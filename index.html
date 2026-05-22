@@ -1,1364 +1,1364 @@
 <!DOCTYPE html><html lang="zh-Hant"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>水與酸鹼的微觀奧秘</title>
-  <!-- 引入可愛圓潤的 Fredoka 字型、清晰的 Noto Sans TC 與專業圖示 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水與酸鹼的微觀奧秘</title>
+    <!-- 引入可愛圓潤的 Fredoka 字型、清晰的 Noto Sans TC 與專業圖示 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <style>
-      /* ==================== 1. 基本設定與童趣幻燈片規格 ==================== */
-      * {
-          box-sizing: border-box;
-      }
+    <style>
+        /* ==================== 1. 基本設定與童趣幻燈片規格 ==================== */
+        * {
+            box-sizing: border-box;
+        }
 
-      body {
-          background-color: #f0e6df; /* 溫暖的淺燕麥色底 */
-          display: grid;
-          gap: 25px;
-          grid-template-columns: 1fr;
-          margin: 0;
-          min-height: 100vh;
-          padding: 20px 0;
-          place-items: center;
-      }
+        body {
+            background-color: #f0e6df; /* 溫暖的淺燕麥色底 */
+            display: grid;
+            gap: 25px;
+            grid-template-columns: 1fr;
+            margin: 0;
+            min-height: 100vh;
+            padding: 20px 0;
+            place-items: center;
+        }
 
-      /* 嚴格限制 1280x720 黃金比例，大圓角，展現軟萌繪本質感 */
-      .slide-container {
-          align-items: flex-start;
-          background-color: #fffdf9; /* 溫馨的暖布丁白 */
-          border-radius: 32px; /* 更圓潤的圓角 */
-          box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
-          display: flex;
-          flex-direction: column;
-          font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
-          height: 720px;
-          justify-content: flex-start;
-          overflow: hidden;
-          padding: 60px 80px;
-          position: relative;
-          width: 1280px;
-          border: 8px solid #fcf0db; /* 像繪本相框一樣的可愛邊框 */
-      }
+        /* 嚴格限制 1280x720 黃金比例，大圓角，展現軟萌繪本質感 */
+        .slide-container {
+            align-items: flex-start;
+            background-color: #fffdf9; /* 溫馨的暖布丁白 */
+            border-radius: 32px; /* 更圓潤的圓角 */
+            box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            height: 720px;
+            justify-content: flex-start;
+            overflow: hidden;
+            padding: 60px 80px;
+            position: relative;
+            width: 1280px;
+            border: 8px solid #fcf0db; /* 像繪本相框一樣的可愛邊框 */
+        }
 
-      /* 漂浮的小水滴與可愛泡泡背景 (Cute Floating Bubbles) */
-      .slide-container::before {
-          content: '';
-          position: absolute;
-          top: -5%;
-          right: -5%;
-          width: 400px;
-          height: 400px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(255, 182, 193, 0.25) 0%, rgba(255, 253, 249, 0) 70%);
-          pointer-events: none;
-          z-index: 0;
-      }
+        /* 漂浮的小水滴與可愛泡泡背景 (Cute Floating Bubbles) */
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: -5%;
+            right: -5%;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 182, 193, 0.25) 0%, rgba(255, 253, 249, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-      .slide-container::after {
-          content: '';
-          position: absolute;
-          bottom: -5%;
-          left: -5%;
-          width: 350px;
-          height: 350px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(135, 206, 250, 0.25) 0%, rgba(255, 253, 249, 0) 70%);
-          pointer-events: none;
-          z-index: 0;
-      }
+        .slide-container::after {
+            content: '';
+            position: absolute;
+            bottom: -5%;
+            left: -5%;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(135, 206, 250, 0.25) 0%, rgba(255, 253, 249, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-      /* 額外的可愛漂浮小星星與水滴圖示裝飾 */
-      .deco-bubble {
-          position: absolute;
-          background: rgba(135, 206, 250, 0.2);
-          border-radius: 50%;
-          pointer-events: none;
-      }
+        /* 額外的可愛漂浮小星星與水滴圖示裝飾 */
+        .deco-bubble {
+            position: absolute;
+            background: rgba(135, 206, 250, 0.2);
+            border-radius: 50%;
+            pointer-events: none;
+        }
 
-      .slide-container>* {
-          position: relative;
-          z-index: 1;
-      }
+        .slide-container>* {
+            position: relative;
+            z-index: 1;
+        }
 
-      /* ==================== 2. 統一文字與童趣色彩規範 ==================== */
-      .slide-container h1,
-      .slide-container h2,
-      .slide-container h3 {
-          color: #4a3e3d;
-          font-weight: 700;
-          margin: 0;
-      }
+        /* ==================== 2. 統一文字與童趣色彩規範 ==================== */
+        .slide-container h1,
+        .slide-container h2,
+        .slide-container h3 {
+            color: #4a3e3d;
+            font-weight: 700;
+            margin: 0;
+        }
 
-      /* 頂部標題：左側可愛大圓點裝飾，維持無抖動對齊 */
-      .slide-container h2.slide-title {
-          font-size: 36px;
-          margin-bottom: 30px;
-          width: 100%;
-          text-align: left;
-          border-left: 8px solid #4fc3f7;
-          padding-left: 18px;
-          line-height: 1.2;
-          border-radius: 4px;
-      }
+        /* 頂部標題：左側可愛大圓點裝飾，維持無抖動對齊 */
+        .slide-container h2.slide-title {
+            font-size: 36px;
+            margin-bottom: 30px;
+            width: 100%;
+            text-align: left;
+            border-left: 8px solid #4fc3f7;
+            padding-left: 18px;
+            line-height: 1.2;
+            border-radius: 4px;
+        }
 
-      .slide-container h3 {
-          font-size: 24px;
-          margin-bottom: 12px;
-          color: #ff8a65;
-      }
+        .slide-container h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #ff8a65;
+        }
 
-      .slide-container p,
-      .slide-container li {
-          font-size: 18px;
-          line-height: 1.6;
-          color: #6d5d5b;
-          margin: 0;
-      }
+        .slide-container p,
+        .slide-container li {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #6d5d5b;
+            margin: 0;
+        }
 
-      /* ==================== 3. 布局定義與內容區 ==================== */
-      .content-area {
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-          justify-content: center;
-          width: 100%;
-          height: calc(100% - 80px);
-      }
+        /* ==================== 3. 布局定義與內容區 ==================== */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+            width: 100%;
+            height: calc(100% - 80px);
+        }
 
-      /* 標準兩欄式版面 */
-      .two-column {
-          align-items: center;
-          display: grid;
-          gap: 60px;
-          grid-template-columns: 1.12fr 0.88fr;
-          width: 100%;
-      }
+        /* 標準兩欄式版面 */
+        .two-column {
+            align-items: center;
+            display: grid;
+            gap: 60px;
+            grid-template-columns: 1.12fr 0.88fr;
+            width: 100%;
+        }
 
-      .text-column {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-      }
+        .text-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
-      .text-column p {
-          margin-bottom: 18px;
-      }
+        .text-column p {
+            margin-bottom: 18px;
+        }
 
-      .text-column p:last-child {
-          margin-bottom: 0;
-      }
+        .text-column p:last-child {
+            margin-bottom: 0;
+        }
 
-      /* 軟綿綿邊框的圖片框 */
-      .image-wrapper {
-          border-radius: 24px;
-          box-shadow: 0 8px 20px rgba(139, 92, 26, 0.08);
-          overflow: hidden;
-          width: 100%;
-          height: 380px;
-          border: 4px dashed #ffcc80; /* 可愛虛線外框 */
-          background-color: #ffffff;
-      }
+        /* 軟綿綿邊框的圖片框 */
+        .image-wrapper {
+            border-radius: 24px;
+            box-shadow: 0 8px 20px rgba(139, 92, 26, 0.08);
+            overflow: hidden;
+            width: 100%;
+            height: 380px;
+            border: 4px dashed #ffcc80; /* 可愛虛線外框 */
+            background-color: #ffffff;
+        }
 
-      .image-wrapper img {
-          display: block;
-          height: 100%;
-          object-fit: contain;
-          width: 100%;
-          padding: 15px;
-      }
+        .image-wrapper img {
+            display: block;
+            height: 100%;
+            object-fit: contain;
+            width: 100%;
+            padding: 15px;
+        }
 
-      /* 專為第四頁設計的寬版橫向佈局，確保圖表最大化 */
-      .wide-layout {
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-          width: 100%;
-          height: 100%;
-      }
-      
-      .wide-top-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 30px;
-          width: 100%;
-      }
-      
-      .wide-text-intro {
-          flex: 1;
-      }
-      
-      .wide-text-intro p {
-          font-size: 18px;
-          line-height: 1.6;
-          margin: 0;
-      }
-      
-      .wide-image-wrapper {
-          border-radius: 24px;
-          box-shadow: 0 8px 20px rgba(139, 92, 26, 0.08);
-          overflow: hidden;
-          width: 100%;
-          height: 350px; /* 給予圖表高達 350px 的充足空間 */
-          border: 4px dashed #a5d6a7; /* 可愛虛線外框 */
-          background-color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 10px 20px;
-      }
+        /* 專為第四頁設計的寬版橫向佈局，確保圖表最大化 */
+        .wide-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            height: 100%;
+        }
 
-      /* 3.1 封面特殊設計 (Theme 1 溫慢蘇打粉藍背景) */
-      .slide-container.title-slide {
-          background-color: #e3f2fd; /* 超療癒的淡藍色 */
-          justify-content: center;
-          align-items: center;
-          padding: 0;
-          border: 8px solid #bbdefb;
-      }
+        .wide-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+        }
 
-      .slide-container.title-slide::before {
-          background: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 50%);
-      }
+        .wide-text-intro {
+            flex: 1;
+        }
 
-      .slide-container.title-slide::after {
-          background: radial-gradient(circle at 90% 80%, rgba(255, 235, 156, 0.4) 0%, transparent 50%);
-      }
+        .wide-text-intro p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin: 0;
+        }
 
-      .title-layout {
-          text-align: center;
-          max-width: 950px;
-          padding: 40px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-      }
+        .wide-image-wrapper {
+            border-radius: 24px;
+            box-shadow: 0 8px 20px rgba(139, 92, 26, 0.08);
+            overflow: hidden;
+            width: 100%;
+            height: 350px; /* 給予圖表高達 350px 的充足空間 */
+            border: 4px dashed #a5d6a7; /* 可愛虛線外框 */
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+        }
 
-      .title-layout h1 {
-          font-size: 60px;
-          font-weight: 700;
-          color: #2c5282; /* 溫和的深藍色 */
-          margin: 0 0 20px 0;
-          line-height: 1.3;
-          letter-spacing: 1px;
-          text-shadow: 2px 2px 0px #ffffff;
-      }
+        /* 3.1 封面特殊設計 (Theme 1 溫慢蘇打粉藍背景) */
+        .slide-container.title-slide {
+            background-color: #e3f2fd; /* 超療癒的淡藍色 */
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            border: 8px solid #bbdefb;
+        }
 
-      .title-layout .subtitle {
-          color: #4a5568;
-          font-size: 22px;
-          line-height: 1.6;
-          font-weight: 400;
-          max-width: 800px;
-          margin: 0;
-      }
+        .slide-container.title-slide::before {
+            background: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 50%);
+        }
 
-      .academic-badge {
-          border: 2px solid #90caf9;
-          background-color: rgba(255, 255, 255, 0.7);
-          color: #1e88e5;
-          font-size: 14px;
-          font-weight: 600;
-          padding: 6px 18px;
-          border-radius: 30px;
-          margin-bottom: 25px;
-          letter-spacing: 2px;
-          display: inline-block;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-      }
+        .slide-container.title-slide::after {
+            background: radial-gradient(circle at 90% 80%, rgba(255, 235, 156, 0.4) 0%, transparent 50%);
+        }
 
-      /* 3.2 磚瓦式卡片設計 (Tiled Layout) */
-      .tiled-content {
-          display: flex;
-          gap: 30px;
-          width: 100%;
-          align-items: stretch;
-      }
+        .title-layout {
+            text-align: center;
+            max-width: 950px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-      .tile {
-          background-color: #ffffff;
-          border: 3px solid #ffe0b2;
-          border-radius: 24px;
-          display: flex;
-          flex-direction: column;
-          flex: 1;
-          padding: 40px 35px;
-          box-shadow: 0 6px 15px rgba(139, 92, 26, 0.04);
-          position: relative;
-      }
+        .title-layout h1 {
+            font-size: 60px;
+            font-weight: 700;
+            color: #2c5282; /* 溫和的深藍色 */
+            margin: 0 0 20px 0;
+            line-height: 1.3;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0px #ffffff;
+        }
 
-      /* 左邊卡片為粉橘，右邊為粉綠 */
-      .tile-ph {
-          border: 3px solid #ffccbc;
-          background-color: #fff9f8;
-      }
+        .title-layout .subtitle {
+            color: #4a5568;
+            font-size: 22px;
+            line-height: 1.6;
+            font-weight: 400;
+            max-width: 800px;
+            margin: 0;
+        }
 
-      .tile-poh {
-          border: 3px solid #b2dfdb;
-          background-color: #f2fbf9;
-      }
+        .academic-badge {
+            border: 2px solid #90caf9;
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #1e88e5;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 6px 18px;
+            border-radius: 30px;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            display: inline-block;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
 
-      .tile-icon {
-          font-size: 42px;
-          margin-bottom: 20px;
-      }
+        /* 3.2 磚瓦式卡片設計 (Tiled Layout) */
+        .tiled-content {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+            align-items: stretch;
+        }
 
-      .tile-ph .tile-icon {
-          color: #ff8a65;
-      }
+        .tile {
+            background-color: #ffffff;
+            border: 3px solid #ffe0b2;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 40px 35px;
+            box-shadow: 0 6px 15px rgba(139, 92, 26, 0.04);
+            position: relative;
+        }
 
-      .tile-poh .tile-icon {
-          color: #4db6ac;
-      }
+        /* 左邊卡片為粉橘，右邊為粉綠 */
+        .tile-ph {
+            border: 3px solid #ffccbc;
+            background-color: #fff9f8;
+        }
 
-      .tile h3 {
-          font-size: 24px;
-          font-weight: 700;
-          margin-bottom: 15px;
-      }
+        .tile-poh {
+            border: 3px solid #b2dfdb;
+            background-color: #f2fbf9;
+        }
 
-      .tile p {
-          font-size: 17px;
-          line-height: 1.6;
-          color: #6d5d5b;
-      }
+        .tile-icon {
+            font-size: 42px;
+            margin-bottom: 20px;
+        }
 
-      .tile strong {
-          color: #4a3e3d;
-      }
+        .tile-ph .tile-icon {
+            color: #ff8a65;
+        }
 
-      /* ==================== 4. 數學公式專用排版 (MathML) ==================== */
-      .formula-container {
-          background-color: #f7fcfe;
-          border: 3px dashed #4fc3f7;
-          border-radius: 16px;
-          display: inline-block;
-          margin-top: 15px;
-          padding: 12px 24px;
-          box-shadow: 0 4px 8px rgba(79, 195, 247, 0.05);
-          width: fit-content;
-      }
+        .tile-poh .tile-icon {
+            color: #4db6ac;
+        }
 
-      math {
-          font-size: 18px;
-          color: #4a3e3d;
-      }
+        .tile h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
 
-      /* ==================== 5. 第五頁互動實驗室專用樣式 ==================== */
-      .lab-btn {
-          padding: 10px 18px;
-          border-radius: 16px;
-          font-size: 15px;
-          font-weight: bold;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.04);
-          font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
-      }
-      
-      .lab-btn-add {
-          background-color: #e3f2fd;
-          color: #0d47a1;
-          border: 2px solid #90caf9;
-      }
-      .lab-btn-add:hover {
-          background-color: #bbdefb;
-          transform: translateY(-2px);
-      }
-      
-      .lab-btn-indicator {
-          background-color: #fce4ec;
-          color: #c2185b;
-          border: 2px solid #f8bbd0;
-      }
-      .lab-btn-indicator:hover {
-          background-color: #f8bbd0;
-          transform: translateY(-2px);
-      }
-      
-      .lab-btn-reset {
-          background-color: #f5f5f5;
-          color: #616161;
-          border: 2px solid #e0e0e0;
-      }
-      .lab-btn-reset:hover {
-          background-color: #eeeeee;
-          transform: translateY(-2px);
-      }
+        .tile p {
+            font-size: 17px;
+            line-height: 1.6;
+            color: #6d5d5b;
+        }
 
-      /* 物理級漂浮離子系統 (Emerge, Scatter & Hover) */
-      .floating-ion {
-          position: absolute;
-          pointer-events: none;
-          z-index: 2;
-          opacity: 0;
-          filter: drop-shadow(0 2px 5px rgba(0,0,0,0.1));
-      }
-      
-      /* 氫離子 (球體結構) */
-      .ion-h {
-          width: 32px;
-          height: 32px;
-      }
+        .tile strong {
+            color: #4a3e3d;
+        }
 
-      /* 鈉離子 (球體結構) */
-      .ion-na {
-          width: 32px;
-          height: 32px;
-      }
-      
-      /* 氫氧根離子 (全新簡化單球體結構) */
-      .ion-oh {
-          width: 32px;
-          height: 32px;
-      }
+        /* ==================== 4. 數學公式專用排版 (MathML) ==================== */
+        .formula-container {
+            background-color: #f7fcfe;
+            border: 3px dashed #4fc3f7;
+            border-radius: 16px;
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 24px;
+            box-shadow: 0 4px 8px rgba(79, 195, 247, 0.05);
+            width: fit-content;
+        }
 
-      .ion-emerging {
-          animation: emerge-and-scatter 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
-      }
+        math {
+            font-size: 18px;
+            color: #4a3e3d;
+        }
 
-      @keyframes emerge-and-scatter {
-          0% {
-              left: calc(50% - 16px);
-              top: -10px;
-              transform: scale(0.1) rotate(0deg);
-              opacity: 0;
-          }
-          20% {
-              opacity: 1;
-          }
-          100% {
-              left: var(--dest-x);
-              top: var(--dest-y);
-              transform: scale(1) rotate(360deg);
-              opacity: 1;
-          }
-      }
+        /* ==================== 5. 第五頁互動實驗室專用樣式 ==================== */
+        .lab-btn {
+            padding: 10px 18px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+        }
 
-      .ion-floating {
-          opacity: 1 !important; /* 確保結束動畫後，始終保持可見 */
-          animation: idle-float 4s infinite ease-in-out;
-      }
+        .lab-btn-add {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            border: 2px solid #90caf9;
+        }
+        .lab-btn-add:hover {
+            background-color: #bbdefb;
+            transform: translateY(-2px);
+        }
 
-      @keyframes idle-float {
-          0%, 100% { transform: translate(0, 0) rotate(0deg); }
-          50% { transform: translate(var(--idle-x), var(--idle-y)) rotate(12deg); }
-      }
+        .lab-btn-indicator {
+            background-color: #fce4ec;
+            color: #c2185b;
+            border: 2px solid #f8bbd0;
+        }
+        .lab-btn-indicator:hover {
+            background-color: #f8bbd0;
+            transform: translateY(-2px);
+        }
 
-      /* 完美的物理加速落下與濺水動畫系統 */
-      #naoh-falling-pellet {
-          position: absolute;
-          top: -20px;
-          left: calc(50% - 8px);
-          width: 16px;
-          height: 12px;
-          background: #ffffff;
-          border: 2px solid #b0bec5;
-          border-radius: 6px;
-          box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-          opacity: 0;
-          z-index: 8;
-          pointer-events: none;
-      }
+        .lab-btn-reset {
+            background-color: #f5f5f5;
+            color: #616161;
+            border: 2px solid #e0e0e0;
+        }
+        .lab-btn-reset:hover {
+            background-color: #eeeeee;
+            transform: translateY(-2px);
+        }
 
-      .pellet-falling {
-          animation: fall-pellet 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
-      }
+        /* 物理級漂浮離子系統 (Emerge, Scatter & Hover) */
+        .floating-ion {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.1));
+        }
 
-      @keyframes fall-pellet {
-          0% {
-              top: -30px;
-              opacity: 0;
-              transform: scaleY(1.3);
-          }
-          30% {
-              opacity: 1;
-              transform: scaleY(1.1);
-          }
-          90% {
-              opacity: 1;
-              transform: scaleY(1);
-          }
-          100% {
-              top: 59px; /* 水面高度，相對於 180px 燒杯 */
-              opacity: 0;
-              transform: scale(0.6);
-          }
-      }
+        /* 氫離子 (球體結構) */
+        .ion-h {
+            width: 32px;
+            height: 32px;
+        }
 
-      #droplet-anim {
-          position: absolute;
-          top: -20px;
-          left: calc(50% - 5px);
-          width: 10px;
-          height: 14px;
-          border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-          background: #e91e63;
-          box-shadow: 0 2px 4px rgba(233, 30, 99, 0.3);
-          opacity: 0;
-          z-index: 8;
-          pointer-events: none;
-      }
+        /* 鈉離子 (球體結構) */
+        .ion-na {
+            width: 32px;
+            height: 32px;
+        }
 
-      .droplet-falling {
-          animation: fall-droplet 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
-      }
+        /* 氫氧根離子 (全新簡化單球體結構) */
+        .ion-oh {
+            width: 32px;
+            height: 32px;
+        }
 
-      @keyframes fall-droplet {
-          0% {
-              top: -30px;
-              opacity: 0;
-              transform: scaleY(1.4);
-          }
-          30% {
-              opacity: 1;
-          }
-          100% {
-              top: 59px; /* 水面高度 */
-              opacity: 0;
-              transform: scale(0.5);
-          }
-      }
+        .ion-emerging {
+            animation: emerge-and-scatter 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+        }
 
-      /* 濺水同心圓漣漪 */
-      #splash-ripple {
-          position: absolute;
-          top: 59px;
-          left: 50%;
-          transform: translateX(-50%) scale(0);
-          width: 40px;
-          height: 12px;
-          border: 2px solid #81d4fa;
-          border-radius: 50%;
-          pointer-events: none;
-          z-index: 5;
-          opacity: 0;
-      }
+        @keyframes emerge-and-scatter {
+            0% {
+                left: calc(50% - 16px);
+                top: -10px;
+                transform: scale(0.1) rotate(0deg);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                left: var(--dest-x);
+                top: var(--dest-y);
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
 
-      .splash-active {
-          animation: splash-expand 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
-      }
+        .ion-floating {
+            opacity: 1 !important; /* 確保結束動畫後，始終保持可見 */
+            animation: idle-float 4s infinite ease-in-out;
+        }
 
-      @keyframes splash-expand {
-          0% {
-              transform: translateX(-50%) scale(0);
-              opacity: 1;
-          }
-          100% {
-              transform: translateX(-50%) scale(2.2);
-              opacity: 0;
-          }
-      }
+        @keyframes idle-float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(var(--idle-x), var(--idle-y)) rotate(12deg); }
+        }
 
-      /* 水波受力震動 */
-      @keyframes wave-bounce {
-          0%, 100% { transform: translateY(0); }
-          30% { transform: translateY(5px); }
-          60% { transform: translateY(-2.5px); }
-          80% { transform: translateY(1px); }
-      }
-      
-      .wave-impact {
-          animation: wave-bounce 0.6s ease-in-out;
-      }
+        /* 完美的物理加速落下與濺水動畫系統 */
+        #naoh-falling-pellet {
+            position: absolute;
+            top: -20px;
+            left: calc(50% - 8px);
+            width: 16px;
+            height: 12px;
+            background: #ffffff;
+            border: 2px solid #b0bec5;
+            border-radius: 6px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            opacity: 0;
+            z-index: 8;
+            pointer-events: none;
+        }
 
-      /* 互動題目卡片樣式 */
-      .option-group {
-          display: flex;
-          gap: 12px;
-          margin-top: 8px;
-          width: 100%;
-      }
+        .pellet-falling {
+            animation: fall-pellet 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+        }
 
-      .option-btn {
-          background-color: #ffffff;
-          border: 2px solid #ffe0b2;
-          border-radius: 12px;
-          padding: 8px 14px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #6d5d5b;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          text-align: center;
-          flex: 1;
-          font-family: 'Noto Sans TC', sans-serif;
-      }
-      .option-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 10px rgba(139, 92, 26, 0.05);
-          border-color: #ffcc80;
-      }
-      
-      .question-card {
-          background-color: #ffffff;
-          border: 2px solid #f3e5f5;
-          border-radius: 16px;
-          padding: 12px 18px;
-          margin-bottom: 12px;
-          box-shadow: 0 4px 10px rgba(139, 92, 26, 0.02);
-      }
-      
-      .question-card p {
-          font-size: 15px;
-          font-weight: 700;
-          margin-bottom: 6px;
-          color: #4a3e3d;
-      }
+        @keyframes fall-pellet {
+            0% {
+                top: -30px;
+                opacity: 0;
+                transform: scaleY(1.3);
+            }
+            30% {
+                opacity: 1;
+                transform: scaleY(1.1);
+            }
+            90% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+            100% {
+                top: 59px; /* 水面高度，相對於 180px 燒杯 */
+                opacity: 0;
+                transform: scale(0.6);
+            }
+        }
 
-      .feedback-alert {
-          font-size: 13px;
-          font-weight: bold;
-          margin-top: 8px;
-          padding: 6px 12px;
-          border-radius: 8px;
-          display: none;
-      }
-  </style>
+        #droplet-anim {
+            position: absolute;
+            top: -20px;
+            left: calc(50% - 5px);
+            width: 10px;
+            height: 14px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            background: #e91e63;
+            box-shadow: 0 2px 4px rgba(233, 30, 99, 0.3);
+            opacity: 0;
+            z-index: 8;
+            pointer-events: none;
+        }
+
+        .droplet-falling {
+            animation: fall-droplet 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+        }
+
+        @keyframes fall-droplet {
+            0% {
+                top: -30px;
+                opacity: 0;
+                transform: scaleY(1.4);
+            }
+            30% {
+                opacity: 1;
+            }
+            100% {
+                top: 59px; /* 水面高度 */
+                opacity: 0;
+                transform: scale(0.5);
+            }
+        }
+
+        /* 濺水同心圓漣漪 */
+        #splash-ripple {
+            position: absolute;
+            top: 59px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            width: 40px;
+            height: 12px;
+            border: 2px solid #81d4fa;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+        }
+
+        .splash-active {
+            animation: splash-expand 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        @keyframes splash-expand {
+            0% {
+                transform: translateX(-50%) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-50%) scale(2.2);
+                opacity: 0;
+            }
+        }
+
+        /* 水波受力震動 */
+        @keyframes wave-bounce {
+            0%, 100% { transform: translateY(0); }
+            30% { transform: translateY(5px); }
+            60% { transform: translateY(-2.5px); }
+            80% { transform: translateY(1px); }
+        }
+
+        .wave-impact {
+            animation: wave-bounce 0.6s ease-in-out;
+        }
+
+        /* 互動題目卡片樣式 */
+        .option-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .option-btn {
+            background-color: #ffffff;
+            border: 2px solid #ffe0b2;
+            border-radius: 12px;
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6d5d5b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            flex: 1;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(139, 92, 26, 0.05);
+            border-color: #ffcc80;
+        }
+
+        .question-card {
+            background-color: #ffffff;
+            border: 2px solid #f3e5f5;
+            border-radius: 16px;
+            padding: 12px 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(139, 92, 26, 0.02);
+        }
+
+        .question-card p {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #4a3e3d;
+        }
+
+        .feedback-alert {
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- Slide 1: 封面 Title_Slide (高質感且童趣的粉藍背景) -->
-  <div class="slide-container title-slide" id="slide1">
-      <!-- 背景可愛泡泡 -->
-      <div class="deco-bubble" style="width: 60px; height: 60px; top: 15%; left: 10%;"></div>
-      <div class="deco-bubble" style="width: 40px; height: 40px; bottom: 20%; right: 12%;"></div>
-      <div class="deco-bubble" style="width: 25px; height: 25px; top: 50%; right: 8%;"></div>
-      
-      <div class="title-layout">
-          <div class="academic-badge">🧪 微觀化學與酸鹼平衡 🧪</div>
-          <h1>水與酸鹼的微觀奧秘</h1>
-          <p class="subtitle">用簡單直覺的視角，探索液體中的離子行為與 pH/pOH 的平衡美學</p>
-      </div>
-  </div>
-
-
-  <!-- Slide 2: 水是解離的媒介 Image_Right_Text_Left (簡約清爽排版) -->
-  <div class="slide-container" id="slide2">
-      <h2 class="slide-title" style="border-left-color: #4fc3f7;">1. 水：完美的「解離媒介」</h2>
-      <div class="content-area">
-          <div class="two-column">
-              <div class="text-column">
-                  <h3 style="color: #4fc3f7;"><i class="fa-solid fa-wand-magic-sparkles"></i> 水分子是如何幫助物質解離的？</h3>
-                  <p>水是由一個氧原子 and 兩個氫原子構成的極性分子。因為帶有微小的正負電性，當鹽類、酸 or 鹼放進水中時，水分子會將它們包圍並拉開，這個過程就叫<strong>「解離」</strong>。</p>
-                  <p>不只如此，水分子彼此之間也會發生微弱的<strong>「自我解離」</strong>，產生兩種性質相反的微小粒子：</p>
-                  
-                  <p>
-                      <i class="fa-solid fa-circle-nodes" style="color: #ff8a65; margin-right: 8px;"></i><strong>氫離子 [hydrogen ion] (H⁺)：</strong> 決定溶液「酸性」的主角。<br>
-                      <i class="fa-solid fa-circle-nodes" style="color: #4db6ac; margin-right: 8px;"></i><strong>氫氧根離子 [hydroxide ion] (OH⁻)：</strong> 決定溶液「鹼性」的主角。
-                  </p>
-
-                  <!-- 自我解離化學式 -->
-                  <div id="formula-container" class="formula-container">
-                      <math display="math">
-                          <mrow>
-                              <msub><mi>H</mi><mn>2</mn></msub><mi>O</mi>
-                              <mo>⇌</mo>
-                              <msup><mi>H</mi><mo>+</mo></msup>
-                              <mo>+</mo>
-                              <mi>O</mi><msup><mi>H</mi><mo>−</mo></msup>
-                          </mrow>
-                      </math>
-                  </div>
-              </div>
-              <div class="image-column">
-                  <div class="image-wrapper" style="border-color: #90caf9; display: flex; align-items: center; justify-content: center; background-color: #ffffff; padding: 10px;">
-                      <!-- 簡單直觀的自我解離向量示意圖 -->
-                      <svg viewBox="0 0 400 300" width="100%" height="100%" style="max-height: 350px;">
-                          <!-- 背景微弱網格 -->
-                          <g stroke="#f8f9fa" stroke-width="1.5">
-                              <line x1="0" y1="50" x2="400" y2="50" />
-                              <line x1="0" y1="100" x2="400" y2="100" />
-                              <line x1="0" y1="150" x2="400" y2="150" />
-                              <line x1="0" y1="200" x2="400" y2="200" />
-                              <line x1="0" y1="250" x2="400" y2="250" />
-                              <line x1="100" y1="0" x2="100" y2="300" />
-                              <line x1="200" y1="0" x2="200" y2="300" />
-                              <line x1="300" y1="0" x2="300" y2="300" />
-                          </g>
-
-                          <!-- 左側：水分子 H2O -->
-                          <g transform="translate(80, 150)">
-                              <!-- 氧原子 (O) -->
-                              <circle cx="0" cy="0" r="32" fill="#e3f2fd" stroke="#4fc3f7" stroke-width="3" />
-                              <text x="0" y="8" font-family="'Fredoka', 'Noto Sans TC'" font-size="22" font-weight="bold" fill="#0288d1" text-anchor="middle">O</text>
-                              
-                              <!-- 氫原子 1 (H) -->
-                              <circle cx="-26" cy="-26" r="16" fill="#ffffff" stroke="#90caf9" stroke-width="3" />
-                              <text x="-26" y="-21" font-family="'Fredoka', 'Noto Sans TC'" font-size="13" font-weight="bold" fill="#0288d1" text-anchor="middle">H</text>
-                              
-                              <!-- 氫原子 2 (H) -->
-                              <circle cx="26" cy="-26" r="16" fill="#ffffff" stroke="#90caf9" stroke-width="3" />
-                              <text x="26" y="-21" font-family="'Fredoka', 'Noto Sans TC'" font-size="13" font-weight="bold" fill="#0288d1" text-anchor="middle">H</text>
-
-                              <!-- 標題 -->
-                              <text x="0" y="60" font-family="'Noto Sans TC'" font-size="15" font-weight="700" fill="#4a3e3d" text-anchor="middle">水分子 (H₂O)</text>
-                          </g>
-
-                          <!-- 中間：可逆解離箭頭 -->
-                          <g transform="translate(195, 150)">
-                              <path d="M -25,-6 L 25,-6 M 15,-11 L 25,-6 L 15,-1" fill="none" stroke="#78909c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-                              <path d="M 25,6 L -25,6 M -15,1 L -25,6 L -15,11" fill="none" stroke="#78909c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-                              <text x="0" y="-22" font-family="'Noto Sans TC'" font-size="13" font-weight="700" fill="#78909c" text-anchor="middle">弱解離</text>
-                          </g>
-
-                          <!-- 右側：H+ 與 OH- -->
-                          <g transform="translate(310, 150)">
-                              <!-- 氫離子 H+ (上方) -->
-                              <g transform="translate(0, -50)">
-                                  <circle cx="0" cy="0" r="18" fill="#fff9f8" stroke="#ff8a65" stroke-width="3" />
-                                  <text x="0" y="6" font-family="'Fredoka', 'Noto Sans TC'" font-size="15" font-weight="bold" fill="#ff8a65" text-anchor="middle">H⁺</text>
-                                  <text x="0" y="32" font-family="'Noto Sans TC'" font-size="13" font-weight="700" fill="#ff8a65" text-anchor="middle">氫離子</text>
-                              </g>
-
-                              <!-- 氫氧根離子 OH- (下方) -->
-                              <g transform="translate(0, 50)">
-                                  <!-- 氧原子部分 -->
-                                  <circle cx="-10" cy="0" r="22" fill="#f2fbf9" stroke="#4db6ac" stroke-width="3" />
-                                  <text x="-10" y="6" font-family="'Fredoka', 'Noto Sans TC'" font-size="15" font-weight="bold" fill="#4db6ac" text-anchor="middle">O</text>
-                                  <!-- 氫原子部分 -->
-                                  <circle cx="12" cy="0" r="13" fill="#ffffff" stroke="#4db6ac" stroke-width="2.5" />
-                                  <text x="12" y="5" font-family="'Fredoka', 'Noto Sans TC'" font-size="10" font-weight="bold" fill="#4db6ac" text-anchor="middle">H</text>
-                                  
-                                  <!-- 帶電量 (-) 標記 -->
-                                  <circle cx="23" cy="-12" r="8" fill="#4db6ac" />
-                                  <text x="23" y="-9" font-family="'Fredoka'" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">-</text>
-
-                                  <text x="0" y="38" font-family="'Noto Sans TC'" font-size="13" font-weight="700" fill="#4db6ac" text-anchor="middle">氫氧根離子 (OH⁻)</text>
-                              </g>
-                          </g>
-                      </svg>
-                  </div>
-              </div>
-          </div>
-      </div>
-  </div>
-
-
-  <!-- Slide 3: pH 與 pOH 的意義 Two_Column_Tiled_Text (經典雙卡片排版) -->
-  <div class="slide-container" id="slide3">
-      <h2 class="slide-title" style="border-left-color: #ff8a65;">2. 什麼是 pH 與 pOH？</h2>
-      <div class="content-area">
-          <div class="tiled-content">
-              <!-- 左卡片: pH 指標 -->
-              <div class="tile tile-ph">
-                  <div class="tile-icon"><i class="fa-solid fa-droplet"></i></div>
-                  <h3 style="color: #ff8a65;">pH值：酸度的測量尺</h3>
-                  <p>pH 值用來衡量溶液中<strong>氫離子 [hydrogen ion] (H⁺)</strong> 的濃度大小。</p>
-                  <p>當 pH 值<strong>小於 7</strong>時，代表溶液中的 H⁺ 比較多，溶液呈現<strong>酸性</strong>（例如：檸檬汁、醋）。數值越小，酸性就越強。</p>
-              </div>
-              <!-- 右卡片: pOH 指標 -->
-              <div class="tile tile-poh">
-                  <div class="tile-icon"><i class="fa-solid fa-soap"></i></div>
-                  <h3 style="color: #4db6ac;">pOH值：鹼度的測量尺</h3>
-                  <p>pOH 值用來衡量溶液中<strong>氫氧根離子 [hydroxide ion] (OH⁻)</strong> 的濃度大小。</p>
-                  <p>當 pOH 值<strong>小於 7</strong>時，代表溶液中的 OH⁻ 比較多，溶液呈現<strong>鹼性</strong>（例如：小蘇打水、肥皂水）。數值越小，鹼性越明顯。</p>
-              </div>
-          </div>
-      </div>
-  </div>
-
-
-  <!-- Slide 4: 14 的平衡常數 (橫向寬版佈局，大幅提升易讀性與圖表大小) -->
-  <div class="slide-container" id="slide4">
-      <h2 class="slide-title" style="border-left-color: #4db6ac;">3. pH 與 pOH 的 14 平衡守則</h2>
-      <div class="content-area">
-          <div class="wide-layout">
-              <!-- 頂部說明文字與公式並排 -->
-              <div class="wide-top-bar">
-                  <div class="wide-text-intro">
-                      <p><strong>完美互補的微觀天平：</strong>在同一個水溶液世界中，酸性主角與鹼性主角就像在玩蹺蹺板：一邊增加，另一邊就必然減少。在 25°C 的標準狀態下，<strong>不論溶液是酸還是鹼，pH 值與 pOH 值的加總永遠剛好等於 14！</strong></p>
-                  </div>
-                  <div id="formula-container" class="formula-container" style="border-color: #4db6ac; background-color: #f2fbf9; margin-top: 0; white-space: nowrap; flex-shrink: 0;">
-                      <math display="math">
-                          <mrow>
-                              <mtext>pH</mtext>
-                              <mo>+</mo>
-                              <mtext>pOH</mtext>
-                              <mo>=</mo>
-                              <mn>14</mn>
-                          </mrow>
-                      </math>
-                  </div>
-              </div>
-              
-              <!-- 下方超大滿版觀測圖表 -->
-              <div class="wide-image-wrapper">
-                  <!-- 全面放大、具備垂直對齊灰色虛線的高對齊向量圖表 -->
-                  <svg viewBox="0 0 1000 320" width="100%" height="100%" style="max-height: 330px;">
-                      <defs>
-                          <!-- pH 漸層條 -->
-                          <linearGradient id="phGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stop-color="#ff5252" />
-                              <stop offset="25%" stop-color="#ffb74d" />
-                              <stop offset="50%" stop-color="#4db6ac" />
-                              <stop offset="75%" stop-color="#26c6da" />
-                              <stop offset="100%" stop-color="#5c6bc0" />
-                          </linearGradient>
-                          <!-- H+ Wedge 漸層 -->
-                          <linearGradient id="acidWedge" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stop-color="#ff8a65" stop-opacity="0.8" />
-                              <stop offset="100%" stop-color="#ff8a65" stop-opacity="0.1" />
-                          </linearGradient>
-                          <!-- OH- Wedge 漸層 -->
-                          <linearGradient id="alkaliWedge" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stop-color="#4db6ac" stop-opacity="0.1" />
-                              <stop offset="100%" stop-color="#4db6ac" stop-opacity="0.8" />
-                          </linearGradient>
-                      </defs>
-
-                      <!-- 背景微弱網格與裝飾 -->
-                      <rect width="1000" height="320" rx="20" fill="#fafafa" stroke="#eeeeee" stroke-width="1" />
-
-                      <!-- 垂直對齊虛線 (對應 pH 與 pOH 刻度，輔助觀察相加等於14) -->
-                      <line x1="100" y1="80" x2="100" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="157" y1="80" x2="157" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="271" y1="80" x2="271" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="329" y1="80" x2="329" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="386" y1="80" x2="386" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="443" y1="80" x2="443" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="557" y1="80" x2="557" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="614" y1="80" x2="614" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="729" y1="80" x2="729" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="786" y1="80" x2="786" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="843" y1="80" x2="843" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-                      <line x1="900" y1="80" x2="900" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
-
-                      <!-- 重點實體引導線與生活指標標籤 -->
-                      <!-- 1. 檸檬 pH=2 -->
-                      <line x1="214" y1="50" x2="214" y2="180" stroke="#ff8a65" stroke-width="2" stroke-dasharray="4,2" />
-                      <g transform="translate(144, 12)">
-                          <rect x="0" y="0" width="140" height="36" rx="10" fill="#fff5f5" stroke="#ff8a65" stroke-width="2" />
-                          <text x="70" y="23" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#c0392b" text-anchor="middle">🍋 檸檬 (pH 2)</text>
-                      </g>
-
-                      <!-- 2. 純水 pH=7 -->
-                      <line x1="500" y1="50" x2="500" y2="180" stroke="#4fc3f7" stroke-width="2" stroke-dasharray="4,2" />
-                      <g transform="translate(430, 12)">
-                          <rect x="0" y="0" width="140" height="36" rx="10" fill="#f0faff" stroke="#4fc3f7" stroke-width="2" />
-                          <text x="70" y="23" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#0288d1" text-anchor="middle">💧 純水 (pH 7)</text>
-                      </g>
-
-                      <!-- 3. 肥皂 pH=10 -->
-                      <line x1="671" y1="50" x2="671" y2="180" stroke="#4db6ac" stroke-width="2" stroke-dasharray="4,2" />
-                      <g transform="translate(601, 12)">
-                          <rect x="0" y="0" width="140" height="36" rx="10" fill="#f2fbf9" stroke="#4db6ac" stroke-width="2" />
-                          <text x="70" y="23" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#00796b" text-anchor="middle">🧼 肥皂 (pH 10)</text>
-                      </g>
-
-                      <!-- pH 標題與數字列 (y=94) -->
-                      <text x="50" y="96" font-family="'Fredoka', 'Noto Sans TC'" font-size="22" font-weight="900" fill="#e5532b" text-anchor="middle">pH</text>
-                      <g font-family="'Fredoka'" font-size="16" font-weight="bold" fill="#4a3e3d" text-anchor="middle">
-                          <text x="100" y="95">0</text>
-                          <text x="157" y="95">1</text>
-                          <text x="214" y="95" fill="#ff5252" font-size="18">2</text>
-                          <text x="271" y="95">3</text>
-                          <text x="329" y="95">4</text>
-                          <text x="386" y="95">5</text>
-                          <text x="443" y="95">6</text>
-                          <text x="500" y="95" fill="#0288d1" font-size="19">7</text>
-                          <text x="557" y="95">8</text>
-                          <text x="614" y="95">9</text>
-                          <text x="671" y="95" fill="#00796b" font-size="18">10</text>
-                          <text x="729" y="95">11</text>
-                          <text x="786" y="95">12</text>
-                          <text x="843" y="95">13</text>
-                          <text x="900" y="95">14</text>
-                      </g>
-
-                      <!-- 主彩色漸層色條 (y=112) -->
-                      <rect x="100" y="112" width="800" height="26" rx="13" fill="url(#phGrad)" />
-
-                      <!-- 刻度白線 -->
-                      <g stroke="#ffffff" stroke-width="2.5" opacity="0.8">
-                          <line x1="100" y1="112" x2="100" y2="138" />
-                          <line x1="157" y1="112" x2="157" y2="138" />
-                          <line x1="214" y1="112" x2="214" y2="138" />
-                          <line x1="271" y1="112" x2="271" y2="138" />
-                          <line x1="329" y1="112" x2="329" y2="138" />
-                          <line x1="386" y1="112" x2="386" y2="138" />
-                          <line x1="443" y1="112" x2="443" y2="138" />
-                          <line x1="500" y1="112" x2="500" y2="138" stroke-width="3.5" />
-                          <line x1="557" y1="112" x2="557" y2="138" />
-                          <line x1="614" y1="112" x2="614" y2="138" />
-                          <line x1="671" y1="112" x2="671" y2="138" />
-                          <line x1="729" y1="112" x2="729" y2="138" />
-                          <line x1="786" y1="112" x2="786" y2="138" />
-                          <line x1="843" y1="112" x2="843" y2="138" />
-                          <line x1="900" y1="112" x2="900" y2="138" />
-                      </g>
-
-                      <!-- pOH 標題與數字列 (y=164) -->
-                      <text x="50" y="166" font-family="'Fredoka', 'Noto Sans TC'" font-size="22" font-weight="900" fill="#1f8b80" text-anchor="middle">pOH</text>
-                      <g font-family="'Fredoka'" font-size="16" font-weight="bold" fill="#6d5d5b" text-anchor="middle">
-                          <text x="100" y="165">14</text>
-                          <text x="157" y="165">13</text>
-                          <text x="214" y="165" fill="#ff5252" font-size="18">12</text>
-                          <text x="271" y="165">11</text>
-                          <text x="329" y="165">10</text>
-                          <text x="386" y="165">9</text>
-                          <text x="443" y="165">8</text>
-                          <text x="500" y="165" fill="#0288d1" font-size="19">7</text>
-                          <text x="557" y="165">6</text>
-                          <text x="614" y="165">5</text>
-                          <text x="671" y="165" fill="#00796b" font-size="18">4</text>
-                          <text x="729" y="165">3</text>
-                          <text x="786" y="165">2</text>
-                          <text x="843" y="165">1</text>
-                          <text x="900" y="165">0</text>
-                      </g>
-
-                      <!-- 離子趨勢與說明 (y=195起) -->
-                      <!-- H+ 濃度變化三角形 -->
-                      <polygon points="100,195 900,215 100,215" fill="url(#acidWedge)" />
-                      <text x="100" y="232" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#e5532b">
-                          👈 H⁺ 離子極多 (酸性環境，pH 值低)
-                      </text>
-
-                      <!-- OH- 濃度變化三角形 -->
-                      <polygon points="100,260 900,260 900,240" fill="url(#alkaliWedge)" />
-                      <text x="900" y="277" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#1f8b80" text-anchor="end">
-                          OH⁻ 離子極多 (鹼性環境，pOH 值低) 👉
-                      </text>
-
-                      <!-- 提示文字：相加等於 14 的膠囊標籤 (y=285) -->
-                      <rect x="350" y="285" width="300" height="28" rx="14" fill="#e3f2fd" stroke="#90caf9" stroke-width="1.5" />
-                      <text x="500" y="304" font-family="'Noto Sans TC'" font-size="13" font-weight="700" fill="#0d47a1" text-anchor="middle">
-                          💡 垂直對齊的兩數相加： pH + pOH = 14 !
-                      </text>
-                  </svg>
-              </div>
-          </div>
-      </div>
-  </div>
-
-
-  <!-- Slide 5: 探索形成水溶液的化學性質 (全新高互動、無預設答案的動態實驗室) -->
-  <div class="slide-container" id="slide5" style="background-color: #f6f9fc; border: 8px solid #cfd8dc;">
-      <h2 class="slide-title" style="border-left-color: #ffb74d;">4. 探索水溶液的化學性質</h2>
-      <div class="content-area">
-          <div class="two-column" style="grid-template-columns: 1fr 1.15fr; gap: 40px; align-items: stretch; height: 100%;">
-              
-              <!-- 左側：微型互動實驗室 (Beaker + Animation Controls) -->
-              <div style="display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 3px dashed #b0bec5; border-radius: 24px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                  <div style="text-align: center;">
-                      <span style="font-size: 14px; font-weight: bold; background-color: #ffefe5; color: #e65100; padding: 4px 14px; border-radius: 20px; border: 1.5px solid #ffcc80;">
-                          🧪 互動式化學實驗：NaOH 溶於水
-                      </span>
-                      
-                      <!-- 酚酞指示劑變色圖表 (全新三試管手繪童趣設計) -->
-                      <div style="margin: 12px auto 0; width: 95%; background-color: #fafbfc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 8px 12px; text-align: left;">
-                          <div style="font-size: 13px; font-weight: bold; color: #475569; text-align: center; margin-bottom: 8px;">
-                              🎈 酚酞指示劑變色特徵
-                          </div>
-                          <div style="display: flex; justify-content: space-around; align-items: center; gap: 8px;">
-                              <!-- 試管 1：酸性/中性 -->
-                              <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                                  <div style="position: relative; width: 22px; height: 48px;">
-                                      <!-- 試管口 -->
-                                      <div style="width: 26px; height: 5px; background: #94a3b8; border-radius: 3px; margin-left: -2px;"></div>
-                                      <!-- 試管身 -->
-                                      <div style="width: 22px; height: 43px; border: 2.5px solid #94a3b8; border-top: none; border-radius: 0 0 11px 11px; background: #ffffff; overflow: hidden; position: relative;">
-                                          <!-- 液體 (無色微透灰) -->
-                                          <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: rgba(241, 245, 249, 0.5); border-top: 1.5px solid #cbd5e1;"></div>
-                                      </div>
-                                  </div>
-                                  <span style="font-size: 11px; font-weight: bold; color: #64748b; margin-top: 4px;">酸性/中性</span>
-                                  <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">(無色透明)</span>
-                              </div>
-                              <!-- 試管 2：微鹼性 -->
-                              <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                                  <div style="position: relative; width: 22px; height: 48px;">
-                                      <!-- 試管口 -->
-                                      <div style="width: 26px; height: 5px; background: #94a3b8; border-radius: 3px; margin-left: -2px;"></div>
-                                      <!-- 試管身 -->
-                                      <div style="width: 22px; height: 43px; border: 2.5px solid #94a3b8; border-top: none; border-radius: 0 0 11px 11px; background: #ffffff; overflow: hidden; position: relative;">
-                                          <!-- 液體 (淺粉紅) -->
-                                          <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: #fbcfe8; border-top: 1.5px solid #f472b6;">
-                                              <div style="position: absolute; bottom: 4px; left: 4px; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.75);"></div>
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <span style="font-size: 11px; font-weight: bold; color: #db2777; margin-top: 4px;">微鹼性</span>
-                                  <span style="font-size: 10px; color: #f472b6; font-weight: 500;">(粉紅色)</span>
-                              </div>
-                              <!-- 試管 3：強鹼性 -->
-                              <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                                  <div style="position: relative; width: 22px; height: 48px;">
-                                      <!-- 試管口 -->
-                                      <div style="width: 26px; height: 5px; background: #94a3b8; border-radius: 3px; margin-left: -2px;"></div>
-                                      <!-- 試管身 -->
-                                      <div style="width: 22px; height: 43px; border: 2.5px solid #94a3b8; border-top: none; border-radius: 0 0 11px 11px; background: #ffffff; overflow: hidden; position: relative;">
-                                          <!-- 液體 (深粉紅) -->
-                                          <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: #ec4899; border-top: 1.5px solid #be185d;">
-                                              <div style="position: absolute; bottom: 5px; left: 3px; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.85);"></div>
-                                              <div style="position: absolute; bottom: 12px; left: 10px; width: 2px; height: 2px; border-radius: 50%; background: rgba(255,255,255,0.6);"></div>
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <span style="font-size: 11px; font-weight: bold; color: #9d174d; margin-top: 4px;">強鹼性</span>
-                                  <span style="font-size: 10px; color: #db2777; font-weight: 500;">(深粉紅色)</span>
-                              </div>
-                          </div>
-                      </div>
-
-                      <p style="font-size: 14px; color: #78909c; margin-top: 8px;">操作下方控制鈕，觀察杯中離子的增長與變化：</p>
-                  </div>
-
-                  <!-- Beaker and Thermometer Container -->
-                  <div id="beaker-wrapper" style="position: relative; width: 100%; height: 190px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 5px 0;">
-                      
-                      <!-- Thermometer -->
-                      <div style="position: absolute; left: 15px; bottom: 10px; height: 160px; width: 50px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
-                          <div id="thermometer-label" style="font-size: 14px; font-weight: 900; color: #d32f2f; margin-bottom: 5px;">25.0°C</div>
-                          <!-- Thermometer body -->
-                          <div style="position: relative; width: 14px; height: 110px; background: #eceff1; border-radius: 7px; border: 2.5px solid #90a4ae; overflow: visible;">
-                              <!-- Mercury level inside -->
-                              <div id="mercury-bar" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 25%; background: #f44336; border-radius: 0 0 4px 4px; transition: height 0.6s ease-out;"></div>
-                              <!-- Bulb at base -->
-                              <div style="position: absolute; bottom: -12px; left: -6px; width: 22px; height: 22px; background: #f44336; border-radius: 50%; border: 2.5px solid #90a4ae;"></div>
-                          </div>
-                      </div>
-
-                      <!-- Beaker Visual container -->
-                      <div id="beaker" style="position: relative; width: 150px; height: 150px; margin-left: 45px;">
-                          <!-- Beaker Glass SVG -->
-                          <svg viewBox="0 0 100 100" style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 10; pointer-events: none;">
-                              <path d="M 15,10 L 15,90 A 5,5 0 0,0 20,95 L 80,95 A 5,5 0 0,0 85,90 L 85,10 M 10,10 L 20,10 M 80,10 L 90,10" fill="none" stroke="#78909c" stroke-width="3" stroke-linecap="round"/>
-                              <!-- Scale labels -->
-                              <line x1="25" y1="30" x2="35" y2="30" stroke="#b0bec5" stroke-width="1.5"/>
-                              <line x1="25" y1="50" x2="45" y2="50" stroke="#b0bec5" stroke-width="1.5"/>
-                              <line x1="25" y1="70" x2="35" y2="70" stroke="#b0bec5" stroke-width="1.5"/>
-                          </svg>
-
-                          <!-- Water Liquid -->
-                          <div id="water-liquid" style="position: absolute; bottom: 6px; left: 18px; width: 114px; height: 96px; background-color: rgba(179, 229, 252, 0.55); border-radius: 0 0 16px 16px; transition: background-color 1.6s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 1; overflow: hidden;">
-                              <div id="water-wave" style="position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: rgba(129, 212, 250, 0.45);"></div>
-                              <!-- Container for floating ions generated via script -->
-                              <div id="ion-container" style="position: relative; width: 100%; height: 100%;"></div>
-                          </div>
-
-                          <!-- 完美置中的高流煙物理落下動畫元件 -->
-                          <div id="naoh-falling-pellet" style="left: calc(50% - 8px);"></div>
-                          <div id="droplet-anim" style="left: calc(50% - 5px);"></div>
-                          <div id="splash-ripple"></div>
-                      </div>
-                  </div>
-
-                  <!-- Beaker Actions Buttons -->
-                  <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
-                      <button class="lab-btn lab-btn-add" onclick="addNaOH()"><i class="fa-solid fa-plus"></i> 放一片 NaOH 固體</button>
-                      <button class="lab-btn lab-btn-indicator" onclick="addIndicator()"><i class="fa-solid fa-droplet"></i> 滴入酚酞指示劑</button>
-                      <button class="lab-btn lab-btn-reset" onclick="resetExperiment()"><i class="fa-solid fa-rotate-left"></i> 重設</button>
-                  </div>
-              </div>
-
-              <!-- 右側：高互動探究問題 (無預設答案，全新邏輯順序) -->
-              <div style="display: flex; flex-direction: column; justify-content: center;">
-                  
-                  <!-- Question 1 -->
-                  <div class="question-card">
-                      <p>Q1. 當你放入 NaOH 晶體後，觀察「溫度計」，代表溶解過程：</p>
-                      <div class="option-group">
-                          <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q1')">吸熱反應 (溫度下降)</button>
-                          <button class="option-btn" onclick="checkAnswer(this, true, 'feedback-q1')">放熱反應 (溫度上升)</button>
-                          <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q1')">無溫度變化</button>
-                      </div>
-                      <div id="feedback-q1" class="feedback-alert"></div>
-                  </div>
-
-                  <!-- Question 2 (原本的 Q3 提前，探討微觀離子) -->
-                  <div class="question-card">
-                      <p>Q2. 微觀世界中，NaOH 在水中被拉開後，哪一個離子精靈大幅增加了？</p>
-                      <div class="option-group">
-                          <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q2')">氫離子 [hydrogen ion] (H⁺)</button>
-                          <button class="option-btn" onclick="checkAnswer(this, true, 'feedback-q2')">氫氧根離子 [hydroxide ion] (OH⁻)</button>
-                      </div>
-                      <div id="feedback-q2" class="feedback-alert"></div>
-                  </div>
-
-                  <!-- Question 3 (原本的 Q2 後移，探討宏觀酚酞呈色) -->
-                  <div class="question-card">
-                      <p>Q3. 滴入「酚酞指示劑」後，此時呈鹼性的水溶液變成了什麼顏色？</p>
-                      <div class="option-group">
-                          <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q3')">維持無色透明</button>
-                          <button class="option-btn" onclick="checkAnswer(this, true, 'feedback-q3')">渲染成夢幻粉紅色</button>
-                          <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q3')">轉為蘋果亮黃色</button>
-                      </div>
-                      <div id="feedback-q3" class="feedback-alert"></div>
-                  </div>
-
-              </div>
-          </div>
-      </div>
-  </div>
-
-
-  <!-- ==================== 6. 微型實驗室互動腳本區 ==================== -->
-  <script>
-      let naohCount = 0;
-      let hasIndicator = false;
-      let temperature = 25.0;
-
-      const waterLiquid = document.getElementById('water-liquid');
-      const waterWave = document.getElementById('water-wave');
-      const thermometerLabel = document.getElementById('thermometer-label');
-      const mercuryBar = document.getElementById('mercury-bar');
-      const ionContainer = document.getElementById('ion-container');
-      const dropletAnim = document.getElementById('droplet-anim');
-      const pelletAnim = document.getElementById('naoh-falling-pellet');
-      const splashRipple = document.getElementById('splash-ripple');
-
-      // 初始化監聽硬體加速 CSS 動畫的觸發點
-      window.addEventListener('DOMContentLoaded', () => {
-          // 初始狀態完全清空，不載入任何預設離子 (遵照使用者指示)
-
-          // 監聽固體墜落完成
-          pelletAnim.addEventListener('animationend', (e) => {
-              if (e.animationName === 'fall-pellet') {
-                  pelletAnim.classList.remove('pellet-falling');
-                  
-                  // 1. 觸發波浪彈力震動
-                  waterWave.classList.remove('wave-impact');
-                  void waterWave.offsetWidth; // 強制瀏覽器重繪 (Reflow) 確保動畫重新跑
-                  waterWave.classList.add('wave-impact');
-
-                  // 2. 觸發水花漣漪 (藍色)
-                  splashRipple.style.borderColor = '#81d4fa';
-                  splashRipple.classList.remove('splash-active');
-                  void splashRipple.offsetWidth;
-                  splashRipple.classList.add('splash-active');
-
-                  // 3. 實際增加固體計數
-                  naohCount++;
-
-                  // 4. 動態生成符合第二頁圖示結構的解離離子 (Na 與 簡化後的 OH 單顆球體)
-                  createIonElement('Na', false);
-                  createIonElement('OH', false);
-
-                  // 5. 更新巨觀溫度與指示劑顏色
-                  updateBeakerVisuals();
-              }
-          });
-
-          // 監聽酚酞液滴墜落完成
-          dropletAnim.addEventListener('animationend', (e) => {
-              if (e.animationName === 'fall-droplet') {
-                  dropletAnim.classList.remove('droplet-falling');
-
-                  // 1. 觸發波浪彈力震動
-                  waterWave.classList.remove('wave-impact');
-                  void waterWave.offsetWidth;
-                  waterWave.classList.add('wave-impact');
-
-                  // 2. 觸發水花漣漪 (酚酞深粉紅色)
-                  splashRipple.style.borderColor = '#e91e63';
-                  splashRipple.classList.remove('splash-active');
-                  void splashRipple.offsetWidth;
-                  splashRipple.classList.add('splash-active');
-
-                  // 3. 設定狀態並漸進變色
-                  hasIndicator = true;
-                  updateBeakerVisuals();
-              }
-          });
-
-          // 監聽水面與漣漪動畫終了以清理狀態
-          waterWave.addEventListener('animationend', (e) => {
-              if (e.animationName === 'wave-bounce') {
-                  waterWave.classList.remove('wave-impact');
-              }
-          });
-
-          splashRipple.addEventListener('animationend', () => {
-              splashRipple.classList.remove('splash-active');
-          });
-      });
-
-      // 更新實驗室的巨觀與微觀視覺呈現 (極致柔順的色彩過渡)
-      function updateBeakerVisuals() {
-          // 每多一片晶體，溫度急遽上升 14.5 °C
-          temperature = 25.0 + (naohCount * 14.5);
-          if (temperature > 85) temperature = 85.0; 
-          thermometerLabel.innerText = `${temperature.toFixed(1)}°C`;
-          
-          // 水銀高度比例 (0°C~100°C)
-          const mercuryHeight = Math.max(10, Math.min(100, (temperature / 100) * 100));
-          mercuryBar.style.height = `${mercuryHeight}%`;
-
-          // 酚酞指示劑鹼性檢驗（1.6秒極柔和的色素漸開過渡）
-          if (hasIndicator) {
-              if (naohCount > 0) {
-                  waterLiquid.style.backgroundColor = "rgba(233, 30, 99, 0.72)";
-              } else {
-                  waterLiquid.style.backgroundColor = "rgba(179, 229, 252, 0.55)";
-              }
-          } else {
-              waterLiquid.style.backgroundColor = "rgba(179, 229, 252, 0.55)";
-          }
-      }
-
-      // 放下 NaOH 固體顆粒 (觸發 CSS 物理落下)
-      function addNaOH() {
-          if (naohCount >= 6) return; // 避免離子過度飽和擁擠
-
-          // 防止動畫執行中重複點擊
-          if (pelletAnim.classList.contains('pellet-falling')) return;
-
-          pelletAnim.className = '';
-          void pelletAnim.offsetWidth;
-          pelletAnim.classList.add('pellet-falling');
-      }
-
-      // 滴入指示劑 (觸發 CSS 物理落下)
-      function addIndicator() {
-          if (hasIndicator) return;
-
-          // 防止動畫執行中重複點擊
-          if (dropletAnim.classList.contains('droplet-falling')) return;
-
-          dropletAnim.className = '';
-          void dropletAnim.offsetWidth;
-          dropletAnim.classList.add('droplet-falling');
-      }
-
-      // 動態生成帶有精緻分子與電性圖示結構的離子 (支援初始直接漂浮與解離投射動畫)
-      function createIonElement(type, preExisting = false) {
-          const ion = document.createElement('div');
-          
-          // 決定類別樣式
-          let ionClass = '';
-          if (type === 'Na') ionClass = 'ion-na';
-          else if (type === 'OH') ionClass = 'ion-oh';
-          else ionClass = 'ion-h';
-
-          // 初始狀態：如果是預先存在的，直接套用漂浮動畫；如果是新產生的，套用拋散解離動畫
-          ion.className = `floating-ion ${preExisting ? 'ion-floating' : 'ion-emerging'} ${ionClass}`;
-          
-          // 繪製簡約、美觀且大小完全對等的一體化球體結構
-          if (type === 'Na') {
-              ion.innerHTML = `
-                  <svg viewBox="0 0 32 32" style="width: 100%; height: 100%;">
-                      <!-- 鈉離子 (橘粉色正電精靈) -->
-                      <circle cx="16" cy="16" r="12" fill="#ff8a65" stroke="#ffffff" stroke-width="2"/>
-                      <text x="16" y="20.5" font-family="'Fredoka', sans-serif" font-size="11" font-weight="900" fill="#ffffff" text-anchor="middle">Na⁺</text>
-                  </svg>
-              `;
-          } else if (type === 'OH') {
-              ion.innerHTML = `
-                  <svg viewBox="0 0 32 32" style="width: 100%; height: 100%;">
-                      <!-- 氫氧根離子 (簡化為單顆綠色負電球體精靈，提升觀測體驗) -->
-                      <circle cx="16" cy="16" r="12" fill="#4db6ac" stroke="#ffffff" stroke-width="2"/>
-                      <text x="16" y="20.5" font-family="'Fredoka', sans-serif" font-size="11" font-weight="900" fill="#ffffff" text-anchor="middle">OH⁻</text>
-                  </svg>
-              `;
-          } else {
-              ion.innerHTML = `
-                  <svg viewBox="0 0 32 32" style="width: 100%; height: 100%;">
-                      <!-- 氫離子 (酸酸粉橘正電精靈) -->
-                      <circle cx="16" cy="16" r="11" fill="#fff9f8" stroke="#ff8a65" stroke-width="2"/>
-                      <text x="16" y="20.5" font-family="'Fredoka', sans-serif" font-size="11" font-weight="900" fill="#ff8a65" text-anchor="middle">H⁺</text>
-                  </svg>
-              `;
-          }
-
-          // 隨機計算在水溶液範圍內的目的地
-          const destX = Math.floor(Math.random() * 60 + 12); // 12px ~ 72px
-          const destY = Math.floor(Math.random() * 40 + 20); // 20px ~ 60px
-
-          // 先賦予基本坐標，避免移除 entry 動畫時位置跑掉
-          ion.style.left = `${destX}px`;
-          ion.style.top = `${destY}px`;
-
-          if (preExisting) {
-              // 若為預設存在，直接定位並啟用動態
-              ion.style.opacity = '1';
-              
-              // 設定每顆離子獨一無二的隨機小幅度晃動位移與週期
-              ion.style.setProperty('--idle-x', `${(Math.random() * 8 - 4).toFixed(1)}px`);
-              ion.style.setProperty('--idle-y', `${(Math.random() * 10 - 5).toFixed(1)}px`);
-              ion.style.animationDuration = `${3.5 + Math.random() * 3}s`;
-          } else {
-              // 若為新生離子，從落入點（中上方）往目的地拋散，並宣告動畫專用變數
-              ion.style.setProperty('--dest-x', `${destX}px`);
-              ion.style.setProperty('--dest-y', `${destY}px`);
-
-              // 解離拋散動畫結束後，無縫轉換到微幅懸浮 Hover 狀態並保留在瓶中
-              ion.addEventListener('animationend', (e) => {
-                  if (e.animationName === 'emerge-and-scatter') {
-                      ion.classList.remove('ion-emerging');
-                      ion.style.opacity = '1'; // 強制將本體透明度設為 1（避免因為基礎 css 的 opacity: 0 而消失）
-                      ion.classList.add('ion-floating');
-                      
-                      ion.style.setProperty('--idle-x', `${(Math.random() * 8 - 4).toFixed(1)}px`);
-                      ion.style.setProperty('--idle-y', `${(Math.random() * 10 - 5).toFixed(1)}px`);
-                      ion.style.animationDuration = `${3.5 + Math.random() * 3}s`;
-                  }
-              });
-          }
-
-          ionContainer.appendChild(ion);
-      }
-
-      // 重新開始實驗 (清空所有離子，還原至無離子純水狀態)
-      function resetExperiment() {
-          naohCount = 0;
-          hasIndicator = false;
-          temperature = 25.0;
-          ionContainer.innerHTML = '';
-          
-          // 不再加載任何預設離子，保持完全清澈 (遵照使用者指示)
-          updateBeakerVisuals();
-
-          // 重設所有的題目反饋與按鈕外觀
-          const alerts = document.querySelectorAll('.feedback-alert');
-          alerts.forEach(el => el.style.display = 'none');
-
-          const optionBtns = document.querySelectorAll('.option-btn');
-          optionBtns.forEach(btn => {
-              btn.style.borderColor = "#ffe0b2";
-              btn.style.backgroundColor = "#ffffff";
-              btn.style.color = "#6d5d5b";
-          });
-      }
-
-      // 檢查使用者點選的題目答案 (高互動即時提示與反饋)
-      function checkAnswer(btn, isCorrect, feedbackId) {
-          const parent = btn.parentElement;
-          const siblingButtons = parent.querySelectorAll('.option-btn');
-          const feedbackEl = document.getElementById(feedbackId);
-
-          // 恢復所有同儕按鈕的外觀
-          siblingButtons.forEach(b => {
-              b.style.borderColor = "#ffe0b2";
-              b.style.backgroundColor = "#ffffff";
-              b.style.color = "#6d5d5b";
-          });
-
-          feedbackEl.style.display = 'block';
-
-          if (isCorrect) {
-              btn.style.borderColor = "#4db6ac";
-              btn.style.backgroundColor = "#e0f2f1";
-              btn.style.color = "#00796b";
-              feedbackEl.innerHTML = `<i class="fa-solid fa-face-laugh-beam"></i> 答對了！恭喜你，實驗觀察非常入微！`;
-              feedbackEl.style.color = "#00796b";
-              feedbackEl.style.backgroundColor = "#e0f2f1";
-          } else {
-              btn.style.borderColor = "#ff8a65";
-              btn.style.backgroundColor = "#fbe9e7";
-              btn.style.color = "#d84315";
-              feedbackEl.innerHTML = `<i class="fa-solid fa-seedling"></i> 答案不太對喔！試著加一些 NaOH 或重設實驗再觀察一次！`;
-              feedbackEl.style.color = "#d84315";
-              feedbackEl.style.backgroundColor = "#fbe9e7";
-          }
-      }
-  </script>
+    <!-- Slide 1: 封面 Title_Slide (高質感且童趣的粉藍背景) -->
+    <div class="slide-container title-slide" id="slide1">
+        <!-- 背景可愛泡泡 -->
+        <div class="deco-bubble" style="width: 60px; height: 60px; top: 15%; left: 10%;"></div>
+        <div class="deco-bubble" style="width: 40px; height: 40px; bottom: 20%; right: 12%;"></div>
+        <div class="deco-bubble" style="width: 25px; height: 25px; top: 50%; right: 8%;"></div>
+
+        <div class="title-layout">
+            <div class="academic-badge">🧪 微觀化學與酸鹼平衡 🧪</div>
+            <h1>水與酸鹼的微觀奧秘</h1>
+            <p class="subtitle">用簡單直覺的視角，探索液體中的離子行為與 pH/pOH 的平衡美學</p>
+        </div>
+    </div>
+
+
+    <!-- Slide 2: 水是解離的媒介 Image_Right_Text_Left (簡約清爽排版) -->
+    <div class="slide-container" id="slide2">
+        <h2 class="slide-title" style="border-left-color: #4fc3f7;">1. 水：完美的「解離媒介」</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div class="text-column">
+                    <h3 style="color: #4fc3f7;"><i class="fa-solid fa-wand-magic-sparkles"></i> 水分子是如何幫助物質解離的？</h3>
+                    <p>水是由一個氧原子 and 兩個氫原子構成的極性分子。因為帶有微小的正負電性，當鹽類、酸 or 鹼放進水中時，水分子會將它們包圍並拉開，這個過程就叫<strong>「解離」</strong>。</p>
+                    <p>不只如此，水分子彼此之間也會發生微弱的<strong>「自我解離」</strong>，產生兩種性質相反的微小粒子：</p>
+
+                    <p>
+                        <i class="fa-solid fa-circle-nodes" style="color: #ff8a65; margin-right: 8px;"></i><strong>氫離子 [hydrogen ion] (H⁺)：</strong> 決定溶液「酸性」的主角。<br>
+                        <i class="fa-solid fa-circle-nodes" style="color: #4db6ac; margin-right: 8px;"></i><strong>氫氧根離子 [hydroxide ion] (OH⁻)：</strong> 決定溶液「鹼性」的主角。
+                    </p>
+
+                    <!-- 自我解離化學式 -->
+                    <div id="formula-container" class="formula-container">
+                        <math display="math">
+                            <mrow>
+                                <msub><mi>H</mi><mn>2</mn></msub><mi>O</mi>
+                                <mo>⇌</mo>
+                                <msup><mi>H</mi><mo>+</mo></msup>
+                                <mo>+</mo>
+                                <mi>O</mi><msup><mi>H</mi><mo>−</mo></msup>
+                            </mrow>
+                        </math>
+                    </div>
+                </div>
+                <div class="image-column">
+                    <div class="image-wrapper" style="border-color: #90caf9; display: flex; align-items: center; justify-content: center; background-color: #ffffff; padding: 10px;">
+                        <!-- 簡單直觀的自我解離向量示意圖 -->
+                        <svg viewBox="0 0 400 300" width="100%" height="100%" style="max-height: 350px;">
+                            <!-- 背景微弱網格 -->
+                            <g stroke="#f8f9fa" stroke-width="1.5">
+                                <line x1="0" y1="50" x2="400" y2="50" />
+                                <line x1="0" y1="100" x2="400" y2="100" />
+                                <line x1="0" y1="150" x2="400" y2="150" />
+                                <line x1="0" y1="200" x2="400" y2="200" />
+                                <line x1="0" y1="250" x2="400" y2="250" />
+                                <line x1="100" y1="0" x2="100" y2="300" />
+                                <line x1="200" y1="0" x2="200" y2="300" />
+                                <line x1="300" y1="0" x2="300" y2="300" />
+                            </g>
+
+                            <!-- 左側：水分子 H2O -->
+                            <g transform="translate(80, 150)">
+                                <!-- 氧原子 (O) -->
+                                <circle cx="0" cy="0" r="32" fill="#e3f2fd" stroke="#4fc3f7" stroke-width="3" />
+                                <text x="0" y="8" font-family="'Fredoka', 'Noto Sans TC'" font-size="22" font-weight="bold" fill="#0288d1" text-anchor="middle">O</text>
+
+                                <!-- 氫原子 1 (H) -->
+                                <circle cx="-26" cy="-26" r="16" fill="#ffffff" stroke="#90caf9" stroke-width="3" />
+                                <text x="-26" y="-21" font-family="'Fredoka', 'Noto Sans TC'" font-size="13" font-weight="bold" fill="#0288d1" text-anchor="middle">H</text>
+
+                                <!-- 氫原子 2 (H) -->
+                                <circle cx="26" cy="-26" r="16" fill="#ffffff" stroke="#90caf9" stroke-width="3" />
+                                <text x="26" y="-21" font-family="'Fredoka', 'Noto Sans TC'" font-size="13" font-weight="bold" fill="#0288d1" text-anchor="middle">H</text>
+
+                                <!-- 標題 -->
+                                <text x="0" y="60" font-family="'Noto Sans TC'" font-size="15" font-weight="700" fill="#4a3e3d" text-anchor="middle">水分子 (H₂O)</text>
+                            </g>
+
+                            <!-- 中間：可逆解離箭頭 -->
+                            <g transform="translate(195, 150)">
+                                <path d="M -25,-6 L 25,-6 M 15,-11 L 25,-6 L 15,-1" fill="none" stroke="#78909c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M 25,6 L -25,6 M -15,1 L -25,6 L -15,11" fill="none" stroke="#78909c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <text x="0" y="-22" font-family="'Noto Sans TC'" font-size="13" font-weight="700" fill="#78909c" text-anchor="middle">弱解離</text>
+                            </g>
+
+                            <!-- 右側：H+ 與 OH- -->
+                            <g transform="translate(310, 150)">
+                                <!-- 氫離子 H+ (上方) -->
+                                <g transform="translate(0, -50)">
+                                    <circle cx="0" cy="0" r="18" fill="#fff9f8" stroke="#ff8a65" stroke-width="3" />
+                                    <text x="0" y="6" font-family="'Fredoka', 'Noto Sans TC'" font-size="15" font-weight="bold" fill="#ff8a65" text-anchor="middle">H⁺</text>
+                                    <text x="0" y="32" font-family="'Noto Sans TC'" font-size="13" font-weight="700" fill="#ff8a65" text-anchor="middle">氫離子</text>
+                                </g>
+
+                                <!-- 氫氧根離子 OH- (下方) -->
+                                <g transform="translate(0, 50)">
+                                    <!-- 氧原子部分 -->
+                                    <circle cx="-10" cy="0" r="22" fill="#f2fbf9" stroke="#4db6ac" stroke-width="3" />
+                                    <text x="-10" y="6" font-family="'Fredoka', 'Noto Sans TC'" font-size="15" font-weight="bold" fill="#4db6ac" text-anchor="middle">O</text>
+                                    <!-- 氫原子部分 -->
+                                    <circle cx="12" cy="0" r="13" fill="#ffffff" stroke="#4db6ac" stroke-width="2.5" />
+                                    <text x="12" y="5" font-family="'Fredoka', 'Noto Sans TC'" font-size="10" font-weight="bold" fill="#4db6ac" text-anchor="middle">H</text>
+
+                                    <!-- 帶電量 (-) 標記 -->
+                                    <circle cx="23" cy="-12" r="8" fill="#4db6ac" />
+                                    <text x="23" y="-9" font-family="'Fredoka'" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">-</text>
+
+                                    <text x="0" y="38" font-family="'Noto Sans TC'" font-size="13" font-weight="700" fill="#4db6ac" text-anchor="middle">氫氧根離子 (OH⁻)</text>
+                                </g>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Slide 3: pH 與 pOH 的意義 Two_Column_Tiled_Text (經典雙卡片排版) -->
+    <div class="slide-container" id="slide3">
+        <h2 class="slide-title" style="border-left-color: #ff8a65;">2. 什麼是 pH 與 pOH？</h2>
+        <div class="content-area">
+            <div class="tiled-content">
+                <!-- 左卡片: pH 指標 -->
+                <div class="tile tile-ph">
+                    <div class="tile-icon"><i class="fa-solid fa-droplet"></i></div>
+                    <h3 style="color: #ff8a65;">pH值：酸度的測量尺</h3>
+                    <p>pH 值用來衡量溶液中<strong>氫離子 [hydrogen ion] (H⁺)</strong> 的濃度大小。</p>
+                    <p>當 pH 值<strong>小於 7</strong>時，代表溶液中的 H⁺ 比較多，溶液呈現<strong>酸性</strong>（例如：檸檬汁、醋）。數值越小，酸性就越強。</p>
+                </div>
+                <!-- 右卡片: pOH 指標 -->
+                <div class="tile tile-poh">
+                    <div class="tile-icon"><i class="fa-solid fa-soap"></i></div>
+                    <h3 style="color: #4db6ac;">pOH值：鹼度的測量尺</h3>
+                    <p>pOH 值用來衡量溶液中<strong>氫氧根離子 [hydroxide ion] (OH⁻)</strong> 的濃度大小。</p>
+                    <p>當 pOH 值<strong>小於 7</strong>時，代表溶液中的 OH⁻ 比較多，溶液呈現<strong>鹼性</strong>（例如：小蘇打水、肥皂水）。數值越小，鹼性越明顯。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Slide 4: 14 的平衡常數 (橫向寬版佈局，大幅提升易讀性與圖表大小) -->
+    <div class="slide-container" id="slide4">
+        <h2 class="slide-title" style="border-left-color: #4db6ac;">3. pH 與 pOH 的 14 平衡守則</h2>
+        <div class="content-area">
+            <div class="wide-layout">
+                <!-- 頂部說明文字與公式並排 -->
+                <div class="wide-top-bar">
+                    <div class="wide-text-intro">
+                        <p><strong>完美互補的微觀天平：</strong>在同一個水溶液世界中，酸性主角與鹼性主角就像在玩蹺蹺板：一邊增加，另一邊就必然減少。在 25°C 的標準狀態下，<strong>不論溶液是酸還是鹼，pH 值與 pOH 值的加總永遠剛好等於 14！</strong></p>
+                    </div>
+                    <div id="formula-container" class="formula-container" style="border-color: #4db6ac; background-color: #f2fbf9; margin-top: 0; white-space: nowrap; flex-shrink: 0;">
+                        <math display="math">
+                            <mrow>
+                                <mtext>pH</mtext>
+                                <mo>+</mo>
+                                <mtext>pOH</mtext>
+                                <mo>=</mo>
+                                <mn>14</mn>
+                            </mrow>
+                        </math>
+                    </div>
+                </div>
+
+                <!-- 下方超大滿版觀測圖表 -->
+                <div class="wide-image-wrapper">
+                    <!-- 全面放大、具備垂直對齊灰色虛線的高對齊向量圖表 -->
+                    <svg viewBox="0 0 1000 320" width="100%" height="100%" style="max-height: 330px;">
+                        <defs>
+                            <!-- pH 漸層條 -->
+                            <linearGradient id="phGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#ff5252" />
+                                <stop offset="25%" stop-color="#ffb74d" />
+                                <stop offset="50%" stop-color="#4db6ac" />
+                                <stop offset="75%" stop-color="#26c6da" />
+                                <stop offset="100%" stop-color="#5c6bc0" />
+                            </linearGradient>
+                            <!-- H+ Wedge 漸層 -->
+                            <linearGradient id="acidWedge" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#ff8a65" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#ff8a65" stop-opacity="0.1" />
+                            </linearGradient>
+                            <!-- OH- Wedge 漸層 -->
+                            <linearGradient id="alkaliWedge" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#4db6ac" stop-opacity="0.1" />
+                                <stop offset="100%" stop-color="#4db6ac" stop-opacity="0.8" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- 背景微弱網格與裝飾 -->
+                        <rect width="1000" height="320" rx="20" fill="#fafafa" stroke="#eeeeee" stroke-width="1" />
+
+                        <!-- 垂直對齊虛線 (對應 pH 與 pOH 刻度，輔助觀察相加等於14) -->
+                        <line x1="100" y1="80" x2="100" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="157" y1="80" x2="157" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="271" y1="80" x2="271" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="329" y1="80" x2="329" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="386" y1="80" x2="386" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="443" y1="80" x2="443" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="557" y1="80" x2="557" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="614" y1="80" x2="614" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="729" y1="80" x2="729" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="786" y1="80" x2="786" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="843" y1="80" x2="843" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+                        <line x1="900" y1="80" x2="900" y2="180" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="3,3" />
+
+                        <!-- 重點實體引導線與生活指標標籤 -->
+                        <!-- 1. 檸檬 pH=2 -->
+                        <line x1="214" y1="50" x2="214" y2="180" stroke="#ff8a65" stroke-width="2" stroke-dasharray="4,2" />
+                        <g transform="translate(144, 12)">
+                            <rect x="0" y="0" width="140" height="36" rx="10" fill="#fff5f5" stroke="#ff8a65" stroke-width="2" />
+                            <text x="70" y="23" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#c0392b" text-anchor="middle">🍋 檸檬 (pH 2)</text>
+                        </g>
+
+                        <!-- 2. 純水 pH=7 -->
+                        <line x1="500" y1="50" x2="500" y2="180" stroke="#4fc3f7" stroke-width="2" stroke-dasharray="4,2" />
+                        <g transform="translate(430, 12)">
+                            <rect x="0" y="0" width="140" height="36" rx="10" fill="#f0faff" stroke="#4fc3f7" stroke-width="2" />
+                            <text x="70" y="23" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#0288d1" text-anchor="middle">💧 純水 (pH 7)</text>
+                        </g>
+
+                        <!-- 3. 肥皂 pH=10 -->
+                        <line x1="671" y1="50" x2="671" y2="180" stroke="#4db6ac" stroke-width="2" stroke-dasharray="4,2" />
+                        <g transform="translate(601, 12)">
+                            <rect x="0" y="0" width="140" height="36" rx="10" fill="#f2fbf9" stroke="#4db6ac" stroke-width="2" />
+                            <text x="70" y="23" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#00796b" text-anchor="middle">🧼 肥皂 (pH 10)</text>
+                        </g>
+
+                        <!-- pH 標題與數字列 (y=94) -->
+                        <text x="50" y="96" font-family="'Fredoka', 'Noto Sans TC'" font-size="22" font-weight="900" fill="#e5532b" text-anchor="middle">pH</text>
+                        <g font-family="'Fredoka'" font-size="16" font-weight="bold" fill="#4a3e3d" text-anchor="middle">
+                            <text x="100" y="95">0</text>
+                            <text x="157" y="95">1</text>
+                            <text x="214" y="95" fill="#ff5252" font-size="18">2</text>
+                            <text x="271" y="95">3</text>
+                            <text x="329" y="95">4</text>
+                            <text x="386" y="95">5</text>
+                            <text x="443" y="95">6</text>
+                            <text x="500" y="95" fill="#0288d1" font-size="19">7</text>
+                            <text x="557" y="95">8</text>
+                            <text x="614" y="95">9</text>
+                            <text x="671" y="95" fill="#00796b" font-size="18">10</text>
+                            <text x="729" y="95">11</text>
+                            <text x="786" y="95">12</text>
+                            <text x="843" y="95">13</text>
+                            <text x="900" y="95">14</text>
+                        </g>
+
+                        <!-- 主彩色漸層色條 (y=112) -->
+                        <rect x="100" y="112" width="800" height="26" rx="13" fill="url(#phGrad)" />
+
+                        <!-- 刻度白線 -->
+                        <g stroke="#ffffff" stroke-width="2.5" opacity="0.8">
+                            <line x1="100" y1="112" x2="100" y2="138" />
+                            <line x1="157" y1="112" x2="157" y2="138" />
+                            <line x1="214" y1="112" x2="214" y2="138" />
+                            <line x1="271" y1="112" x2="271" y2="138" />
+                            <line x1="329" y1="112" x2="329" y2="138" />
+                            <line x1="386" y1="112" x2="386" y2="138" />
+                            <line x1="443" y1="112" x2="443" y2="138" />
+                            <line x1="500" y1="112" x2="500" y2="138" stroke-width="3.5" />
+                            <line x1="557" y1="112" x2="557" y2="138" />
+                            <line x1="614" y1="112" x2="614" y2="138" />
+                            <line x1="671" y1="112" x2="671" y2="138" />
+                            <line x1="729" y1="112" x2="729" y2="138" />
+                            <line x1="786" y1="112" x2="786" y2="138" />
+                            <line x1="843" y1="112" x2="843" y2="138" />
+                            <line x1="900" y1="112" x2="900" y2="138" />
+                        </g>
+
+                        <!-- pOH 標題與數字列 (y=164) -->
+                        <text x="50" y="166" font-family="'Fredoka', 'Noto Sans TC'" font-size="22" font-weight="900" fill="#1f8b80" text-anchor="middle">pOH</text>
+                        <g font-family="'Fredoka'" font-size="16" font-weight="bold" fill="#6d5d5b" text-anchor="middle">
+                            <text x="100" y="165">14</text>
+                            <text x="157" y="165">13</text>
+                            <text x="214" y="165" fill="#ff5252" font-size="18">12</text>
+                            <text x="271" y="165">11</text>
+                            <text x="329" y="165">10</text>
+                            <text x="386" y="165">9</text>
+                            <text x="443" y="165">8</text>
+                            <text x="500" y="165" fill="#0288d1" font-size="19">7</text>
+                            <text x="557" y="165">6</text>
+                            <text x="614" y="165">5</text>
+                            <text x="671" y="165" fill="#00796b" font-size="18">4</text>
+                            <text x="729" y="165">3</text>
+                            <text x="786" y="165">2</text>
+                            <text x="843" y="165">1</text>
+                            <text x="900" y="165">0</text>
+                        </g>
+
+                        <!-- 離子趨勢與說明 (y=195起) -->
+                        <!-- H+ 濃度變化三角形 -->
+                        <polygon points="100,195 900,215 100,215" fill="url(#acidWedge)" />
+                        <text x="100" y="232" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#e5532b">
+                            👈 H⁺ 離子極多 (酸性環境，pH 值低)
+                        </text>
+
+                        <!-- OH- 濃度變化三角形 -->
+                        <polygon points="100,260 900,260 900,240" fill="url(#alkaliWedge)" />
+                        <text x="900" y="277" font-family="'Noto Sans TC'" font-size="14" font-weight="700" fill="#1f8b80" text-anchor="end">
+                            OH⁻ 離子極多 (鹼性環境，pOH 值低) 👉
+                        </text>
+
+                        <!-- 提示文字：相加等於 14 的膠囊標籤 (y=285) -->
+                        <rect x="350" y="285" width="300" height="28" rx="14" fill="#e3f2fd" stroke="#90caf9" stroke-width="1.5" />
+                        <text x="500" y="304" font-family="'Noto Sans TC'" font-size="13" font-weight="700" fill="#0d47a1" text-anchor="middle">
+                            💡 垂直對齊的兩數相加： pH + pOH = 14 !
+                        </text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Slide 5: 探索形成水溶液的化學性質 (全新高互動、無預設答案的動態實驗室) -->
+    <div class="slide-container" id="slide5" style="background-color: #f6f9fc; border: 8px solid #cfd8dc;">
+        <h2 class="slide-title" style="border-left-color: #ffb74d;">4. 探索水溶液的化學性質</h2>
+        <div class="content-area">
+            <div class="two-column" style="grid-template-columns: 1fr 1.15fr; gap: 40px; align-items: stretch; height: 100%;">
+
+                <!-- 左側：微型互動實驗室 (Beaker + Animation Controls) -->
+                <div style="display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 3px dashed #b0bec5; border-radius: 24px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                    <div style="text-align: center;">
+                        <span style="font-size: 14px; font-weight: bold; background-color: #ffefe5; color: #e65100; padding: 4px 14px; border-radius: 20px; border: 1.5px solid #ffcc80;">
+                            🧪 互動式化學實驗：NaOH 溶於水
+                        </span>
+
+                        <!-- 酚酞指示劑變色圖表 (全新三試管手繪童趣設計) -->
+                        <div style="margin: 12px auto 0; width: 95%; background-color: #fafbfc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 8px 12px; text-align: left;">
+                            <div style="font-size: 13px; font-weight: bold; color: #475569; text-align: center; margin-bottom: 8px;">
+                                🎈 酚酞指示劑變色特徵
+                            </div>
+                            <div style="display: flex; justify-content: space-around; align-items: center; gap: 8px;">
+                                <!-- 試管 1：酸性/中性 -->
+                                <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                                    <div style="position: relative; width: 22px; height: 48px;">
+                                        <!-- 試管口 -->
+                                        <div style="width: 26px; height: 5px; background: #94a3b8; border-radius: 3px; margin-left: -2px;"></div>
+                                        <!-- 試管身 -->
+                                        <div style="width: 22px; height: 43px; border: 2.5px solid #94a3b8; border-top: none; border-radius: 0 0 11px 11px; background: #ffffff; overflow: hidden; position: relative;">
+                                            <!-- 液體 (無色微透灰) -->
+                                            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: rgba(241, 245, 249, 0.5); border-top: 1.5px solid #cbd5e1;"></div>
+                                        </div>
+                                    </div>
+                                    <span style="font-size: 11px; font-weight: bold; color: #64748b; margin-top: 4px;">酸性/中性</span>
+                                    <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">(無色透明)</span>
+                                </div>
+                                <!-- 試管 2：微鹼性 -->
+                                <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                                    <div style="position: relative; width: 22px; height: 48px;">
+                                        <!-- 試管口 -->
+                                        <div style="width: 26px; height: 5px; background: #94a3b8; border-radius: 3px; margin-left: -2px;"></div>
+                                        <!-- 試管身 -->
+                                        <div style="width: 22px; height: 43px; border: 2.5px solid #94a3b8; border-top: none; border-radius: 0 0 11px 11px; background: #ffffff; overflow: hidden; position: relative;">
+                                            <!-- 液體 (淺粉紅) -->
+                                            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: #fbcfe8; border-top: 1.5px solid #f472b6;">
+                                                <div style="position: absolute; bottom: 4px; left: 4px; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.75);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span style="font-size: 11px; font-weight: bold; color: #db2777; margin-top: 4px;">微鹼性</span>
+                                    <span style="font-size: 10px; color: #f472b6; font-weight: 500;">(粉紅色)</span>
+                                </div>
+                                <!-- 試管 3：強鹼性 -->
+                                <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                                    <div style="position: relative; width: 22px; height: 48px;">
+                                        <!-- 試管口 -->
+                                        <div style="width: 26px; height: 5px; background: #94a3b8; border-radius: 3px; margin-left: -2px;"></div>
+                                        <!-- 試管身 -->
+                                        <div style="width: 22px; height: 43px; border: 2.5px solid #94a3b8; border-top: none; border-radius: 0 0 11px 11px; background: #ffffff; overflow: hidden; position: relative;">
+                                            <!-- 液體 (深粉紅) -->
+                                            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: #ec4899; border-top: 1.5px solid #be185d;">
+                                                <div style="position: absolute; bottom: 5px; left: 3px; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.85);"></div>
+                                                <div style="position: absolute; bottom: 12px; left: 10px; width: 2px; height: 2px; border-radius: 50%; background: rgba(255,255,255,0.6);"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span style="font-size: 11px; font-weight: bold; color: #9d174d; margin-top: 4px;">強鹼性</span>
+                                    <span style="font-size: 10px; color: #db2777; font-weight: 500;">(深粉紅色)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p style="font-size: 14px; color: #78909c; margin-top: 8px;">操作下方控制鈕，觀察杯中離子的增長與變化：</p>
+                    </div>
+
+                    <!-- Beaker and Thermometer Container -->
+                    <div id="beaker-wrapper" style="position: relative; width: 100%; height: 190px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 5px 0;">
+
+                        <!-- Thermometer -->
+                        <div style="position: absolute; left: 15px; bottom: 10px; height: 160px; width: 50px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;">
+                            <div id="thermometer-label" style="font-size: 14px; font-weight: 900; color: #d32f2f; margin-bottom: 5px;">25.0°C</div>
+                            <!-- Thermometer body -->
+                            <div style="position: relative; width: 14px; height: 110px; background: #eceff1; border-radius: 7px; border: 2.5px solid #90a4ae; overflow: visible;">
+                                <!-- Mercury level inside -->
+                                <div id="mercury-bar" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 25%; background: #f44336; border-radius: 0 0 4px 4px; transition: height 0.6s ease-out;"></div>
+                                <!-- Bulb at base -->
+                                <div style="position: absolute; bottom: -12px; left: -6px; width: 22px; height: 22px; background: #f44336; border-radius: 50%; border: 2.5px solid #90a4ae;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Beaker Visual container -->
+                        <div id="beaker" style="position: relative; width: 150px; height: 150px; margin-left: 45px;">
+                            <!-- Beaker Glass SVG -->
+                            <svg viewBox="0 0 100 100" style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 10; pointer-events: none;">
+                                <path d="M 15,10 L 15,90 A 5,5 0 0,0 20,95 L 80,95 A 5,5 0 0,0 85,90 L 85,10 M 10,10 L 20,10 M 80,10 L 90,10" fill="none" stroke="#78909c" stroke-width="3" stroke-linecap="round"/>
+                                <!-- Scale labels -->
+                                <line x1="25" y1="30" x2="35" y2="30" stroke="#b0bec5" stroke-width="1.5"/>
+                                <line x1="25" y1="50" x2="45" y2="50" stroke="#b0bec5" stroke-width="1.5"/>
+                                <line x1="25" y1="70" x2="35" y2="70" stroke="#b0bec5" stroke-width="1.5"/>
+                            </svg>
+
+                            <!-- Water Liquid -->
+                            <div id="water-liquid" style="position: absolute; bottom: 6px; left: 18px; width: 114px; height: 96px; background-color: rgba(179, 229, 252, 0.55); border-radius: 0 0 16px 16px; transition: background-color 1.6s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 1; overflow: hidden;">
+                                <div id="water-wave" style="position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: rgba(129, 212, 250, 0.45);"></div>
+                                <!-- Container for floating ions generated via script -->
+                                <div id="ion-container" style="position: relative; width: 100%; height: 100%;"></div>
+                            </div>
+
+                            <!-- 完美置中的高流煙物理落下動畫元件 -->
+                            <div id="naoh-falling-pellet" style="left: calc(50% - 8px);"></div>
+                            <div id="droplet-anim" style="left: calc(50% - 5px);"></div>
+                            <div id="splash-ripple"></div>
+                        </div>
+                    </div>
+
+                    <!-- Beaker Actions Buttons -->
+                    <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                        <button class="lab-btn lab-btn-add" onclick="addNaOH()"><i class="fa-solid fa-plus"></i> 放一片 NaOH 固體</button>
+                        <button class="lab-btn lab-btn-indicator" onclick="addIndicator()"><i class="fa-solid fa-droplet"></i> 滴入酚酞指示劑</button>
+                        <button class="lab-btn lab-btn-reset" onclick="resetExperiment()"><i class="fa-solid fa-rotate-left"></i> 重設</button>
+                    </div>
+                </div>
+
+                <!-- 右側：高互動探究問題 (無預設答案，全新邏輯順序) -->
+                <div style="display: flex; flex-direction: column; justify-content: center;">
+
+                    <!-- Question 1 -->
+                    <div class="question-card">
+                        <p>Q1. 當你放入 NaOH 晶體後，觀察「溫度計」，代表溶解過程：</p>
+                        <div class="option-group">
+                            <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q1')">吸熱反應 (溫度下降)</button>
+                            <button class="option-btn" onclick="checkAnswer(this, true, 'feedback-q1')">放熱反應 (溫度上升)</button>
+                            <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q1')">無溫度變化</button>
+                        </div>
+                        <div id="feedback-q1" class="feedback-alert"></div>
+                    </div>
+
+                    <!-- Question 2 (原本的 Q3 提前，探討微觀離子) -->
+                    <div class="question-card">
+                        <p>Q2. 微觀世界中，NaOH 在水中被拉開後，哪一個離子精靈大幅增加了？</p>
+                        <div class="option-group">
+                            <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q2')">氫離子 [hydrogen ion] (H⁺)</button>
+                            <button class="option-btn" onclick="checkAnswer(this, true, 'feedback-q2')">氫氧根離子 [hydroxide ion] (OH⁻)</button>
+                        </div>
+                        <div id="feedback-q2" class="feedback-alert"></div>
+                    </div>
+
+                    <!-- Question 3 (原本的 Q2 後移，探討宏觀酚酞呈色) -->
+                    <div class="question-card">
+                        <p>Q3. 滴入「酚酞指示劑」後，此時呈鹼性的水溶液變成了什麼顏色？</p>
+                        <div class="option-group">
+                            <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q3')">依然保持無色透明</button>
+                            <button class="option-btn" onclick="checkAnswer(this, true, 'feedback-q3')">變成漂亮的粉紅色</button>
+                            <button class="option-btn" onclick="checkAnswer(this, false, 'feedback-q3')">變成清澈的藍色</button>
+                        </div>
+                        <div id="feedback-q3" class="feedback-alert"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==================== 6. 微型實驗室互動腳本區 ==================== -->
+    <script>
+        let naohCount = 0;
+        let hasIndicator = false;
+        let temperature = 25.0;
+
+        const waterLiquid = document.getElementById('water-liquid');
+        const waterWave = document.getElementById('water-wave');
+        const thermometerLabel = document.getElementById('thermometer-label');
+        const mercuryBar = document.getElementById('mercury-bar');
+        const ionContainer = document.getElementById('ion-container');
+        const dropletAnim = document.getElementById('droplet-anim');
+        const pelletAnim = document.getElementById('naoh-falling-pellet');
+        const splashRipple = document.getElementById('splash-ripple');
+
+        // 初始化監聽硬體加速 CSS 動畫的觸發點
+        window.addEventListener('DOMContentLoaded', () => {
+            // 初始狀態完全清空，不載入任何預設離子 (遵照使用者指示)
+
+            // 監聽固體墜落完成
+            pelletAnim.addEventListener('animationend', (e) => {
+                if (e.animationName === 'fall-pellet') {
+                    pelletAnim.classList.remove('pellet-falling');
+
+                    // 1. 觸發波浪彈力震動
+                    waterWave.classList.remove('wave-impact');
+                    void waterWave.offsetWidth; // 強制瀏覽器重繪 (Reflow) 確保動畫重新跑
+                    waterWave.classList.add('wave-impact');
+
+                    // 2. 觸發水花漣漪 (藍色)
+                    splashRipple.style.borderColor = '#81d4fa';
+                    splashRipple.classList.remove('splash-active');
+                    void splashRipple.offsetWidth;
+                    splashRipple.classList.add('splash-active');
+
+                    // 3. 實際增加固體計數
+                    naohCount++;
+
+                    // 4. 動態生成符合第二頁圖示結構的解離離子 (Na 與 簡化後的 OH 單顆球體)
+                    createIonElement('Na', false);
+                    createIonElement('OH', false);
+
+                    // 5. 更新巨觀溫度與指示劑顏色
+                    updateBeakerVisuals();
+                }
+            });
+
+            // 監聽酚酞液滴墜落完成
+            dropletAnim.addEventListener('animationend', (e) => {
+                if (e.animationName === 'fall-droplet') {
+                    dropletAnim.classList.remove('droplet-falling');
+
+                    // 1. 觸發波浪彈力震動
+                    waterWave.classList.remove('wave-impact');
+                    void waterWave.offsetWidth;
+                    waterWave.classList.add('wave-impact');
+
+                    // 2. 觸發水花漣漪 (酚酞深粉紅色)
+                    splashRipple.style.borderColor = '#e91e63';
+                    splashRipple.classList.remove('splash-active');
+                    void splashRipple.offsetWidth;
+                    splashRipple.classList.add('splash-active');
+
+                    // 3. 設定狀態並漸進變色
+                    hasIndicator = true;
+                    updateBeakerVisuals();
+                }
+            });
+
+            // 監聽水面與漣漪動畫終了以清理狀態
+            waterWave.addEventListener('animationend', (e) => {
+                if (e.animationName === 'wave-bounce') {
+                    waterWave.classList.remove('wave-impact');
+                }
+            });
+
+            splashRipple.addEventListener('animationend', () => {
+                splashRipple.classList.remove('splash-active');
+            });
+        });
+
+        // 更新實驗室的巨觀與微觀視覺呈現 (極致柔順的色彩過渡)
+        function updateBeakerVisuals() {
+            // 每多一片晶體，溫度急遽上升 14.5 °C
+            temperature = 25.0 + (naohCount * 14.5);
+            if (temperature > 85) temperature = 85.0;
+            thermometerLabel.innerText = `${temperature.toFixed(1)}°C`;
+
+            // 水銀高度比例 (0°C~100°C)
+            const mercuryHeight = Math.max(10, Math.min(100, (temperature / 100) * 100));
+            mercuryBar.style.height = `${mercuryHeight}%`;
+
+            // 酚酞指示劑鹼性檢驗（1.6秒極柔和的色素漸開過渡）
+            if (hasIndicator) {
+                if (naohCount > 0) {
+                    waterLiquid.style.backgroundColor = "rgba(233, 30, 99, 0.72)";
+                } else {
+                    waterLiquid.style.backgroundColor = "rgba(179, 229, 252, 0.55)";
+                }
+            } else {
+                waterLiquid.style.backgroundColor = "rgba(179, 229, 252, 0.55)";
+            }
+        }
+
+        // 放下 NaOH 固體顆粒 (觸發 CSS 物理落下)
+        function addNaOH() {
+            if (naohCount >= 6) return; // 避免離子過度飽和擁擠
+
+            // 防止動畫執行中重複點擊
+            if (pelletAnim.classList.contains('pellet-falling')) return;
+
+            pelletAnim.className = '';
+            void pelletAnim.offsetWidth;
+            pelletAnim.classList.add('pellet-falling');
+        }
+
+        // 滴入指示劑 (觸發 CSS 物理落下)
+        function addIndicator() {
+            if (hasIndicator) return;
+
+            // 防止動畫執行中重複點擊
+            if (dropletAnim.classList.contains('droplet-falling')) return;
+
+            dropletAnim.className = '';
+            void dropletAnim.offsetWidth;
+            dropletAnim.classList.add('droplet-falling');
+        }
+
+        // 動態生成帶有精緻分子與電性圖示結構的離子 (支援初始直接漂浮與解離投射動畫)
+        function createIonElement(type, preExisting = false) {
+            const ion = document.createElement('div');
+
+            // 決定類別樣式
+            let ionClass = '';
+            if (type === 'Na') ionClass = 'ion-na';
+            else if (type === 'OH') ionClass = 'ion-oh';
+            else ionClass = 'ion-h';
+
+            // 初始狀態：如果是預先存在的，直接套用漂浮動畫；如果是新產生的，套用拋散解離動畫
+            ion.className = `floating-ion ${preExisting ? 'ion-floating' : 'ion-emerging'} ${ionClass}`;
+
+            // 繪製簡約、美觀且大小完全對等的一體化球體結構
+            if (type === 'Na') {
+                ion.innerHTML = `
+                    <svg viewBox="0 0 32 32" style="width: 100%; height: 100%;">
+                        <!-- 鈉離子 (橘粉色正電精靈) -->
+                        <circle cx="16" cy="16" r="12" fill="#ff8a65" stroke="#ffffff" stroke-width="2"/>
+                        <text x="16" y="20.5" font-family="'Fredoka', sans-serif" font-size="11" font-weight="900" fill="#ffffff" text-anchor="middle">Na⁺</text>
+                    </svg>
+                `;
+            } else if (type === 'OH') {
+                ion.innerHTML = `
+                    <svg viewBox="0 0 32 32" style="width: 100%; height: 100%;">
+                        <!-- 氫氧根離子 (簡化為單顆綠色負電球體精靈，提升觀測體驗) -->
+                        <circle cx="16" cy="16" r="12" fill="#4db6ac" stroke="#ffffff" stroke-width="2"/>
+                        <text x="16" y="20.5" font-family="'Fredoka', sans-serif" font-size="11" font-weight="900" fill="#ffffff" text-anchor="middle">OH⁻</text>
+                    </svg>
+                `;
+            } else {
+                ion.innerHTML = `
+                    <svg viewBox="0 0 32 32" style="width: 100%; height: 100%;">
+                        <!-- 氫離子 (酸酸粉橘正電精靈) -->
+                        <circle cx="16" cy="16" r="11" fill="#fff9f8" stroke="#ff8a65" stroke-width="2"/>
+                        <text x="16" y="20.5" font-family="'Fredoka', sans-serif" font-size="11" font-weight="900" fill="#ff8a65" text-anchor="middle">H⁺</text>
+                    </svg>
+                `;
+            }
+
+            // 隨機計算在水溶液範圍內的目的地
+            const destX = Math.floor(Math.random() * 60 + 12); // 12px ~ 72px
+            const destY = Math.floor(Math.random() * 40 + 20); // 20px ~ 60px
+
+            // 先賦予基本坐標，避免移除 entry 動畫時位置跑掉
+            ion.style.left = `${destX}px`;
+            ion.style.top = `${destY}px`;
+
+            if (preExisting) {
+                // 若為預設存在，直接定位並啟用動態
+                ion.style.opacity = '1';
+
+                // 設定每顆離子獨一無二的隨機小幅度晃動位移與週期
+                ion.style.setProperty('--idle-x', `${(Math.random() * 8 - 4).toFixed(1)}px`);
+                ion.style.setProperty('--idle-y', `${(Math.random() * 10 - 5).toFixed(1)}px`);
+                ion.style.animationDuration = `${3.5 + Math.random() * 3}s`;
+            } else {
+                // 若為新生離子，從落入點（中上方）往目的地拋散，並宣告動畫專用變數
+                ion.style.setProperty('--dest-x', `${destX}px`);
+                ion.style.setProperty('--dest-y', `${destY}px`);
+
+                // 解離拋散動畫結束後，無縫轉換到微幅懸浮 Hover 狀態並保留在瓶中
+                ion.addEventListener('animationend', (e) => {
+                    if (e.animationName === 'emerge-and-scatter') {
+                        ion.classList.remove('ion-emerging');
+                        ion.style.opacity = '1'; // 強制將本體透明度設為 1（避免因為基礎 css 的 opacity: 0 而消失）
+                        ion.classList.add('ion-floating');
+
+                        ion.style.setProperty('--idle-x', `${(Math.random() * 8 - 4).toFixed(1)}px`);
+                        ion.style.setProperty('--idle-y', `${(Math.random() * 10 - 5).toFixed(1)}px`);
+                        ion.style.animationDuration = `${3.5 + Math.random() * 3}s`;
+                    }
+                });
+            }
+
+            ionContainer.appendChild(ion);
+        }
+
+        // 重新開始實驗 (清空所有離子，還原至無離子純水狀態)
+        function resetExperiment() {
+            naohCount = 0;
+            hasIndicator = false;
+            temperature = 25.0;
+            ionContainer.innerHTML = '';
+
+            // 不再加載任何預設離子，保持完全清澈 (遵照使用者指示)
+            updateBeakerVisuals();
+
+            // 重設所有的題目反饋與按鈕外觀
+            const alerts = document.querySelectorAll('.feedback-alert');
+            alerts.forEach(el => el.style.display = 'none');
+
+            const optionBtns = document.querySelectorAll('.option-btn');
+            optionBtns.forEach(btn => {
+                btn.style.borderColor = "#ffe0b2";
+                btn.style.backgroundColor = "#ffffff";
+                btn.style.color = "#6d5d5b";
+            });
+        }
+
+        // 檢查使用者點選的題目答案 (高互動即時提示與反饋)
+        function checkAnswer(btn, isCorrect, feedbackId) {
+            const parent = btn.parentElement;
+            const siblingButtons = parent.querySelectorAll('.option-btn');
+            const feedbackEl = document.getElementById(feedbackId);
+
+            // 恢復所有同儕按鈕的外觀
+            siblingButtons.forEach(b => {
+                b.style.borderColor = "#ffe0b2";
+                b.style.backgroundColor = "#ffffff";
+                b.style.color = "#6d5d5b";
+            });
+
+            feedbackEl.style.display = 'block';
+
+            if (isCorrect) {
+                btn.style.borderColor = "#4db6ac";
+                btn.style.backgroundColor = "#e0f2f1";
+                btn.style.color = "#00796b";
+                feedbackEl.innerHTML = `<i class="fa-solid fa-face-laugh-beam"></i> 答對了！恭喜你，實驗觀察非常入微！`;
+                feedbackEl.style.color = "#00796b";
+                feedbackEl.style.backgroundColor = "#e0f2f1";
+            } else {
+                btn.style.borderColor = "#ff8a65";
+                btn.style.backgroundColor = "#fbe9e7";
+                btn.style.color = "#d84315";
+                feedbackEl.innerHTML = `<i class="fa-solid fa-seedling"></i> 答案不太對喔！試著加一些 NaOH 或重設實驗再觀察一次！`;
+                feedbackEl.style.color = "#d84315";
+                feedbackEl.style.backgroundColor = "#fbe9e7";
+            }
+        }
+    </script>
 </body>
 </html>
