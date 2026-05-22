@@ -1,0 +1,611 @@
+/* ==================== 1. 基本設定與童趣幻燈片規格 ==================== */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f0e6df; /* 溫暖的淺燕麥色底 */
+    display: grid;
+    gap: 25px;
+    grid-template-columns: 1fr;
+    margin: 0;
+    min-height: 100vh;
+    padding: 20px 0;
+    place-items: center;
+}
+
+/* 嚴格限制 1280x720 黃金比例，大圓角，展現軟萌繪本質感 */
+.slide-container {
+    align-items: flex-start;
+    background-color: #fffdf9; /* 溫馨的暖布丁白 */
+    border-radius: 32px; /* 更圓潤的圓角 */
+    box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    height: 720px;
+    justify-content: flex-start;
+    overflow: hidden;
+    padding: 60px 80px;
+    position: relative;
+    width: 1280px;
+    border: 8px solid #fcf0db; /* 像繪本相框一樣的可愛邊框 */
+}
+
+/* 漂浮的小水滴與可愛泡泡背景 (Cute Floating Bubbles) */
+.slide-container::before {
+    content: '';
+    position: absolute;
+    top: -5%;
+    right: -5%;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 182, 193, 0.25) 0%, rgba(255, 253, 249, 0) 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.slide-container::after {
+    content: '';
+    position: absolute;
+    bottom: -5%;
+    left: -5%;
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(135, 206, 250, 0.25) 0%, rgba(255, 253, 249, 0) 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 額外的可愛漂浮小星星與水滴圖示裝飾 */
+.deco-bubble {
+    position: absolute;
+    background: rgba(135, 206, 250, 0.2);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.slide-container>* {
+    position: relative;
+    z-index: 1;
+}
+
+/* ==================== 2. 統一文字與童趣色彩規範 ==================== */
+.slide-container h1,
+.slide-container h2,
+.slide-container h3 {
+    color: #4a3e3d;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* 頂部標題：左側可愛大圓點裝飾，維持無抖動對齊 */
+.slide-container h2.slide-title {
+    font-size: 36px;
+    margin-bottom: 30px;
+    width: 100%;
+    text-align: left;
+    border-left: 8px solid #4fc3f7;
+    padding-left: 18px;
+    line-height: 1.2;
+    border-radius: 4px;
+}
+
+.slide-container h3 {
+    font-size: 24px;
+    margin-bottom: 12px;
+    color: #ff8a65;
+}
+
+.slide-container p,
+.slide-container li {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #6d5d5b;
+    margin: 0;
+}
+
+/* ==================== 3. 布局定義與內容區 ==================== */
+.content-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: center;
+    width: 100%;
+    height: calc(100% - 80px);
+}
+
+/* 標準兩欄式版面 */
+.two-column {
+    align-items: center;
+    display: grid;
+    gap: 60px;
+    grid-template-columns: 1.12fr 0.88fr;
+    width: 100%;
+}
+
+.text-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.text-column p {
+    margin-bottom: 18px;
+}
+
+.text-column p:last-child {
+    margin-bottom: 0;
+}
+
+/* 軟綿綿邊框的圖片框 */
+.image-wrapper {
+    border-radius: 24px;
+    box-shadow: 0 8px 20px rgba(139, 92, 26, 0.08);
+    overflow: hidden;
+    width: 100%;
+    height: 380px;
+    border: 4px dashed #ffcc80; /* 可愛虛線外框 */
+    background-color: #ffffff;
+}
+
+.image-wrapper img {
+    display: block;
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+    padding: 15px;
+}
+
+/* 專為第四頁設計的寬版橫向佈局，確保圖表最大化 */
+.wide-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    height: 100%;
+}
+
+.wide-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    width: 100%;
+}
+
+.wide-text-intro {
+    flex: 1;
+}
+
+.wide-text-intro p {
+    font-size: 18px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.wide-image-wrapper {
+    border-radius: 24px;
+    box-shadow: 0 8px 20px rgba(139, 92, 26, 0.08);
+    overflow: hidden;
+    width: 100%;
+    height: 350px; /* 給予圖表高達 350px 的充足空間 */
+    border: 4px dashed #a5d6a7; /* 可愛虛線外框 */
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+}
+
+/* 3.1 封面特殊設計 (Theme 1 溫慢蘇打粉藍背景) */
+.slide-container.title-slide {
+    background-color: #e3f2fd; /* 超療癒的淡藍色 */
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    border: 8px solid #bbdefb;
+}
+
+.slide-container.title-slide::before {
+    background: radial-gradient(circle at 10% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 50%);
+}
+
+.slide-container.title-slide::after {
+    background: radial-gradient(circle at 90% 80%, rgba(255, 235, 156, 0.4) 0%, transparent 50%);
+}
+
+.title-layout {
+    text-align: center;
+    max-width: 950px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.title-layout h1 {
+    font-size: 60px;
+    font-weight: 700;
+    color: #2c5282; /* 溫和的深藍色 */
+    margin: 0 0 20px 0;
+    line-height: 1.3;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 0px #ffffff;
+}
+
+.title-layout .subtitle {
+    color: #4a5568;
+    font-size: 22px;
+    line-height: 1.6;
+    font-weight: 400;
+    max-width: 800px;
+    margin: 0;
+}
+
+.academic-badge {
+    border: 2px solid #90caf9;
+    background-color: rgba(255, 255, 255, 0.7);
+    color: #1e88e5;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 18px;
+    border-radius: 30px;
+    margin-bottom: 25px;
+    letter-spacing: 2px;
+    display: inline-block;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+/* 3.2 磚瓦式卡片設計 (Tiled Layout) */
+.tiled-content {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+    align-items: stretch;
+}
+
+.tile {
+    background-color: #ffffff;
+    border: 3px solid #ffe0b2;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 40px 35px;
+    box-shadow: 0 6px 15px rgba(139, 92, 26, 0.04);
+    position: relative;
+}
+
+/* 左邊卡片為粉橘，右邊為粉綠 */
+.tile-ph {
+    border: 3px solid #ffccbc;
+    background-color: #fff9f8;
+}
+
+.tile-poh {
+    border: 3px solid #b2dfdb;
+    background-color: #f2fbf9;
+}
+
+.tile-icon {
+    font-size: 42px;
+    margin-bottom: 20px;
+}
+
+.tile-ph .tile-icon {
+    color: #ff8a65;
+}
+
+.tile-poh .tile-icon {
+    color: #4db6ac;
+}
+
+.tile h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.tile p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #6d5d5b;
+}
+
+.tile strong {
+    color: #4a3e3d;
+}
+
+/* ==================== 4. 數學公式專用排版 (MathML) ==================== */
+.formula-container {
+    background-color: #f7fcfe;
+    border: 3px dashed #4fc3f7;
+    border-radius: 16px;
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 24px;
+    box-shadow: 0 4px 8px rgba(79, 195, 247, 0.05);
+    width: fit-content;
+}
+
+math {
+    font-size: 18px;
+    color: #4a3e3d;
+}
+
+/* ==================== 5. 第五頁互動實驗室專用樣式 ==================== */
+.lab-btn {
+    padding: 10px 18px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+    font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+}
+
+.lab-btn-add {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+    border: 2px solid #90caf9;
+}
+.lab-btn-add:hover {
+    background-color: #bbdefb;
+    transform: translateY(-2px);
+}
+
+.lab-btn-indicator {
+    background-color: #fce4ec;
+    color: #c2185b;
+    border: 2px solid #f8bbd0;
+}
+.lab-btn-indicator:hover {
+    background-color: #f8bbd0;
+    transform: translateY(-2px);
+}
+
+.lab-btn-reset {
+    background-color: #f5f5f5;
+    color: #616161;
+    border: 2px solid #e0e0e0;
+}
+.lab-btn-reset:hover {
+    background-color: #eeeeee;
+    transform: translateY(-2px);
+}
+
+/* 物理級漂浮離子系統 (Emerge, Scatter & Hover) */
+.floating-ion {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.1));
+}
+
+/* 氫離子 (球體結構) */
+.ion-h {
+    width: 32px;
+    height: 32px;
+}
+
+/* 鈉離子 (球體結構) */
+.ion-na {
+    width: 32px;
+    height: 32px;
+}
+
+/* 氫氧根離子 (全新簡化單球體結構) */
+.ion-oh {
+    width: 32px;
+    height: 32px;
+}
+
+.ion-emerging {
+    animation: emerge-and-scatter 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+}
+
+@keyframes emerge-and-scatter {
+    0% {
+        left: calc(50% - 16px);
+        top: -10px;
+        transform: scale(0.1) rotate(0deg);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        left: var(--dest-x);
+        top: var(--dest-y);
+        transform: scale(1) rotate(360deg);
+        opacity: 1;
+    }
+}
+
+.ion-floating {
+    opacity: 1 !important; /* 確保結束動畫後，始終保持可見 */
+    animation: idle-float 4s infinite ease-in-out;
+}
+
+@keyframes idle-float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    50% { transform: translate(var(--idle-x), var(--idle-y)) rotate(12deg); }
+}
+
+/* 完美的物理加速落下與濺水動畫系統 */
+#naoh-falling-pellet {
+    position: absolute;
+    top: -20px;
+    left: calc(50% - 8px);
+    width: 16px;
+    height: 12px;
+    background: #ffffff;
+    border: 2px solid #b0bec5;
+    border-radius: 6px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    opacity: 0;
+    z-index: 8;
+    pointer-events: none;
+}
+
+.pellet-falling {
+    animation: fall-pellet 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+@keyframes fall-pellet {
+    0% {
+        top: -30px;
+        opacity: 0;
+        transform: scaleY(1.3);
+    }
+    30% {
+        opacity: 1;
+        transform: scaleY(1.1);
+    }
+    90% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+    100% {
+        top: 59px; /* 水面高度，相對於 180px 燒杯 */
+        opacity: 0;
+        transform: scale(0.6);
+    }
+}
+
+#droplet-anim {
+    position: absolute;
+    top: -20px;
+    left: calc(50% - 5px);
+    width: 10px;
+    height: 14px;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    background: #e91e63;
+    box-shadow: 0 2px 4px rgba(233, 30, 99, 0.3);
+    opacity: 0;
+    z-index: 8;
+    pointer-events: none;
+}
+
+.droplet-falling {
+    animation: fall-droplet 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+}
+
+@keyframes fall-droplet {
+    0% {
+        top: -30px;
+        opacity: 0;
+        transform: scaleY(1.4);
+    }
+    30% {
+        opacity: 1;
+    }
+    100% {
+        top: 59px; /* 水面高度 */
+        opacity: 0;
+        transform: scale(0.5);
+    }
+}
+
+/* 濺水同心圓漣漪 */
+#splash-ripple {
+    position: absolute;
+    top: 59px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 40px;
+    height: 12px;
+    border: 2px solid #81d4fa;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+}
+
+.splash-active {
+    animation: splash-expand 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes splash-expand {
+    0% {
+        transform: translateX(-50%) scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-50%) scale(2.2);
+        opacity: 0;
+    }
+}
+
+/* 水波受力震動 */
+@keyframes wave-bounce {
+    0%, 100% { transform: translateY(0); }
+    30% { transform: translateY(5px); }
+    60% { transform: translateY(-2.5px); }
+    80% { transform: translateY(1px); }
+}
+
+.wave-impact {
+    animation: wave-bounce 0.6s ease-in-out;
+}
+
+/* 互動題目卡片樣式 */
+.option-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.option-btn {
+    background-color: #ffffff;
+    border: 2px solid #ffe0b2;
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6d5d5b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    flex: 1;
+    font-family: 'Noto Sans TC', sans-serif;
+}
+.option-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(139, 92, 26, 0.05);
+    border-color: #ffcc80;
+}
+
+.question-card {
+    background-color: #ffffff;
+    border: 2px solid #f3e5f5;
+    border-radius: 16px;
+    padding: 12px 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 10px rgba(139, 92, 26, 0.02);
+}
+
+.question-card p {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #4a3e3d;
+}
+
+.feedback-alert {
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: 8px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: none;
+}
