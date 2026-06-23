@@ -2,12 +2,66 @@
 // 這個檔案只放題庫資料，方便日後新增 / 修改題目。
 // 需在 math-rpg.js 之前載入，提供全域變數 QUESTION_POOLS。
 
-const POOL_DIVIDE = [
-    { q: "84 ÷ 4 = ?",  a: ["19", "21", "23", "24"],     correct: 1 },
-    { q: "9.6 ÷ 3 = ?", a: ["3.1", "3.2", "3.3", "2.2"], correct: 1 },
-    { q: "125 ÷ 5 = ?", a: ["25", "23", "30", "15"],     correct: 0 },
-    { q: "7.2 ÷ 6 = ?", a: ["1.1", "1.2", "1.3", "2.4"], correct: 1 }
-];
+// === 整數、小數除以整數：動態產生題目（不使用固定題庫）===
+// 規則：答案最多 3 位小數、兩數皆 2 位數以內、適合五年級、選項夠接近不會太明顯
+function poolRandInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function poolRound3(x) { return Math.round(x * 1000) / 1000; }
+function poolTerminates3(x) { return Math.abs(x * 1000 - Math.round(x * 1000)) < 1e-9; }
+function poolDecimals(x) {
+    const s = poolRound3(x).toString();
+    const i = s.indexOf('.');
+    return i === -1 ? 0 : s.length - i - 1;
+}
+function poolFmt(x) { return parseFloat(poolRound3(x).toFixed(3)).toString(); }
+function poolShuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// 容易得到「會除盡且 ≤3 位小數」結果的分母
+const DIVIDE_DENOMS = [2, 4, 5, 8, 10, 16, 20, 25, 40, 50];
+
+function generateDivideQuestion() {
+    let a, b, value;
+    do {
+        b = DIVIDE_DENOMS[poolRandInt(0, DIVIDE_DENOMS.length - 1)];
+        a = poolRandInt(2, 99);
+        value = a / b;
+    } while (!(value >= 0.1 && value < 10 && !Number.isInteger(value) && poolTerminates3(value)));
+
+    const correct = poolRound3(value);
+    const dp = poolDecimals(correct);          // 正確答案的小數位數
+    const unit = Math.pow(10, -dp);            // 最後一位的大小
+
+    // 產生與正解相近的誘答選項
+    const deltas = poolShuffle([unit, -unit, 2 * unit, -2 * unit, 3 * unit, -3 * unit, 0.1, -0.1]);
+    const values = [correct];
+    for (const d of deltas) {
+        if (values.length >= 4) break;
+        const cand = poolRound3(correct + d);
+        if (cand > 0 && poolTerminates3(cand) && !values.some(v => Math.abs(v - cand) < 1e-9)) {
+            values.push(cand);
+        }
+    }
+    let k = 4;
+    while (values.length < 4) { // 萬一不夠就再補
+        const cand = poolRound3(correct + k * unit);
+        if (cand > 0 && !values.some(v => Math.abs(v - cand) < 1e-9)) values.push(cand);
+        k++;
+    }
+
+    const correctStr = poolFmt(correct);
+    const options = poolShuffle(values).map(poolFmt);
+    const asFraction = Math.random() < 0.5; // 兩種題型：分數化小數 或 直接除法
+    const q = asFraction
+        ? `${a}/${b} = ?（用小數表示）`
+        : `${a} ÷ ${b} = ?（用小數表示）`;
+
+    return { q, a: options, correct: options.indexOf(correctStr) };
+}
 
 const POOL_SURFACE = [
     { q: "邊長 2 公分正方體的表面積？", a: ["20", "24", "16", "12"], correct: 1 },
@@ -75,7 +129,7 @@ const POOL_RATIO_VALUE = [
 
 // ===== 各年級的題庫組合 =====
 const POOLS_G5 = {
-    "整數、小數除以整數": POOL_DIVIDE,
+    "整數、小數除以整數": generateDivideQuestion, // 動態產生（非固定題庫）
     "表面積": POOL_SURFACE,
     "比率與百分率": POOL_RATIO,
     "時間的乘除": POOL_TIME,

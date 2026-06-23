@@ -1,7 +1,8 @@
 // 題庫資料來自 math-rpg-pools.js（須先載入，提供全域變數 QUESTION_POOLS）
 let selectedGrade = null;
 let selectedPool = null;
-let questions = []; // 開始遊戲時依所選題庫填入
+let activePool = [];      // 目前題庫：可為題目陣列，或會回傳題目的產生器函式
+let currentQuestion = null; // 目前這一題
 
 // === 敵人血量表：依序出現，第一隻 20，之後越來越多。可自行調整數值來平衡 ===
 const ENEMY_HP_TABLE = [20, 28, 40, 56, 76, 100];
@@ -40,7 +41,6 @@ const UPGRADES = [
     { icon: "⏱️", title: "從容思考", desc: "作答時間 +5 秒", weight: 17, apply: () => { ROUND_TIME += 5; } }
 ];
 
-let currentQ = 0;
 let playerHP = PLAYER_MAX;
 let currentEnemyIndex = 0;
 let enemyMax = ENEMY_HP_TABLE[0];
@@ -185,8 +185,10 @@ function chooseUpgrade(upg) {
 }
 
 function loadQuestion() {
-    currentQ = Math.floor(Math.random() * questions.length);
-    const q = questions[currentQ];
+    currentQuestion = (typeof activePool === 'function')
+        ? activePool()
+        : activePool[Math.floor(Math.random() * activePool.length)];
+    const q = currentQuestion;
     document.getElementById('question-text').innerText = q.q;
 
     const grid = document.getElementById('option-grid');
@@ -224,7 +226,7 @@ function damagePlayer(prefix, emoji) {
 }
 
 function handleTimeout() {
-    const q = questions[currentQ];
+    const q = currentQuestion;
     const btns = document.querySelectorAll('.option-btn');
     btns.forEach(b => b.disabled = true);
     btns[q.correct].classList.add('correct');
@@ -233,7 +235,7 @@ function handleTimeout() {
 
 function checkAnswer(index) {
     stopTimer();
-    const q = questions[currentQ];
+    const q = currentQuestion;
     const btns = document.querySelectorAll('.option-btn');
     btns.forEach(b => b.disabled = true);
     btns[q.correct].classList.add('correct');
@@ -341,7 +343,7 @@ function backToGrade() {
 
 function selectPool(grade, pool) {
     selectedPool = pool;
-    questions = QUESTION_POOLS[grade][pool];
+    activePool = QUESTION_POOLS[grade][pool];
     document.getElementById('howto-pool-label').innerText = `${grade} ・ ${pool}`;
     document.getElementById('howto-overlay').classList.remove('hidden');
 }
