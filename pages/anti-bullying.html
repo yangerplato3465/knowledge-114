@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尊重與包容 · 反霸凌互動問答</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #f0e6df;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+        }
+
+        .quiz-card {
+            background-color: #fffdf9;
+            border: 8px solid #fcf0db;
+            border-radius: 32px;
+            box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+            width: 820px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        /* ---------- 頂部標題 ---------- */
+        .quiz-header {
+            background: linear-gradient(135deg, #4fc3f7 0%, #4db6ac 100%);
+            color: #ffffff;
+            text-align: center;
+            padding: 48px 40px 40px;
+            position: relative;
+        }
+
+        .quiz-header .header-icon {
+            font-size: 56px;
+            margin-bottom: 12px;
+        }
+
+        .quiz-header h1 {
+            font-size: 40px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 1px 2px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .quiz-header p {
+            font-size: 19px;
+            margin: 10px 0 0;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        /* ---------- 進度條 ---------- */
+        .progress-wrap {
+            padding: 28px 56px 0;
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: 600;
+            color: #9e8e8b;
+            margin-bottom: 10px;
+        }
+
+        .progress-track {
+            background-color: #fcf0db;
+            border-radius: 999px;
+            height: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4fc3f7, #4db6ac);
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        /* ---------- 題目區 ---------- */
+        .quiz-body {
+            padding: 32px 56px 48px;
+        }
+
+        .question-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4a3e3d;
+            line-height: 1.45;
+            margin: 0 0 32px;
+        }
+
+        .option-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .option-btn {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            width: 100%;
+            text-align: left;
+            background-color: #ffffff;
+            border: 3px solid #fcf0db;
+            border-radius: 20px;
+            padding: 22px 26px;
+            font-size: 20px;
+            font-weight: 500;
+            color: #6d5d5b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+        }
+
+        .option-btn .opt-marker {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background-color: #f7fcfe;
+            border: 2px solid #cfe9f7;
+            color: #4fc3f7;
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #4fc3f7;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(79, 195, 247, 0.15);
+        }
+
+        .option-btn:disabled { cursor: default; }
+
+        .option-btn.correct {
+            border-color: #66bb6a;
+            background-color: #f1faf1;
+            color: #2e7d32;
+        }
+
+        .option-btn.correct .opt-marker {
+            background-color: #66bb6a;
+            border-color: #66bb6a;
+            color: #ffffff;
+        }
+
+        .option-btn.wrong {
+            border-color: #ef9a9a;
+            background-color: #fdf2f2;
+            color: #c62828;
+        }
+
+        .option-btn.wrong .opt-marker {
+            background-color: #ef5350;
+            border-color: #ef5350;
+            color: #ffffff;
+        }
+
+        /* ---------- 回饋與按鈕 ---------- */
+        .feedback-msg {
+            font-size: 21px;
+            font-weight: 700;
+            text-align: center;
+            margin: 28px 0 0;
+            min-height: 30px;
+        }
+
+        .feedback-msg.good { color: #2e9e6b; }
+        .feedback-msg.bad { color: #e5532b; }
+
+        .footer-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .pill-btn {
+            background: linear-gradient(135deg, #4fc3f7 0%, #4db6ac 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 999px;
+            padding: 16px 44px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            box-shadow: 0 6px 16px rgba(79, 195, 247, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pill-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(79, 195, 247, 0.3);
+        }
+
+        .hidden { display: none; }
+
+        /* ---------- 結果頁 ---------- */
+        .result-screen {
+            text-align: center;
+            padding: 56px 56px 64px;
+        }
+
+        .result-screen .result-icon { font-size: 72px; }
+
+        .result-screen h2 {
+            font-size: 34px;
+            font-weight: 700;
+            color: #4a3e3d;
+            margin: 16px 0 12px;
+        }
+
+        .result-screen .score-text {
+            font-size: 22px;
+            color: #6d5d5b;
+            margin: 0 0 8px;
+        }
+
+        .result-screen .score-big {
+            font-size: 48px;
+            font-weight: 700;
+            color: #4db6ac;
+            margin: 8px 0 28px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 22px;
+            font-size: 16px;
+            color: #9e8e8b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover { color: #4fc3f7; }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-card">
+        <div class="quiz-header">
+            <div class="header-icon">🤝</div>
+            <h1>尊重與包容</h1>
+            <p>反霸凌校園教育互動問答</p>
+        </div>
+
+        <!-- 答題畫面 -->
+        <div id="quiz-screen">
+            <div class="progress-wrap">
+                <div class="progress-meta">
+                    <span id="progress-label">第 1 題 / 共 8 題</span>
+                    <span id="score-label">得分 0</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="quiz-body">
+                <h2 id="question-text" class="question-text"></h2>
+                <div id="option-list" class="option-list"></div>
+                <div id="feedback-msg" class="feedback-msg"></div>
+                <div class="footer-actions">
+                    <button id="next-btn" class="pill-btn hidden" onclick="nextQuestion()">
+                        下一題 <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果畫面 -->
+        <div id="result-screen" class="result-screen hidden">
+            <div class="result-icon">🎉</div>
+            <h2>完成測驗！</h2>
+            <p class="score-text">您答對了</p>
+            <div id="score-big" class="score-big"></div>
+            <button class="pill-btn" onclick="restartQuiz()">
+                <i class="fa-solid fa-rotate-left"></i> 重新開始
+            </button>
+            <br>
+            <a href="../index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i> 回到學習主頁</a>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                q: "1. 什麼樣的行為屬於「霸凌」？",
+                a: ["偶發的意見不合", "長時間且惡意的重複欺負", "兩個人在操場上賽跑", "分組時沒有選到好朋友"],
+                correct: 1
+            },
+            {
+                q: "2. 霸凌的形式有哪些？",
+                a: ["僅指肢體毆打", "僅指說壞話", "包含肢體、言語、網路與關係霸凌", "學校裡發生的所有衝突都是"],
+                correct: 2
+            },
+            {
+                q: "3. 面對網路霸凌，最好的處理方式是？",
+                a: ["轉發給其他朋友討論", "留言反擊，罵回去", "不按讚、不轉發，並截圖通報", "裝作沒看到，保護自己就好"],
+                correct: 2
+            },
+            {
+                q: "4. 當看到有人被霸凌時，旁觀者應該？",
+                a: ["保持中立，這是私人糾紛", "站在旁邊錄影上傳", "制止或通報信任的成人", "假裝沒看到，避免自己受害"],
+                correct: 2
+            },
+            {
+                q: "5. 霸凌是因為被霸凌者「自己有錯」嗎？",
+                a: ["正確，蒼蠅不叮無縫的蛋", "錯誤，這是加害者的行為缺失", "有時候是，看情況", "取決於老師的觀點"],
+                correct: 1
+            },
+            {
+                q: "6. 什麼是「關係霸凌」？",
+                a: ["兩個人在運動場吵架", "玩遊戲時不小心跌倒", "惡意排擠、孤立或散佈謠言", "老師處罰不聽話的學生"],
+                correct: 2
+            },
+            {
+                q: "7. 當你需要求助時，可以找誰？",
+                a: ["霸凌你的人", "輔導室老師或信任的成人", "隨便路上的陌生人", "不告訴任何人"],
+                correct: 1
+            },
+            {
+                q: "8. 網路霸凌是否觸犯法律？",
+                a: ["不會，網路是虛擬空間", "會，可能觸犯公然侮辱或誹謗罪", "只有罵髒話才算", "學生不會觸法"],
+                correct: 1
+            }
+        ];
+
+        const LETTERS = ['A', 'B', 'C', 'D'];
+        let currentQ = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            const q = questions[currentQ];
+
+            document.getElementById('progress-label').innerText = `第 ${currentQ + 1} 題 / 共 ${questions.length} 題`;
+            document.getElementById('score-label').innerText = `得分 ${score}`;
+            document.getElementById('progress-fill').style.width = `${(currentQ / questions.length) * 100}%`;
+
+            document.getElementById('question-text').innerText = q.q;
+
+            const list = document.getElementById('option-list');
+            list.innerHTML = q.a.map((opt, i) => `
+                <button class="option-btn" onclick="checkAnswer(${i})">
+                    <span class="opt-marker">${LETTERS[i]}</span>
+                    <span>${opt}</span>
+                </button>
+            `).join('');
+
+            const feedback = document.getElementById('feedback-msg');
+            feedback.innerText = '';
+            feedback.className = 'feedback-msg';
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function checkAnswer(index) {
+            const q = questions[currentQ];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            btns[q.correct].classList.add('correct');
+
+            const feedback = document.getElementById('feedback-msg');
+            if (index === q.correct) {
+                score++;
+                feedback.innerText = '答對了！非常棒！ 🌟';
+                feedback.className = 'feedback-msg good';
+            } else {
+                btns[index].classList.add('wrong');
+                feedback.innerText = `答錯了。正確答案是 ${LETTERS[q.correct]}：${q.a[q.correct]}`;
+                feedback.className = 'feedback-msg bad';
+            }
+
+            document.getElementById('score-label').innerText = `得分 ${score}`;
+
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.innerHTML = (currentQ === questions.length - 1)
+                ? '看結果 <i class="fa-solid fa-flag-checkered"></i>'
+                : '下一題 <i class="fa-solid fa-arrow-right"></i>';
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ >= questions.length) {
+                showResult();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            const result = document.getElementById('result-screen');
+            result.classList.remove('hidden');
+            document.getElementById('score-big').innerText = `${score} / ${questions.length}`;
+        }
+
+        function restartQuiz() {
+            currentQ = 0;
+            score = 0;
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
