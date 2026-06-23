@@ -224,6 +224,131 @@
         .upgrade-card .up-title { font-size: 19px; font-weight: 700; color: #4a3e3d; }
         .upgrade-card .up-desc { font-size: 14px; color: #6d5d5b; line-height: 1.45; }
 
+        .howto-text {
+            text-align: left;
+            font-size: 16px;
+            color: #6d5d5b;
+            line-height: 1.7;
+            margin: 6px auto 26px;
+            max-width: 460px;
+            padding-left: 4px;
+            list-style: none;
+        }
+        .howto-text li { margin-bottom: 10px; }
+        .howto-text strong { color: #4a3e3d; }
+
+        /* ---------- 開始前的選單畫面 ---------- */
+        .setup-screen {
+            padding: 44px 56px 56px;
+            text-align: center;
+        }
+
+        .setup-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4a3e3d;
+            margin: 0 0 8px;
+        }
+
+        .setup-sub {
+            font-size: 16px;
+            color: #9e8e8b;
+            margin: 0 0 30px;
+        }
+
+        .choice-grid { display: flex; gap: 20px; }
+
+        .choice-card {
+            flex: 1;
+            background-color: #ffffff;
+            border: 3px solid #fcf0db;
+            border-radius: 24px;
+            padding: 44px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+        }
+
+        .choice-card:hover {
+            border-color: #ff8a65;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 22px rgba(255, 138, 101, 0.18);
+        }
+
+        .choice-card .choice-emoji {
+            font-size: 52px;
+            line-height: 1;
+            font-weight: 700;
+            color: #ff8a65;
+            width: 84px;
+            height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff3ee;
+            border: 3px solid #ffd0bf;
+            border-radius: 50%;
+        }
+        .choice-card .choice-label { font-size: 24px; font-weight: 700; color: #4a3e3d; }
+
+        .pool-list { display: flex; flex-direction: column; gap: 14px; }
+
+        .pool-card {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background-color: #ffffff;
+            border: 3px solid #fcf0db;
+            border-radius: 18px;
+            padding: 18px 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            text-align: left;
+            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+        }
+
+        .pool-card:hover {
+            border-color: #ff8a65;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(255, 138, 101, 0.15);
+        }
+
+        .pool-card .pool-num {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #fff3ee;
+            border: 2px solid #ffd0bf;
+            color: #ff8a65;
+            font-weight: 700;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pool-card .pool-name { font-size: 19px; font-weight: 600; color: #4a3e3d; flex: 1; }
+        .pool-card .pool-arrow { color: #c8b8b5; font-size: 16px; }
+
+        .back-link-btn {
+            margin-top: 26px;
+            background: none;
+            border: none;
+            color: #9e8e8b;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+        }
+        .back-link-btn:hover { color: #ff8a65; }
+
         /* ---------- 戰鬥場景 ---------- */
         .battle-stage {
             display: flex;
@@ -478,8 +603,32 @@
             <p>用算術打倒怪獸吧！答對攻擊，答錯受傷</p>
         </div>
 
+        <!-- 選年級 -->
+        <div id="grade-screen" class="setup-screen">
+            <h2 class="setup-title">選擇年級</h2>
+            <p class="setup-sub">先選擇你的年級，再挑選想練習的題庫</p>
+            <div class="choice-grid">
+                <button class="choice-card" onclick="selectGrade('五年級')">
+                    <span class="choice-emoji">五</span>
+                    <span class="choice-label">五年級</span>
+                </button>
+                <button class="choice-card" onclick="selectGrade('六年級')">
+                    <span class="choice-emoji">六</span>
+                    <span class="choice-label">六年級</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 選題庫 -->
+        <div id="pool-screen" class="setup-screen hidden">
+            <h2 class="setup-title">選擇題庫</h2>
+            <p id="pool-sub" class="setup-sub"></p>
+            <div id="pool-list" class="pool-list"></div>
+            <button class="back-link-btn" onclick="backToGrade()"><i class="fa-solid fa-chevron-left"></i> 重新選擇年級</button>
+        </div>
+
         <!-- 戰鬥畫面 -->
-        <div id="battle-screen">
+        <div id="battle-screen" class="hidden">
             <div id="enemy-map" class="enemy-map"></div>
             <div class="battle-stage">
                 <div class="fighter">
@@ -530,6 +679,22 @@
             <a href="../index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i> 回到學習主頁</a>
         </div>
 
+        <!-- 玩法說明 -->
+        <div id="howto-overlay" class="upgrade-overlay hidden">
+            <div class="upgrade-panel">
+                <h2>🎮 遊戲玩法</h2>
+                <p class="panel-sub" id="howto-pool-label"></p>
+                <ul class="howto-text">
+                    <li>⚔️ <strong>答對題目</strong>：攻擊怪獸，扣牠的血量。</li>
+                    <li>💥 <strong>答錯或時間到</strong>：換你被攻擊，扣自己的血量。</li>
+                    <li>⏱️ 每題有 <strong>30 秒</strong>作答時間，要把握喔！</li>
+                    <li>⭐ 打倒怪獸後可<strong>三選一</strong>強化能力。</li>
+                    <li>👑 一路打倒所有怪獸，擊敗最後的<strong>魔王</strong>就獲勝！</li>
+                </ul>
+                <button class="pill-btn" onclick="startGame()">開始遊戲 <i class="fa-solid fa-play"></i></button>
+            </div>
+        </div>
+
         <!-- 三選一強化面板 -->
         <div id="upgrade-overlay" class="upgrade-overlay hidden">
             <div class="upgrade-panel">
@@ -540,6 +705,9 @@
         </div>
     </div>
 
+    <audio id="bg-music" src="../assets/audio/music.mp3" loop preload="auto"></audio>
+
+    <script src="../assets/js/math-rpg-pools.js"></script>
     <script src="../assets/js/math-rpg.js"></script>
 </body>
 </html>

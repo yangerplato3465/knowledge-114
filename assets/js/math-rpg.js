@@ -1,14 +1,7 @@
-// === 佔位用數學題目 (placeholder math questions) ===
-const questions = [
-    { q: "7 + 8 = ?",   a: ["13", "15", "16", "17"], correct: 1 },
-    { q: "12 × 3 = ?",  a: ["33", "36", "39", "42"], correct: 1 },
-    { q: "45 ÷ 9 = ?",  a: ["4", "5", "6", "7"],     correct: 1 },
-    { q: "24 - 9 = ?",  a: ["13", "14", "15", "16"], correct: 2 },
-    { q: "6 × 7 = ?",   a: ["42", "48", "36", "49"], correct: 0 },
-    { q: "100 - 37 = ?",a: ["53", "63", "67", "73"], correct: 1 },
-    { q: "9 × 9 = ?",   a: ["72", "81", "90", "99"], correct: 1 },
-    { q: "56 ÷ 8 = ?",  a: ["6", "7", "8", "9"],     correct: 1 }
-];
+// 題庫資料來自 math-rpg-pools.js（須先載入，提供全域變數 QUESTION_POOLS）
+let selectedGrade = null;
+let selectedPool = null;
+let questions = []; // 開始遊戲時依所選題庫填入
 
 // === 敵人血量表：依序出現，第一隻 20，之後越來越多。可自行調整數值來平衡 ===
 const ENEMY_HP_TABLE = [20, 28, 40, 56, 76, 100];
@@ -298,18 +291,81 @@ function endGame(win) {
     }
 }
 
-function restartGame() {
+function beginBattle() {
     // 重置所有可被強化的數值回到初始狀態
     PLAYER_MAX = 100;
     HIT_TO_ENEMY = 10;
     ROUND_TIME = 30;
     defenseReduction = 0;
     playerHP = PLAYER_MAX;
+    currentEnemyIndex = 0;
     document.getElementById('upgrade-overlay').classList.add('hidden');
+    document.getElementById('howto-overlay').classList.add('hidden');
     document.getElementById('end-screen').classList.add('hidden');
+    document.getElementById('grade-screen').classList.add('hidden');
+    document.getElementById('pool-screen').classList.add('hidden');
     document.getElementById('battle-screen').classList.remove('hidden');
     spawnEnemy(0);
     loadQuestion();
 }
 
-window.onload = () => { spawnEnemy(0); loadQuestion(); };
+function restartGame() { beginBattle(); }
+
+// ===== 開始前的選單流程：選年級 → 選題庫 → 玩法說明 → 開始 =====
+function selectGrade(grade) {
+    selectedGrade = grade;
+    document.getElementById('grade-screen').classList.add('hidden');
+    renderPoolScreen(grade);
+    document.getElementById('pool-screen').classList.remove('hidden');
+}
+
+function renderPoolScreen(grade) {
+    document.getElementById('pool-sub').innerText = `${grade}　請選擇一個題庫`;
+    const list = document.getElementById('pool-list');
+    list.innerHTML = '';
+    Object.keys(QUESTION_POOLS[grade]).forEach((poolName, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'pool-card';
+        btn.innerHTML = `<span class="pool-num">${i + 1}</span>` +
+                        `<span class="pool-name">${poolName}</span>` +
+                        `<i class="fa-solid fa-chevron-right pool-arrow"></i>`;
+        btn.addEventListener('click', () => selectPool(grade, poolName));
+        list.appendChild(btn);
+    });
+}
+
+function backToGrade() {
+    document.getElementById('pool-screen').classList.add('hidden');
+    document.getElementById('grade-screen').classList.remove('hidden');
+}
+
+function selectPool(grade, pool) {
+    selectedPool = pool;
+    questions = QUESTION_POOLS[grade][pool];
+    document.getElementById('howto-pool-label').innerText = `${grade} ・ ${pool}`;
+    document.getElementById('howto-overlay').classList.remove('hidden');
+}
+
+function startGame() {
+    beginBattle();
+}
+
+// ===== 背景音樂：進入頁面後循環播放（瀏覽器需先有互動才允許播放） =====
+const bgMusic = document.getElementById('bg-music');
+
+function startMusic() {
+    if (!bgMusic) return;
+    bgMusic.volume = 0.4;
+    bgMusic.play().catch(() => {}); // 被自動播放政策擋下時忽略，等下一次互動再試
+}
+
+(function initMusic() {
+    startMusic(); // 先嘗試自動播放
+    const playOnce = () => {
+        startMusic();
+        document.removeEventListener('pointerdown', playOnce);
+        document.removeEventListener('keydown', playOnce);
+    };
+    document.addEventListener('pointerdown', playOnce);
+    document.addEventListener('keydown', playOnce);
+})();
