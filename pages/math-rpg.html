@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數學勇者 · RPG 闖關問答</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #f0e6df;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+        }
+
+        .game-card {
+            background-color: #fffdf9;
+            border: 8px solid #fcf0db;
+            border-radius: 32px;
+            box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+            width: 860px;
+            max-width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ---------- 頂部標題 ---------- */
+        .game-header {
+            background: linear-gradient(135deg, #ff8a65 0%, #ffb74d 100%);
+            color: #ffffff;
+            text-align: center;
+            padding: 40px 40px 34px;
+        }
+
+        .game-header .header-icon { font-size: 52px; margin-bottom: 10px; }
+
+        .game-header h1 {
+            font-size: 38px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 1px 2px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .game-header p {
+            font-size: 18px;
+            margin: 8px 0 0;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        /* ---------- 敵人關卡地圖 (Slay the Spire 風格) ---------- */
+        .enemy-map {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 30px 56px 6px;
+        }
+
+        .map-node {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            border: 3px solid #e6dccf;
+            background-color: #ffffff;
+            color: #c8b8b5;
+            transition: all 0.3s ease;
+        }
+
+        .map-line {
+            flex: 1;
+            height: 4px;
+            border-radius: 999px;
+            background-color: #ece0d3;
+            min-width: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .map-line.done { background-color: #4db6ac; }
+
+        .map-node.done {
+            border-color: #4db6ac;
+            background-color: #f2fbf9;
+            color: #4db6ac;
+            opacity: 0.85;
+        }
+
+        .map-node.current {
+            border-color: #ff8a65;
+            background-color: #fff3ee;
+            color: #ff8a65;
+            transform: scale(1.25);
+            animation: nodePulse 1.2s infinite;
+        }
+
+        @keyframes nodePulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(255, 138, 101, 0.3); }
+            50% { box-shadow: 0 4px 20px rgba(255, 138, 101, 0.55); }
+        }
+
+        /* 最後一關：魔王節點，更大、紅金配色、頭頂皇冠 */
+        .map-node.boss {
+            width: 60px;
+            height: 60px;
+            font-size: 26px;
+            border-width: 4px;
+            border-color: #c62828;
+            background-color: #fdecea;
+            color: #c62828;
+            position: relative;
+        }
+
+        .map-node.boss.current {
+            transform: scale(1.18);
+            animation: bossPulse 1.1s infinite;
+        }
+
+        .map-node.boss .boss-crown {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+        }
+
+        @keyframes bossPulse {
+            0%, 100% { box-shadow: 0 4px 14px rgba(198, 40, 40, 0.35); }
+            50% { box-shadow: 0 4px 22px rgba(198, 40, 40, 0.6); }
+        }
+
+        /* ---------- 攻擊時整個畫面輕微震動 ---------- */
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-5px, 3px); }
+            40% { transform: translate(5px, -3px); }
+            60% { transform: translate(-4px, 2px); }
+            80% { transform: translate(4px, -2px); }
+        }
+
+        .game-card.shake { animation: screenShake 0.4s ease; }
+
+        /* ---------- 勝利後的三選一強化面板 ---------- */
+        .upgrade-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(74, 62, 61, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 50;
+        }
+
+        .upgrade-panel {
+            background-color: #fffdf9;
+            border: 6px solid #fcf0db;
+            border-radius: 28px;
+            padding: 34px 32px;
+            text-align: center;
+            width: 100%;
+            max-width: 720px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+            animation: panelPop 0.3s ease;
+        }
+
+        @keyframes panelPop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .upgrade-panel h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4a3e3d;
+            margin: 0 0 6px;
+        }
+
+        .upgrade-panel .panel-sub {
+            font-size: 16px;
+            color: #9e8e8b;
+            margin: 0 0 26px;
+        }
+
+        .upgrade-options { display: flex; gap: 16px; }
+
+        .upgrade-card {
+            flex: 1;
+            background-color: #ffffff;
+            border: 3px solid #fcf0db;
+            border-radius: 20px;
+            padding: 26px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+        }
+
+        .upgrade-card:hover {
+            border-color: #ff8a65;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 22px rgba(255, 138, 101, 0.18);
+        }
+
+        .upgrade-card .up-icon { font-size: 40px; line-height: 1; }
+        .upgrade-card .up-title { font-size: 19px; font-weight: 700; color: #4a3e3d; }
+        .upgrade-card .up-desc { font-size: 14px; color: #6d5d5b; line-height: 1.45; }
+
+        /* ---------- 戰鬥場景 ---------- */
+        .battle-stage {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 24px;
+            padding: 14px 56px 12px;
+        }
+
+        .fighter { width: 46%; text-align: center; }
+
+        .fighter .avatar {
+            font-size: 84px;
+            line-height: 1;
+            display: inline-block;
+            transition: transform 0.15s ease;
+        }
+
+        .fighter .name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4a3e3d;
+            margin: 8px 0 6px;
+        }
+
+        .hp-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #9e8e8b;
+            margin-bottom: 6px;
+        }
+
+        .hp-track {
+            background-color: #fcf0db;
+            border-radius: 999px;
+            height: 16px;
+            overflow: hidden;
+            border: 2px solid #f3e3c7;
+        }
+
+        .hp-fill {
+            height: 100%;
+            width: 100%;
+            border-radius: 999px;
+            transition: width 0.5s ease, background-color 0.5s ease;
+        }
+
+        .hp-fill.player { background: linear-gradient(90deg, #66bb6a, #43a047); }
+        .hp-fill.enemy  { background: linear-gradient(90deg, #ef5350, #e53935); }
+
+        .vs-badge {
+            font-size: 26px;
+            font-weight: 700;
+            color: #c8b8b5;
+            padding-bottom: 40px;
+        }
+
+        /* 受擊與攻擊動畫 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px) rotate(-4deg); }
+            75% { transform: translateX(8px) rotate(4deg); }
+        }
+        @keyframes bump {
+            0%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-14px) scale(1.08); }
+        }
+        .hit { animation: shake 0.4s ease; }
+        .attack { animation: bump 0.4s ease; }
+
+        .floating-dmg {
+            position: absolute;
+            font-size: 52px;
+            font-weight: 700;
+            pointer-events: none;
+            z-index: 60;
+            text-shadow:
+                -2px -2px 0 #fff, 2px -2px 0 #fff,
+                -2px  2px 0 #fff, 2px  2px 0 #fff,
+                0 4px 10px rgba(0, 0, 0, 0.25);
+            animation: floatUp 1.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes floatUp {
+            0%   { opacity: 0; transform: translateY(0) scale(0.4); }
+            18%  { opacity: 1; transform: translateY(-18px) scale(1.35); }
+            32%  { transform: translateY(-26px) scale(1); }
+            70%  { opacity: 1; transform: translateY(-46px) scale(1); }
+            100% { opacity: 0; transform: translateY(-90px) scale(0.95); }
+        }
+
+        /* ---------- 題目區 ---------- */
+        .quiz-body { padding: 16px 56px 48px; }
+
+        .round-label {
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            color: #9e8e8b;
+            margin-bottom: 12px;
+        }
+
+        /* ---------- 計時器 ---------- */
+        .timer-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .timer-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: #4db6ac;
+            min-width: 54px;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timer-track {
+            flex: 1;
+            background-color: #fcf0db;
+            border-radius: 999px;
+            height: 14px;
+            overflow: hidden;
+            border: 2px solid #f3e3c7;
+        }
+
+        .timer-fill {
+            height: 100%;
+            width: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #4db6ac, #4fc3f7);
+            transition: width 1s linear, background 0.3s ease;
+        }
+
+        .timer-fill.low { background: linear-gradient(90deg, #ef5350, #ff8a65); }
+        .timer-text.low { color: #e5532b; animation: pulse 0.6s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+        }
+
+        .question-box {
+            background-color: #f7fcfe;
+            border: 3px dashed #4fc3f7;
+            border-radius: 20px;
+            text-align: center;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .question-box .q-text {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4a3e3d;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .option-btn {
+            background-color: #ffffff;
+            border: 3px solid #fcf0db;
+            border-radius: 20px;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #6d5d5b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #ff8a65;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 138, 101, 0.18);
+        }
+
+        .option-btn:disabled { cursor: default; }
+        .option-btn.correct { border-color: #66bb6a; background-color: #f1faf1; color: #2e7d32; }
+        .option-btn.wrong   { border-color: #ef9a9a; background-color: #fdf2f2; color: #c62828; }
+
+        .feedback-msg {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin: 24px 0 0;
+            min-height: 28px;
+        }
+        .feedback-msg.good { color: #2e9e6b; }
+        .feedback-msg.bad { color: #e5532b; }
+
+        .footer-actions { display: flex; justify-content: center; margin-top: 20px; }
+
+        .pill-btn {
+            background: linear-gradient(135deg, #ff8a65 0%, #ffb74d 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 999px;
+            padding: 16px 44px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            box-shadow: 0 6px 16px rgba(255, 138, 101, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pill-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(255, 138, 101, 0.3); }
+
+        .hidden { display: none; }
+
+        /* ---------- 結束畫面 ---------- */
+        .end-screen { text-align: center; padding: 56px; }
+        .end-screen .end-icon { font-size: 76px; }
+        .end-screen h2 { font-size: 34px; font-weight: 700; color: #4a3e3d; margin: 16px 0 10px; }
+        .end-screen p { font-size: 20px; color: #6d5d5b; margin: 0 0 26px; }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 22px;
+            font-size: 16px;
+            color: #9e8e8b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover { color: #ff8a65; }
+    </style>
+</head>
+<body>
+
+    <div class="game-card">
+        <div class="game-header">
+            <div class="header-icon">⚔️</div>
+            <h1>數學勇者</h1>
+            <p>用算術打倒怪獸吧！答對攻擊，答錯受傷</p>
+        </div>
+
+        <!-- 戰鬥畫面 -->
+        <div id="battle-screen">
+            <div id="enemy-map" class="enemy-map"></div>
+            <div class="battle-stage">
+                <div class="fighter">
+                    <span id="player-avatar" class="avatar">🧙</span>
+                    <div class="name">勇者</div>
+                    <div class="hp-row"><i class="fa-solid fa-heart" style="color:#66bb6a;"></i> <span id="player-hp-text">100 / 100</span></div>
+                    <div class="hp-track"><div id="player-hp" class="hp-fill player"></div></div>
+                </div>
+
+                <div class="vs-badge">VS</div>
+
+                <div class="fighter">
+                    <span id="enemy-avatar" class="avatar">👾</span>
+                    <div id="enemy-name" class="name">史萊姆怪</div>
+                    <div class="hp-row"><i class="fa-solid fa-heart" style="color:#ef5350;"></i> <span id="enemy-hp-text">100 / 100</span></div>
+                    <div class="hp-track"><div id="enemy-hp" class="hp-fill enemy"></div></div>
+                </div>
+            </div>
+
+            <div class="quiz-body">
+                <div id="round-label" class="round-label"></div>
+                <div class="timer-wrap">
+                    <div class="timer-track"><div id="timer-fill" class="timer-fill"></div></div>
+                    <div id="timer-text" class="timer-text"><i class="fa-solid fa-stopwatch"></i> <span id="timer-secs">30</span>s</div>
+                </div>
+                <div class="question-box">
+                    <p id="question-text" class="q-text"></p>
+                </div>
+                <div id="option-grid" class="option-grid"></div>
+                <div id="feedback-msg" class="feedback-msg"></div>
+                <div class="footer-actions">
+                    <button id="next-btn" class="pill-btn hidden" onclick="nextRound()">
+                        繼續 <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結束畫面 -->
+        <div id="end-screen" class="end-screen hidden">
+            <div id="end-icon" class="end-icon">🏆</div>
+            <h2 id="end-title"></h2>
+            <p id="end-text"></p>
+            <button class="pill-btn" onclick="restartGame()">
+                <i class="fa-solid fa-rotate-left"></i> 再玩一次
+            </button>
+            <br>
+            <a href="../index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i> 回到學習主頁</a>
+        </div>
+
+        <!-- 三選一強化面板 -->
+        <div id="upgrade-overlay" class="upgrade-overlay hidden">
+            <div class="upgrade-panel">
+                <h2>⭐ 選擇一項強化</h2>
+                <p class="panel-sub">打倒敵人！挑選一個能力提升，再迎戰下一隻怪獸</p>
+                <div id="upgrade-options" class="upgrade-options"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/math-rpg.js"></script>
+</body>
+</html>
