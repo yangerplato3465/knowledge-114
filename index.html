@@ -20,6 +20,7 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
+            padding: 40px 20px;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
         }
 
@@ -30,6 +31,7 @@
             box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
             padding: 60px 80px;
             width: 680px;
+            max-width: 100%;
             text-align: center;
         }
 
@@ -46,108 +48,184 @@
             margin: 0 0 48px 0;
         }
 
-        .page-list {
+        .category-list {
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .page-btn {
+        /* 大主題按鈕 */
+        .category {
+            border: 3px solid #fcf0db;
+            border-radius: 24px;
+            overflow: hidden;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.05);
+            transition: border-color 0.2s ease;
+        }
+        .category.open { border-color: #4fc3f7; }
+
+        .category-head {
             display: flex;
             align-items: center;
             gap: 20px;
-            background-color: #ffffff;
-            border: 3px solid #fcf0db;
-            border-radius: 20px;
-            padding: 20px 28px;
-            text-decoration: none;
+            padding: 24px 28px;
+            cursor: pointer;
+            user-select: none;
             color: #4a3e3d;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.05);
+            transition: background-color 0.2s ease;
         }
+        .category-head:hover { background-color: #f7fcfe; }
 
-        .page-btn:hover {
-            border-color: #4fc3f7;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(79, 195, 247, 0.15);
-        }
-
-        .page-btn .btn-icon {
-            font-size: 32px;
-            width: 52px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .page-btn .btn-text {
-            text-align: left;
-        }
-
-        .page-btn .btn-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 2px;
-        }
-
-        .page-btn .btn-desc {
-            font-size: 14px;
-            color: #9e8e8b;
-            font-weight: 400;
-        }
-
-        .page-btn .btn-arrow {
+        .category-head .cat-icon { font-size: 34px; width: 52px; text-align: center; flex-shrink: 0; }
+        .category-head .cat-text { text-align: left; }
+        .category-head .cat-title { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+        .category-head .cat-desc { font-size: 14px; color: #9e8e8b; font-weight: 400; }
+        .category-head .cat-chevron {
             margin-left: auto;
             font-size: 18px;
             color: #c8b8b5;
+            transition: transform 0.25s ease;
         }
+        .category.open .cat-chevron { transform: rotate(180deg); color: #4fc3f7; }
+
+        /* 展開區 */
+        .sub-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding: 0 18px;
+        }
+        .category.open .sub-list { max-height: 600px; }
+
+        .sub-inner { padding: 6px 0 18px 0; display: flex; flex-direction: column; gap: 12px; }
+
+        .page-btn {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background-color: #fffef9;
+            border: 3px solid #fcf0db;
+            border-radius: 18px;
+            padding: 16px 22px;
+            text-decoration: none;
+            color: #4a3e3d;
+            transition: all 0.2s ease;
+        }
+        .page-btn:hover {
+            border-color: #4fc3f7;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 195, 247, 0.15);
+        }
+        .page-btn .btn-icon { font-size: 28px; width: 46px; text-align: center; flex-shrink: 0; }
+        .page-btn .btn-text { text-align: left; }
+        .page-btn .btn-title { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+        .page-btn .btn-desc { font-size: 13px; color: #9e8e8b; font-weight: 400; }
+        .page-btn .btn-arrow { margin-left: auto; font-size: 16px; color: #c8b8b5; }
     </style>
 </head>
 <body>
 
     <div class="hub-card">
         <h1>📚 學習主頁</h1>
-        <p class="subtitle">選擇一個主題開始學習</p>
+        <p class="subtitle">選擇一個主題開始</p>
         <p style="font-size: 14px; color: #c8b8b5; margin: -36px 0 48px 0;">By Anita 老師</p>
 
-        <div class="page-list">
-            <a href="pages/water-acid-base.html" class="page-btn">
-                <div class="btn-icon">🧪</div>
-                <div class="btn-text">
-                    <div class="btn-title">水與酸鹼的微觀奧秘</div>
-                    <div class="btn-desc">探索離子行為與 pH / pOH 的平衡美學</div>
+        <div class="category-list">
+
+            <!-- 教學內容 -->
+            <div class="category">
+                <div class="category-head" onclick="toggleCategory(this)">
+                    <div class="cat-icon">🎒</div>
+                    <div class="cat-text">
+                        <div class="cat-title">教學內容</div>
+                        <div class="cat-desc">互動課程與闖關遊戲</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-down cat-chevron"></i>
                 </div>
-                <i class="fa-solid fa-chevron-right btn-arrow"></i>
-            </a>
-            <a href="pages/anti-bullying.html" class="page-btn">
-                <div class="btn-icon">🤝</div>
-                <div class="btn-text">
-                    <div class="btn-title">尊重與包容</div>
-                    <div class="btn-desc">反霸凌校園教育互動問答</div>
+                <div class="sub-list">
+                    <div class="sub-inner">
+                        <a href="pages/water-acid-base.html" class="page-btn">
+                            <div class="btn-icon">🧪</div>
+                            <div class="btn-text">
+                                <div class="btn-title">水與酸鹼的微觀奧秘</div>
+                                <div class="btn-desc">探索離子行為與 pH / pOH 的平衡美學</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                        <a href="pages/anti-bullying.html" class="page-btn">
+                            <div class="btn-icon">🤝</div>
+                            <div class="btn-text">
+                                <div class="btn-title">尊重與包容</div>
+                                <div class="btn-desc">反霸凌校園教育互動問答</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                        <a href="pages/debug.html" class="page-btn">
+                            <div class="btn-icon">🍰</div>
+                            <div class="btn-text">
+                                <div class="btn-title">代碼麵包工廠</div>
+                                <div class="btn-desc">Debug 除錯冒險 · 單步執行找出程式的 Bug</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                        <a href="pages/math-rpg.html" class="page-btn">
+                            <div class="btn-icon">⚔️</div>
+                            <div class="btn-text">
+                                <div class="btn-title">數學勇者</div>
+                                <div class="btn-desc">RPG 闖關問答 · 答對攻擊怪獸，答錯就會受傷</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                    </div>
                 </div>
-                <i class="fa-solid fa-chevron-right btn-arrow"></i>
-            </a>
-            <a href="pages/math-rpg.html" class="page-btn">
-                <div class="btn-icon">⚔️</div>
-                <div class="btn-text">
-                    <div class="btn-title">數學勇者</div>
-                    <div class="btn-desc">RPG 闖關問答 · 答對攻擊怪獸，答錯就會受傷</div>
+            </div>
+
+            <!-- 素材 -->
+            <div class="category">
+                <div class="category-head" onclick="toggleCategory(this)">
+                    <div class="cat-icon">📦</div>
+                    <div class="cat-text">
+                        <div class="cat-title">素材</div>
+                        <div class="cat-desc">遊戲素材的下載與上傳</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-down cat-chevron"></i>
                 </div>
-                <i class="fa-solid fa-chevron-right btn-arrow"></i>
-            </a>
-            <a href="pages/debug.html" class="page-btn">
-                <div class="btn-icon">🍰</div>
-                <div class="btn-text">
-                    <div class="btn-title">代碼麵包工廠</div>
-                    <div class="btn-desc">Debug 除錯冒險 · 單步執行找出程式的 Bug</div>
+                <div class="sub-list">
+                    <div class="sub-inner">
+                        <a href="pages/downloads.html" class="page-btn">
+                            <div class="btn-icon">📥</div>
+                            <div class="btn-text">
+                                <div class="btn-title">素材下載</div>
+                                <div class="btn-desc">下載遊戲素材與教學檔案</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                        <a href="pages/upload.html" class="page-btn">
+                            <div class="btn-icon">📤</div>
+                            <div class="btn-text">
+                                <div class="btn-title">上傳素材</div>
+                                <div class="btn-desc">老師專用 · 需要 GitHub 權杖</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                    </div>
                 </div>
-                <i class="fa-solid fa-chevron-right btn-arrow"></i>
-            </a>
+            </div>
+
         </div>
     </div>
 
     <p id="version-label" style="margin-top: 18px; font-size: 13px; color: #c8b8b5;"></p>
 
     <script>
+        function toggleCategory(head) {
+            const cat = head.parentElement;
+            const isOpen = cat.classList.contains('open');
+            document.querySelectorAll('.category').forEach(c => c.classList.remove('open'));
+            if (!isOpen) cat.classList.add('open');
+        }
+
         fetch('config.json')
             .then(r => r.json())
             .then(cfg => {
