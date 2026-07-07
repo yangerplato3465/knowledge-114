@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上傳素材 · 學習主頁</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #f0e6df;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            color: #4a3e3d;
+        }
+
+        .card {
+            background-color: #fffdf9;
+            border: 8px solid #fcf0db;
+            border-radius: 32px;
+            box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+            padding: 48px 56px;
+            width: 620px;
+            max-width: 100%;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #9e8e8b;
+            font-size: 15px;
+            margin-bottom: 22px;
+        }
+        .back-link:hover { color: #4fc3f7; }
+
+        h1 { font-size: 32px; font-weight: 700; margin: 0 0 6px 0; }
+        .subtitle { font-size: 15px; color: #9e8e8b; margin: 0 0 32px 0; }
+
+        label { display: block; font-size: 15px; font-weight: 500; margin: 0 0 8px 0; }
+
+        input[type="password"], input[type="text"] {
+            width: 100%;
+            border: 3px solid #fcf0db;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #4a3e3d;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        input:focus { border-color: #4fc3f7; }
+
+        .hint {
+            font-size: 13px;
+            color: #c8b8b5;
+            margin: 8px 0 0 0;
+            line-height: 1.6;
+        }
+        .hint a { color: #4db6ac; }
+
+        .field { margin-bottom: 26px; }
+
+        .drop-zone {
+            border: 3px dashed #e6d5c8;
+            border-radius: 20px;
+            padding: 34px 20px;
+            text-align: center;
+            color: #9e8e8b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #fffef9;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #4fc3f7;
+            background-color: #f7fcfe;
+            color: #4a3e3d;
+        }
+        .drop-zone i { font-size: 34px; color: #d8c4b8; display: block; margin-bottom: 12px; }
+        .drop-zone.dragover i { color: #4fc3f7; }
+        #fileInput { display: none; }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 18px;
+            padding: 16px;
+            font-size: 17px;
+            font-weight: 700;
+            font-family: inherit;
+            color: #fff;
+            background: linear-gradient(135deg, #4fc3f7 0%, #4db6ac 100%);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            box-shadow: 0 6px 16px rgba(79, 195, 247, 0.25);
+        }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(79, 195, 247, 0.3); }
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        #results { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; }
+        .result-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-size: 14px;
+            background-color: #f7fcfe;
+            border: 2px solid #eaf6fb;
+        }
+        .result-row.ok { background-color: #f1faf1; border-color: #dcefdc; }
+        .result-row.err { background-color: #fdf2f2; border-color: #f6dede; }
+        .result-row .r-icon { flex-shrink: 0; font-size: 18px; }
+        .result-row.ok .r-icon { color: #66bb6a; }
+        .result-row.err .r-icon { color: #e57373; }
+        .result-row.pending .r-icon { color: #4fc3f7; }
+        .result-row .r-name { font-weight: 500; word-break: break-all; }
+        .result-row .r-msg { margin-left: auto; color: #9e8e8b; font-size: 13px; flex-shrink: 0; }
+
+        .remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9e8e8b; margin-top: 10px; }
+        .remember input { width: auto; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
+        <h1>📤 上傳素材</h1>
+        <p class="subtitle">上傳的檔案會存到網站的素材庫，任何人都能在下載頁取得。</p>
+
+        <div class="field">
+            <label for="token">GitHub 存取權杖（Token）</label>
+            <input type="password" id="token" placeholder="ghp_... 或 github_pat_..." autocomplete="off">
+            <p class="hint">
+                這是上傳的「鑰匙」，只有你需要。到
+                <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">GitHub 設定</a>
+                建立一個 Fine-grained token，對 <b>knowledge-114</b> 這個 repo 開啟 <b>Contents: Read and write</b> 權限即可。<b>切勿分享給別人。</b>
+            </p>
+            <label class="remember"><input type="checkbox" id="remember"> 記住權杖（僅存在這台裝置的瀏覽器）</label>
+        </div>
+
+        <div class="field">
+            <label>選擇檔案</label>
+            <div class="drop-zone" id="dropZone">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <div id="dropText">點這裡選檔，或把檔案拖進來</div>
+            </div>
+            <input type="file" id="fileInput" multiple>
+        </div>
+
+        <button class="btn" id="uploadBtn" disabled>上傳</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // ===== 設定：要存到哪個 repo 的哪個資料夾 =====
+        const OWNER  = 'yangerplato3465';
+        const REPO   = 'knowledge-114';
+        const BRANCH = 'main';
+        const DIR    = 'assets/uploads';
+        const API    = `https://api.github.com/repos/${OWNER}/${REPO}/contents`;
+
+        const tokenInput = document.getElementById('token');
+        const rememberBox = document.getElementById('remember');
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const dropText = document.getElementById('dropText');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const results = document.getElementById('results');
+
+        let selectedFiles = [];
+
+        // 還原記住的權杖
+        const saved = localStorage.getItem('gh_upload_token');
+        if (saved) { tokenInput.value = saved; rememberBox.checked = true; }
+
+        function refreshBtn() {
+            uploadBtn.disabled = !(tokenInput.value.trim() && selectedFiles.length);
+        }
+        tokenInput.addEventListener('input', refreshBtn);
+
+        // 檔案選擇
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => setFiles([...fileInput.files]));
+
+        ['dragover', 'dragenter'].forEach(ev =>
+            dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add('dragover'); }));
+        ['dragleave', 'drop'].forEach(ev =>
+            dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove('dragover'); }));
+        dropZone.addEventListener('drop', e => setFiles([...e.dataTransfer.files]));
+
+        function setFiles(files) {
+            selectedFiles = files;
+            dropText.textContent = files.length
+                ? `已選 ${files.length} 個檔案：${files.map(f => f.name).join('、')}`
+                : '點這裡選檔，或把檔案拖進來';
+            refreshBtn();
+        }
+
+        // 把檔案讀成 base64（安全處理二進位）
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const bytes = new Uint8Array(reader.result);
+                    let binary = '';
+                    const chunk = 0x8000;
+                    for (let i = 0; i < bytes.length; i += chunk) {
+                        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+                    }
+                    resolve(btoa(binary));
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function rowFor(name) {
+            const row = document.createElement('div');
+            row.className = 'result-row pending';
+            row.innerHTML = `<i class="fa-solid fa-spinner fa-spin r-icon"></i>
+                             <span class="r-name">${name}</span>
+                             <span class="r-msg">上傳中…</span>`;
+            results.appendChild(row);
+            return row;
+        }
+        function setRow(row, ok, msg) {
+            row.className = 'result-row ' + (ok ? 'ok' : 'err');
+            row.querySelector('.r-icon').className =
+                'fa-solid r-icon ' + (ok ? 'fa-circle-check' : 'fa-circle-xmark');
+            row.querySelector('.r-msg').textContent = msg;
+        }
+
+        async function uploadOne(file, token) {
+            const path = `${DIR}/${file.name}`;
+            const url = `${API}/${path.split('/').map(encodeURIComponent).join('/')}`;
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            };
+
+            // 若檔名已存在，取得 sha 以便覆蓋更新
+            let sha;
+            const head = await fetch(`${url}?ref=${BRANCH}`, { headers });
+            if (head.status === 200) sha = (await head.json()).sha;
+
+            const content = await fileToBase64(file);
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({
+                    message: `上傳素材：${file.name}`,
+                    content,
+                    branch: BRANCH,
+                    ...(sha ? { sha } : {})
+                })
+            });
+
+            if (res.ok) return sha ? '已更新' : '完成';
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || `HTTP ${res.status}`);
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            const token = tokenInput.value.trim();
+            if (rememberBox.checked) localStorage.setItem('gh_upload_token', token);
+            else localStorage.removeItem('gh_upload_token');
+
+            uploadBtn.disabled = true;
+            results.innerHTML = '';
+
+            for (const file of selectedFiles) {
+                const row = rowFor(file.name);
+                try {
+                    const msg = await uploadOne(file, token);
+                    setRow(row, true, msg);
+                } catch (e) {
+                    setRow(row, false, e.message);
+                }
+            }
+
+            uploadBtn.disabled = false;
+        });
+    </script>
+</body>
+</html>
