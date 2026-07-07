@@ -131,6 +131,52 @@
 
         .remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9e8e8b; margin-top: 10px; }
         .remember input { width: auto; }
+
+        /* 管理已上傳的素材 */
+        .manage { margin-top: 34px; border-top: 2px solid #f3e7db; padding-top: 24px; }
+        .manage-head { display: flex; align-items: center; margin-bottom: 14px; }
+        .manage-head .m-title { font-size: 16px; font-weight: 700; }
+        .link-btn {
+            margin-left: auto;
+            border: none;
+            background: none;
+            color: #4db6ac;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .link-btn:hover { color: #4fc3f7; }
+
+        .manage-list { display: flex; flex-direction: column; gap: 10px; }
+        .m-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 2px solid #fcf0db;
+            border-radius: 14px;
+            padding: 12px 16px;
+            background-color: #fffef9;
+        }
+        .m-row .m-name { font-size: 14px; font-weight: 500; word-break: break-all; }
+        .m-row .m-size { font-size: 12px; color: #c8b8b5; margin-left: auto; flex-shrink: 0; }
+        .del-btn {
+            flex-shrink: 0;
+            border: 2px solid #f6dede;
+            background-color: #fdf2f2;
+            color: #e57373;
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .del-btn:hover:not(:disabled) { background-color: #e57373; color: #fff; border-color: #e57373; }
+        .del-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .m-state { color: #9e8e8b; font-size: 14px; padding: 8px 2px; }
     </style>
 </head>
 <body>
@@ -162,6 +208,16 @@
         <button class="btn" id="uploadBtn" disabled>上傳</button>
 
         <div id="results"></div>
+
+        <div class="manage">
+            <div class="manage-head">
+                <span class="m-title">🗂️ 已上傳的素材</span>
+                <button id="refreshBtn" class="link-btn"><i class="fa-solid fa-rotate"></i> 重新整理</button>
+            </div>
+            <div id="manageList" class="manage-list">
+                <div class="m-state">載入中…</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -179,6 +235,8 @@
         const dropText = document.getElementById('dropText');
         const uploadBtn = document.getElementById('uploadBtn');
         const results = document.getElementById('results');
+        const manageList = document.getElementById('manageList');
+        const refreshListBtn = document.getElementById('refreshBtn');
 
         let selectedFiles = [];
 
@@ -292,7 +350,108 @@
             }
 
             uploadBtn.disabled = false;
+            loadManage();
         });
+
+        // ===== 管理／刪除已上傳的素材 =====
+        function fmtSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+
+        async function loadManage() {
+            manageList.innerHTML = '<div class="m-state">載入中…</div>';
+            // 有貼 Token 時用「已登入」方式讀取，額度從 60/hr 提升到 5000/hr
+            const token = tokenInput.value.trim();
+            const headers = { 'Accept': 'application/vnd.github+json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            let res;
+            try {
+                res = await fetch(`${API}/${DIR}?ref=${BRANCH}`, { headers });
+            } catch (e) {
+                manageList.innerHTML = '<div class="m-state">無法連線，稍後再試。</div>';
+                return;
+            }
+            if (res.status === 404) {
+                manageList.innerHTML = '<div class="m-state">素材庫還是空的。</div>';
+                return;
+            }
+            if (res.status === 403 && res.headers.get('x-ratelimit-remaining') === '0') {
+                manageList.innerHTML = '<div class="m-state">GitHub 查詢次數暫時用完了。請在上方貼上 Token 再按「重新整理」，即可解除限制。</div>';
+                return;
+            }
+            if (!res.ok) {
+                manageList.innerHTML = `<div class="m-state">載入失敗（HTTP ${res.status}）</div>`;
+                return;
+            }
+
+            let items = (await res.json())
+                .filter(f => f.type === 'file' && f.name !== '.gitkeep')
+                .sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+
+            if (!items.length) {
+                manageList.innerHTML = '<div class="m-state">素材庫還是空的。</div>';
+                return;
+            }
+
+            manageList.innerHTML = '';
+            for (const f of items) {
+                const row = document.createElement('div');
+                row.className = 'm-row';
+                row.innerHTML = `
+                    <span class="m-name">${f.name}</span>
+                    <span class="m-size">${fmtSize(f.size)}</span>
+                    <button class="del-btn"><i class="fa-solid fa-trash"></i> 刪除</button>`;
+                row.querySelector('.del-btn').addEventListener('click', () =>
+                    deleteFile(f.name, f.sha, row));
+                manageList.appendChild(row);
+            }
+        }
+
+        async function deleteFile(name, sha, row) {
+            const token = tokenInput.value.trim();
+            if (!token) {
+                alert('請先在上方貼上 GitHub 權杖，才能刪除檔案。');
+                return;
+            }
+            if (!confirm(`確定要刪除「${name}」嗎？此動作無法復原。`)) return;
+
+            const btn = row.querySelector('.del-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 刪除中…';
+
+            const path = `${DIR}/${name}`;
+            const url = `${API}/${path.split('/').map(encodeURIComponent).join('/')}`;
+            try {
+                const res = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github+json'
+                    },
+                    body: JSON.stringify({ message: `刪除素材：${name}`, sha, branch: BRANCH })
+                });
+                if (res.ok) {
+                    row.remove();
+                    if (!manageList.querySelector('.m-row'))
+                        manageList.innerHTML = '<div class="m-state">素材庫還是空的。</div>';
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert('刪除失敗：' + (err.message || `HTTP ${res.status}`));
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-trash"></i> 刪除';
+                }
+            } catch (e) {
+                alert('刪除失敗：' + e.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-trash"></i> 刪除';
+            }
+        }
+
+        refreshListBtn.addEventListener('click', loadManage);
+        loadManage();
     </script>
 </body>
 </html>
