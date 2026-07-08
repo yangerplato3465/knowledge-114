@@ -1,0 +1,237 @@
+/* ===== 檔案管理頁樣式（downloads.html / upload.html 共用）===== */
+
+/* ---------- 共用 ---------- */
+* { box-sizing: border-box; }
+
+body {
+    background-color: #f0e6df;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    color: #4a3e3d;
+}
+body.page-downloads { align-items: flex-start; padding: 48px 20px; }
+body.page-upload { align-items: center; padding: 40px 20px; }
+
+.card {
+    background-color: #fffdf9;
+    border: 8px solid #fcf0db;
+    border-radius: 32px;
+    box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+    padding: 48px 56px;
+    max-width: 100%;
+}
+body.page-downloads .card { width: 640px; }
+body.page-upload .card { width: 620px; }
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #9e8e8b;
+    font-size: 15px;
+    margin-bottom: 22px;
+}
+.back-link:hover { color: #4fc3f7; }
+
+h1 { font-size: 32px; font-weight: 700; margin: 0 0 6px 0; }
+.subtitle { font-size: 15px; color: #9e8e8b; }
+body.page-downloads .subtitle { margin: 0 0 28px 0; }
+body.page-upload .subtitle { margin: 0 0 32px 0; }
+
+/* ---------- 下載頁（downloads） ---------- */
+.top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+
+.file-list { display: flex; flex-direction: column; gap: 12px; }
+
+.file-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background-color: #ffffff;
+    border: 3px solid #fcf0db;
+    border-radius: 18px;
+    padding: 16px 22px;
+    transition: all 0.2s ease;
+}
+.file-row:hover { border-color: #4fc3f7; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(79, 195, 247, 0.12); }
+
+.file-icon { font-size: 26px; width: 40px; text-align: center; flex-shrink: 0; color: #4db6ac; }
+.file-info { min-width: 0; }
+.file-name { font-size: 16px; font-weight: 500; word-break: break-all; }
+.file-size { font-size: 13px; color: #c8b8b5; }
+
+.dl-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #4fc3f7 0%, #4db6ac 100%);
+    border-radius: 14px;
+    padding: 10px 18px;
+    box-shadow: 0 4px 12px rgba(79, 195, 247, 0.2);
+    transition: transform 0.15s ease;
+}
+.dl-btn:hover { transform: translateY(-1px); }
+
+.state { text-align: center; color: #9e8e8b; padding: 40px 10px; font-size: 15px; }
+.state i { font-size: 30px; display: block; margin-bottom: 14px; color: #d8c4b8; }
+.state.err i { color: #e57373; }
+
+/* ---------- 上傳頁（upload） ---------- */
+label { display: block; font-size: 15px; font-weight: 500; margin: 0 0 8px 0; }
+
+input[type="password"], input[type="text"] {
+    width: 100%;
+    border: 3px solid #fcf0db;
+    border-radius: 16px;
+    padding: 14px 18px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #4a3e3d;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+input:focus { border-color: #4fc3f7; }
+
+.hint {
+    font-size: 13px;
+    color: #c8b8b5;
+    margin: 8px 0 0 0;
+    line-height: 1.6;
+}
+.hint a { color: #4db6ac; }
+
+.field { margin-bottom: 26px; }
+
+.drop-zone {
+    border: 3px dashed #e6d5c8;
+    border-radius: 20px;
+    padding: 34px 20px;
+    text-align: center;
+    color: #9e8e8b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #fffef9;
+}
+.drop-zone:hover, .drop-zone.dragover {
+    border-color: #4fc3f7;
+    background-color: #f7fcfe;
+    color: #4a3e3d;
+}
+.drop-zone i { font-size: 34px; color: #d8c4b8; display: block; margin-bottom: 12px; }
+.drop-zone.dragover i { color: #4fc3f7; }
+#fileInput { display: none; }
+
+.btn {
+    width: 100%;
+    border: none;
+    border-radius: 18px;
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: inherit;
+    color: #fff;
+    background: linear-gradient(135deg, #4fc3f7 0%, #4db6ac 100%);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    box-shadow: 0 6px 16px rgba(79, 195, 247, 0.25);
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(79, 195, 247, 0.3); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+#results { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; }
+.result-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 14px;
+    background-color: #f7fcfe;
+    border: 2px solid #eaf6fb;
+}
+.result-row.ok { background-color: #f1faf1; border-color: #dcefdc; }
+.result-row.err { background-color: #fdf2f2; border-color: #f6dede; }
+.result-row .r-icon { flex-shrink: 0; font-size: 18px; }
+.result-row.ok .r-icon { color: #66bb6a; }
+.result-row.err .r-icon { color: #e57373; }
+.result-row.pending .r-icon { color: #4fc3f7; }
+.result-row .r-name { font-weight: 500; word-break: break-all; }
+.result-row .r-msg { margin-left: auto; color: #9e8e8b; font-size: 13px; flex-shrink: 0; }
+
+.remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9e8e8b; margin-top: 10px; }
+.remember input { width: auto; }
+
+/* 管理已上傳的素材 */
+.manage { margin-top: 34px; border-top: 2px solid #f3e7db; padding-top: 24px; }
+.manage-head { display: flex; align-items: center; margin-bottom: 14px; }
+.manage-head .m-title { font-size: 16px; font-weight: 700; }
+.link-btn {
+    margin-left: auto;
+    border: none;
+    background: none;
+    color: #4db6ac;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.link-btn:hover { color: #4fc3f7; }
+
+.manage-list { display: flex; flex-direction: column; gap: 10px; }
+.m-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 2px solid #fcf0db;
+    border-radius: 14px;
+    padding: 12px 16px;
+    background-color: #fffef9;
+}
+.m-row .m-name { font-size: 14px; font-weight: 500; word-break: break-all; }
+.m-row .m-size { font-size: 12px; color: #c8b8b5; margin-left: auto; flex-shrink: 0; }
+.del-btn {
+    flex-shrink: 0;
+    border: 2px solid #f6dede;
+    background-color: #fdf2f2;
+    color: #e57373;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.del-btn:hover:not(:disabled) { background-color: #e57373; color: #fff; border-color: #e57373; }
+.del-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.m-state { color: #9e8e8b; font-size: 14px; padding: 8px 2px; }
+
+/* ---------- 手機版 ---------- */
+@media (max-width: 600px) {
+    body.page-downloads, body.page-upload { padding: 20px 12px; }
+    .card { padding: 28px 20px; border-width: 6px; }
+    h1 { font-size: 26px; }
+    .subtitle { font-size: 14px; }
+
+    /* 下載頁 */
+    .file-row { gap: 12px; padding: 12px 14px; }
+    .file-icon { font-size: 22px; width: 30px; }
+    .file-name { font-size: 15px; }
+    .dl-btn { padding: 8px 12px; font-size: 13px; }
+
+    /* 上傳頁 */
+    .drop-zone { padding: 26px 14px; }
+    .m-row { gap: 10px; padding: 10px 12px; }
+    .del-btn { padding: 7px 10px; font-size: 12px; }
+}

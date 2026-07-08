@@ -412,6 +412,25 @@
         .back-link:hover { color: #ff8a65; }
 
         @media (max-width: 1000px) { .workspace { grid-template-columns: 1fr; } }
+
+        /* ---------- 手機版 ---------- */
+        @media (max-width: 700px) {
+            body { padding: 16px 10px; }
+            .debug-card { border-width: 6px; }
+            .debug-header { padding: 26px 18px 22px; }
+            .debug-header .header-icon { font-size: 42px; }
+            .debug-header h1 { font-size: 26px; }
+            .debug-header p { font-size: 14px; }
+            .mission-bar { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 18px; }
+            .workspace { padding: 16px 14px 22px; gap: 14px; }
+            .ctrl-btn { font-size: 16px; padding: 13px; }
+            .factory-stage { min-height: 240px; }
+            .robot { font-size: 64px; }
+            .product { font-size: 48px; min-height: 54px; }
+            .overlay-card { padding: 26px 22px; }
+            .overlay-card h2 { font-size: 22px; }
+            .card-footer { padding: 0 20px 24px; }
+        }
     </style>
 </head>
 <body>

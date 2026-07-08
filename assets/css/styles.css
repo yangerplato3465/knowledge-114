@@ -609,3 +609,51 @@ math {
     border-radius: 8px;
     display: none;
 }
+
+/* ==================== 6. 窄螢幕版面（平板與手機） ==================== */
+/* 幻燈片原始設計為固定 1280x720；視窗不夠寬時改為直式流動排版 */
+@media (max-width: 1080px) {
+    body {
+        padding: 16px 10px;
+        gap: 20px;
+    }
+
+    .slide-container {
+        width: 100%;
+        height: auto;
+        padding: 28px 20px;
+        border-width: 6px;
+    }
+
+    .content-area {
+        height: auto;
+    }
+
+    .slide-container h2.slide-title { font-size: 26px; margin-bottom: 20px; }
+    .slide-container h3 { font-size: 20px; }
+    .slide-container p,
+    .slide-container li { font-size: 16px; }
+    math { font-size: 16px; }
+
+    /* 兩欄改單欄（slide5 有 inline 欄寬設定，需 !important 蓋過） */
+    .two-column {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+    }
+
+    .image-wrapper { height: 280px; }
+    .wide-image-wrapper { height: 260px; padding: 8px 10px; }
+    .wide-top-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+
+    .slide-container.title-slide { min-height: 420px; }
+    .title-layout { padding: 24px 10px; }
+    .title-layout h1 { font-size: 34px; }
+    .title-layout .subtitle { font-size: 17px; }
+
+    .tiled-content { flex-direction: column; gap: 18px; }
+    .tile { padding: 26px 22px; }
+
+    /* 實驗室操作鈕與答題選項允許換行／堆疊 */
+    #beaker-wrapper + div { flex-wrap: wrap; }
+    .option-group { flex-direction: column; }
+}
