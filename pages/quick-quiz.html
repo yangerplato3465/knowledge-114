@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快問快答 · 是非題挑戰</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #f0e6df;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+        }
+
+        .quiz-card {
+            background-color: #fffdf9;
+            border: 8px solid #fcf0db;
+            border-radius: 32px;
+            box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+            width: 1040px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        /* ---------- 頂部標題 ---------- */
+        .quiz-header {
+            background: linear-gradient(135deg, #ffb74d 0%, #ff8a65 100%);
+            color: #ffffff;
+            text-align: center;
+            padding: 48px 40px 40px;
+            position: relative;
+        }
+
+        .quiz-header .header-icon { font-size: 56px; margin-bottom: 12px; }
+
+        .quiz-header h1 {
+            font-size: 40px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 1px 2px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .quiz-header p {
+            font-size: 19px;
+            margin: 10px 0 0;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        /* ---------- 進度條 ---------- */
+        .progress-wrap { padding: 28px 80px 0; }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #9e8e8b;
+            margin-bottom: 10px;
+        }
+
+        .setup-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background-color: #fffef9;
+            border: 2px solid #fcf0db;
+            border-radius: 999px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #9e8e8b;
+            cursor: pointer;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .setup-btn:hover { border-color: #ffb74d; color: #ff8a65; }
+
+        .progress-track {
+            background-color: #fcf0db;
+            border-radius: 999px;
+            height: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #ffb74d, #ff8a65);
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        /* ---------- 倒數計時 ---------- */
+        /* 固定高度的舞台：倒數環與答案徽章共用同一個空間，切換時外框不變 */
+        .stage {
+            min-height: 168px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .timer-ring {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .timer-ring svg { transform: rotate(-90deg); }
+
+        .timer-ring .ring-bg { fill: none; stroke: #fcf0db; stroke-width: 8; }
+
+        .timer-ring .ring-fg {
+            fill: none;
+            stroke: #ff8a65;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+        }
+
+        .timer-ring .ring-num {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 700;
+            color: #ff8a65;
+        }
+
+        .timer-ring.urgent .ring-fg { stroke: #ef5350; }
+        .timer-ring.urgent .ring-num { color: #ef5350; }
+        .timer-ring.done { display: none; }
+
+        /* ---------- 題目區 ---------- */
+        .quiz-body { padding: 8px 80px 48px; }
+
+        /* 題目外框：固定高度，不論字數長短外框大小一致，文字置中 */
+        .question-text {
+            font-size: 45px;
+            font-weight: 700;
+            color: #4a3e3d;
+            line-height: 1.45;
+            margin: 0 0 20px;
+            text-align: center;
+            height: 240px;
+            padding: 20px 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fffef9;
+            border: 3px solid #fcf0db;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+        }
+
+        /* ---------- 答案揭曉 ---------- */
+        .answer-reveal {
+            text-align: center;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-reveal.hidden { display: none; }
+
+        .answer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            border-radius: 28px;
+            padding: 20px 44px;
+            font-size: 42px;
+            font-weight: 700;
+            animation: pop 0.3s ease;
+        }
+
+        .answer-badge .badge-icon { font-size: 48px; }
+
+        .answer-badge.is-true {
+            background-color: #f1faf1;
+            border: 3px solid #66bb6a;
+            color: #2e7d32;
+        }
+
+        .answer-badge.is-false {
+            background-color: #fdf2f2;
+            border: 3px solid #ef5350;
+            color: #c62828;
+        }
+
+        .answer-caption {
+            font-size: 18px;
+            color: #9e8e8b;
+            font-weight: 500;
+            margin-top: 12px;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ---------- 按鈕 ---------- */
+        .footer-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 24px;
+            min-height: 58px; /* 預留「下一題」按鈕空間，隱藏時不塌陷 */
+        }
+
+        .pill-btn {
+            background: linear-gradient(135deg, #ffb74d 0%, #ff8a65 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 999px;
+            padding: 16px 44px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            box-shadow: 0 6px 16px rgba(255, 138, 101, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pill-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(255, 138, 101, 0.3);
+        }
+
+        .hidden { display: none; }
+
+        /* ---------- 開始設定頁 ---------- */
+        .start-screen { text-align: center; padding: 48px 56px 60px; }
+
+        .start-screen .start-icon { font-size: 60px; margin-bottom: 6px; }
+
+        .start-screen h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4a3e3d;
+            margin: 8px 0 6px;
+        }
+
+        .start-screen .start-sub {
+            font-size: 16px;
+            color: #9e8e8b;
+            margin: 0 0 32px;
+        }
+
+        .time-field {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            background-color: #fffef9;
+            border: 3px solid #fcf0db;
+            border-radius: 24px;
+            padding: 20px 28px;
+            margin-bottom: 10px;
+        }
+
+        .time-field label { font-size: 20px; font-weight: 600; color: #6d5d5b; }
+
+        .time-field input {
+            width: 90px;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            font-size: 34px;
+            font-weight: 700;
+            text-align: center;
+            color: #ff8a65;
+            border: 3px solid #fcf0db;
+            border-radius: 16px;
+            padding: 6px 4px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .time-field input:focus { border-color: #ffb74d; }
+
+        .time-field .unit { font-size: 20px; font-weight: 600; color: #6d5d5b; }
+
+        .start-hint { font-size: 14px; color: #c8b8b5; margin: 4px 0 30px; }
+
+        .quick-picks {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 0 34px;
+            flex-wrap: wrap;
+        }
+
+        .pick-btn {
+            background-color: #fffef9;
+            border: 3px solid #fcf0db;
+            border-radius: 999px;
+            padding: 8px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #9e8e8b;
+            cursor: pointer;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .pick-btn:hover { border-color: #ffb74d; color: #ff8a65; }
+
+        /* ---------- 結果頁 ---------- */
+        .result-screen { text-align: center; padding: 56px 56px 64px; }
+
+        .result-screen .result-icon { font-size: 72px; }
+
+        .result-screen h2 {
+            font-size: 34px;
+            font-weight: 700;
+            color: #4a3e3d;
+            margin: 16px 0 12px;
+        }
+
+        .result-screen .result-sub { font-size: 20px; color: #6d5d5b; margin: 0 0 28px; }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 22px;
+            font-size: 16px;
+            color: #9e8e8b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover { color: #ff8a65; }
+
+        /* ---------- 手機版 ---------- */
+        @media (max-width: 600px) {
+            body { padding: 20px 12px; }
+            .quiz-card { border-width: 6px; }
+            .quiz-header { padding: 32px 20px 28px; }
+            .quiz-header .header-icon { font-size: 44px; }
+            .quiz-header h1 { font-size: 28px; }
+            .quiz-header p { font-size: 16px; }
+            .progress-wrap { padding: 22px 22px 0; }
+            .stage { min-height: 138px; }
+            .timer-ring { width: 80px; height: 80px; margin: 0 auto; }
+            .timer-ring .ring-num { font-size: 32px; }
+            .quiz-body { padding: 8px 22px 36px; }
+            .question-text { font-size: 22px; margin-bottom: 16px; height: 150px; padding: 16px 20px; }
+            .answer-badge { padding: 16px 32px; font-size: 32px; }
+            .answer-badge .badge-icon { font-size: 38px; }
+            .pill-btn { padding: 14px 36px; font-size: 18px; }
+            .result-screen { padding: 40px 22px 48px; }
+            .result-screen h2 { font-size: 27px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-card">
+        <div class="quiz-header">
+            <div class="header-icon">⚡</div>
+            <h1>快問快答</h1>
+        </div>
+
+        <!-- 開始設定畫面 -->
+        <div id="start-screen" class="start-screen">
+            <div class="start-icon">⏱️</div>
+            <h2>設定每題作答時間</h2>
+            <p class="start-sub">依照孩子的年齡調整，30 題都會套用這個秒數</p>
+
+            <div class="time-field">
+                <label for="time-input">每題</label>
+                <input id="time-input" type="number" min="1" max="60" step="1" value="3">
+                <span class="unit">秒</span>
+            </div>
+
+            <div class="quick-picks">
+                <button class="pick-btn" onclick="setTime(3)">3 秒</button>
+                <button class="pick-btn" onclick="setTime(5)">5 秒</button>
+                <button class="pick-btn" onclick="setTime(8)">8 秒</button>
+                <button class="pick-btn" onclick="setTime(10)">10 秒</button>
+            </div>
+
+            <p class="start-hint">可輸入 1～60 秒</p>
+
+            <div class="footer-actions">
+                <button class="pill-btn" onclick="startGame()">
+                    開始挑戰 <i class="fa-solid fa-play"></i>
+                </button>
+            </div>
+            <a href="../index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i> 回到學習主頁</a>
+        </div>
+
+        <!-- 答題畫面 -->
+        <div id="quiz-screen" class="hidden">
+            <div class="progress-wrap">
+                <div class="progress-meta">
+                    <button class="setup-btn" onclick="backToSetup()">
+                        <i class="fa-solid fa-gear"></i> 回到設定
+                    </button>
+                    <span id="progress-label">第 1 題 / 共 6 題</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="quiz-body">
+                <h2 id="question-text" class="question-text"></h2>
+
+                <div class="stage">
+                    <div id="timer-ring" class="timer-ring">
+                        <svg width="96" height="96" viewBox="0 0 96 96">
+                            <circle class="ring-bg" cx="48" cy="48" r="42"></circle>
+                            <circle id="ring-fg" class="ring-fg" cx="48" cy="48" r="42"></circle>
+                        </svg>
+                        <div id="ring-num" class="ring-num">3</div>
+                    </div>
+
+                    <div id="answer-reveal" class="answer-reveal hidden">
+                        <div id="answer-badge" class="answer-badge">
+                            <span class="badge-icon"><i id="badge-icon" class="fa-solid fa-circle-check"></i></span>
+                            <span id="answer-word">對</span>
+                        </div>
+                        <div class="answer-caption">正確答案</div>
+                    </div>
+                </div>
+
+                <div class="footer-actions">
+                    <button id="next-btn" class="pill-btn hidden" onclick="nextQuestion()">
+                        下一題 <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果畫面 -->
+        <div id="result-screen" class="result-screen hidden">
+            <div class="result-icon">🎉</div>
+            <h2>全部完成！</h2>
+            <p class="result-sub">6 題都答完囉，做得好！</p>
+            <button class="pill-btn" onclick="restartQuiz()">
+                <i class="fa-solid fa-rotate-left"></i> 再玩一次
+            </button>
+            <br>
+            <a href="../index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i> 回到學習主頁</a>
+        </div>
+    </div>
+
+    <script>
+        // ── 題庫 ──
+        // answer: true = 對(⭕) / false = 錯(❌)
+        const questions = [
+            { q: "上完廁所、吃飯前，都要用肥皂把手洗乾淨。", answer: true },
+            { q: "為了上課不遲到，過馬路時只要看到紅燈閃爍，就要用最快的速度衝過去。", answer: false },
+            { q: "躺著看書、一邊走路一邊看書，很容易讓眼睛近視。", answer: true },
+            { q: "鉛筆盒裡的橡皮擦，除了可以擦錯字，肚子餓的時候也可以拿來咬一咬當零食。", answer: false },
+            { q: "在走廊上不可以用跑步的，因為撞到同學會受傷。", answer: true },
+            { q: "垃圾倒進垃圾桶就好，鋁箔包和紙盒不用壓扁，直接丟進去比較快。", answer: false },
+            { q: "打噴嚏或咳嗽的時候，應該用手肘或衛生紙遮住口鼻。", answer: true },
+            { q: "企鵝是鳥類的一種，所以牠們非常擅長在天空中飛翔。", answer: false },
+            { q: "小狗高興的時候，通常會一直搖尾巴。", answer: true },
+            { q: "魚在水裡游泳，是因為牠們跟人類一樣是用鼻子呼吸。", answer: false },
+            { q: "青蛙小時候的名字叫做「蝌蚪」，長大後尾巴會不見。", answer: true },
+            { q: "仙人掌住在很乾的沙漠裡，所以牠們最喜歡每天被澆滿滿的水。", answer: false },
+            { q: "蝸牛爬過的地方，常常會留下一條亮亮、黏黏的痕跡。", answer: true },
+            { q: "太陽每天都是從西邊升起，從東邊落下。", answer: false },
+            { q: "西瓜切開來裡面有很多黑色的子，那些子就是西瓜的種子。", answer: true },
+            { q: "多吃蔬菜和水果，可以讓上廁所大便的時候變得很順暢。", answer: true },
+            { q: "牛奶含有豐富的鈣質，所以只要每天一直喝牛奶，不吃飯也沒關係。", answer: false },
+            { q: "吃完甜點或糖果後，一定要趕快漱口或刷牙，才不會長蛀牙。", answer: true },
+            { q: "炸雞、薯條和可樂非常好吃，所以天天三餐都吃牠們，身體會變得超級健康。", answer: false },
+            { q: "人類的指甲如果太長不剪，裡面會藏很多髒髒的細菌。", answer: true },
+            { q: "感冒發燒的時候，只要去打一整天的電動，病就會自己好起來。", answer: false },
+            { q: "一邊嘴巴含著食物、一邊大聲說話，很容易會被噎到。", answer: true },
+            { q: "世界上所有人的指紋，長得都不一樣。", answer: true },
+            { q: "冰淇淋冰冰涼涼的，所以把它放進熱熱的湯麵裡，冰淇淋絕對不會融化。", answer: false },
+            { q: "在卡通裡，貓頭鷹常常戴著眼鏡看書，但現實中貓頭鷹其實是不戴眼鏡的。", answer: true },
+            { q: "把白色和紅色的彩色筆顏色混在一起，會變成綠色。", answer: false },
+            { q: "我們每天晚上睡覺作夢，大部分的時候在醒來之後就會忘記了。", answer: true },
+            { q: "蜘蛛有 6 條腿，跟螞蟻、蝴蝶一模一樣。", answer: false },
+            { q: "中秋節的時候，大家最喜歡吃圓圓的月餅和柚子。", answer: true },
+            { q: "只要我們跑得夠快，就可以在出太陽的白天，把自己的影子甩掉。", answer: false }
+        ];
+
+        // 洗牌：每次開始隨機打亂題目順序
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        let TIME_LIMIT = 3;                   // 每題秒數（開始前由使用者設定）
+        const RING_CIRC = 2 * Math.PI * 42;   // 進度環周長
+
+        let currentQ = 0;
+        let timer = null;
+        let timeLeft = TIME_LIMIT;
+
+        function loadQuestion() {
+            const q = questions[currentQ];
+
+            document.getElementById('progress-label').innerText = `第 ${currentQ + 1} 題 / 共 ${questions.length} 題`;
+            document.getElementById('progress-fill').style.width = `${(currentQ / questions.length) * 100}%`;
+            document.getElementById('question-text').innerText = q.q;
+
+            // 隱藏答案與下一題按鈕、顯示計時器
+            document.getElementById('answer-reveal').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('timer-ring').classList.remove('done');
+
+            startTimer();
+        }
+
+        function startTimer() {
+            const ringFg = document.getElementById('ring-fg');
+            const ringNum = document.getElementById('ring-num');
+            const ring = document.getElementById('timer-ring');
+
+            timeLeft = TIME_LIMIT;
+            ring.classList.remove('urgent');
+            ringNum.innerText = timeLeft;
+
+            // 進度環：滿格 → 每秒縮短
+            ringFg.style.strokeDasharray = RING_CIRC;
+            ringFg.style.transition = 'none';
+            ringFg.style.strokeDashoffset = 0;
+            void ringFg.offsetWidth; // 觸發 reflow 重置動畫
+            ringFg.style.transition = 'stroke-dashoffset 1s linear, stroke 0.3s ease';
+            tickRing();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                ringNum.innerText = Math.max(timeLeft, 0);
+                if (timeLeft <= 1) ring.classList.add('urgent');
+                tickRing();
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    revealAnswer();
+                }
+            }, 1000);
+        }
+
+        function tickRing() {
+            const ringFg = document.getElementById('ring-fg');
+            const elapsed = TIME_LIMIT - timeLeft;
+            ringFg.style.strokeDashoffset = RING_CIRC * (elapsed / TIME_LIMIT);
+        }
+
+        // 時間到，公布答案
+        function revealAnswer() {
+            const q = questions[currentQ];
+
+            document.getElementById('timer-ring').classList.add('done');
+
+            const badge = document.getElementById('answer-badge');
+            const icon = document.getElementById('badge-icon');
+            const word = document.getElementById('answer-word');
+
+            if (q.answer) {
+                badge.className = 'answer-badge is-true';
+                icon.className = 'fa-solid fa-circle-check';
+                word.innerText = '對 (True)';
+            } else {
+                badge.className = 'answer-badge is-false';
+                icon.className = 'fa-solid fa-circle-xmark';
+                word.innerText = '錯 (False)';
+            }
+
+            document.getElementById('answer-reveal').classList.remove('hidden');
+
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.innerHTML = (currentQ === questions.length - 1)
+                ? '完成 <i class="fa-solid fa-flag-checkered"></i>'
+                : '下一題 <i class="fa-solid fa-arrow-right"></i>';
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ >= questions.length) {
+                showResult();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.querySelector('#result-screen .result-sub').innerText =
+                `${questions.length} 題都答完囉，做得好！`;
+            document.getElementById('result-screen').classList.remove('hidden');
+        }
+
+        // 快速選項按鈕：填入預設秒數
+        function setTime(sec) {
+            document.getElementById('time-input').value = sec;
+        }
+
+        // 讀取設定並開始遊戲
+        function startGame() {
+            const input = document.getElementById('time-input');
+            let sec = parseInt(input.value, 10);
+            if (isNaN(sec) || sec < 1) sec = 1;
+            if (sec > 60) sec = 60;
+            input.value = sec;
+            TIME_LIMIT = sec;
+
+            currentQ = 0;
+            shuffle(questions);
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        // 遊戲進行中：回到秒數設定畫面（停止計時）
+        function backToSetup() {
+            clearInterval(timer);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        // 再玩一次：回到設定畫面，可重新調整秒數
+        function restartQuiz() {
+            backToSetup();
+        }
+    </script>
+</body>
+</html>
