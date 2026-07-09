@@ -9,11 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/theme.css">
     <style>
         * { box-sizing: border-box; }
 
         body {
-            background-color: #f0e6df;
+            background-color: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -24,10 +25,10 @@
         }
 
         .quiz-card {
-            background-color: #fffdf9;
-            border: 8px solid #fcf0db;
+            background-color: var(--surface);
+            border: 8px solid var(--border);
             border-radius: 32px;
-            box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+            box-shadow: 0 15px 35px var(--shadow);
             width: 820px;
             max-width: 100%;
             overflow: hidden;
@@ -35,7 +36,7 @@
 
         /* ---------- 頂部標題 ---------- */
         .quiz-header {
-            background: linear-gradient(135deg, #4fc3f7 0%, #4db6ac 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             color: #ffffff;
             text-align: center;
             padding: 48px 40px 40px;
@@ -71,19 +72,19 @@
             justify-content: space-between;
             font-size: 16px;
             font-weight: 600;
-            color: #9e8e8b;
+            color: var(--muted);
             margin-bottom: 10px;
         }
 
         .progress-track {
-            background-color: #fcf0db;
+            background-color: var(--border);
             border-radius: 999px;
             height: 12px;
             overflow: hidden;
         }
 
         .progress-fill {
-            background: linear-gradient(90deg, #4fc3f7, #4db6ac);
+            background: linear-gradient(90deg, var(--primary), var(--accent));
             height: 100%;
             width: 0;
             border-radius: 999px;
@@ -98,7 +99,7 @@
         .question-text {
             font-size: 28px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             line-height: 1.45;
             margin: 0 0 32px;
         }
@@ -115,17 +116,17 @@
             gap: 18px;
             width: 100%;
             text-align: left;
-            background-color: #ffffff;
-            border: 3px solid #fcf0db;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
             border-radius: 20px;
             padding: 22px 26px;
             font-size: 20px;
             font-weight: 500;
-            color: #6d5d5b;
+            color: var(--ink-soft);
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
-            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+            box-shadow: 0 4px 12px var(--shadow);
         }
 
         .option-btn .opt-marker {
@@ -133,9 +134,9 @@
             width: 38px;
             height: 38px;
             border-radius: 50%;
-            background-color: #f7fcfe;
-            border: 2px solid #cfe9f7;
-            color: #4fc3f7;
+            background-color: var(--surface-2);
+            border: 2px solid var(--primary-tint);
+            color: var(--primary);
             font-weight: 700;
             font-size: 18px;
             display: flex;
@@ -144,17 +145,17 @@
         }
 
         .option-btn:hover:not(:disabled) {
-            border-color: #4fc3f7;
+            border-color: var(--primary);
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(79, 195, 247, 0.15);
+            box-shadow: 0 8px 20px var(--primary-shadow);
         }
 
         .option-btn:disabled { cursor: default; }
 
         .option-btn.correct {
             border-color: #66bb6a;
-            background-color: #f1faf1;
-            color: #2e7d32;
+            background-color: var(--good-bg);
+            color: var(--good);
         }
 
         .option-btn.correct .opt-marker {
@@ -165,8 +166,8 @@
 
         .option-btn.wrong {
             border-color: #ef9a9a;
-            background-color: #fdf2f2;
-            color: #c62828;
+            background-color: var(--bad-bg);
+            color: var(--bad);
         }
 
         .option-btn.wrong .opt-marker {
@@ -184,8 +185,8 @@
             min-height: 30px;
         }
 
-        .feedback-msg.good { color: #2e9e6b; }
-        .feedback-msg.bad { color: #e5532b; }
+        .feedback-msg.good { color: var(--good); }
+        .feedback-msg.bad { color: var(--bad); }
 
         .footer-actions {
             display: flex;
@@ -194,7 +195,7 @@
         }
 
         .pill-btn {
-            background: linear-gradient(135deg, #4fc3f7 0%, #4db6ac 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             color: #ffffff;
             border: none;
             border-radius: 999px;
@@ -204,7 +205,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
-            box-shadow: 0 6px 16px rgba(79, 195, 247, 0.25);
+            box-shadow: 0 6px 16px var(--primary-shadow);
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -212,7 +213,7 @@
 
         .pill-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 24px rgba(79, 195, 247, 0.3);
+            box-shadow: 0 10px 24px var(--primary-shadow);
         }
 
         .hidden { display: none; }
@@ -228,20 +229,20 @@
         .result-screen h2 {
             font-size: 34px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             margin: 16px 0 12px;
         }
 
         .result-screen .score-text {
             font-size: 22px;
-            color: #6d5d5b;
+            color: var(--ink-soft);
             margin: 0 0 8px;
         }
 
         .result-screen .score-big {
             font-size: 48px;
             font-weight: 700;
-            color: #4db6ac;
+            color: var(--accent);
             margin: 8px 0 28px;
         }
 
@@ -249,12 +250,12 @@
             display: inline-block;
             margin-top: 22px;
             font-size: 16px;
-            color: #9e8e8b;
+            color: var(--muted);
             text-decoration: none;
             font-weight: 500;
         }
 
-        .back-link:hover { color: #4fc3f7; }
+        .back-link:hover { color: var(--primary); }
 
         /* ---------- 手機版 ---------- */
         @media (max-width: 600px) {
@@ -449,5 +450,6 @@
 
         window.onload = loadQuestion;
     </script>
+    <script src="../assets/js/theme.js"></script>
 </body>
 </html>

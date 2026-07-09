@@ -9,11 +9,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/theme.css">
     <style>
         * { box-sizing: border-box; }
 
+        /* 本頁主題色：縹色（深天藍，不帶紫） */
+        body { --g1: #3f6fb0; --g2: #7ba6d8; }
+
         body {
-            background-color: #f0e6df;
+            background-color: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -24,10 +28,10 @@
         }
 
         .game-card {
-            background-color: #fffdf9;
-            border: 8px solid #fcf0db;
+            background-color: var(--surface);
+            border: 8px solid var(--border);
             border-radius: 32px;
-            box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+            box-shadow: 0 15px 35px var(--shadow);
             width: 860px;
             max-width: 100%;
             overflow: hidden;
@@ -36,7 +40,7 @@
 
         /* ---------- 頂部標題 ---------- */
         .game-header {
-            background: linear-gradient(135deg, #ff8a65 0%, #ffb74d 100%);
+            background: linear-gradient(135deg, var(--g1) 0%, var(--g2) 100%);
             color: #ffffff;
             text-align: center;
             padding: 40px 40px 34px;
@@ -76,9 +80,9 @@
             justify-content: center;
             font-size: 20px;
             flex-shrink: 0;
-            border: 3px solid #e6dccf;
-            background-color: #ffffff;
-            color: #c8b8b5;
+            border: 3px solid var(--border);
+            background-color: var(--surface);
+            color: var(--muted-2);
             transition: all 0.3s ease;
         }
 
@@ -86,24 +90,24 @@
             flex: 1;
             height: 4px;
             border-radius: 999px;
-            background-color: #ece0d3;
+            background-color: var(--border);
             min-width: 16px;
             transition: background-color 0.3s ease;
         }
 
-        .map-line.done { background-color: #4db6ac; }
+        .map-line.done { background-color: var(--accent); }
 
         .map-node.done {
-            border-color: #4db6ac;
-            background-color: #f2fbf9;
-            color: #4db6ac;
+            border-color: var(--accent);
+            background-color: var(--surface-2);
+            color: var(--accent);
             opacity: 0.85;
         }
 
         .map-node.current {
-            border-color: #ff8a65;
-            background-color: #fff3ee;
-            color: #ff8a65;
+            border-color: var(--g1);
+            background-color: var(--warn-bg);
+            color: var(--g1);
             transform: scale(1.25);
             animation: nodePulse 1.2s infinite;
         }
@@ -119,9 +123,9 @@
             height: 60px;
             font-size: 26px;
             border-width: 4px;
-            border-color: #c62828;
-            background-color: #fdecea;
-            color: #c62828;
+            border-color: var(--bad);
+            background-color: var(--bad-bg);
+            color: var(--bad);
             position: relative;
         }
 
@@ -167,8 +171,8 @@
         }
 
         .upgrade-panel {
-            background-color: #fffdf9;
-            border: 6px solid #fcf0db;
+            background-color: var(--surface);
+            border: 6px solid var(--border);
             border-radius: 28px;
             padding: 34px 32px;
             text-align: center;
@@ -186,13 +190,13 @@
         .upgrade-panel h2 {
             font-size: 28px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             margin: 0 0 6px;
         }
 
         .upgrade-panel .panel-sub {
             font-size: 16px;
-            color: #9e8e8b;
+            color: var(--muted);
             margin: 0 0 26px;
         }
 
@@ -200,8 +204,8 @@
 
         .upgrade-card {
             flex: 1;
-            background-color: #ffffff;
-            border: 3px solid #fcf0db;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
             border-radius: 20px;
             padding: 26px 16px;
             cursor: pointer;
@@ -211,23 +215,23 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+            box-shadow: 0 4px 12px var(--shadow);
         }
 
         .upgrade-card:hover {
-            border-color: #ff8a65;
+            border-color: var(--g1);
             transform: translateY(-4px);
             box-shadow: 0 10px 22px rgba(255, 138, 101, 0.18);
         }
 
         .upgrade-card .up-icon { font-size: 40px; line-height: 1; }
-        .upgrade-card .up-title { font-size: 19px; font-weight: 700; color: #4a3e3d; }
-        .upgrade-card .up-desc { font-size: 14px; color: #6d5d5b; line-height: 1.45; }
+        .upgrade-card .up-title { font-size: 19px; font-weight: 700; color: var(--ink); }
+        .upgrade-card .up-desc { font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
 
         .howto-text {
             text-align: left;
             font-size: 16px;
-            color: #6d5d5b;
+            color: var(--ink-soft);
             line-height: 1.7;
             margin: 6px auto 26px;
             max-width: 460px;
@@ -235,7 +239,7 @@
             list-style: none;
         }
         .howto-text li { margin-bottom: 10px; }
-        .howto-text strong { color: #4a3e3d; }
+        .howto-text strong { color: var(--ink); }
 
         /* ---------- 開始前的選單畫面 ---------- */
         .setup-screen {
@@ -246,13 +250,13 @@
         .setup-title {
             font-size: 28px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             margin: 0 0 8px;
         }
 
         .setup-sub {
             font-size: 16px;
-            color: #9e8e8b;
+            color: var(--muted);
             margin: 0 0 30px;
         }
 
@@ -260,8 +264,8 @@
 
         .choice-card {
             flex: 1;
-            background-color: #ffffff;
-            border: 3px solid #fcf0db;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
             border-radius: 24px;
             padding: 44px 20px;
             cursor: pointer;
@@ -271,11 +275,11 @@
             flex-direction: column;
             align-items: center;
             gap: 12px;
-            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+            box-shadow: 0 4px 12px var(--shadow);
         }
 
         .choice-card:hover {
-            border-color: #ff8a65;
+            border-color: var(--g1);
             transform: translateY(-4px);
             box-shadow: 0 10px 22px rgba(255, 138, 101, 0.18);
         }
@@ -284,17 +288,17 @@
             font-size: 52px;
             line-height: 1;
             font-weight: 700;
-            color: #ff8a65;
+            color: var(--g1);
             width: 84px;
             height: 84px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #fff3ee;
-            border: 3px solid #ffd0bf;
+            background-color: var(--warn-bg);
+            border: 3px solid var(--warn-border);
             border-radius: 50%;
         }
-        .choice-card .choice-label { font-size: 24px; font-weight: 700; color: #4a3e3d; }
+        .choice-card .choice-label { font-size: 24px; font-weight: 700; color: var(--ink); }
 
         .pool-list { display: flex; flex-direction: column; gap: 14px; }
 
@@ -302,19 +306,19 @@
             display: flex;
             align-items: center;
             gap: 18px;
-            background-color: #ffffff;
-            border: 3px solid #fcf0db;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
             border-radius: 18px;
             padding: 18px 24px;
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
             text-align: left;
-            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+            box-shadow: 0 4px 12px var(--shadow);
         }
 
         .pool-card:hover {
-            border-color: #ff8a65;
+            border-color: var(--g1);
             transform: translateY(-3px);
             box-shadow: 0 8px 18px rgba(255, 138, 101, 0.15);
         }
@@ -324,9 +328,9 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background-color: #fff3ee;
-            border: 2px solid #ffd0bf;
-            color: #ff8a65;
+            background-color: var(--warn-bg);
+            border: 2px solid var(--warn-border);
+            color: var(--g1);
             font-weight: 700;
             font-size: 17px;
             display: flex;
@@ -334,20 +338,20 @@
             justify-content: center;
         }
 
-        .pool-card .pool-name { font-size: 19px; font-weight: 600; color: #4a3e3d; flex: 1; }
-        .pool-card .pool-arrow { color: #c8b8b5; font-size: 16px; }
+        .pool-card .pool-name { font-size: 19px; font-weight: 600; color: var(--ink); flex: 1; }
+        .pool-card .pool-arrow { color: var(--muted-2); font-size: 16px; }
 
         .back-link-btn {
             margin-top: 26px;
             background: none;
             border: none;
-            color: #9e8e8b;
+            color: var(--muted);
             font-size: 15px;
             font-weight: 500;
             cursor: pointer;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
         }
-        .back-link-btn:hover { color: #ff8a65; }
+        .back-link-btn:hover { color: var(--g1); }
 
         /* ---------- 戰鬥場景 ---------- */
         .battle-stage {
@@ -370,7 +374,7 @@
         .fighter .name {
             font-size: 18px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             margin: 8px 0 6px;
         }
 
@@ -381,16 +385,16 @@
             justify-content: center;
             font-size: 14px;
             font-weight: 600;
-            color: #9e8e8b;
+            color: var(--muted);
             margin-bottom: 6px;
         }
 
         .hp-track {
-            background-color: #fcf0db;
+            background-color: var(--border);
             border-radius: 999px;
             height: 16px;
             overflow: hidden;
-            border: 2px solid #f3e3c7;
+            border: 2px solid var(--border);
         }
 
         .hp-fill {
@@ -400,13 +404,13 @@
             transition: width 0.5s ease, background-color 0.5s ease;
         }
 
-        .hp-fill.player { background: linear-gradient(90deg, #66bb6a, #43a047); }
-        .hp-fill.enemy  { background: linear-gradient(90deg, #ef5350, #e53935); }
+        .hp-fill.player { background: linear-gradient(90deg, #66bb6a, var(--good)); }
+        .hp-fill.enemy  { background: linear-gradient(90deg, #ef5350, var(--bad)); }
 
         .vs-badge {
             font-size: 26px;
             font-weight: 700;
-            color: #c8b8b5;
+            color: var(--muted-2);
             padding-bottom: 40px;
         }
 
@@ -450,7 +454,7 @@
             text-align: center;
             font-size: 15px;
             font-weight: 600;
-            color: #9e8e8b;
+            color: var(--muted);
             margin-bottom: 12px;
         }
 
@@ -465,7 +469,7 @@
         .timer-text {
             font-size: 22px;
             font-weight: 700;
-            color: #4db6ac;
+            color: var(--accent);
             min-width: 54px;
             text-align: right;
             display: flex;
@@ -475,23 +479,23 @@
 
         .timer-track {
             flex: 1;
-            background-color: #fcf0db;
+            background-color: var(--border);
             border-radius: 999px;
             height: 14px;
             overflow: hidden;
-            border: 2px solid #f3e3c7;
+            border: 2px solid var(--border);
         }
 
         .timer-fill {
             height: 100%;
             width: 100%;
             border-radius: 999px;
-            background: linear-gradient(90deg, #4db6ac, #4fc3f7);
+            background: linear-gradient(90deg, var(--accent), var(--primary));
             transition: width 1s linear, background 0.3s ease;
         }
 
-        .timer-fill.low { background: linear-gradient(90deg, #ef5350, #ff8a65); }
-        .timer-text.low { color: #e5532b; animation: pulse 0.6s infinite; }
+        .timer-fill.low { background: linear-gradient(90deg, #ef5350, var(--g1)); }
+        .timer-text.low { color: var(--bad); animation: pulse 0.6s infinite; }
 
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
@@ -499,8 +503,8 @@
         }
 
         .question-box {
-            background-color: #f7fcfe;
-            border: 3px dashed #4fc3f7;
+            background-color: var(--surface-2);
+            border: 3px dashed var(--primary);
             border-radius: 20px;
             text-align: center;
             padding: 24px;
@@ -510,7 +514,7 @@
         .question-box .q-text {
             font-size: 36px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             margin: 0;
             letter-spacing: 1px;
         }
@@ -522,28 +526,28 @@
         }
 
         .option-btn {
-            background-color: #ffffff;
-            border: 3px solid #fcf0db;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
             border-radius: 20px;
             padding: 20px;
             font-size: 24px;
             font-weight: 600;
-            color: #6d5d5b;
+            color: var(--ink-soft);
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
-            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+            box-shadow: 0 4px 12px var(--shadow);
         }
 
         .option-btn:hover:not(:disabled) {
-            border-color: #ff8a65;
+            border-color: var(--g1);
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(255, 138, 101, 0.18);
         }
 
         .option-btn:disabled { cursor: default; }
-        .option-btn.correct { border-color: #66bb6a; background-color: #f1faf1; color: #2e7d32; }
-        .option-btn.wrong   { border-color: #ef9a9a; background-color: #fdf2f2; color: #c62828; }
+        .option-btn.correct { border-color: #66bb6a; background-color: var(--good-bg); color: var(--good); }
+        .option-btn.wrong   { border-color: #ef9a9a; background-color: var(--bad-bg); color: var(--bad); }
 
         .feedback-msg {
             font-size: 20px;
@@ -552,13 +556,13 @@
             margin: 24px 0 0;
             min-height: 28px;
         }
-        .feedback-msg.good { color: #2e9e6b; }
-        .feedback-msg.bad { color: #e5532b; }
+        .feedback-msg.good { color: var(--good); }
+        .feedback-msg.bad { color: var(--bad); }
 
         .footer-actions { display: flex; justify-content: center; margin-top: 20px; }
 
         .pill-btn {
-            background: linear-gradient(135deg, #ff8a65 0%, #ffb74d 100%);
+            background: linear-gradient(135deg, var(--g1) 0%, var(--g2) 100%);
             color: #ffffff;
             border: none;
             border-radius: 999px;
@@ -580,18 +584,18 @@
         /* ---------- 結束畫面 ---------- */
         .end-screen { text-align: center; padding: 56px; }
         .end-screen .end-icon { font-size: 76px; }
-        .end-screen h2 { font-size: 34px; font-weight: 700; color: #4a3e3d; margin: 16px 0 10px; }
-        .end-screen p { font-size: 20px; color: #6d5d5b; margin: 0 0 26px; }
+        .end-screen h2 { font-size: 34px; font-weight: 700; color: var(--ink); margin: 16px 0 10px; }
+        .end-screen p { font-size: 20px; color: var(--ink-soft); margin: 0 0 26px; }
 
         .back-link {
             display: inline-block;
             margin-top: 22px;
             font-size: 16px;
-            color: #9e8e8b;
+            color: var(--muted);
             text-decoration: none;
             font-weight: 500;
         }
-        .back-link:hover { color: #ff8a65; }
+        .back-link:hover { color: var(--g1); }
 
         /* ---------- 手機版 ---------- */
         @media (max-width: 600px) {
@@ -772,5 +776,6 @@
 
     <script src="../assets/js/math-rpg-pools.js"></script>
     <script src="../assets/js/math-rpg.js"></script>
+    <script src="../assets/js/theme.js"></script>
 </body>
 </html>

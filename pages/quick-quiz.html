@@ -9,11 +9,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/theme.css">
     <style>
         * { box-sizing: border-box; }
 
+        /* 本頁主題色：空色（天藍） */
+        body { --g1: #5b90c9; --g2: #93c1e6; }
+
         body {
-            background-color: #f0e6df;
+            background-color: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -24,10 +28,10 @@
         }
 
         .quiz-card {
-            background-color: #fffdf9;
-            border: 8px solid #fcf0db;
+            background-color: var(--surface);
+            border: 8px solid var(--border);
             border-radius: 32px;
-            box-shadow: 0 15px 35px rgba(139, 92, 26, 0.1);
+            box-shadow: 0 15px 35px var(--shadow);
             width: 1040px;
             max-width: 100%;
             overflow: hidden;
@@ -35,7 +39,7 @@
 
         /* ---------- 頂部標題 ---------- */
         .quiz-header {
-            background: linear-gradient(135deg, #ffb74d 0%, #ff8a65 100%);
+            background: linear-gradient(135deg, var(--g2) 0%, var(--g1) 100%);
             color: #ffffff;
             text-align: center;
             padding: 48px 40px 40px;
@@ -67,7 +71,7 @@
             align-items: center;
             font-size: 16px;
             font-weight: 600;
-            color: #9e8e8b;
+            color: var(--muted);
             margin-bottom: 10px;
         }
 
@@ -75,29 +79,29 @@
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            background-color: #fffef9;
-            border: 2px solid #fcf0db;
+            background-color: var(--surface);
+            border: 2px solid var(--border);
             border-radius: 999px;
             padding: 6px 16px;
             font-size: 14px;
             font-weight: 600;
-            color: #9e8e8b;
+            color: var(--muted);
             cursor: pointer;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
             transition: all 0.2s ease;
         }
 
-        .setup-btn:hover { border-color: #ffb74d; color: #ff8a65; }
+        .setup-btn:hover { border-color: var(--g2); color: var(--g1); }
 
         .progress-track {
-            background-color: #fcf0db;
+            background-color: var(--border);
             border-radius: 999px;
             height: 12px;
             overflow: hidden;
         }
 
         .progress-fill {
-            background: linear-gradient(90deg, #ffb74d, #ff8a65);
+            background: linear-gradient(90deg, var(--g2), var(--g1));
             height: 100%;
             width: 0;
             border-radius: 999px;
@@ -124,11 +128,11 @@
 
         .timer-ring svg { transform: rotate(-90deg); }
 
-        .timer-ring .ring-bg { fill: none; stroke: #fcf0db; stroke-width: 8; }
+        .timer-ring .ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
 
         .timer-ring .ring-fg {
             fill: none;
-            stroke: #ff8a65;
+            stroke: var(--g1);
             stroke-width: 8;
             stroke-linecap: round;
             transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
@@ -142,7 +146,7 @@
             justify-content: center;
             font-size: 40px;
             font-weight: 700;
-            color: #ff8a65;
+            color: var(--g1);
         }
 
         .timer-ring.urgent .ring-fg { stroke: #ef5350; }
@@ -156,7 +160,7 @@
         .question-text {
             font-size: 45px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             line-height: 1.45;
             margin: 0 0 20px;
             text-align: center;
@@ -165,10 +169,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #fffef9;
-            border: 3px solid #fcf0db;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
             border-radius: 24px;
-            box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
+            box-shadow: 0 4px 12px var(--shadow);
         }
 
         /* ---------- 答案揭曉 ---------- */
@@ -197,20 +201,20 @@
         .answer-badge .badge-icon { font-size: 48px; }
 
         .answer-badge.is-true {
-            background-color: #f1faf1;
+            background-color: var(--good-bg);
             border: 3px solid #66bb6a;
-            color: #2e7d32;
+            color: var(--good);
         }
 
         .answer-badge.is-false {
-            background-color: #fdf2f2;
+            background-color: var(--bad-bg);
             border: 3px solid #ef5350;
-            color: #c62828;
+            color: var(--bad);
         }
 
         .answer-caption {
             font-size: 18px;
-            color: #9e8e8b;
+            color: var(--muted);
             font-weight: 500;
             margin-top: 12px;
         }
@@ -230,7 +234,7 @@
         }
 
         .pill-btn {
-            background: linear-gradient(135deg, #ffb74d 0%, #ff8a65 100%);
+            background: linear-gradient(135deg, var(--g2) 0%, var(--g1) 100%);
             color: #ffffff;
             border: none;
             border-radius: 999px;
@@ -261,13 +265,13 @@
         .start-screen h2 {
             font-size: 28px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             margin: 8px 0 6px;
         }
 
         .start-screen .start-sub {
             font-size: 16px;
-            color: #9e8e8b;
+            color: var(--muted);
             margin: 0 0 32px;
         }
 
@@ -275,14 +279,14 @@
             display: inline-flex;
             align-items: center;
             gap: 14px;
-            background-color: #fffef9;
-            border: 3px solid #fcf0db;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
             border-radius: 24px;
             padding: 20px 28px;
             margin-bottom: 10px;
         }
 
-        .time-field label { font-size: 20px; font-weight: 600; color: #6d5d5b; }
+        .time-field label { font-size: 20px; font-weight: 600; color: var(--ink-soft); }
 
         .time-field input {
             width: 90px;
@@ -290,19 +294,19 @@
             font-size: 34px;
             font-weight: 700;
             text-align: center;
-            color: #ff8a65;
-            border: 3px solid #fcf0db;
+            color: var(--g1);
+            border: 3px solid var(--border);
             border-radius: 16px;
             padding: 6px 4px;
             outline: none;
             transition: border-color 0.2s ease;
         }
 
-        .time-field input:focus { border-color: #ffb74d; }
+        .time-field input:focus { border-color: var(--g2); }
 
-        .time-field .unit { font-size: 20px; font-weight: 600; color: #6d5d5b; }
+        .time-field .unit { font-size: 20px; font-weight: 600; color: var(--ink-soft); }
 
-        .start-hint { font-size: 14px; color: #c8b8b5; margin: 4px 0 30px; }
+        .start-hint { font-size: 14px; color: var(--muted-2); margin: 4px 0 30px; }
 
         .quick-picks {
             display: flex;
@@ -313,19 +317,19 @@
         }
 
         .pick-btn {
-            background-color: #fffef9;
-            border: 3px solid #fcf0db;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
             border-radius: 999px;
             padding: 8px 20px;
             font-size: 15px;
             font-weight: 600;
-            color: #9e8e8b;
+            color: var(--muted);
             cursor: pointer;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
             transition: all 0.2s ease;
         }
 
-        .pick-btn:hover { border-color: #ffb74d; color: #ff8a65; }
+        .pick-btn:hover { border-color: var(--g2); color: var(--g1); }
 
         /* ---------- 結果頁 ---------- */
         .result-screen { text-align: center; padding: 56px 56px 64px; }
@@ -335,22 +339,22 @@
         .result-screen h2 {
             font-size: 34px;
             font-weight: 700;
-            color: #4a3e3d;
+            color: var(--ink);
             margin: 16px 0 12px;
         }
 
-        .result-screen .result-sub { font-size: 20px; color: #6d5d5b; margin: 0 0 28px; }
+        .result-screen .result-sub { font-size: 20px; color: var(--ink-soft); margin: 0 0 28px; }
 
         .back-link {
             display: inline-block;
             margin-top: 22px;
             font-size: 16px;
-            color: #9e8e8b;
+            color: var(--muted);
             text-decoration: none;
             font-weight: 500;
         }
 
-        .back-link:hover { color: #ff8a65; }
+        .back-link:hover { color: var(--g1); }
 
         /* ---------- 手機版 ---------- */
         @media (max-width: 600px) {
@@ -648,5 +652,6 @@
             backToSetup();
         }
     </script>
+    <script src="../assets/js/theme.js"></script>
 </body>
 </html>

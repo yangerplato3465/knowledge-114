@@ -464,8 +464,8 @@ const dlEngine = {
     },
     renderStatus() {
         const stMap = {
-            ready: ["待命", "#9e8e8b"], running: ["執行中 ⚙️", "#2e7d32"],
-            waiting: ["等待中 ⏳", "#ef6c00"], done: ["完成 ✅", "#2e7d32"], dead: ["卡死 🔴", "#c62828"]
+            ready: ["待命", "var(--muted)"], running: ["執行中 ⚙️", "var(--g1)"],
+            waiting: ["等待中 ⏳", "var(--warn)"], done: ["完成 ✅", "var(--g1)"], dead: ["卡死 🔴", "var(--bad)"]
         };
         const robo = (w, job) => {
             const st = rt.deadlock && rt.status[w] === "waiting" ? "dead" : rt.status[w];
