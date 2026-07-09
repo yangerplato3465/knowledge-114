@@ -1,0 +1,179 @@
+/* ============================================================
+   共用主題：日系水藍色系 + 深色模式
+   薄水色 usumizuiro / 水色 mizuiro / 空色 sorairo / 御空色 misorairo
+   所有頁面共用。淺色為預設，深色跟隨系統或手動切換。
+   ============================================================ */
+
+:root {
+    color-scheme: light;
+
+    /* 面 surfaces */
+    --bg: #eaf2ef;            /* 頁面底（薄水色調淡） */
+    --surface: #ffffff;       /* 卡片 */
+    --surface-2: #e8f1ef;     /* 內嵌 / hover 底 */
+    --surface-3: #dcebe9;     /* 更深一階的柔底 */
+
+    /* 邊框 borders */
+    --border: #d7e4ea;
+    --border-strong: #bcd3e0;
+
+    /* 文字 text */
+    --ink: #2f3e60;           /* 標題 / 主要文字（深藍） */
+    --ink-soft: #4a566c;      /* 內文 */
+    --muted: #7e8ca0;         /* 次要 */
+    --muted-2: #a8b5c3;       /* 提示 / 最淡 */
+
+    /* 主色 primary（御空色） */
+    --primary: #6d86c6;
+    --primary-strong: #5a72b0;
+    --primary-tint: #dde5f5;  /* 主色柔底 */
+    --on-primary: #ffffff;    /* 主色按鈕上的字 */
+
+    /* 輔色 */
+    --accent: #4f86b5;        /* 空色系 · 連結 / 次要重點 */
+    --accent-sky: #8fb6d3;    /* 空色 */
+    --accent-mizu: #afcfdd;   /* 水色 */
+    --accent-pale: #d3e4dd;   /* 薄水色 */
+
+    /* 語意色 semantic（含深色可讀版本） */
+    --good: #2e8b5e;
+    --good-bg: #e8f5ee;
+    --good-border: #c6e6d5;
+    --bad: #cf4b3f;
+    --bad-bg: #fbedeb;
+    --bad-border: #f0d0cb;
+    --warn: #c17a1e;
+    --warn-bg: #faf0dd;
+    --warn-border: #f0dcb0;
+    --info: #3a7fb8;
+    --info-bg: #e7f0f8;
+    --info-border: #c5ddef;
+
+    /* 陰影 */
+    --shadow: rgba(47, 62, 96, 0.10);
+    --shadow-strong: rgba(47, 62, 96, 0.16);
+    --primary-shadow: rgba(109, 134, 198, 0.25);
+
+    /* 常用漸層（按鈕） */
+    --grad: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+}
+
+/* 深色調色盤 */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg: #10141c;
+    --surface: #1a2030;
+    --surface-2: #232c3e;
+    --surface-3: #2c3650;
+
+    --border: #2f3a4f;
+    --border-strong: #45536b;
+
+    --ink: #e8eef7;
+    --ink-soft: #c3cddd;
+    --muted: #93a0b4;
+    --muted-2: #6a7688;
+
+    --primary: #93a9db;
+    --primary-strong: #aec0e7;
+    --primary-tint: #2a3352;
+    --on-primary: #10141c;
+
+    --accent: #77a9d2;
+    --accent-sky: #6f97b8;
+    --accent-mizu: #5b7f96;
+    --accent-pale: #3a4a55;
+
+    --good: #63c89b;
+    --good-bg: #163024;
+    --good-border: #285041;
+    --bad: #f08a7f;
+    --bad-bg: #38201d;
+    --bad-border: #5a322d;
+    --warn: #e0a94e;
+    --warn-bg: #33280f;
+    --warn-border: #574016;
+    --info: #74a9d3;
+    --info-bg: #15263a;
+    --info-border: #2a4258;
+
+    --shadow: rgba(0, 0, 0, 0.45);
+    --shadow-strong: rgba(0, 0, 0, 0.6);
+    --primary-shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* 未手動選擇時，跟隨系統深色 */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+
+        --bg: #10141c;
+        --surface: #1a2030;
+        --surface-2: #232c3e;
+        --surface-3: #2c3650;
+
+        --border: #2f3a4f;
+        --border-strong: #45536b;
+
+        --ink: #e8eef7;
+        --ink-soft: #c3cddd;
+        --muted: #93a0b4;
+        --muted-2: #6a7688;
+
+        --primary: #93a9db;
+        --primary-strong: #aec0e7;
+        --primary-tint: #2a3352;
+        --on-primary: #10141c;
+
+        --accent: #77a9d2;
+        --accent-sky: #6f97b8;
+        --accent-mizu: #5b7f96;
+        --accent-pale: #3a4a55;
+
+        --good: #63c89b;
+        --good-bg: #163024;
+        --good-border: #285041;
+        --bad: #f08a7f;
+        --bad-bg: #38201d;
+        --bad-border: #5a322d;
+        --warn: #e0a94e;
+        --warn-bg: #33280f;
+        --warn-border: #574016;
+        --info: #74a9d3;
+        --info-bg: #15263a;
+        --info-border: #2a4258;
+
+        --shadow: rgba(0, 0, 0, 0.45);
+        --shadow-strong: rgba(0, 0, 0, 0.6);
+        --primary-shadow: rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* ---------- 深色 / 淺色 切換鈕 ---------- */
+.theme-toggle {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 9999;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 19px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px var(--shadow);
+    transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease;
+    font-family: inherit;
+}
+.theme-toggle:hover { transform: translateY(-2px) scale(1.05); }
+.theme-toggle:active { transform: scale(0.95); }
+
+@media (max-width: 600px) {
+    .theme-toggle { right: 14px; bottom: 14px; width: 42px; height: 42px; font-size: 17px; }
+}
