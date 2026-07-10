@@ -258,7 +258,7 @@
         .hidden { display: none; }
 
         /* ---------- 開始設定頁 ---------- */
-        .start-screen { text-align: center; padding: 48px 56px 60px; }
+        .start-screen { text-align: center; padding: 44px 64px 56px; }
 
         .start-screen .start-icon { font-size: 60px; margin-bottom: 6px; }
 
@@ -272,18 +272,43 @@
         .start-screen .start-sub {
             font-size: 16px;
             color: var(--muted);
-            margin: 0 0 32px;
+            margin: 0 0 30px;
         }
+
+        /* 秒數與題數左右並排 */
+        .settings-row {
+            display: flex;
+            gap: 24px;
+            margin: 0 auto 30px;
+            max-width: 880px;
+        }
+
+        .setting-group {
+            flex: 1;
+            background-color: var(--surface);
+            border: 3px solid var(--border);
+            border-radius: 24px;
+            padding: 22px 20px 12px;
+        }
+
+        .setting-group .group-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--ink-soft);
+            margin: 0 0 16px;
+        }
+
+        .setting-group .group-title i { color: var(--g1); }
 
         .time-field {
             display: inline-flex;
             align-items: center;
             gap: 14px;
-            background-color: var(--surface);
-            border: 3px solid var(--border);
-            border-radius: 24px;
-            padding: 20px 28px;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
 
         .time-field label { font-size: 20px; font-weight: 600; color: var(--ink-soft); }
@@ -306,13 +331,13 @@
 
         .time-field .unit { font-size: 20px; font-weight: 600; color: var(--ink-soft); }
 
-        .start-hint { font-size: 14px; color: var(--muted-2); margin: 4px 0 30px; }
+        .start-hint { font-size: 14px; color: var(--muted-2); margin: 0 0 8px; }
 
         .quick-picks {
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin: 0 0 34px;
+            margin: 0 0 14px;
             flex-wrap: wrap;
         }
 
@@ -357,7 +382,12 @@
         .back-link:hover { color: var(--g1); }
 
         /* ---------- 手機版 ---------- */
+        @media (max-width: 760px) {
+            .settings-row { flex-direction: column; gap: 16px; }
+        }
+
         @media (max-width: 600px) {
+            .start-screen { padding: 36px 22px 44px; }
             body { padding: 20px 12px; }
             .quiz-card { border-width: 6px; }
             .quiz-header { padding: 32px 20px 28px; }
@@ -389,23 +419,48 @@
         <!-- 開始設定畫面 -->
         <div id="start-screen" class="start-screen">
             <div class="start-icon">⏱️</div>
-            <h2>設定每題作答時間</h2>
-            <p class="start-sub">依照孩子的年齡調整，30 題都會套用這個秒數</p>
+            <h2>設定遊戲方式</h2>
+            <p class="start-sub">依照孩子的年齡調整每題秒數與題目數量</p>
 
-            <div class="time-field">
-                <label for="time-input">每題</label>
-                <input id="time-input" type="number" min="1" max="60" step="1" value="3">
-                <span class="unit">秒</span>
+            <div class="settings-row">
+                <div class="setting-group">
+                    <p class="group-title"><i class="fa-solid fa-stopwatch"></i> 每題作答時間</p>
+
+                    <div class="time-field">
+                        <label for="time-input">每題</label>
+                        <input id="time-input" type="number" min="1" max="60" step="1" value="3">
+                        <span class="unit">秒</span>
+                    </div>
+
+                    <div class="quick-picks">
+                        <button class="pick-btn" onclick="setTime(3)">3 秒</button>
+                        <button class="pick-btn" onclick="setTime(5)">5 秒</button>
+                        <button class="pick-btn" onclick="setTime(8)">8 秒</button>
+                        <button class="pick-btn" onclick="setTime(10)">10 秒</button>
+                    </div>
+
+                    <p class="start-hint">可輸入 1～60 秒</p>
+                </div>
+
+                <div class="setting-group">
+                    <p class="group-title"><i class="fa-solid fa-list-ol"></i> 題目數量</p>
+
+                    <div class="time-field">
+                        <label for="count-input">共</label>
+                        <input id="count-input" type="number" min="1" step="1" value="10">
+                        <span class="unit">題</span>
+                    </div>
+
+                    <div class="quick-picks">
+                        <button class="pick-btn" onclick="setCount(5)">5 題</button>
+                        <button class="pick-btn" onclick="setCount(10)">10 題</button>
+                        <button class="pick-btn" onclick="setCount(20)">20 題</button>
+                        <button class="pick-btn" onclick="setCount(30)">30 題</button>
+                    </div>
+
+                    <p id="count-hint" class="start-hint">每次會從題庫隨機抽出題目</p>
+                </div>
             </div>
-
-            <div class="quick-picks">
-                <button class="pick-btn" onclick="setTime(3)">3 秒</button>
-                <button class="pick-btn" onclick="setTime(5)">5 秒</button>
-                <button class="pick-btn" onclick="setTime(8)">8 秒</button>
-                <button class="pick-btn" onclick="setTime(10)">10 秒</button>
-            </div>
-
-            <p class="start-hint">可輸入 1～60 秒</p>
 
             <div class="footer-actions">
                 <button class="pill-btn" onclick="startGame()">
@@ -475,7 +530,7 @@
         // ── 題庫 ──
         // answer: true = 對(⭕) / false = 錯(❌)
         const questions = [
-        { q: "在走廊上不可以用跑步的，因為撞到同學會受傷。", answer: true },
+            { q: "在走廊上不可以用跑步的，因為撞到同學會受傷。", answer: true },
             { q: "世界上所有人的指紋，長得都不一樣。", answer: true },
             { q: "中秋節的時候，大家最喜歡吃圓圓的月餅和柚子。", answer: true },
             { q: "剪刀和美工刀非常鋒利，拿來剪紙的時候要小心，不可以用刀尖對著同學。", answer: true },
@@ -578,15 +633,20 @@
         let TIME_LIMIT = 3;                   // 每題秒數（開始前由使用者設定）
         const RING_CIRC = 2 * Math.PI * 42;   // 進度環周長
 
+        let gameQuestions = [];               // 本輪要玩的題目（由題庫隨機抽出）
         let currentQ = 0;
         let timer = null;
         let timeLeft = TIME_LIMIT;
 
-        function loadQuestion() {
-            const q = questions[currentQ];
+        // 題數輸入上限 = 題庫總數
+        document.getElementById('count-input').max = questions.length;
+        document.getElementById('count-hint').innerText = `可輸入 1～${questions.length} 題`;
 
-            document.getElementById('progress-label').innerText = `第 ${currentQ + 1} 題 / 共 ${questions.length} 題`;
-            document.getElementById('progress-fill').style.width = `${(currentQ / questions.length) * 100}%`;
+        function loadQuestion() {
+            const q = gameQuestions[currentQ];
+
+            document.getElementById('progress-label').innerText = `第 ${currentQ + 1} 題 / 共 ${gameQuestions.length} 題`;
+            document.getElementById('progress-fill').style.width = `${(currentQ / gameQuestions.length) * 100}%`;
             document.getElementById('question-text').innerText = q.q;
 
             // 隱藏答案與下一題按鈕、顯示計時器
@@ -634,7 +694,7 @@
 
         // 時間到，公布答案
         function revealAnswer() {
-            const q = questions[currentQ];
+            const q = gameQuestions[currentQ];
 
             document.getElementById('timer-ring').classList.add('done');
 
@@ -655,7 +715,7 @@
             document.getElementById('answer-reveal').classList.remove('hidden');
 
             const nextBtn = document.getElementById('next-btn');
-            nextBtn.innerHTML = (currentQ === questions.length - 1)
+            nextBtn.innerHTML = (currentQ === gameQuestions.length - 1)
                 ? '完成 <i class="fa-solid fa-flag-checkered"></i>'
                 : '下一題 <i class="fa-solid fa-arrow-right"></i>';
             nextBtn.classList.remove('hidden');
@@ -663,7 +723,7 @@
 
         function nextQuestion() {
             currentQ++;
-            if (currentQ >= questions.length) {
+            if (currentQ >= gameQuestions.length) {
                 showResult();
             } else {
                 loadQuestion();
@@ -673,13 +733,18 @@
         function showResult() {
             document.getElementById('quiz-screen').classList.add('hidden');
             document.querySelector('#result-screen .result-sub').innerText =
-                `${questions.length} 題都答完囉，做得好！`;
+                `${gameQuestions.length} 題都答完囉，做得好！`;
             document.getElementById('result-screen').classList.remove('hidden');
         }
 
         // 快速選項按鈕：填入預設秒數
         function setTime(sec) {
             document.getElementById('time-input').value = sec;
+        }
+
+        // 快速選項按鈕：填入預設題數
+        function setCount(n) {
+            document.getElementById('count-input').value = Math.min(n, questions.length);
         }
 
         // 讀取設定並開始遊戲
@@ -691,8 +756,15 @@
             input.value = sec;
             TIME_LIMIT = sec;
 
+            const countInput = document.getElementById('count-input');
+            let count = parseInt(countInput.value, 10);
+            if (isNaN(count) || count < 1) count = 1;
+            if (count > questions.length) count = questions.length;
+            countInput.value = count;
+
             currentQ = 0;
             shuffle(questions);
+            gameQuestions = questions.slice(0, count);
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
