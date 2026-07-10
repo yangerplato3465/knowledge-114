@@ -22,7 +22,7 @@
             line-height: 1.7;
         }
 
-        .wrap { max-width: 900px; margin: 0 auto; }
+        .wrap { max-width: 940px; margin: 0 auto; }
 
         .back-link {
             display: inline-flex;
@@ -36,21 +36,43 @@
         }
         .back-link:hover { color: var(--primary); }
 
+        /* ---------- Brand bar ---------- */
+        .brand-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--surface);
+            border: 3px solid var(--border);
+            border-radius: 20px;
+            padding: 10px 22px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        .brand-bar img { height: 46px; width: auto; border-radius: 8px; }
+        .brand-bar .brand-text { font-size: 13px; color: var(--muted); line-height: 1.4; }
+        .brand-bar .brand-text b { color: var(--ink); font-size: 14.5px; letter-spacing: 1px; }
+        .brand-bar .brand-right { margin-left: auto; font-size: 12px; color: var(--muted-2); text-align: right; white-space: nowrap; }
+
         /* ---------- Hero ---------- */
         .hero {
             background: var(--surface);
             border: 6px solid var(--border);
             border-radius: 32px;
             box-shadow: 0 15px 35px var(--shadow);
-            padding: 44px 40px;
+            padding: 26px 26px 40px;
             text-align: center;
             margin-bottom: 28px;
         }
-        .hero .emoji-row { font-size: 44px; letter-spacing: 8px; }
+        .hero .cover {
+            width: 100%;
+            border-radius: 22px;
+            display: block;
+            margin-bottom: 24px;
+        }
         .hero h1 {
             font-size: 36px;
             font-weight: 900;
-            margin: 10px 0 6px;
+            margin: 0 0 6px;
         }
         .hero .sub { color: var(--muted); font-size: 16px; margin: 0 0 20px; }
         .badges { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
@@ -93,7 +115,7 @@
         h3.block-title {
             font-size: 18px;
             font-weight: 700;
-            margin: 26px 0 12px;
+            margin: 28px 0 12px;
             display: flex; align-items: center; gap: 8px;
         }
         h3.block-title::before {
@@ -103,75 +125,43 @@
             background: var(--grad);
         }
 
-        /* ---------- 40min timeline ---------- */
-        .timeline40 { display: flex; flex-direction: column; gap: 0; }
-        .t-row {
-            display: grid;
-            grid-template-columns: 86px 26px 1fr;
-            gap: 0 14px;
-        }
-        .t-time {
-            text-align: right;
-            font-weight: 700;
-            color: var(--primary-strong);
-            font-size: 14px;
-            padding-top: 14px;
-            white-space: nowrap;
-        }
-        .t-line { position: relative; }
-        .t-line::before {
-            content: "";
-            position: absolute;
-            left: 50%; top: 0; bottom: 0;
-            width: 3px; margin-left: -1.5px;
-            background: var(--border-strong);
-        }
-        .t-row:first-child .t-line::before { top: 20px; }
-        .t-row:last-child .t-line::before { bottom: auto; height: 20px; }
-        .t-dot {
-            position: absolute;
-            left: 50%; top: 18px;
-            width: 14px; height: 14px;
-            margin-left: -7px;
-            border-radius: 50%;
-            background: var(--primary);
-            border: 3px solid var(--surface);
-            box-shadow: 0 0 0 2px var(--primary);
-        }
-        .t-card {
+        /* ---------- Photos ---------- */
+        .photo {
             background: var(--surface-2);
-            border-radius: 18px;
-            padding: 14px 18px;
-            margin: 6px 0 14px;
+            border-radius: 20px;
+            padding: 12px;
         }
-        .t-card .t-title { font-weight: 700; font-size: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-        .t-card .t-min {
-            font-size: 12px;
-            background: var(--primary);
-            color: var(--on-primary);
-            padding: 1px 10px;
-            border-radius: 999px;
-            font-weight: 700;
+        .photo img {
+            width: 100%;
+            display: block;
+            border-radius: 14px;
         }
-        .t-card .t-slides { font-size: 12px; color: var(--muted-2); }
-        .t-card p { margin: 6px 0 0; font-size: 14px; color: var(--ink-soft); }
+        .photo .cap {
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            padding: 8px 6px 0;
+        }
+        .photo-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .photo-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 
-        /* ---------- History timeline ---------- */
-        .hist { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+        /* ---------- History cards ---------- */
+        .hist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .hist-card {
             background: var(--surface-2);
-            border-radius: 18px;
-            padding: 18px 16px;
-            text-align: center;
+            border-radius: 20px;
+            overflow: hidden;
         }
-        .hist-card .h-year { font-weight: 900; font-size: 19px; color: var(--primary-strong); }
-        .hist-card .h-emoji { font-size: 32px; margin: 6px 0; }
-        .hist-card .h-title { font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
-        .hist-card p { font-size: 13px; color: var(--ink-soft); margin: 0; }
+        .hist-card img { width: 100%; display: block; aspect-ratio: 16/10; object-fit: cover; }
+        .hist-card .h-body { padding: 14px 18px 16px; }
+        .hist-card .h-year { font-weight: 900; font-size: 18px; color: var(--primary-strong); }
+        .hist-card .h-title { font-weight: 700; font-size: 15.5px; margin: 2px 0 4px; }
+        .hist-card p { font-size: 13.5px; color: var(--ink-soft); margin: 0; }
 
-        /* ---------- Generic card grids ---------- */
+        /* ---------- Generic grids ---------- */
         .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
         .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
         .mini-card {
             background: var(--surface-2);
             border-radius: 18px;
@@ -181,6 +171,16 @@
         .mini-card .m-emoji { font-size: 34px; }
         .mini-card .m-title { font-weight: 700; font-size: 15.5px; margin: 6px 0 4px; }
         .mini-card p { font-size: 13.5px; color: var(--ink-soft); margin: 0; }
+
+        /* fact cards */
+        .fact-card {
+            background: var(--surface-2);
+            border: 2px dashed var(--border-strong);
+            border-radius: 18px;
+            padding: 16px 18px;
+        }
+        .fact-card .f-head { font-weight: 900; font-size: 15px; display: flex; align-items: center; gap: 8px; color: var(--accent); }
+        .fact-card p { font-size: 13.5px; color: var(--ink-soft); margin: 6px 0 0; }
 
         .info-box {
             border-radius: 16px;
@@ -194,15 +194,30 @@
         .info-box.bad  { background: var(--bad-bg);  border: 2px solid var(--bad-border);  color: var(--ink-soft); }
         .info-box b { color: var(--ink); }
 
-        /* ---------- SVG figure ---------- */
-        .figure {
-            background: var(--surface-2);
-            border-radius: 20px;
-            padding: 20px;
-            margin-top: 8px;
+        /* ---------- Comparison table ---------- */
+        .cmp-wrap { overflow-x: auto; }
+        table.cmp {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+            min-width: 560px;
         }
-        .figure svg { width: 100%; height: auto; display: block; }
-        .fig-cap { text-align: center; font-size: 13px; color: var(--muted); margin-top: 10px; }
+        table.cmp th, table.cmp td {
+            padding: 10px 14px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        table.cmp thead th {
+            background: var(--primary-tint);
+            color: var(--primary-strong);
+            font-weight: 900;
+            font-size: 14.5px;
+        }
+        table.cmp thead th:first-child { border-radius: 14px 0 0 0; }
+        table.cmp thead th:last-child { border-radius: 0 14px 0 0; }
+        table.cmp td:first-child { font-weight: 700; background: var(--surface-2); }
+        table.cmp img { width: 100%; max-width: 150px; border-radius: 10px; }
 
         /* ---------- Viscosity bar ---------- */
         .visc-bar {
@@ -242,34 +257,25 @@
         .q-answer.show { display: block; }
         .q-answer b { color: var(--ink); }
 
-        /* ---------- Reveal cards ---------- */
-        .reveal-list { display: flex; flex-direction: column; gap: 12px; }
-        .reveal {
+        /* ---------- Activity cards ---------- */
+        .act-card {
             background: var(--surface-2);
-            border-radius: 16px;
+            border-radius: 20px;
             overflow: hidden;
         }
-        .reveal-q {
-            padding: 14px 18px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            user-select: none;
+        .act-card img { width: 100%; display: block; aspect-ratio: 4/3; object-fit: cover; }
+        .act-card .a-body { padding: 14px 16px 16px; }
+        .act-card .a-title { font-weight: 900; font-size: 15px; }
+        .act-card .a-title .a-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--on-primary);
+            font-size: 13px;
+            margin-right: 6px;
         }
-        .reveal-q .rev-chevron { margin-left: auto; color: var(--muted-2); transition: transform 0.25s ease; }
-        .reveal.open .rev-chevron { transform: rotate(180deg); color: var(--primary); }
-        .reveal-a {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            font-size: 14px;
-            color: var(--ink-soft);
-        }
-        .reveal.open .reveal-a { max-height: 300px; }
-        .reveal-a .rev-inner { padding: 0 18px 16px; }
+        .act-card p { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0; }
 
         /* ---------- Experiment ---------- */
         .exp-banner {
@@ -324,41 +330,6 @@
         }
         .recipe-item p { font-size: 13.5px; color: var(--ink-soft); margin: 2px 0 0; }
 
-        /* steps */
-        .steps { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
-        .step {
-            display: grid;
-            grid-template-columns: 46px 1fr;
-            gap: 14px;
-            background: var(--surface-2);
-            border-radius: 16px;
-            padding: 14px 18px;
-            align-items: start;
-        }
-        .step .s-num {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: var(--on-primary);
-            font-weight: 900;
-            font-size: 18px;
-            display: flex; align-items: center; justify-content: center;
-            margin-top: 2px;
-        }
-        .step .s-title { font-weight: 700; font-size: 15.5px; }
-        .step p { margin: 3px 0 0; font-size: 14px; color: var(--ink-soft); }
-        .step .s-magic {
-            display: inline-block;
-            font-size: 12.5px;
-            font-weight: 700;
-            border-radius: 999px;
-            padding: 2px 12px;
-            margin-top: 6px;
-        }
-        .s-magic.blue { background: var(--info-bg); color: var(--info); border: 1.5px solid var(--info-border); }
-        .s-magic.fade { background: var(--warn-bg); color: var(--warn); border: 1.5px solid var(--warn-border); }
-        .s-magic.back { background: var(--good-bg); color: var(--good); border: 1.5px solid var(--good-border); }
-
         /* pH scale */
         .ph-scale { margin-top: 14px; }
         .ph-bar {
@@ -377,20 +348,33 @@
             font-size: 13px;
             margin-top: 36px;
         }
+        footer img {
+            max-width: 340px;
+            width: 60%;
+            border-radius: 14px;
+            display: block;
+            margin: 0 auto 12px;
+            opacity: 0.9;
+        }
 
         /* ---------- Mobile ---------- */
         @media (max-width: 640px) {
             body { padding: 20px 10px 70px; }
-            .hero { padding: 30px 20px; border-width: 5px; }
-            .hero h1 { font-size: 26px; }
+            .brand-bar { flex-wrap: wrap; padding: 10px 16px; }
+            .brand-bar .brand-right { display: none; }
+            .hero { padding: 16px 14px 30px; border-width: 5px; }
+            .hero h1 { font-size: 25px; }
             .section { padding: 22px 18px; }
             .sec-head h2 { font-size: 20px; }
             .sec-head .sec-tag { display: none; }
-            .hist { grid-template-columns: repeat(2, 1fr); }
-            .grid3 { grid-template-columns: 1fr; }
-            .grid2 { grid-template-columns: 1fr; }
+            .hist { grid-template-columns: 1fr; }
+            .grid3, .grid4, .photo-grid3 { grid-template-columns: 1fr 1fr; }
+            .grid2, .photo-grid2 { grid-template-columns: 1fr; }
             .t-row { grid-template-columns: 62px 20px 1fr; gap: 0 8px; }
             .t-time { font-size: 12px; }
+        }
+        @media (max-width: 420px) {
+            .grid3, .grid4, .photo-grid3 { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -399,77 +383,26 @@
 <div class="wrap">
     <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回到學習主頁</a>
 
+    <!-- ===== 超知識 Brand bar ===== -->
+    <div class="brand-bar">
+        <img src="../assets/images/magic-ink/logo.jpg" alt="超知識 SUPER SCIENCE KNOWLEDGE">
+        <div class="brand-text">
+            <b>超知識 SUPER SCIENCE KNOWLEDGE</b><br>
+            NATURE · LIFE · SCIENCE 科普教材系列
+        </div>
+        <div class="brand-right">1143L1 課程教材<br>整理：Anita 老師</div>
+    </div>
+
     <!-- ===== Hero ===== -->
     <div class="hero">
-        <div class="emoji-row">🖊️✨🧪</div>
+        <img class="cover" src="../assets/images/magic-ink/cover.jpg" alt="原子筆與筆記本封面照">
         <h1>神奇的墨水！原子筆的科學</h1>
-        <p class="sub">40 分鐘課程懶人包 · 科普閱讀 ＋ 素養訓練 · By Anita 老師</p>
+        <p class="sub">40 分鐘課程懶人包 · 科普閱讀 ＋ 素養訓練</p>
         <div class="badges">
             <span class="badge">⏱️ 40 分鐘</span>
             <span class="badge">📖 原子筆的世界</span>
             <span class="badge">💧 墨水的奧秘</span>
             <span class="badge">🔬 課後實驗：消失的墨水</span>
-        </div>
-    </div>
-
-    <!-- ===== 40 min plan ===== -->
-    <div class="section">
-        <div class="sec-head">
-            <div class="sec-icon">⏱️</div>
-            <h2>40 分鐘課程流程</h2>
-            <span class="sec-tag">一目瞭然的時間分配</span>
-        </div>
-        <p class="sec-lead">五個段落由淺入深：從「每天都在用的筆」出發，走進歷史、構造、墨水科學，最後用「會消失的墨水」吊足胃口，銜接課後實驗。</p>
-
-        <div class="timeline40">
-            <div class="t-row">
-                <div class="t-time">00–05</div>
-                <div class="t-line"><div class="t-dot"></div></div>
-                <div class="t-card">
-                    <div class="t-title">🙋 引起動機：拆開你的原子筆 <span class="t-min">5 分鐘</span><span class="t-slides">投影片 p.3、12–14</span></div>
-                    <p>提問：「你喜歡粗筆還是細筆？」發下不再用的原子筆，讓學生動手拆開，找找看有哪些零件（筆桿、筆芯、彈簧、筆尖…）。</p>
-                </div>
-            </div>
-            <div class="t-row">
-                <div class="t-time">05–14</div>
-                <div class="t-line"><div class="t-dot"></div></div>
-                <div class="t-card">
-                    <div class="t-title">📜 原子筆的世界：歷史與構造 <span class="t-min">9 分鐘</span><span class="t-slides">投影片 p.6–11、15–23</span></div>
-                    <p>兩位發明家的故事（Loud 與 Bíró）、「原子筆」名稱的由來、筆的演化，再聚焦到筆尖球珠的精密工程與粗細規格。</p>
-                </div>
-            </div>
-            <div class="t-row">
-                <div class="t-time">14–22</div>
-                <div class="t-line"><div class="t-dot"></div></div>
-                <div class="t-card">
-                    <div class="t-title">💧 墨水的奧秘：成分與種類 <span class="t-min">8 分鐘</span><span class="t-slides">投影片 p.25–33</span></div>
-                    <p>墨水三大成分、染料 vs 色素、四大類墨水與黏稠度。互動提問：「哪一種可以擦掉油性筆？」（水／酒精／洗碗精）。</p>
-                </div>
-            </div>
-            <div class="t-row">
-                <div class="t-time">22–30</div>
-                <div class="t-line"><div class="t-dot"></div></div>
-                <div class="t-card">
-                    <div class="t-title">🔬 原子筆與墨水的科學 <span class="t-min">8 分鐘</span><span class="t-slides">投影片 p.36–41</span></div>
-                    <p>毛細現象（紙巾吸墨水示範）、墨水流量的控制、黑色墨水的色層分析——原來黑色是很多顏色混在一起！</p>
-                </div>
-            </div>
-            <div class="t-row">
-                <div class="t-time">30–38</div>
-                <div class="t-line"><div class="t-dot"></div></div>
-                <div class="t-card">
-                    <div class="t-title">✨ 消失的墨水：故事與原理 <span class="t-min">8 分鐘</span><span class="t-slides">投影片 p.42–47</span></div>
-                    <p>說「小小郵差與會消失的字」的故事，介紹消失墨水的原理與實驗材料，老師示範「顯色」魔法，預告課後實驗。</p>
-                </div>
-            </div>
-            <div class="t-row">
-                <div class="t-time">38–40</div>
-                <div class="t-line"><div class="t-dot"></div></div>
-                <div class="t-card">
-                    <div class="t-title">🎯 總結與快問快答 <span class="t-min">2 分鐘</span></div>
-                    <p>用本頁最下方的快問快答收尾，確認學生帶走三個關鍵字：球珠、毛細現象、酸鹼指示劑。</p>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -480,131 +413,138 @@
             <h2>原子筆的世界</h2>
             <span class="sec-tag">歷史 · 名稱由來 · 構造</span>
         </div>
+        <p class="sec-lead">每天寫功課、考卷、畫圖都離不開它。你有沒有想過：原子筆裡面到底長什麼樣子？它為什麼叫「原子」筆？</p>
+
+        <h3 class="block-title">開場提問：你喜歡粗筆還是細筆？</h3>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/stroke-thick.jpg" alt="粗筆筆跡" loading="lazy">
+                <div class="cap">粗筆：寫起來滑，但字比較粗</div>
+            </div>
+            <div class="photo">
+                <img src="../assets/images/magic-ink/stroke-thin.jpg" alt="細筆筆跡" loading="lazy">
+                <div class="cap">細筆：字細緻，但比較刮紙</div>
+            </div>
+        </div>
 
         <h3 class="block-title">一支筆的百年旅程</h3>
         <div class="hist">
             <div class="hist-card">
-                <div class="h-year">1888</div>
-                <div class="h-emoji">🇺🇸</div>
-                <div class="h-title">John J. Loud 取得專利</div>
-                <p>10 月 30 日發表，想在粗糙木頭、包裝紙上寫字，筆尖有可滾動的小鋼珠。可惜出墨不均、會漏水堵塞，專利最終失效。</p>
+                <img src="../assets/images/magic-ink/loud-patent.jpg" alt="John J. Loud 專利圖" loading="lazy">
+                <div class="h-body">
+                    <div class="h-year">1888</div>
+                    <div class="h-title">🇺🇸 John J. Loud 取得最早專利</div>
+                    <p>10 月 30 日發表。他想做一支能在粗糙木頭、厚包裝紙上寫字的筆——筆尖有一顆可以滾動的小鋼珠。可惜出墨不均勻、會漏水堵塞，專利沒有被開發而最終失效。</p>
+                </div>
             </div>
             <div class="hist-card">
-                <div class="h-year">1930s</div>
-                <div class="h-emoji">🇭🇺</div>
-                <div class="h-title">記者 Bíró 的靈感</div>
-                <p>匈牙利記者 Ladislao José Bíró 受不了鋼筆的不便，發明了靠滾動把墨「印」在紙上的 Ball Point Pen，像印報紙一樣方便。</p>
+                <img src="../assets/images/magic-ink/biro.jpg" alt="Ladislao José Bíró" loading="lazy">
+                <div class="h-body">
+                    <div class="h-year">1930s</div>
+                    <div class="h-title">🇭🇺 記者 Bíró 的靈感</div>
+                    <p>匈牙利記者 Ladislao José Bíró 深受鋼筆書寫不便之苦，發明了可以在手帕、木材表面寫字、不必灌墨水的 Ball Point Pen——透過滾動把墨「印」在紙上，像印報紙一樣方便。1940 年代和兄弟申請專利，商品化為「Biro 原子筆」。</p>
+                </div>
             </div>
             <div class="hist-card">
-                <div class="h-year">1940s</div>
-                <div class="h-emoji">🏭</div>
-                <div class="h-title">Bíró 兄弟商品化</div>
-                <p>比洛和他的兄弟申請原子筆技術專利，產品化為「Biro 原子筆」，開始風行世界。</p>
+                <img src="../assets/images/magic-ink/atomic-bomb.jpg" alt="原子彈" loading="lazy">
+                <div class="h-body">
+                    <div class="h-year">戰後</div>
+                    <div class="h-title">⚛️ 為什麼叫「原子」筆？</div>
+                    <p>原子筆進入亞洲市場時沒有中文名稱。當時美國靠原子彈贏得二次大戰，「原子」成了最高科技與「勝利」的代名詞，許多商品都冠上「原子」兩個字提升形象、幫助銷售。</p>
+                </div>
             </div>
             <div class="hist-card">
-                <div class="h-year">戰後</div>
-                <div class="h-emoji">⚛️</div>
-                <div class="h-title">為什麼叫「原子」筆？</div>
-                <p>進入亞洲市場時沒有中文名。當時「原子」是最高科技與「勝利」的代名詞，商人便把新產品冠上「原子」二字，沿用至今。</p>
+                <img src="../assets/images/magic-ink/pastel-pens.jpg" alt="原子筆" loading="lazy">
+                <div class="h-body">
+                    <div class="h-year">現在</div>
+                    <div class="h-title">🖊️ 名字一直流傳到今天</div>
+                    <p>「原子筆」也代表「取用不完、源源不絕」的意思。後來沒有更新的創意產品取代它，這個名字就一直流傳到現在，大家也習慣用「原子筆」稱呼鋼珠筆。</p>
+                </div>
             </div>
         </div>
 
         <h3 class="block-title">筆的演化：越來越方便</h3>
-        <div class="grid3">
-            <div class="mini-card">
-                <div class="m-emoji">🪶</div>
-                <div class="m-title">羽毛筆</div>
-                <p>要一直沾墨，很麻煩</p>
+        <div class="photo">
+            <img src="../assets/images/magic-ink/slide-evolution.jpg" alt="羽毛筆到鋼筆到原子筆的演化" loading="lazy">
+            <div class="cap">羽毛筆（沾墨，麻煩）→ 鋼筆（滑順但容易漏墨）→ 原子筆（便宜、不漏、耐用）——最方便的進化版！</div>
+        </div>
+
+        <h3 class="block-title">拆開來看：裡面有好多零件！</h3>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/pen-exploded.jpg" alt="原子筆分解圖" loading="lazy">
+                <div class="cap">雖然外觀看起來很普通，但其實它有很多零件喔！</div>
             </div>
-            <div class="mini-card">
-                <div class="m-emoji">🖋️</div>
-                <div class="m-title">鋼筆</div>
-                <p>滑順，但容易漏墨</p>
-            </div>
-            <div class="mini-card">
-                <div class="m-emoji">🖊️</div>
-                <div class="m-title">原子筆</div>
-                <p>便宜、不漏、耐用 ✅</p>
+            <div class="photo">
+                <img src="../assets/images/magic-ink/pen-parts.jpg" alt="拆解後的原子筆零件" loading="lazy">
+                <div class="cap">課堂活動：拆一支不再用的筆，看看你能找到哪些零件？</div>
             </div>
         </div>
 
-        <h3 class="block-title">拆開來看：原子筆的構造</h3>
-        <div class="figure">
-            <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="原子筆構造圖">
-                <!-- pen body -->
-                <g>
-                    <!-- button -->
-                    <rect x="640" y="120" width="46" height="36" rx="8" fill="var(--primary)"/>
-                    <!-- barrel -->
-                    <rect x="250" y="110" width="400" height="56" rx="18" fill="var(--accent-sky)"/>
-                    <rect x="250" y="110" width="400" height="20" rx="10" fill="#ffffff" opacity="0.25"/>
-                    <!-- grip -->
-                    <rect x="180" y="112" width="80" height="52" rx="14" fill="var(--accent)"/>
-                    <!-- cone -->
-                    <polygon points="180,116 120,132 120,144 180,160" fill="var(--primary-strong)"/>
-                    <!-- tip -->
-                    <rect x="96" y="132" width="26" height="12" rx="4" fill="#8d99ae"/>
-                    <circle cx="92" cy="138" r="7" fill="#5b6470"/>
-                </g>
-                <!-- labels -->
-                <g font-family="'Noto Sans TC', sans-serif" font-size="15" font-weight="700" fill="var(--ink)">
-                    <g>
-                        <line x1="663" y1="112" x2="663" y2="70" stroke="var(--muted)" stroke-width="2"/>
-                        <text x="663" y="58" text-anchor="middle">按鈕開關</text>
-                    </g>
-                    <g>
-                        <line x1="450" y1="102" x2="450" y2="70" stroke="var(--muted)" stroke-width="2"/>
-                        <text x="450" y="58" text-anchor="middle">筆桿（外層保護）</text>
-                    </g>
-                    <g>
-                        <line x1="220" y1="170" x2="220" y2="212" stroke="var(--muted)" stroke-width="2"/>
-                        <text x="220" y="234" text-anchor="middle">握位</text>
-                    </g>
-                    <g>
-                        <line x1="450" y1="174" x2="450" y2="212" stroke="var(--muted)" stroke-width="2"/>
-                        <text x="450" y="234" text-anchor="middle">筆芯：墨水的家（裝墨水的地方）</text>
-                    </g>
-                    <g>
-                        <line x1="92" y1="128" x2="92" y2="70" stroke="var(--muted)" stroke-width="2"/>
-                        <text x="92" y="58" text-anchor="middle">球珠筆尖</text>
-                    </g>
-                </g>
-                <!-- zoom circle -->
-                <g>
-                    <line x1="92" y1="150" x2="92" y2="196" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/>
-                    <circle cx="92" cy="248" r="46" fill="var(--surface)" stroke="var(--primary)" stroke-width="3"/>
-                    <!-- socket -->
-                    <path d="M 62 226 L 84 252 A 12 12 0 0 0 100 252 L 122 226 L 122 238 L 103 260 A 16 16 0 0 1 81 260 L 62 238 Z" fill="#8d99ae"/>
-                    <!-- ink channel -->
-                    <rect x="86" y="214" width="12" height="24" fill="var(--info)"/>
-                    <!-- ball -->
-                    <circle cx="92" cy="258" r="12" fill="#dfe6ee" stroke="#5b6470" stroke-width="2"/>
-                    <text x="92" y="296" text-anchor="middle" font-family="'Noto Sans TC', sans-serif" font-size="12" font-weight="700" fill="var(--ink)">放大：球珠卡在圓形槽裡</text>
-                </g>
-            </svg>
-            <div class="fig-cap">球珠被卡在小小的圓形槽裡——能滾動、不會掉出來，精密程度用「微米」計算！</div>
-        </div>
-
-        <div class="grid3" style="margin-top:14px;">
-            <div class="mini-card">
-                <div class="m-emoji">⚽</div>
-                <div class="m-title">球珠是筆尖主角</div>
-                <p>一邊滾、一邊沾墨，把墨水轉印到紙上，一邊轉一邊寫</p>
+        <h3 class="block-title">基本構造與筆尖放大圖</h3>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/slide-structure.jpg" alt="原子筆基本構造圖" loading="lazy">
+                <div class="cap">外層保護、按鈕開關、裝墨水的地方；筆芯放大：座、球珠座、球珠、油墨導向孔、墨盒、潤滑脂、埋塞</div>
             </div>
-            <div class="mini-card">
-                <div class="m-emoji">📏</div>
-                <div class="m-title">筆尖粗細</div>
-                <p>0.5 / 0.7 / 1.0 mm<br>越細字越細緻但刮紙，越粗越滑但字粗</p>
-            </div>
-            <div class="mini-card">
-                <div class="m-emoji">🔒</div>
-                <div class="m-title">為什麼不漏墨？</div>
-                <p>墨水黏度高，球珠又像塞子把出口封住</p>
+            <div class="photo">
+                <img src="../assets/images/magic-ink/slide-ball-socket.jpg" alt="球珠固定方式放大圖" loading="lazy">
+                <div class="cap">球珠卡在小小的圓形槽裡——能滾、不會掉出來，精密程度用「微米」計算！</div>
             </div>
         </div>
 
-        <div class="info-box warn">
-            <b>☀️ 什麼是「爆墨」？</b> 原子筆放在太陽下曝曬，裡面的墨會受熱膨脹、壓力變大，就可能被擠出來——這就是大家說的爆墨。所以原子筆要遠離高溫喔！
+        <h3 class="block-title">筆尖的主角：球珠</h3>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/ball-writing.jpg" alt="球珠寫字特寫" loading="lazy">
+                <div class="cap">這顆小鋼球是筆的靈魂！一直滾、一直沾墨，把墨轉到紙上——一邊轉、一邊寫</div>
+            </div>
+            <div class="photo">
+                <img src="../assets/images/magic-ink/tips-macro.jpg" alt="筆尖特寫" loading="lazy">
+                <div class="cap">墨水黏度高＋球珠像塞子把出口封住＝不會像水一樣滴出來</div>
+            </div>
+        </div>
+
+        <div class="photo" style="margin-top:14px;">
+            <img src="../assets/images/magic-ink/tip-sizes.jpg" alt="0.5mm 0.7mm 1.0mm 筆尖粗細比較" loading="lazy">
+            <div class="cap">設計筆的人會做出很多尺寸：0.5 / 0.7 / 1.0 mm，給不同的使用者</div>
+        </div>
+
+        <h3 class="block-title">☀️ 原子筆很怕高溫？「爆墨」原理</h3>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/heat-pen.jpg" alt="放在桌上的筆與熱咖啡" loading="lazy">
+                <div class="cap">高溫讓墨膨脹、壓力變大，墨就可能被擠出來</div>
+            </div>
+            <div>
+                <div class="info-box warn" style="margin-top:0;">
+                    <b>爆墨是怎麼發生的？</b><br>
+                    把原子筆放在太陽底下曝曬，筆芯裡的墨受熱膨脹、壓力變大，就可能從筆尖被擠出來，造成「爆墨」。所以：原子筆不要放車上曬太陽、不要放在暖氣旁！
+                </div>
+                <div class="info-box info">
+                    <b>反過來想 🤔</b> 平常不漏墨的祕密＝「黏稠的墨水」＋「球珠塞住出口」。只有高溫讓墨膨脹時，這道防線才會被突破。
+                </div>
+            </div>
+        </div>
+
+        <h3 class="block-title">🌟 超知識冷知識（補充自科普資料）</h3>
+        <div class="grid2">
+            <div class="fact-card">
+                <div class="f-head">📏 一支筆能寫多遠？</div>
+                <p>一支普通油性原子筆的墨量，大約可以連續畫出 <b>2 公里</b>長的線——大概是繞操場 5 圈！</p>
+            </div>
+            <div class="fact-card">
+                <div class="f-head">🌍 賣得最多的筆</div>
+                <p>法國 BIC 公司的 Cristal 原子筆，自 1950 年上市以來已賣出超過 <b>1,000 億支</b>，是世界上最暢銷的筆。</p>
+            </div>
+            <div class="fact-card">
+                <div class="f-head">💎 球珠是什麼做的？</div>
+                <p>常見的球珠材質是<b>碳化鎢</b>超硬合金，比一般鋼鐵還硬很多，才能一直滾動而不磨損。</p>
+            </div>
+            <div class="fact-card">
+                <div class="f-head">🚀 太空裡能寫字嗎？</div>
+                <p>無重力時墨水不會「往下流」！太空筆用<b>加壓氣體</b>把墨推向筆尖，所以躺著寫、倒著寫、在太空寫都沒問題。</p>
+            </div>
         </div>
     </div>
 
@@ -615,63 +555,135 @@
             <h2>墨水的奧秘</h2>
             <span class="sec-tag">成分 · 種類 · 特性</span>
         </div>
-        <p class="sec-lead">墨水基本上就是：<b>顏色 ＋ 能讓它流動的液體</b>，再加一些小配方讓它更好用。古代中國燒松木做「松煙墨」，歐洲用「鐵膽墨」寫聖經（會慢慢腐蝕紙張變棕色）。</p>
+        <p class="sec-lead">墨水基本上就是：<b>顏色 ＋ 能讓它流動的液體</b>，再加一些小配方讓它更好用。墨水跟飲料一樣有配方，只是不能喝！</p>
+
+        <div class="photo">
+            <img src="../assets/images/magic-ink/ink-splash.jpg" alt="墨水潑灑" loading="lazy">
+            <div class="cap">墨水是什麼？顏色＋能讓它流動的液體＋讓它更好用的小配方</div>
+        </div>
+
+        <h3 class="block-title">古代人用什麼寫字？</h3>
+        <div class="photo">
+            <img src="../assets/images/magic-ink/slide-ancient-ink.jpg" alt="松煙墨與鐵膽墨" loading="lazy">
+            <div class="cap">古代中國：燒松木的煙做墨條，叫「松煙墨」；歐洲：用「鐵膽墨」寫聖經——但它會慢慢腐蝕紙張，變成棕色痕跡</div>
+        </div>
+        <div class="grid2" style="margin-top:14px;">
+            <div class="mini-card">
+                <div class="m-emoji">🏮</div>
+                <div class="m-title">松煙墨（中國）</div>
+                <p>燒松木收集黑煙的碳粒，加膠做成墨條。磨墨時加水，就是書法用的墨汁——碳非常穩定，千年字畫依然烏黑！</p>
+            </div>
+            <div class="mini-card">
+                <div class="m-emoji">⛪</div>
+                <div class="m-title">鐵膽墨（歐洲）</div>
+                <p>用鐵鹽＋植物中的單寧酸調成，寫聖經、寫樂譜都用它。缺點：含酸性物質，時間久了會腐蝕紙張、字跡轉棕。</p>
+            </div>
+        </div>
 
         <h3 class="block-title">墨水三大成分</h3>
-        <div class="grid3">
+        <div class="photo">
+            <img src="../assets/images/magic-ink/slide-ink-parts.jpg" alt="墨水三大成分解析" loading="lazy">
+            <div class="cap">溶劑（水／油／酒精）＋ 顏料（色素／染料）＋ 添加物（防腐、增稠）</div>
+        </div>
+        <div class="grid3" style="margin-top:14px;">
             <div class="mini-card">
                 <div class="m-emoji">🥤</div>
                 <div class="m-title">溶劑</div>
-                <p>水 / 油 / 酒精<br>讓墨水能流動</p>
+                <p>水 / 油 / 酒精——墨水的「載體」，讓墨水能流動。不同溶劑決定墨水的個性！</p>
             </div>
             <div class="mini-card">
                 <div class="m-emoji">🎨</div>
                 <div class="m-title">顏料</div>
-                <p>色素或染料<br>給墨水顏色</p>
+                <p>色素或染料——給墨水顏色的主角</p>
             </div>
             <div class="mini-card">
                 <div class="m-emoji">🧂</div>
                 <div class="m-title">添加物</div>
-                <p>防腐、增稠<br>讓墨水更好用</p>
+                <p>防腐劑、增稠劑——讓墨水不發霉、濃稠度剛剛好</p>
             </div>
         </div>
 
         <h3 class="block-title">染料 vs 色素：糖與沙子</h3>
-        <div class="grid2">
-            <div class="mini-card">
-                <div class="m-emoji">🍬</div>
-                <div class="m-title">染料＝糖</div>
-                <p>一倒進水就溶入，顏色亮麗（藍筆、紅筆多用染料），但比較會褪色</p>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/dye-cups.jpg" alt="染料溶液" loading="lazy">
+                <div class="cap">染料像糖，一倒進水就溶入——顏色亮麗</div>
             </div>
-            <div class="mini-card">
-                <div class="m-emoji">🏖️</div>
-                <div class="m-title">色素＝沙子</div>
-                <p>漂在水裡但不溶解，比較耐久不褪色（黑筆常用「碳黑」）</p>
+            <div>
+                <div class="mini-card" style="margin-bottom:14px;">
+                    <div class="m-emoji">🍬</div>
+                    <div class="m-title">染料＝糖</div>
+                    <p>溶進水裡，顏色亮（藍筆、紅筆多用染料配方），但比較會褪色</p>
+                </div>
+                <div class="mini-card">
+                    <div class="m-emoji">🏖️</div>
+                    <div class="m-title">色素＝沙子</div>
+                    <p>漂在水裡但不溶解，耐久不褪色——黑筆常用「碳黑」，所以黑色最耐久！</p>
+                </div>
             </div>
         </div>
+        <div class="info-box info">
+            <b>💡 這就解釋了：</b>為什麼有些筆寫起來特別「亮」，有些筆的字放很久都不褪色——關鍵就在用了染料還是色素！
+        </div>
 
-        <h3 class="block-title">四大類墨水與黏稠度</h3>
-        <div class="grid2">
-            <div class="mini-card"><div class="m-emoji">💦</div><div class="m-title">水性</div><p>滑順水潤，像鋼筆墨水</p></div>
-            <div class="mini-card"><div class="m-emoji">🫙</div><div class="m-title">凝膠（中性）</div><p>水＋膠，兼顧滑順與耐用</p></div>
-            <div class="mini-card"><div class="m-emoji">🛢️</div><div class="m-title">油性</div><p>最耐用、附著力強，原子筆專用</p></div>
-            <div class="mini-card"><div class="m-emoji">🍶</div><div class="m-title">酒精墨</div><p>快乾好擦，白板筆就是這類</p></div>
+        <h3 class="block-title">現代墨水四大類型</h3>
+        <div class="photo">
+            <img src="../assets/images/magic-ink/slide-ink-types.jpg" alt="水性、油性、凝膠、酒精墨四大類" loading="lazy">
+            <div class="cap">每一種墨水都是為不同用途設計：白板筆用酒精所以擦得掉；油性筆寫塑膠比較好附著</div>
         </div>
         <div class="visc-bar"></div>
         <div class="visc-labels"><span>水性</span><span>中性</span><span>中油</span><span>油性</span></div>
         <div class="visc-sub"><span>淡・稀</span><span></span><span></span><span>濃・稠</span></div>
 
-        <h3 class="block-title">想一想：哪一種能擦掉油性筆？</h3>
+        <h3 class="block-title">鋼筆、中性筆、原子筆比一比</h3>
+        <div class="cmp-wrap">
+            <table class="cmp">
+                <thead>
+                    <tr><th></th><th>🖋️ 鋼筆</th><th>🖊️ 中性筆</th><th>🖊️ 原子筆</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>墨水</td><td>水性</td><td>水＋膠</td><td>油性</td></tr>
+                    <tr><td>寫感</td><td>最滑順</td><td>滑順又顯色</td><td>稍有阻力</td></tr>
+                    <tr><td>缺點</td><td>容易漏墨、要保養</td><td>墨耗得快</td><td>偶爾出墨結塊</td></tr>
+                    <tr><td>耐用度</td><td>字怕水</td><td>中等</td><td>最耐久 🏆</td></tr>
+                    <tr><td>適合場合</td><td>簽名、書法</td><td>筆記、日常</td><td>考試、文件、萬用</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="info-box good"><b>🎯 結論：</b>不同場合用不同筆——沒有最好的筆，只有最適合的筆！</div>
+
+        <h3 class="block-title">油性筆為什麼不容易被水洗掉？</h3>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/shirt-stain.jpg" alt="襯衫上的油性筆痕" loading="lazy">
+                <div class="cap">慘劇現場：油性筆沾到衣服……</div>
+            </div>
+            <div>
+                <div class="info-box bad" style="margin-top:0;">
+                    <b>為什麼水洗不掉？</b><br>
+                    油性筆遇到水不會暈開，因為裡面的溶劑是「油」，而<b>水和油不互溶</b>。另外油性筆的樹脂附著力強，一旦乾掉就像一層薄膜黏在表面。
+                </div>
+                <div class="info-box good">
+                    <b>那怎麼辦？</b><br>
+                    酒精分子能溶解油性墨水，也能把樹脂薄膜慢慢弄散——所以用酒精擦最有機會救回來！
+                </div>
+            </div>
+        </div>
+
         <div class="quiz" id="quiz-clean">
-            <div class="q-text">油性筆寫錯了想擦掉，你會選哪一個？</div>
+            <div class="q-text">🤔 隨堂考：油性筆寫錯了想擦掉，你會選什麼？</div>
             <div class="q-options">
                 <button class="q-btn" data-ok="0">💧 A：水</button>
                 <button class="q-btn" data-ok="1">🍶 B：酒精</button>
                 <button class="q-btn" data-ok="0">🧴 C：洗碗精</button>
             </div>
             <div class="q-answer">
-                <b>答案是 B：酒精！</b> 油性筆的溶劑是「油」，水和油不混合，所以水洗不掉；洗碗精幫助有限。酒精分子能溶解油性墨水、把樹脂薄膜慢慢弄散，字跡就被溶掉了。這也解釋了為什麼油性筆沾到衣服很難洗——樹脂乾掉後像一層薄膜黏在表面。
+                <b>答案是 B：酒精！</b> 洗碗精幫助有限，水更不可能。原理如上：相似的分子才能互溶——酒精和油性墨水「合得來」，水和油「合不來」。
             </div>
+        </div>
+        <div class="photo" style="margin-top:14px;">
+            <img src="../assets/images/magic-ink/slide-eraser-quiz.jpg" alt="水、酒精、洗碗精三選一" loading="lazy">
+            <div class="cap">課堂互動投影片：A 水 / B 酒精 / C 洗碗精（p.32）</div>
         </div>
     </div>
 
@@ -684,74 +696,67 @@
         </div>
 
         <h3 class="block-title">毛細現象：墨水自己往筆尖跑</h3>
-        <p style="font-size:14.5px; color:var(--ink-soft); margin:0 0 12px;">吸管、紙巾能把水「吸」上去，這就是<b>毛細現象</b>。原子筆裡也有！所以墨水會自己往筆尖跑，不需要用力擠。</p>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/capillary.jpg" alt="棉繩把彩色水吸上來" loading="lazy">
+                <div class="cap">吸管、紙巾、棉繩都能把水「吸」上去——這就是毛細現象</div>
+            </div>
+            <div class="photo">
+                <img src="../assets/images/magic-ink/rainbow-towels.jpg" alt="紙巾彩虹橋" loading="lazy">
+                <div class="cap">動手做：把紙巾浸一點彩色水，看水自己往上跑！</div>
+            </div>
+        </div>
         <div class="info-box info">
-            <b>🌈 課堂小示範：紙巾吸墨水</b>　把紙巾一端浸入彩色水中，看水自己爬上來——彩虹橋實驗（投影片 p.37）。
+            <b>💡 關鍵理解：</b>原子筆裡也有毛細現象，所以墨水會自動往筆尖跑，不需要用力擠。這也是為什麼原子筆<b>倒著寫會斷水</b>——毛細＋重力都幫不上忙了！（太空筆就是為了解決這個問題）
         </div>
 
         <h3 class="block-title">為什麼墨水不會一次流光？</h3>
-        <div class="figure">
-            <svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="球珠寫字四步驟">
-                <g font-family="'Noto Sans TC', sans-serif" font-size="13.5" font-weight="700" fill="var(--ink)">
-                    <!-- step 1 -->
-                    <g transform="translate(20,20)">
-                        <rect width="160" height="130" rx="16" fill="var(--surface)"/>
-                        <circle cx="80" cy="20" r="14" fill="var(--primary)"/>
-                        <text x="80" y="25" text-anchor="middle" fill="var(--on-primary)">1</text>
-                        <polygon points="60,42 100,42 90,72 70,72" fill="var(--accent-sky)"/>
-                        <rect x="74" y="46" width="12" height="22" fill="var(--info)"/>
-                        <circle cx="80" cy="78" r="10" fill="#dfe6ee" stroke="#5b6470" stroke-width="2"/>
-                        <text x="80" y="112" text-anchor="middle">重力讓油墨</text>
-                        <text x="80" y="128" text-anchor="middle">落在球珠上</text>
-                    </g>
-                    <!-- step 2 -->
-                    <g transform="translate(210,20)">
-                        <rect width="160" height="130" rx="16" fill="var(--surface)"/>
-                        <circle cx="80" cy="20" r="14" fill="var(--primary)"/>
-                        <text x="80" y="25" text-anchor="middle" fill="var(--on-primary)">2</text>
-                        <circle cx="80" cy="66" r="16" fill="#dfe6ee" stroke="#5b6470" stroke-width="2"/>
-                        <path d="M 62 52 A 24 24 0 0 1 98 52" fill="none" stroke="var(--info)" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M 96 50 l 6 -2 l -2 7 Z" fill="var(--info)"/>
-                        <text x="80" y="112" text-anchor="middle">球珠旋轉時</text>
-                        <text x="80" y="128" text-anchor="middle">帶著墨轉出來</text>
-                    </g>
-                    <!-- step 3 -->
-                    <g transform="translate(400,20)">
-                        <rect width="160" height="130" rx="16" fill="var(--surface)"/>
-                        <circle cx="80" cy="20" r="14" fill="var(--primary)"/>
-                        <text x="80" y="25" text-anchor="middle" fill="var(--on-primary)">3</text>
-                        <circle cx="80" cy="60" r="14" fill="#dfe6ee" stroke="#5b6470" stroke-width="2"/>
-                        <line x1="30" y1="80" x2="130" y2="80" stroke="var(--muted)" stroke-width="3"/>
-                        <path d="M 40 78 Q 60 72 78 76" fill="none" stroke="var(--info)" stroke-width="4" stroke-linecap="round"/>
-                        <text x="80" y="112" text-anchor="middle">在紙上留下</text>
-                        <text x="80" y="128" text-anchor="middle">油墨的印記</text>
-                    </g>
-                    <!-- step 4 -->
-                    <g transform="translate(590,20)">
-                        <rect width="160" height="130" rx="16" fill="var(--surface)"/>
-                        <circle cx="80" cy="20" r="14" fill="var(--primary)"/>
-                        <text x="80" y="25" text-anchor="middle" fill="var(--on-primary)">4</text>
-                        <circle cx="80" cy="66" r="16" fill="#dfe6ee" stroke="#5b6470" stroke-width="2"/>
-                        <path d="M 98 80 A 24 24 0 0 1 62 80" fill="none" stroke="var(--info)" stroke-width="4" stroke-linecap="round"/>
-                        <path d="M 64 82 l -6 2 l 2 -7 Z" fill="var(--info)"/>
-                        <text x="80" y="112" text-anchor="middle">球珠轉回去</text>
-                        <text x="80" y="128" text-anchor="middle">再充新的墨</text>
-                    </g>
-                    <!-- arrows -->
-                    <g stroke="var(--muted-2)" stroke-width="3" fill="var(--muted-2)">
-                        <line x1="184" y1="85" x2="204" y2="85"/><polygon points="204,79 214,85 204,91"/>
-                        <line x1="374" y1="85" x2="394" y2="85"/><polygon points="394,79 404,85 394,91"/>
-                        <line x1="564" y1="85" x2="584" y2="85"/><polygon points="584,79 594,85 584,91"/>
-                    </g>
-                </g>
-            </svg>
-            <div class="fig-cap">毛細現象控制流量＋球珠擋住出口＝墨水只會慢慢沾到球上，不會整罐流出來</div>
+        <div class="photo">
+            <img src="../assets/images/magic-ink/ball-mechanism.jpg" alt="球珠帶墨四步驟原理圖" loading="lazy">
+            <div class="cap">① 重力讓油墨落在圓珠內側 → ② 圓珠旋轉帶著墨出來 → ③ 在紙面留下印記 → ④ 圓珠轉回去再充墨</div>
+        </div>
+        <div class="info-box info">
+            毛細現象控制流量 ＋ 筆尖的「球」擋住出口 ＝ 墨水只會慢慢沾到球上，不會像倒水一樣整罐流出來。
         </div>
 
-        <h3 class="block-title">黑色墨水的祕密：色層分析</h3>
-        <p style="font-size:14.5px; color:var(--ink-soft); margin:0;">黑色墨水不是只有黑色！它是很多種顏色混在一起。用色層分析紙（Chromatography）滴幾滴水，不同染料分子<b>大小不一樣、喜歡水的程度也不一樣</b>——比較小或比較親水的顏色跑得快，就分成一層一層不同的顏色。</p>
+        <h3 class="block-title">黑色墨水的祕密：色層分析（Chromatography）</h3>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/chroma-petri.jpg" alt="濾紙上的色層分析" loading="lazy">
+                <div class="cap">黑色墨水在濾紙上被水帶開後，跑出好多顏色！</div>
+            </div>
+            <div class="photo">
+                <img src="../assets/images/magic-ink/chroma-layers.jpg" alt="顏色分層" loading="lazy">
+                <div class="cap">不同染料分子大小不一樣、親水程度不一樣——跑得快慢不同，就分成一層一層</div>
+            </div>
+        </div>
         <div class="info-box info">
-            <b>🖤 課堂小示範：黑筆的色層分析</b>　咖啡濾紙上畫一個黑點，滴幾滴水，看黑色會不會跑出其他顏色（投影片 p.40）。
+            <b>🖤 你知道嗎？</b>黑色墨水其實是很多種顏色混在一起！比較小、比較「喜歡水」的染料分子跟著水跑得快；比較大、比較「不喜歡水」的跑得慢——顏色就這樣被分開了。科學家還用同樣的方法分析食物色素、檢驗藥物成分呢！
+        </div>
+
+        <h3 class="block-title">🙌 課堂動手做三連發</h3>
+        <div class="grid3">
+            <div class="act-card">
+                <img src="../assets/images/magic-ink/marble-ink.jpg" alt="彈珠滾墨水" loading="lazy">
+                <div class="a-body">
+                    <div class="a-title"><span class="a-num">1</span>滾珠帶墨水</div>
+                    <p>彈珠沾有顏色的水放在紙上滾——顏料水被帶著走！原子筆的筆尖就是這樣把墨水帶出來的。（p.18）</p>
+                </div>
+            </div>
+            <div class="act-card">
+                <img src="../assets/images/magic-ink/rainbow-towels.jpg" alt="紙巾吸墨水" loading="lazy">
+                <div class="a-body">
+                    <div class="a-title"><span class="a-num">2</span>紙巾吸墨水</div>
+                    <p>紙巾浸一點彩色水，看水自己往上爬——這就是毛細現象！（p.37）</p>
+                </div>
+            </div>
+            <div class="act-card">
+                <img src="../assets/images/magic-ink/chroma-petri.jpg" alt="黑筆色層分析" loading="lazy">
+                <div class="a-body">
+                    <div class="a-title"><span class="a-num">3</span>黑筆的色層分析</div>
+                    <p>咖啡濾紙上畫一個黑點、滴幾滴水——看黑色跑出其他顏色！（p.40，需：咖啡濾紙、黑色水性筆、少量水）</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -763,12 +768,38 @@
             <span class="sec-tag">課堂最後 8 分鐘的高潮</span>
         </div>
 
-        <div class="info-box info" style="margin-top:0;">
-            <b>📖 小小郵差與會消失的字</b><br>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/postman-story.jpg" alt="小小郵差與化學師的故事插圖" loading="lazy">
+                <div class="cap">故事：小小郵差與會消失的字</div>
+            </div>
+            <div class="photo">
+                <img src="../assets/images/magic-ink/secret-message.jpg" alt="Secret Message 隱形墨水" loading="lazy">
+                <div class="cap">消失的墨水＝染料分子會「變身」的化學魔法</div>
+            </div>
+        </div>
+
+        <div class="info-box info">
+            <b>📖 說給學生聽：</b><br>
             很久以前，有個國家的郵差常常被敵人偷看信件。國王很苦惱，就請來一位化學師。化學師調配出一種魔法墨水：寫下去很清楚，但三個時辰後會慢慢消失，只剩下淡淡的影子。只有收信人知道秘密——把信放到溫暖的火爐旁，字就會像幽靈一樣重新浮出來！從此以後，只有真正的收件人才看得懂裡面的訊息。
         </div>
 
         <p style="font-size:14.5px; color:var(--ink-soft);">消失的墨水，利用的是<b>「染料分子會改變」</b>的原理：有些顏料遇到<b>酸或鹼</b>會變色、褪色甚至變透明；有些則是氧化還原反應讓顏色被破壞掉。字跡不是真的不見，是分子「變身」了！</p>
+
+        <h3 class="block-title">🍋 加碼：在家就能玩的檸檬汁隱形墨水</h3>
+        <div class="photo-grid2">
+            <div class="photo">
+                <img src="../assets/images/magic-ink/lemon-ink.jpg" alt="檸檬汁隱形墨水" loading="lazy">
+                <div class="cap">用棉花棒沾檸檬汁寫字，乾了就隱形</div>
+            </div>
+            <div class="photo">
+                <img src="../assets/images/magic-ink/iron-reveal.jpg" alt="熨斗加熱顯字" loading="lazy">
+                <div class="cap">請大人幫忙用熨斗加熱——字就浮現了！（加熱讓檸檬汁裡的糖分焦化變棕色）</div>
+            </div>
+        </div>
+        <div class="info-box warn">
+            <b>⚠️ 提醒：</b>加熱步驟（熨斗、吹風機、燈泡）一定要請大人協助，注意燙傷風險。
+        </div>
     </div>
 
     <!-- ===== Section 5: Experiment ===== -->
@@ -782,6 +813,12 @@
         <div class="exp-banner">
             <span class="big">🎩</span>
             <span>三段魔法：鹼讓字「浮現」→ 酸讓字「消失」→ 學生自製的碳酸鈉讓字「復活」！</span>
+        </div>
+
+        <h3 class="block-title">準備材料</h3>
+        <div class="photo">
+            <img src="../assets/images/magic-ink/slide-materials.jpg" alt="實驗材料：氫氧化鈉、百里香酚酞、95%酒精、水、量筒、燒杯、棉花棒、紙" loading="lazy">
+            <div class="cap">氫氧化鈉、百里酚酞、95% 酒精、水、量筒、燒杯三個、棉花棒、紙（投影片 p.46）</div>
         </div>
 
         <h3 class="block-title">實驗原理（三合一）</h3>
@@ -857,48 +894,6 @@
             </div>
         </div>
 
-        <h3 class="block-title">建議實驗流程</h3>
-        <div class="steps">
-            <div class="step">
-                <div class="s-num">1</div>
-                <div>
-                    <div class="s-title">學生：製作「復活魔法水」</div>
-                    <p>每組把 5 g 小蘇打加入 50 mL 水中攪拌，加熱煮沸幾分鐘，放涼備用——小蘇打已經變身成碳酸鈉了。</p>
-                </div>
-            </div>
-            <div class="step">
-                <div class="s-num">2</div>
-                <div>
-                    <div class="s-title">塗上隱形底墨</div>
-                    <p>把百里酚酞酒精溶液（無色）薄薄塗在紙上想寫字的區域，稍微晾乾。</p>
-                </div>
-            </div>
-            <div class="step">
-                <div class="s-num">3</div>
-                <div>
-                    <div class="s-title">鹼性顯色：字浮現了！</div>
-                    <p>用棉花棒沾 NaOH 水溶液，在塗過底墨的地方寫字——藍色字跡立刻浮現。</p>
-                    <span class="s-magic blue">💙 無色 → 藍色（鹼性顯色）</span>
-                </div>
-            </div>
-            <div class="step">
-                <div class="s-num">4</div>
-                <div>
-                    <div class="s-title">酸性消字：字不見了！</div>
-                    <p>用棉花棒沾（或噴一點）檸檬酸水溶液輕輕塗過字跡——酸鹼中和，藍色瞬間消失。<br><span style="font-size:13px; color:var(--muted);">小知識：就算不加酸，空氣中的二氧化碳也會慢慢中和掉鹼，字會自己淡掉——這就是市售「消失墨水」的原理。</span></p>
-                    <span class="s-magic fade">🫥 藍色 → 無色（酸鹼中和）</span>
-                </div>
-            </div>
-            <div class="step">
-                <div class="s-num">5</div>
-                <div>
-                    <div class="s-title">字跡復活：用學生自製的碳酸鈉！</div>
-                    <p>用棉花棒沾步驟 1 做好的碳酸鈉溶液塗回字跡處——鹼性回來了，藍字再次浮現，全場歡呼！</p>
-                    <span class="s-magic back">💙 無色 → 藍色（字跡復活）</span>
-                </div>
-            </div>
-        </div>
-
         <div class="info-box bad">
             <b>⚠️ 安全提醒</b><br>
             ・NaOH 具腐蝕性：由老師調配與保管，學生僅用棉花棒沾取，全程配戴護目鏡，避免接觸皮膚與眼睛。<br>
@@ -908,34 +903,37 @@
         </div>
     </div>
 
-    <!-- ===== Quick Q&A ===== -->
+    <!-- ===== Home challenge ===== -->
     <div class="section">
         <div class="sec-head">
-            <div class="sec-icon">🎯</div>
-            <h2>快問快答：你帶走了嗎？</h2>
-            <span class="sec-tag">點一下看答案</span>
+            <div class="sec-icon">🏠</div>
+            <h2>回家挑戰（延伸思考）</h2>
+            <span class="sec-tag">把科學帶回家</span>
         </div>
-        <div class="reveal-list">
-            <div class="reveal">
-                <div class="reveal-q" onclick="toggleReveal(this)">🖊️ 原子筆為什麼叫「原子」筆？<i class="fa-solid fa-chevron-down rev-chevron"></i></div>
-                <div class="reveal-a"><div class="rev-inner">當年原子筆進入亞洲市場沒有中文名，而「原子」是當時最高科技與勝利的象徵，商人便冠上「原子」二字幫助銷售，名字就一直流傳到現在。</div></div>
+        <div class="grid3">
+            <div class="mini-card">
+                <div class="m-emoji">🔍</div>
+                <div class="m-title">觀察任務</div>
+                <p>找出家裡 3 支不同的筆，判斷它們是水性、中性還是油性？寫在紙上滴一滴水試試看！</p>
             </div>
-            <div class="reveal">
-                <div class="reveal-q" onclick="toggleReveal(this)">⚽ 筆尖的球珠是怎麼寫出字的？<i class="fa-solid fa-chevron-down rev-chevron"></i></div>
-                <div class="reveal-a"><div class="rev-inner">球珠卡在圓形槽裡，能滾但不會掉。寫字時球珠一邊滾、一邊沾墨，把墨水轉印到紙上；轉回去時再充新的墨。毛細現象讓墨水自己往筆尖跑。</div></div>
+            <div class="mini-card">
+                <div class="m-emoji">🌈</div>
+                <div class="m-title">實驗任務</div>
+                <p>用咖啡濾紙和黑色水性筆做色層分析，數數看你分出了幾種顏色？</p>
             </div>
-            <div class="reveal">
-                <div class="reveal-q" onclick="toggleReveal(this)">🧼 油性筆沾到衣服，用什麼比較有機會擦掉？<i class="fa-solid fa-chevron-down rev-chevron"></i></div>
-                <div class="reveal-a"><div class="rev-inner">酒精！油性墨水的溶劑是油，水洗不掉；酒精分子能溶解油性墨水、弄散樹脂薄膜。</div></div>
-            </div>
-            <div class="reveal">
-                <div class="reveal-q" onclick="toggleReveal(this)">✨ 消失的墨水為什麼會消失？<i class="fa-solid fa-chevron-down rev-chevron"></i></div>
-                <div class="reveal-a"><div class="rev-inner">百里酚酞是酸鹼指示劑：鹼性時是藍色，被酸（或空氣中的二氧化碳）中和後變無色。字不是不見了，是染料分子「變身」了！</div></div>
+            <div class="mini-card">
+                <div class="m-emoji">🍋</div>
+                <div class="m-title">魔法任務</div>
+                <p>用檸檬汁寫一封隱形信給家人，請大人幫忙加熱顯字！</p>
             </div>
         </div>
     </div>
 
-    <footer>神奇的墨水！原子筆的科學 · 40 分鐘課程懶人包 · 大耳狗教學網</footer>
+    <footer>
+        <img src="../assets/images/magic-ink/logo-wall.jpg" alt="超知識 logo 牆" loading="lazy">
+        超知識 SUPER SCIENCE KNOWLEDGE · 1143L1 神奇的墨水！原子筆的科學<br>
+        40 分鐘課程懶人包 · 大耳狗教學網 · By Anita 老師
+    </footer>
 </div>
 
 <script>
@@ -953,10 +951,6 @@
             });
         });
     });
-
-    function toggleReveal(head) {
-        head.parentElement.classList.toggle('open');
-    }
 </script>
 <script src="../assets/js/theme.js"></script>
 </body>
