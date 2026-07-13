@@ -19,7 +19,6 @@ A static educational website (學習主頁 / "Learning Hub") of interactive less
 Each lesson is largely **independent** — there is no shared component framework, and the same helper name (e.g. `checkAnswer`) is re-implemented per page with different signatures. Do not assume logic is shared across pages unless it comes from a linked `assets/js` file. Asset conventions vary by page:
 
 - **`pages/water-acid-base.html`** — the only page using the shared `assets/css/styles.css` and `assets/js/script.js`. A chemistry beaker simulation: global state (`naohCount`, `hasIndicator`, `temperature`) drives DOM/SVG ion animations. Animation restarts use the `void el.offsetWidth` reflow trick; visuals are re-derived in `updateBeakerVisuals()`.
-- **`pages/anti-bullying.html`** — fully self-contained (inline styles + inline `<script>` with a local `questions` array). A quiz; touches no shared assets.
 - **`pages/math-rpg.html`** — an RPG battle quiz. Loads **`assets/js/math-rpg-pools.js` before `assets/js/math-rpg.js`** (order matters): pools defines the global `QUESTION_POOLS`, which the game reads. Flow: select grade → select pool → how-to → battle.
 
 ### math-rpg specifics
