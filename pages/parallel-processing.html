@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心指揮官 · 平行處理大作戰</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        /* 本頁主題色：電路紫 */
+        body { --g1: #6d5fc0; --g2: #9c8fdd; --g-bg: #efedfa; --g-line: #d8d2f0; }
+        :root[data-theme="dark"] body { --g-bg: #221f38; --g-line: #3d3760; }
+        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body { --g-bg: #221f38; --g-line: #3d3760; } }
+
+        body {
+            background-color: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+        }
+
+        .game-card {
+            background-color: var(--surface);
+            border: 8px solid var(--border);
+            border-radius: 32px;
+            box-shadow: 0 15px 35px var(--shadow);
+            width: 1120px;
+            max-width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ---------- 頂部標題 ---------- */
+        .game-header {
+            background: linear-gradient(135deg, var(--g2) 0%, var(--g1) 100%);
+            color: #ffffff;
+            text-align: center;
+            padding: 30px 40px 26px;
+            position: relative;
+        }
+        .game-header .header-icon { font-size: 46px; margin-bottom: 6px; }
+        .game-header h1 { font-size: 34px; font-weight: 700; margin: 0; text-shadow: 1px 2px 0 rgba(0,0,0,0.08); }
+        .game-header p { font-size: 16px; margin: 8px 0 0; opacity: 0.96; font-weight: 400; line-height: 1.5; }
+        .back-link {
+            position: absolute; left: 22px; top: 22px;
+            color: #fff; text-decoration: none; font-size: 15px; font-weight: 600;
+            background: rgba(255,255,255,0.18); border-radius: 999px; padding: 8px 16px;
+            transition: background 0.2s ease;
+        }
+        .back-link:hover { background: rgba(255,255,255,0.32); }
+
+        /* ---------- 關卡選擇 ---------- */
+        .level-select { padding: 36px 40px 44px; }
+        .level-select h2 { text-align: center; font-size: 22px; color: var(--ink); margin: 0 0 6px; }
+        .level-select .ls-sub { text-align: center; font-size: 14px; color: var(--muted); margin: 0 0 28px; }
+        .level-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        .level-card {
+            border: 3px solid var(--border); border-radius: 24px; padding: 24px 20px;
+            background-color: var(--surface); text-align: center; cursor: pointer;
+            transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+        .level-card:not(.locked):hover { transform: translateY(-4px); border-color: var(--g1); box-shadow: 0 10px 24px var(--primary-shadow); }
+        .level-card .lc-icon { font-size: 42px; margin-bottom: 10px; }
+        .level-card .lc-num { font-size: 13px; font-weight: 700; color: var(--g1); letter-spacing: 1px; }
+        .level-card .lc-title { font-size: 19px; font-weight: 700; color: var(--ink); margin: 4px 0 8px; }
+        .level-card .lc-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+        .level-card .lc-clear {
+            display: none; position: absolute; top: 12px; right: 14px;
+            font-size: 13px; font-weight: 700; color: var(--good);
+        }
+        .level-card.cleared .lc-clear { display: block; }
+        .level-card.locked { opacity: 0.55; cursor: not-allowed; background-color: var(--surface-2); }
+        .level-card.locked .lc-lock { position: absolute; top: 12px; right: 14px; color: var(--muted-2); font-size: 16px; }
+
+        /* ---------- 任務說明條 ---------- */
+        .mission-bar {
+            display: flex; align-items: center; gap: 14px;
+            background-color: var(--g-bg);
+            border-bottom: 3px solid var(--border);
+            padding: 12px 28px;
+            font-size: 14px; color: var(--ink-soft); line-height: 1.55;
+        }
+        .mission-bar .level-badge {
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--g1), var(--g2));
+            color: #fff; font-weight: 700; font-size: 14px;
+            padding: 8px 14px; border-radius: 14px; white-space: nowrap;
+        }
+        .mission-bar b { color: var(--g1); }
+        .mission-bar .quit-btn {
+            margin-left: auto; flex-shrink: 0;
+            border: 2px solid var(--border-strong); background: var(--surface); color: var(--muted);
+            border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+            cursor: pointer; font-family: inherit; transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .mission-bar .quit-btn:hover { color: var(--bad); border-color: var(--bad-border); }
+
+        /* ---------- 儀表板 ---------- */
+        .metrics {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+            padding: 16px 28px 6px;
+        }
+        .metric {
+            background-color: var(--surface-2); border: 2px solid var(--border);
+            border-radius: 16px; padding: 10px 16px; text-align: center;
+        }
+        .metric .m-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+        .metric .m-value { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+        .metric .m-value small { font-size: 12px; color: var(--muted); font-weight: 400; }
+        .metric.danger .m-value { color: var(--bad); }
+        .metric .m-bar {
+            height: 6px; border-radius: 3px; background: var(--border); margin-top: 6px; overflow: hidden;
+        }
+        .metric .m-bar > div { height: 100%; width: 0%; background: var(--good); border-radius: 3px; transition: width 0.2s ease, background 0.2s ease; }
+
+        /* ---------- 掉落區（任務佇列） ---------- */
+        .playfield { padding: 10px 28px 26px; }
+        .drop-zone {
+            position: relative;
+            height: 300px;
+            border: 3px dashed var(--border-strong);
+            border-radius: 20px;
+            background:
+                repeating-linear-gradient(0deg, transparent 0 34px, var(--g-bg) 34px 35px);
+            background-color: var(--surface-2);
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+        .drop-zone.danger { border-color: var(--bad); animation: dzFlash 0.6s ease-in-out infinite; }
+        @keyframes dzFlash { 50% { box-shadow: inset 0 0 40px var(--bad-bg); } }
+
+        .overflow-line {
+            position: absolute; left: 0; right: 0; top: 50px;
+            border-top: 2px dashed var(--bad);
+            opacity: 0.65; pointer-events: none; z-index: 2;
+        }
+        .overflow-line span {
+            position: absolute; right: 10px; top: -11px;
+            font-size: 11px; font-weight: 700; color: var(--bad);
+            background: var(--surface); padding: 0 8px; border-radius: 999px;
+        }
+
+        /* 堆疊區收窄置中：一排 4 個，容量 16 = 4 排，第 4 排頂到警戒線 */
+        .task-pile {
+            position: absolute; top: 0; bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 560px; max-width: 100%;
+            padding: 10px 12px;
+            display: flex; flex-wrap: wrap-reverse; align-content: flex-start;
+            flex-direction: row; gap: 8px;
+        }
+
+        /* ---------- 任務方塊 ---------- */
+        .task {
+            width: 118px; height: 52px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-size: 14px; font-weight: 700; color: #fff;
+            cursor: pointer; user-select: none;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.18);
+            border: 3px solid transparent;
+            animation: taskDrop 0.45s cubic-bezier(0.3, 1.4, 0.6, 1);
+            transition: transform 0.12s ease, border-color 0.15s ease, opacity 0.2s ease;
+            position: relative; z-index: 1;
+        }
+        @keyframes taskDrop { from { transform: translateY(-260px); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
+        .task:hover { transform: translateY(-2px); }
+        .task.selected { border-color: #fff; box-shadow: 0 0 0 3px var(--g1), 0 3px 0 rgba(0,0,0,0.18); }
+        .task .t-icon { font-size: 17px; }
+
+        .task.c-blue   { background: linear-gradient(135deg, #5b8fc9, #3d6ea8); }
+        .task.c-red    { background: linear-gradient(135deg, #e07b6d, #c4544a); }
+        .task.c-yellow { background: linear-gradient(135deg, #e0b04e, #c08a1e); }
+        .task.c-heavy  { background: linear-gradient(135deg, #9c7bd4, #6d4fb0); }
+
+        /* ---------- 核心區 ---------- */
+        .cores-title {
+            display: flex; align-items: center; gap: 10px;
+            margin: 18px 0 10px; font-size: 15px; font-weight: 700; color: var(--ink);
+        }
+        .cores-title .acc-panel {
+            margin-left: auto; display: none; align-items: center; gap: 8px;
+            font-size: 13px; font-weight: 600; color: var(--ink-soft);
+            background: var(--surface-2); border: 2px solid var(--border);
+            border-radius: 999px; padding: 6px 14px;
+        }
+        .cores-title .acc-panel.show { display: flex; }
+        .cores-title .acc-panel .acc-state { font-weight: 700; color: var(--good); }
+        .cores-title .acc-panel.in-use .acc-state { color: var(--warn); }
+
+        .cores-row { display: flex; gap: 14px; flex-wrap: wrap; }
+        .core {
+            flex: 1; min-width: 130px; max-width: 220px;
+            border: 3px solid var(--border); border-radius: 18px;
+            background-color: var(--surface);
+            padding: 12px 14px 14px; text-align: center; cursor: pointer;
+            position: relative; user-select: none;
+            transition: border-color 0.2s ease, transform 0.12s ease;
+            animation: coreIn 0.4s ease;
+        }
+        @keyframes coreIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .core:hover { transform: translateY(-2px); }
+        .core .core-name { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+        .core .core-face { font-size: 30px; line-height: 1.2; }
+        .core .core-state { font-size: 12px; font-weight: 700; margin-top: 4px; }
+        .core .core-bar { height: 8px; border-radius: 4px; background: var(--border); margin-top: 8px; overflow: hidden; }
+        .core .core-bar > div { height: 100%; width: 0%; border-radius: 4px; background: var(--g1); }
+
+        /* 閒置：綠色呼吸燈 */
+        .core.idle { border-color: var(--good-border); animation: coreIn 0.4s ease, breathe 2s ease-in-out infinite; }
+        .core.idle .core-state { color: var(--good); }
+        @keyframes breathe {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(46, 139, 94, 0); }
+            50% { box-shadow: 0 0 18px 4px rgba(46, 139, 94, 0.35); }
+        }
+        .core.idle.drop-ok { border-color: var(--good); box-shadow: 0 0 0 3px var(--good-bg); }
+
+        /* 滿載：紅色高頻閃爍 */
+        .core.busy { border-color: var(--bad-border); animation: coreFlash 0.7s ease-in-out infinite; }
+        .core.busy .core-state { color: var(--bad); }
+        .core.busy .core-bar > div { background: linear-gradient(90deg, var(--warn), var(--bad)); }
+        @keyframes coreFlash {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(207, 75, 63, 0); }
+            50% { box-shadow: 0 0 14px 3px rgba(207, 75, 63, 0.4); }
+        }
+
+        /* 阻塞：灰色 + 鎖頭 */
+        .core.blocked { border-color: var(--border-strong); background-color: var(--surface-3); cursor: not-allowed; }
+        .core.blocked .core-state { color: var(--muted); }
+        .core.blocked::after {
+            content: '\1F512'; position: absolute; top: -10px; right: -6px; font-size: 20px;
+        }
+
+        .core .boost-tag {
+            display: none; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: var(--warn); color: #fff; font-size: 11px; font-weight: 700;
+            padding: 2px 10px; border-radius: 999px; white-space: nowrap;
+        }
+        .core.boosted .boost-tag { display: block; }
+
+        /* ---------- 浮動訊息 ---------- */
+        .toast-area {
+            position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+            z-index: 30; display: flex; flex-direction: column; gap: 8px; align-items: center;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--ink); color: var(--surface);
+            font-size: 14px; font-weight: 600; padding: 8px 20px; border-radius: 999px;
+            box-shadow: 0 6px 18px var(--shadow-strong);
+            animation: toastIn 0.3s ease, toastOut 0.4s ease 2s forwards;
+        }
+        @keyframes toastIn { from { transform: translateY(-16px); opacity: 0; } }
+        @keyframes toastOut { to { transform: translateY(-10px); opacity: 0; } }
+
+        /* ---------- 覆蓋層（開場說明 / 結算） ---------- */
+        .overlay {
+            position: absolute; inset: 0; z-index: 40;
+            background: rgba(20, 24, 38, 0.55); backdrop-filter: blur(3px);
+            display: none; align-items: center; justify-content: center; padding: 30px;
+        }
+        .overlay.show { display: flex; }
+        .overlay-box {
+            background: var(--surface); border: 4px solid var(--border);
+            border-radius: 28px; padding: 34px 38px; max-width: 560px; width: 100%;
+            text-align: center; box-shadow: 0 20px 50px var(--shadow-strong);
+            animation: boxPop 0.35s cubic-bezier(0.3, 1.4, 0.6, 1);
+            max-height: 100%; overflow-y: auto;
+        }
+        @keyframes boxPop { from { transform: scale(0.85); opacity: 0; } }
+        .overlay-box .ob-icon { font-size: 52px; margin-bottom: 8px; }
+        .overlay-box h3 { font-size: 26px; color: var(--ink); margin: 0 0 12px; }
+        .overlay-box p { font-size: 15px; color: var(--ink-soft); line-height: 1.75; margin: 0 0 12px; text-align: left; }
+        .overlay-box p.center { text-align: center; }
+        .overlay-box .lesson {
+            background: var(--g-bg); border: 2px solid var(--g-line); border-radius: 16px;
+            padding: 14px 18px; font-size: 14px; color: var(--ink-soft); line-height: 1.7;
+            text-align: left; margin-bottom: 16px;
+        }
+        .overlay-box .lesson b { color: var(--g1); }
+        .overlay-box .stats-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+        .overlay-box .stat-chip {
+            background: var(--surface-2); border: 2px solid var(--border); border-radius: 14px;
+            padding: 8px 16px; font-size: 13px; color: var(--muted); font-weight: 600;
+        }
+        .overlay-box .stat-chip b { display: block; font-size: 20px; color: var(--ink); }
+        .ob-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .ob-btn {
+            border: none; border-radius: 999px; padding: 13px 30px;
+            font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer;
+            background: linear-gradient(135deg, var(--g1), var(--g2)); color: #fff;
+            box-shadow: 0 6px 16px var(--primary-shadow);
+            transition: transform 0.12s ease;
+        }
+        .ob-btn:hover { transform: translateY(-2px); }
+        .ob-btn.ghost { background: var(--surface-2); color: var(--ink-soft); box-shadow: none; border: 2px solid var(--border-strong); }
+
+        .hidden { display: none !important; }
+
+        /* ---------- 手機版 ---------- */
+        @media (max-width: 720px) {
+            body { padding: 20px 10px; }
+            .game-card { border-width: 6px; }
+            .game-header { padding: 24px 16px 20px; }
+            .game-header h1 { font-size: 25px; }
+            .game-header p { font-size: 13px; }
+            .back-link { left: 12px; top: 12px; padding: 6px 12px; font-size: 13px; }
+            .level-select { padding: 24px 18px 30px; }
+            .level-cards { grid-template-columns: 1fr; }
+            .metrics { grid-template-columns: repeat(2, 1fr); padding: 12px 14px 4px; }
+            .playfield { padding: 8px 14px 18px; }
+            .drop-zone { height: 280px; }
+            .task { width: 70px; height: 46px; font-size: 11px; gap: 4px; }
+            .task .t-icon { font-size: 14px; }
+            .task-pile { width: 344px; }
+            .mission-bar { padding: 10px 14px; font-size: 12px; flex-wrap: wrap; }
+            .cores-row { gap: 8px; }
+            .core { min-width: 100px; padding: 8px 8px 10px; }
+            .overlay-box { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-card">
+    <div class="game-header">
+        <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回主頁</a>
+        <div class="header-icon">🖥️</div>
+        <h1>核心指揮官</h1>
+        <p>平行處理大作戰 · 任務不斷落下，指揮你的核心消化它們，別讓系統溢位當機！</p>
+    </div>
+
+    <!-- ========== 關卡選擇 ========== -->
+    <div class="level-select" id="levelSelect">
+        <h2>選擇關卡</h2>
+        <p class="ls-sub">依序闖關，體驗從「單核的無力」到「多核的智慧」</p>
+        <div class="level-cards">
+            <div class="level-card" data-level="1" onclick="tryStartLevel(1)">
+                <div class="lc-clear"><i class="fa-solid fa-circle-check"></i> 已完成</div>
+                <div class="lc-icon">🐌</div>
+                <div class="lc-num">LEVEL 1</div>
+                <div class="lc-title">單核極限</div>
+                <div class="lc-desc">只有一顆核心。<br>手速再快，撐得住嗎？</div>
+            </div>
+            <div class="level-card locked" data-level="2" onclick="tryStartLevel(2)">
+                <div class="lc-clear"><i class="fa-solid fa-circle-check"></i> 已完成</div>
+                <i class="fa-solid fa-lock lc-lock"></i>
+                <div class="lc-icon">🚀</div>
+                <div class="lc-num">LEVEL 2</div>
+                <div class="lc-title">平行分工</div>
+                <div class="lc-desc">解鎖多核心！<br>分流任務，享受吞吐量暴增的快感</div>
+            </div>
+            <div class="level-card locked" data-level="3" onclick="tryStartLevel(3)">
+                <div class="lc-clear"><i class="fa-solid fa-circle-check"></i> 已完成</div>
+                <i class="fa-solid fa-lock lc-lock"></i>
+                <div class="lc-icon">🔒</div>
+                <div class="lc-num">LEVEL 3</div>
+                <div class="lc-title">同步危機</div>
+                <div class="lc-desc">重載任務要搶唯一的加速器，<br>核心多不一定快……</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 遊戲畫面 ========== -->
+    <div class="hidden" id="gameScreen">
+        <div class="mission-bar">
+            <div class="level-badge" id="levelBadge">關卡一</div>
+            <div id="missionText"></div>
+            <button class="quit-btn" onclick="quitToMenu()"><i class="fa-solid fa-door-open"></i> 離開</button>
+        </div>
+
+        <div class="metrics">
+            <div class="metric">
+                <div class="m-label">⚡ 吞吐量 Throughput</div>
+                <div class="m-value"><span id="mThroughput">0.0</span> <small>個/秒</small></div>
+            </div>
+            <div class="metric">
+                <div class="m-label">⏱️ 平均延遲 Latency</div>
+                <div class="m-value"><span id="mLatency">–</span> <small>秒</small></div>
+            </div>
+            <div class="metric" id="pressureMetric">
+                <div class="m-label">📥 佇列壓力</div>
+                <div class="m-value"><span id="mQueue">0</span> <small>/ <span id="mCap">16</span></small></div>
+                <div class="m-bar"><div id="pressureBar"></div></div>
+            </div>
+            <div class="metric">
+                <div class="m-label">⏳ 剩餘時間</div>
+                <div class="m-value"><span id="mTime">60</span> <small>秒</small></div>
+            </div>
+        </div>
+
+        <div class="playfield">
+            <div class="drop-zone" id="dropZone">
+                <div class="overflow-line"><span>⚠ 溢位警戒線</span></div>
+                <div class="task-pile" id="taskPile"></div>
+            </div>
+
+            <div class="cores-title">
+                <i class="fa-solid fa-microchip" style="color: var(--g1);"></i>
+                處理器核心 <span style="font-weight:400; font-size:12px; color:var(--muted);">（點任務再點核心，或直接點核心自動抓取最舊任務）</span>
+                <div class="acc-panel" id="accPanel">
+                    🚀 共享加速器：<span class="acc-state" id="accState">閒置</span>
+                </div>
+            </div>
+            <div class="cores-row" id="coresRow"></div>
+        </div>
+
+    </div>
+
+    <div class="toast-area" id="toastArea"></div>
+
+    <!-- ========== 覆蓋層 ========== -->
+    <div class="overlay" id="overlay">
+        <div class="overlay-box" id="overlayBox"></div>
+    </div>
+</div>
+
+<script>
+'use strict';
+
+/* ================================================================
+   核心指揮官 · 平行處理互動教學遊戲
+   關卡一：單核極限（體驗序列處理的無力 → 設計上必敗）
+   關卡二：平行分工（多核擴展 + 顏色分流 + 快取加速）
+   關卡三：同步危機（共享加速器競爭 → Amdahl 定律）
+   ================================================================ */
+
+/* ---------- 關卡設定（平衡數值都在這裡調） ---------- */
+const LEVELS = {
+    1: {
+        badge: '關卡一', title: '單核極限',
+        mission: '只有 <b>1 顆核心</b>！目標：撐過 <b>60 秒</b>不讓任務堆到警戒線。',
+        duration: 60, capacity: 16,
+        cores: 1, maxCores: 1, coreUnlocks: [],
+        procTime: 2500,
+        spawnStart: 1500, spawnEnd: 1100, // 生成間隔 ms，隨時間線性加快
+        taskTypes: ['blue'],
+        cacheBonus: false,
+        intro: {
+            icon: '🐌', title: '關卡一：單核極限',
+            html: `<p>任務包會從上方不斷落下，堆到<b style="color:var(--bad);">警戒線</b>系統就會溢位當機！</p>
+                   <p>你只有 <b>1 顆核心</b>。點擊任務、再點核心（或直接點核心）就能開始處理。</p>
+                   <p class="center" style="color:var(--muted); font-size:13px;">目標：撐過 60 秒。祝你好運……你會需要的 😏</p>`
+        }
+    },
+    2: {
+        badge: '關卡二', title: '平行分工',
+        mission: '多核心解鎖！任務有<b>顏色</b>之分，同核心連續處理同色會觸發<b>⚡快取加速</b>。撐過 <b>60 秒</b>！',
+        duration: 60, capacity: 16,
+        cores: 2, maxCores: 4, coreUnlocks: [10, 22], // 累計完成數達標自動擴展核心
+        procTime: 2500,
+        spawnStart: 1150, spawnEnd: 800,
+        taskTypes: ['blue', 'red', 'yellow'],
+        cacheBonus: true,
+        intro: {
+            icon: '🚀', title: '關卡二：平行分工',
+            html: `<p>系統升級！你現在有 <b>2 顆核心</b>，隨著處理量增加還會<b>橫向擴展</b>到 4 顆。</p>
+                   <p>任務出現了<b style="color:#3d6ea8;">藍</b>、<b style="color:#c4544a;">紅</b>、<b style="color:#c08a1e;">黃</b>三種顏色——讓同一顆核心連續處理同色任務，會觸發 <b>⚡快取命中</b>，處理速度大幅提升！</p>
+                   <p class="center" style="color:var(--muted); font-size:13px;">試著幫任務「分流」，感受吞吐量暴增的快感！</p>`
+        }
+    },
+    3: {
+        badge: '關卡三', title: '同步危機',
+        mission: '<b>💜 重載任務</b>需要<b>共享加速器</b>（全場只有一台），搶不到的核心會<b>阻塞發呆</b>。撐過 <b>60 秒</b>！',
+        duration: 60, capacity: 16,
+        cores: 4, maxCores: 4, coreUnlocks: [],
+        procTime: 2200,
+        spawnStart: 750, spawnEnd: 500,
+        taskTypes: ['blue', 'red', 'yellow'], // 一般任務仍有顏色，另外機率生成重載任務
+        cacheBonus: true,
+        heavyChance: 0.43,   // 重載任務機率（需要共享加速器）
+        heavyDelay: 10,     // 開場熱身秒數，之後重載任務才登場
+        intro: {
+            icon: '🔒', title: '關卡三：同步危機',
+            html: `<p>你有滿滿 4 顆核心，玩法跟上一關一樣——但真實世界的挑戰來了：</p>
+                   <p>💜 <b style="color:#6d4fb0;">重載任務</b>即將登場。它需要<b>共享加速器</b>才能處理，而全場<b>只有一台</b>。<br>
+                      加速器被占用時，接到重載任務的核心只能灰著臉<b>🔒 阻塞等待</b>，什麼事都做不了……</p>
+                   <p class="center" style="color:var(--muted); font-size:13px;">提示：別讓多顆核心同時去搶加速器。核心再多，排隊時也只能發呆！</p>`
+        }
+    }
+};
+
+const COLOR_META = {
+    blue:   { icon: '📦', label: '藍色' },
+    red:    { icon: '📦', label: '紅色' },
+    yellow: { icon: '📦', label: '黃色' },
+    heavy:  { icon: '🏋️', label: '重載' }
+};
+
+/* ---------- 全域狀態 ---------- */
+let G = null;          // 當前遊戲狀態
+let taskSeq = 0;       // 任務流水號
+
+const $ = id => document.getElementById(id);
+
+/* ---------- 進度存檔 ---------- */
+function getProgress() {
+    try { return JSON.parse(localStorage.getItem('pp-progress')) || { unlocked: 1, cleared: [] }; }
+    catch { return { unlocked: 1, cleared: [] }; }
+}
+function saveProgress(p) { localStorage.setItem('pp-progress', JSON.stringify(p)); }
+function refreshLevelCards() {
+    const p = getProgress();
+    document.querySelectorAll('.level-card').forEach(card => {
+        const lv = +card.dataset.level;
+        card.classList.toggle('locked', lv > p.unlocked);
+        card.classList.toggle('cleared', p.cleared.includes(lv));
+    });
+}
+
+/* ---------- 關卡進入 ---------- */
+function tryStartLevel(lv) {
+    const p = getProgress();
+    if (lv > p.unlocked) { toast('🔒 先完成前面的關卡吧！'); return; }
+    showIntro(lv);
+}
+
+function showIntro(lv) {
+    const cfg = LEVELS[lv];
+    showOverlay(`
+        <div class="ob-icon">${cfg.intro.icon}</div>
+        <h3>${cfg.intro.title}</h3>
+        ${cfg.intro.html}
+        <div class="ob-btns">
+            <button class="ob-btn" onclick="startLevel(${lv})"><i class="fa-solid fa-play"></i> 開始！</button>
+            <button class="ob-btn ghost" onclick="hideOverlay()">返回</button>
+        </div>
+    `);
+}
+
+/* ---------- 遊戲初始化 ---------- */
+function startLevel(lv) {
+    hideOverlay();
+    const cfg = LEVELS[lv];
+    G = {
+        lv, cfg,
+        running: true,
+        startAt: performance.now(),
+        elapsed: 0,
+        lastSpawn: 0,
+        queue: [],            // 佇列中的任務物件
+        cores: [],            // 核心物件
+        selected: null,       // 被選取的任務
+        accBusy: false,       // 共享加速器是否使用中
+        accWaiters: [],       // 等待加速器的核心（FIFO）
+        completedTotal: 0,
+        completions: [],      // { t: 完成時間ms, latency: ms }
+        unlockedCores: 0,
+        heavySeen: false,     // 重載任務是否已首次登場（教學提示用）
+        lastWasHeavy: false   // 上一個生成的是否為重載（假機率：禁止連續兩次）
+    };
+    taskSeq = 0;
+
+    $('levelSelect').classList.add('hidden');
+    $('gameScreen').classList.remove('hidden');
+    $('levelBadge').textContent = cfg.badge + '：' + cfg.title;
+    $('missionText').innerHTML = cfg.mission;
+    $('mCap').textContent = cfg.capacity;
+    $('taskPile').innerHTML = '';
+    $('coresRow').innerHTML = '';
+    $('accPanel').classList.toggle('show', lv === 3);
+    updateAccUI();
+
+    for (let i = 0; i < cfg.cores; i++) addCore();
+
+    G.timer = setInterval(tick, 100);
+    spawnTask(); // 立刻掉第一個，玩家馬上有事做
+    G.lastSpawn = performance.now();
+}
+
+function quitToMenu() {
+    stopGame();
+    $('gameScreen').classList.add('hidden');
+    $('levelSelect').classList.remove('hidden');
+    refreshLevelCards();
+}
+
+function stopGame() {
+    if (G && G.timer) clearInterval(G.timer);
+    if (G) G.running = false;
+}
+
+/* ---------- 核心 ---------- */
+function addCore() {
+    const idx = G.cores.length;
+    const core = {
+        id: idx, task: null, endAt: 0, procMs: 0,
+        lastColor: null, blocked: false, boosted: false
+    };
+    const el = document.createElement('div');
+    el.className = 'core idle';
+    el.innerHTML = `
+        <div class="boost-tag">⚡ 快取命中！</div>
+        <div class="core-name">核心 ${idx + 1}</div>
+        <div class="core-face">🟩</div>
+        <div class="core-state">閒置中</div>
+        <div class="core-bar"><div></div></div>`;
+    el.onclick = () => onCoreClick(core);
+    // 拖曳支援
+    el.ondragover = e => { if (!core.task && !core.blocked) { e.preventDefault(); el.classList.add('drop-ok'); } };
+    el.ondragleave = () => el.classList.remove('drop-ok');
+    el.ondrop = e => {
+        e.preventDefault(); el.classList.remove('drop-ok');
+        const t = G.queue.find(t => t.id === +e.dataTransfer.getData('text/plain'));
+        if (t) assignTask(t, core);
+    };
+    core.el = el;
+    $('coresRow').appendChild(el);
+    G.cores.push(core);
+}
+
+function onCoreClick(core) {
+    if (!G.running || core.task || core.blocked) return;
+    let t = G.selected;
+    if (!t) {
+        // 沒選任務 → 自動抓最舊的任務
+        t = G.queue[0];
+        if (!t) { toast('目前沒有可處理的任務'); return; }
+    }
+    assignTask(t, core);
+}
+
+/* ---------- 任務生成 ---------- */
+function spawnTask() {
+    const cfg = G.cfg;
+    if (G.queue.length >= cfg.capacity) { gameOver(); return; }
+
+    // 假機率：上一個若是重載，這次保證不是（避免連續重載癱瘓全場）
+    const r = Math.random();
+    if (G.lv === 3 && G.elapsed >= cfg.heavyDelay && !G.lastWasHeavy && r < cfg.heavyChance) {
+        // 重載任務：熱身期過後才登場，第一次出現時跳教學提示
+        pushTask({ type: 'heavy', label: '重載' });
+        G.lastWasHeavy = true;
+        if (!G.heavySeen) {
+            G.heavySeen = true;
+            toast('💜 重載任務登場！它需要共享加速器，而全場只有一台！');
+        }
+    } else {
+        const c = cfg.taskTypes[Math.floor(Math.random() * cfg.taskTypes.length)];
+        pushTask({ type: c, label: COLOR_META[c].label });
+        G.lastWasHeavy = false;
+    }
+}
+
+function pushTask(props) {
+    const t = Object.assign({
+        id: ++taskSeq, bornAt: performance.now()
+    }, props);
+    const el = document.createElement('div');
+    el.className = `task c-${t.type}`;
+    el.innerHTML = `<span class="t-icon">${COLOR_META[t.type].icon}</span>${t.label}`;
+    el.draggable = true;
+    el.onclick = () => onTaskClick(t);
+    el.ondragstart = e => {
+        e.dataTransfer.setData('text/plain', t.id);
+        selectTask(t);
+    };
+    t.el = el;
+    G.queue.push(t);
+    $('taskPile').appendChild(el);
+    updatePressure();
+}
+
+function onTaskClick(t) {
+    if (!G.running) return;
+    selectTask(G.selected === t ? null : t);
+}
+
+function selectTask(t) {
+    if (G.selected) G.selected.el.classList.remove('selected');
+    G.selected = t;
+    if (t) t.el.classList.add('selected');
+}
+
+/* ---------- 指派與處理 ---------- */
+function assignTask(t, core) {
+    if (core.task || core.blocked) return;
+    // 從佇列移除
+    G.queue = G.queue.filter(x => x !== t);
+    if (G.selected === t) selectTask(null);
+    t.el.remove();
+    updatePressure();
+
+    core.task = t;
+
+    if (t.type === 'heavy') {
+        if (G.accBusy) {
+            // 加速器被占用 → 核心進入阻塞
+            core.blocked = true;
+            G.accWaiters.push(core);
+            setCoreUI(core, 'blocked');
+            toast(`⛔ 核心 ${core.id + 1} 阻塞：等待共享加速器…`);
+            updateAccUI();
+            return;
+        }
+        G.accBusy = true;
+        updateAccUI();
+    }
+    beginProcessing(core);
+}
+
+function beginProcessing(core) {
+    const cfg = G.cfg;
+    const t = core.task;
+    let ms = cfg.procTime;
+    core.boosted = false;
+
+    if (cfg.cacheBonus && t.type === core.lastColor && ['blue','red','yellow'].includes(t.type)) {
+        ms = Math.round(ms * 0.6); // 快取命中：加速 40%
+        core.boosted = true;
+    }
+    if (t.type === 'heavy') ms = Math.round(ms * 1.5);
+
+    core.procMs = ms;
+    core.endAt = performance.now() + ms;
+    core.lastColor = t.type;
+    setCoreUI(core, 'busy');
+}
+
+function completeTask(core) {
+    const t = core.task;
+    const now = performance.now();
+    G.completedTotal++;
+    G.completions.push({ t: now, latency: now - t.bornAt });
+
+    // 釋放加速器 → 喚醒等待中的核心（FIFO）
+    if (t.type === 'heavy') {
+        G.accBusy = false;
+        const next = G.accWaiters.shift();
+        if (next) {
+            next.blocked = false;
+            G.accBusy = true;
+            toast(`🚀 核心 ${next.id + 1} 取得加速器，恢復運作！`);
+            beginProcessing(next);
+        }
+        updateAccUI();
+    }
+
+    core.task = null;
+    core.boosted = false;
+    setCoreUI(core, 'idle');
+
+    // 關卡二：完成數達標 → 橫向擴展核心
+    const cfg = G.cfg;
+    if (G.unlockedCores < cfg.coreUnlocks.length &&
+        G.completedTotal >= cfg.coreUnlocks[G.unlockedCores]) {
+        G.unlockedCores++;
+        addCore();
+        toast(`🎉 效能達標！橫向擴展：解鎖核心 ${G.cores.length}！`);
+    }
+}
+
+function setCoreUI(core, state) {
+    const el = core.el;
+    el.className = 'core ' + state + (core.boosted ? ' boosted' : '');
+    const face = el.querySelector('.core-face');
+    const label = el.querySelector('.core-state');
+    if (state === 'idle') { face.textContent = '🟩'; label.textContent = '閒置中'; }
+    else if (state === 'busy') { face.textContent = '🔥'; label.textContent = '處理中：' + core.task.label; }
+    else { face.textContent = '⏸️'; label.textContent = '阻塞：等待加速器'; }
+    if (state !== 'busy') el.querySelector('.core-bar > div').style.width = '0%';
+}
+
+function updateAccUI() {
+    const panel = $('accPanel');
+    panel.classList.toggle('in-use', G.accBusy);
+    $('accState').textContent = G.accBusy
+        ? '使用中' + (G.accWaiters.length ? `（${G.accWaiters.length} 核心等待中）` : '')
+        : '閒置';
+}
+
+/* ---------- 主迴圈 ---------- */
+function tick() {
+    if (!G.running) return;
+    const now = performance.now();
+    G.elapsed = (now - G.startAt) / 1000;
+    const cfg = G.cfg;
+
+    // 1. 任務生成（間隔隨時間線性加快）
+    const prog = Math.min(G.elapsed / cfg.duration, 1);
+    const interval = cfg.spawnStart + (cfg.spawnEnd - cfg.spawnStart) * prog;
+    if (now - G.lastSpawn >= interval) {
+        G.lastSpawn = now;
+        spawnTask();
+        if (!G.running) return; // spawnTask 可能觸發 gameOver
+    }
+
+    // 2. 核心進度
+    for (const core of G.cores) {
+        if (core.task && !core.blocked) {
+            const remain = core.endAt - now;
+            const pct = Math.min(100, 100 * (1 - remain / core.procMs));
+            core.el.querySelector('.core-bar > div').style.width = pct + '%';
+            if (remain <= 0) completeTask(core);
+        }
+    }
+
+    // 3. 儀表板
+    const recent5s = G.completions.filter(c => now - c.t <= 5000);
+    $('mThroughput').textContent = (recent5s.length / 5).toFixed(1);
+    const last10 = G.completions.slice(-10);
+    $('mLatency').textContent = last10.length
+        ? (last10.reduce((s, c) => s + c.latency, 0) / last10.length / 1000).toFixed(1)
+        : '–';
+    const remainSec = Math.max(0, Math.ceil(cfg.duration - G.elapsed));
+    $('mTime').textContent = remainSec;
+
+    // 4. 勝利判定
+    if (G.elapsed >= cfg.duration) winLevel();
+}
+
+function updatePressure() {
+    const cfg = G.cfg;
+    const n = G.queue.length;
+    $('mQueue').textContent = n;
+    const pct = (n / cfg.capacity) * 100;
+    const bar = $('pressureBar');
+    bar.style.width = pct + '%';
+    bar.style.background = pct >= 75 ? 'var(--bad)' : pct >= 50 ? 'var(--warn)' : 'var(--good)';
+    $('pressureMetric').classList.toggle('danger', pct >= 75);
+    $('dropZone').classList.toggle('danger', pct >= 75);
+}
+
+/* ---------- 結算 ---------- */
+function statsHtml() {
+    const now = performance.now();
+    const total = G.completedTotal;
+    const avgLat = G.completions.length
+        ? (G.completions.reduce((s, c) => s + c.latency, 0) / G.completions.length / 1000).toFixed(1)
+        : '–';
+    const tp = (total / Math.max(G.elapsed, 1)).toFixed(2);
+    return `
+        <div class="stats-row">
+            <div class="stat-chip">完成任務<b>${total}</b></div>
+            <div class="stat-chip">平均吞吐量<b>${tp} /秒</b></div>
+            <div class="stat-chip">平均延遲<b>${avgLat} 秒</b></div>
+            <div class="stat-chip">存活時間<b>${Math.floor(G.elapsed)} 秒</b></div>
+        </div>`;
+}
+
+const LOSE_LESSONS = {
+    1: `<b>這不是你的錯！</b>任務產生的速度早就超過了單核心的處理極限——不論手速多快，<b>崩潰是數學上的必然</b>。這就是「序列處理瓶頸」：單一核心的硬體速度有極限。<br>解決方案？<b>不是更快的一顆核心，而是更多顆核心。</b>`,
+    2: `佇列溢位了！試著更平均地「分流」：別讓某顆核心閒置（綠燈呼吸 = 資源浪費），並利用<b>同色連續處理的快取加速</b>提高吞吐量。`,
+    3: `佇列溢位了！注意：<b>重載任務同時派給多顆核心</b>會讓大家排隊搶加速器——排隊中的核心完全動不了，一般任務卻還在堆積。訣竅：<b>一次只派一個重載任務</b>，其他核心先消化一般任務，讓所有核心保持流動！`
+};
+const WIN_LESSONS = {
+    1: `你……居然撐過來了？！無論如何你應該感覺到了：<b>單核心就是有極限</b>。接下來，試試多核心的力量吧！`,
+    2: `感受到了嗎？多核心讓吞吐量翻了好幾倍——這就是<b>平行處理（Parallel Processing）</b>與<b>負載平衡（Load Balancing）</b>的威力。但真實世界沒這麼單純……下一關見。`,
+    3: `恭喜通關！🎓 你已經體會了平行處理最深刻的一課——<b>阿姆達爾定律（Amdahl's Law）</b>：加速器一次只能服務一顆核心，這就是程式中「<b>無法平行化的序列部分</b>」。只要它存在，<b>核心再多，整體加速也有天花板</b>——排隊的核心只能發呆。人多不一定好辦事，協調與同步才是關鍵！`
+};
+
+function gameOver() {
+    stopGame();
+    const lv = G.lv;
+    // 關卡一：失敗是設計好的教學時刻 → 順勢解鎖關卡二
+    let unlockedNext = false;
+    if (lv === 1) {
+        const p = getProgress();
+        if (p.unlocked < 2) { p.unlocked = 2; saveProgress(p); unlockedNext = true; }
+    }
+    showOverlay(`
+        <div class="ob-icon">💥</div>
+        <h3>系統溢位當機！</h3>
+        ${statsHtml()}
+        <div class="lesson">💡 ${LOSE_LESSONS[lv]}</div>
+        <div class="ob-btns">
+            ${lv === 1 ? `<button class="ob-btn" onclick="showIntro(2)"><i class="fa-solid fa-rocket"></i> ${unlockedNext ? '解鎖關卡二 →' : '前往關卡二 →'}</button>` : ''}
+            <button class="ob-btn ${lv === 1 ? 'ghost' : ''}" onclick="showIntro(${lv})"><i class="fa-solid fa-rotate-right"></i> 再試一次</button>
+            <button class="ob-btn ghost" onclick="hideOverlay(); quitToMenu();">回關卡選擇</button>
+        </div>
+    `);
+}
+
+function winLevel() {
+    stopGame();
+    const lv = G.lv;
+    const p = getProgress();
+    if (!p.cleared.includes(lv)) p.cleared.push(lv);
+    if (lv < 3 && p.unlocked < lv + 1) p.unlocked = lv + 1;
+    saveProgress(p);
+    showOverlay(`
+        <div class="ob-icon">${lv === 3 ? '🏆' : '🎉'}</div>
+        <h3>${lv === 3 ? '全部通關！' : '關卡完成！'}</h3>
+        ${statsHtml()}
+        <div class="lesson">💡 ${WIN_LESSONS[lv]}</div>
+        <div class="ob-btns">
+            ${lv < 3 ? `<button class="ob-btn" onclick="showIntro(${lv + 1})"><i class="fa-solid fa-forward"></i> 下一關</button>` : ''}
+            <button class="ob-btn ghost" onclick="showIntro(${lv})"><i class="fa-solid fa-rotate-right"></i> 再玩一次</button>
+            <button class="ob-btn ghost" onclick="hideOverlay(); quitToMenu();">回關卡選擇</button>
+        </div>
+    `);
+}
+
+/* ---------- 覆蓋層 / 提示 ---------- */
+function showOverlay(html) {
+    $('overlayBox').innerHTML = html;
+    $('overlay').classList.add('show');
+}
+function hideOverlay() { $('overlay').classList.remove('show'); }
+
+function toast(msg) {
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    $('toastArea').appendChild(el);
+    setTimeout(() => el.remove(), 2600);
+}
+
+refreshLevelCards();
+</script>
+
+<script src="../assets/js/theme.js"></script>
+</body>
+</html>
