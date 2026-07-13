@@ -97,9 +97,48 @@
             transition: max-height 0.3s ease;
             padding: 0 18px;
         }
-        .category.open .sub-list { max-height: 600px; }
+        .category.open .sub-list { max-height: 700px; }
 
         .sub-inner { padding: 6px 0 18px 0; display: flex; flex-direction: column; gap: 12px; }
+
+        /* 子分類(可收合) */
+        .subgroup-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 2px 4px 0 4px;
+            padding: 8px 4px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--muted);
+            text-align: left;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 10px;
+            transition: color 0.2s ease;
+        }
+        .subgroup-head:hover { color: var(--ink); }
+        .subgroup-head::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            border-radius: 1px;
+            background-color: var(--border);
+        }
+        .subgroup-head .sub-chevron {
+            font-size: 13px;
+            color: var(--muted-2);
+            transition: transform 0.25s ease;
+        }
+        .subgroup.open .sub-chevron { transform: rotate(180deg); color: var(--primary); }
+
+        .subgroup-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .subgroup.open .subgroup-list { max-height: 500px; }
+        .subgroup-inner { display: flex; flex-direction: column; gap: 12px; padding: 8px 0 12px 0; }
 
         .page-btn {
             display: flex;
@@ -170,54 +209,66 @@
                 </div>
                 <div class="sub-list">
                     <div class="sub-inner">
-                        <a href="pages/water-acid-base.html" class="page-btn">
-                            <div class="btn-icon">🧪</div>
-                            <div class="btn-text">
-                                <div class="btn-title">水與酸鹼的微觀奧秘</div>
-                                <div class="btn-desc">探索離子行為與 pH / pOH 的平衡美學</div>
+                        <div class="subgroup">
+                            <div class="subgroup-head" onclick="toggleSubgroup(this)">
+                                <span>🔬 科學小實驗</span>
+                                <i class="fa-solid fa-chevron-down sub-chevron"></i>
                             </div>
-                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
-                        </a>
-                        <a href="pages/magic-ink.html" class="page-btn">
-                            <div class="btn-icon">🖊️</div>
-                            <div class="btn-text">
-                                <div class="btn-title">神奇的墨水！原子筆的科學</div>
-                                <div class="btn-desc">40 分鐘課程懶人包 · 含消失墨水課後實驗</div>
+                            <div class="subgroup-list">
+                                <div class="subgroup-inner">
+                                    <a href="pages/water-acid-base.html" class="page-btn">
+                                        <div class="btn-icon">🧪</div>
+                                        <div class="btn-text">
+                                            <div class="btn-title">水與酸鹼的微觀奧秘</div>
+                                            <div class="btn-desc">探索離子行為與 pH / pOH 的平衡美學</div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                                    </a>
+                                    <a href="pages/magic-ink.html" class="page-btn">
+                                        <div class="btn-icon">🖊️</div>
+                                        <div class="btn-text">
+                                            <div class="btn-title">神奇的墨水！原子筆的科學</div>
+                                            <div class="btn-desc">消失墨水課後實驗</div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                                    </a>
+                                </div>
                             </div>
-                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
-                        </a>
-                        <a href="pages/anti-bullying.html" class="page-btn">
-                            <div class="btn-icon">🤝</div>
-                            <div class="btn-text">
-                                <div class="btn-title">尊重與包容</div>
-                                <div class="btn-desc">反霸凌校園教育互動問答</div>
+                        </div>
+                        <div class="subgroup">
+                            <div class="subgroup-head" onclick="toggleSubgroup(this)">
+                                <span>🎮 互動學習小遊戲</span>
+                                <i class="fa-solid fa-chevron-down sub-chevron"></i>
                             </div>
-                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
-                        </a>
-                        <a href="pages/debug.html" class="page-btn">
-                            <div class="btn-icon">🍰</div>
-                            <div class="btn-text">
-                                <div class="btn-title">代碼麵包工廠</div>
-                                <div class="btn-desc">Debug 除錯冒險 · 單步執行找出程式的 Bug</div>
+                            <div class="subgroup-list">
+                                <div class="subgroup-inner">
+                                    <a href="pages/debug.html" class="page-btn">
+                                        <div class="btn-icon">🍰</div>
+                                        <div class="btn-text">
+                                            <div class="btn-title">代碼麵包工廠</div>
+                                            <div class="btn-desc">Debug 除錯冒險 · 單步執行找出程式的 Bug</div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                                    </a>
+                                    <a href="pages/math-rpg.html" class="page-btn">
+                                        <div class="btn-icon">⚔️</div>
+                                        <div class="btn-text">
+                                            <div class="btn-title">數學勇者</div>
+                                            <div class="btn-desc">RPG 闖關問答 · 答對攻擊怪獸，答錯就會受傷</div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                                    </a>
+                                    <a href="pages/quick-quiz.html" class="page-btn">
+                                        <div class="btn-icon">⚡</div>
+                                        <div class="btn-text">
+                                            <div class="btn-title">快問快答</div>
+                                            <div class="btn-desc">是非題挑戰 · 可自訂每題秒數，時間到公布答案</div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                                    </a>
+                                </div>
                             </div>
-                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
-                        </a>
-                        <a href="pages/math-rpg.html" class="page-btn">
-                            <div class="btn-icon">⚔️</div>
-                            <div class="btn-text">
-                                <div class="btn-title">數學勇者</div>
-                                <div class="btn-desc">RPG 闖關問答 · 答對攻擊怪獸，答錯就會受傷</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
-                        </a>
-                        <a href="pages/quick-quiz.html" class="page-btn">
-                            <div class="btn-icon">⚡</div>
-                            <div class="btn-text">
-                                <div class="btn-title">快問快答</div>
-                                <div class="btn-desc">是非題挑戰 · 可自訂每題秒數，時間到公布答案</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
-                        </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -265,6 +316,13 @@
             const isOpen = cat.classList.contains('open');
             document.querySelectorAll('.category').forEach(c => c.classList.remove('open'));
             if (!isOpen) cat.classList.add('open');
+        }
+
+        function toggleSubgroup(head) {
+            const group = head.parentElement;
+            const isOpen = group.classList.contains('open');
+            group.parentElement.querySelectorAll('.subgroup').forEach(g => g.classList.remove('open'));
+            if (!isOpen) group.classList.add('open');
         }
 
         fetch('config.json')
