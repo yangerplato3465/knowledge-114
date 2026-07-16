@@ -1,0 +1,43 @@
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    background-color: var(--bg);
+    margin: 0;
+    padding: 16px;
+    font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.game-bar {
+    display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+}
+.game-bar h1 { font-size: 22px; font-weight: 700; margin: 0; }
+.back-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--muted); text-decoration: none; font-size: 15px;
+}
+.back-link:hover { color: var(--primary); }
+.hint { margin-left: auto; color: var(--muted); font-size: 14px; }
+
+/* Pixi 畫布容器：吃滿剩餘視窗高度 */
+#gameContainer {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    border-radius: 22px;
+    box-shadow: 0 8px 22px var(--shadow);
+    overflow: hidden;
+}
+#gameContainer canvas { display: block; }
+
+.game-loading {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 15px;
+}
