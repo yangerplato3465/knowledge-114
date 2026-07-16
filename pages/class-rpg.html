@@ -121,9 +121,39 @@
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+        /* 登入畫面 */
+        #app { display: none; }
+        .login-screen {
+            min-height: 70vh; display: flex; align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: var(--surface); border: 3px solid var(--border);
+            border-radius: 22px; box-shadow: 0 10px 30px var(--shadow);
+            padding: 34px 30px; width: 380px; max-width: 100%; text-align: center;
+        }
+        .login-card .lock { font-size: 44px; margin-bottom: 6px; }
+        .login-card h2 { font-size: 22px; margin: 0 0 4px; justify-content: center; }
+        .login-card p.hint { color: var(--muted); font-size: 13px; margin: 0 0 22px; }
+        .login-card label { text-align: left; }
+        .login-card .field { margin-bottom: 14px; text-align: left; }
+        .login-card .btn { width: 100%; margin-top: 6px; }
+        .login-err { color: var(--bad); font-size: 13px; min-height: 18px; margin-top: 10px; }
+
+        /* 頂部老師列 */
+        .auth-bar {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--surface); border: 2px solid var(--border);
+            border-radius: 14px; padding: 10px 16px; margin-bottom: 20px;
+            font-size: 14px; color: var(--ink);
+        }
+        .auth-bar .who { color: var(--muted); }
+        .auth-bar .who b { color: var(--ink); }
+        .auth-bar #editNameBtn { margin-left: auto; }
+
         @media (max-width: 600px) {
             h1 { font-size: 27px; }
             .card { padding: 18px; }
+            .login-card { padding: 26px 20px; }
         }
     </style>
 </head>
@@ -132,6 +162,34 @@
         <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
         <h1>⚔️ 班級 RPG</h1>
         <p class="subtitle">建立班級、新增學生角色，資料即時儲存到雲端。老師專用。</p>
+
+        <!-- 登入畫面（未登入時顯示） -->
+        <div id="loginScreen" class="login-screen" style="display:none">
+            <div class="login-card">
+                <div class="lock">🔐</div>
+                <h2>老師登入</h2>
+                <p class="hint">請使用管理員配發的帳號登入</p>
+                <div class="field">
+                    <label>電子郵件</label>
+                    <input id="loginEmail" type="email" autocomplete="username" placeholder="teacher@example.com">
+                </div>
+                <div class="field">
+                    <label>密碼</label>
+                    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+                </div>
+                <button class="btn" id="loginBtn">登入</button>
+                <div class="login-err" id="loginErr"></div>
+            </div>
+        </div>
+
+        <!-- 主應用（登入後顯示） -->
+        <div id="app">
+
+        <div class="auth-bar">
+            <span class="who">登入為 <b id="whoEmail">—</b></span>
+            <button class="btn btn-ghost btn-sm" id="editNameBtn" title="設定顯示名稱"><i class="fa-solid fa-pen"></i> 改名稱</button>
+            <button class="btn btn-ghost btn-sm logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> 登出</button>
+        </div>
 
         <!-- 班級選擇 / 建立 -->
         <div class="card">
@@ -196,6 +254,8 @@
             <div id="studentList" class="students"></div>
             <div id="studentEmpty" class="state">尚未選擇班級。</div>
         </div>
+
+        </div><!-- /#app -->
     </div>
 
     <div id="toast" class="toast"></div>
@@ -204,8 +264,11 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import {
             getFirestore, collection, doc, addDoc, setDoc, getDocs,
-            deleteDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp
+            deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp
         } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import {
+            getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBW7V3sXHn8MsaP4KFmHDOHUFXSz3ksRDM",
@@ -219,6 +282,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // ---- DOM ----
         const $ = id => document.getElementById(id);
@@ -229,6 +293,7 @@
 
         let currentClassId = null;
         let unsubStudents = null;
+        let currentUser = null;
 
         function toast(msg) {
             const t = $('toast');
@@ -243,9 +308,14 @@
 
         // ---- 班級 ----
         async function loadClasses(selectId) {
-            const snap = await getDocs(query(collection(db, 'classes'), orderBy('createdAt', 'asc')));
+            if (!currentUser) return;
+            // 只讀取屬於這位老師的班級（用戶端排序，免建複合索引）
+            const snap = await getDocs(
+                query(collection(db, 'classes'), where('ownerId', '==', currentUser.uid))
+            );
             const classes = [];
             snap.forEach(d => classes.push({ id: d.id, ...d.data() }));
+            classes.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
 
             if (classes.length === 0) {
                 classSelect.innerHTML = '<option value="">尚無班級，請先建立</option>';
@@ -269,6 +339,7 @@
             if (!trimmed) { toast('班級名稱不可空白'); return; }
             const ref = await addDoc(collection(db, 'classes'), {
                 name: trimmed,
+                ownerId: currentUser.uid,
                 createdAt: serverTimestamp()
             });
             toast('已建立班級：' + trimmed);
@@ -414,18 +485,79 @@
             ));
         }
 
+        // ---- 登入 / 登出 ----
+        function authErrMsg(code) {
+            const m = {
+                'auth/invalid-email': '電子郵件格式不正確',
+                'auth/invalid-credential': '帳號或密碼錯誤',
+                'auth/wrong-password': '帳號或密碼錯誤',
+                'auth/user-not-found': '帳號或密碼錯誤',
+                'auth/too-many-requests': '嘗試次數過多，請稍後再試',
+                'auth/user-disabled': '此帳號已被停用'
+            };
+            return m[code] || ('登入失敗：' + code);
+        }
+
+        async function doLogin() {
+            const email = $('loginEmail').value.trim();
+            const pw = $('loginPassword').value;
+            const errEl = $('loginErr');
+            errEl.textContent = '';
+            if (!email || !pw) { errEl.textContent = '請輸入電子郵件與密碼'; return; }
+            $('loginBtn').disabled = true;
+            try {
+                await signInWithEmailAndPassword(auth, email, pw);
+                // onAuthStateChanged 會接手切換畫面
+            } catch (err) {
+                errEl.textContent = authErrMsg(err.code || err.message);
+            } finally {
+                $('loginBtn').disabled = false;
+            }
+        }
+
+        onAuthStateChanged(auth, user => {
+            currentUser = user;
+            if (user) {
+                $('loginScreen').style.display = 'none';
+                $('app').style.display = 'block';
+                $('whoEmail').textContent = user.displayName || user.email || user.uid;
+                $('loginPassword').value = '';
+                loadClasses().catch(err => {
+                    console.error(err);
+                    toast('讀取班級失敗：' + err.message);
+                    classSelect.innerHTML = '<option value="">讀取失敗</option>';
+                });
+            } else {
+                // 未登入：清空並顯示登入畫面
+                if (unsubStudents) { unsubStudents(); unsubStudents = null; }
+                currentClassId = null;
+                $('app').style.display = 'none';
+                $('loginScreen').style.display = 'flex';
+            }
+        });
+
         // ---- 綁定 ----
         classSelect.addEventListener('change', e => selectClass(e.target.value));
         $('newClassBtn').addEventListener('click', createClass);
         $('delClassBtn').addEventListener('click', deleteCurrentClass);
         $('addStudentBtn').addEventListener('click', addStudent);
         $('f_name').addEventListener('keydown', e => { if (e.key === 'Enter') addStudent(); });
-
-        // 啟動
-        loadClasses().catch(err => {
-            console.error(err);
-            toast('連線失敗：' + err.message);
-            classSelect.innerHTML = '<option value="">連線失敗</option>';
+        $('loginBtn').addEventListener('click', doLogin);
+        $('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+        $('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginPassword').focus(); });
+        $('logoutBtn').addEventListener('click', () => signOut(auth));
+        $('editNameBtn').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const name = prompt('設定你的顯示名稱（例如：Gorgeous Tr.Anita）：', currentUser.displayName || '');
+            if (name === null) return;
+            const trimmed = name.trim();
+            try {
+                await updateProfile(currentUser, { displayName: trimmed });
+                $('whoEmail').textContent = trimmed || currentUser.email || currentUser.uid;
+                toast(trimmed ? '已更新名稱' : '已清除名稱');
+            } catch (err) {
+                toast('更新失敗：' + err.message);
+            }
         });
     </script>
     <script src="../assets/js/theme.js"></script>

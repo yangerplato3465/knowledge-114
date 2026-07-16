@@ -1,0 +1,26 @@
+// ============================================================
+// 班級 RPG · Firestore 安全規則
+// 貼到 Firebase 主控台 → Firestore Database → 規則 → 發布
+// 效果：老師必須登入，且只能讀寫「自己建立」的班級與學生
+// ============================================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 班級：只有擁有者(ownerId == 自己uid)能讀寫
+    match /classes/{classId} {
+      allow read:   if request.auth != null
+                    && resource.data.ownerId == request.auth.uid;
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if request.auth != null
+                    && resource.data.ownerId == request.auth.uid;
+
+      // 學生子集合：跟隨母班級的擁有者
+      match /students/{studentId} {
+        allow read, write: if request.auth != null
+          && get(/databases/$(database)/documents/classes/$(classId)).data.ownerId == request.auth.uid;
+      }
+    }
+  }
+}
