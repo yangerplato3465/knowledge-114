@@ -26,6 +26,14 @@ Each lesson is largely **independent** — there is no shared component framewor
 - `QUESTION_POOLS` is `{ 年級: { 題庫名稱: pool } }`. A pool is **either** a static array of `{ q, a: [...], correct }` **or** a generator function returning one such object (e.g. `generateDivideQuestion`). `loadQuestion()` branches on `typeof activePool === 'function'`. Add a topic by adding a key to `POOLS_G5`/`POOLS_G6`; the pool-select screen renders keys automatically.
 - Game balance lives in tunable module-level constants in `math-rpg.js`: `ENEMY_HP_TABLE`, `HIT_TO_PLAYER_TABLE`, `HIT_TO_ENEMY`, `ROUND_TIME`, `PLAYER_MAX`, and the weighted `UPGRADES` list (`weight` controls draw odds; `apply()` mutates the run's stats). `beginBattle()` resets all upgradeable values to their initial state.
 
+### class-rpg specifics
+
+- **`pages/class-rpg.html`** — teacher-only class/student admin backed by Firebase (Auth + Firestore, ES-module CDN imports in `assets/js/class-rpg.js`). Its 進入遊戲 button opens **`pages/class-rpg-game.html`**, the actual game, rendered with **Pixi.js v8** (ESM from jsdelivr, pinned `8.6.6`) in `assets/js/class-rpg-game.js`. Scene layers: `world` (map/objects) and `hud` (fixed UI).
+- **Character sprite sheet** (`assets/images/char/char1.png`, Mana Seed Character Base): 512×512, an 8×8 grid of 64×64 cells. Direction row order within each block is **down, up, right, left**. Frame map (from the Mana Seed "animations, page 1" guide):
+  - Top block, rows 0–3: `stand` = col 0 (cols 1–2 `push`, 3–4 `pull`, 5–7 `jump` — not yet used).
+  - Bottom block, rows 4–7: `walk` = cols 0–5 (6-frame cycle); `run` reuses the walk cycle with frames 3 & 6 replaced by cols 6–7, i.e. column sequence `0, 1, 6, 3, 4, 7`.
+  - Frames are sliced as `Texture` rectangles into the `ANIMS[direction][state]` lookup in `class-rpg-game.js`; one `AnimatedSprite` swaps its `textures` array on state/facing change. Keep `scaleMode = 'nearest'` for pixel art.
+
 ## Conventions
 
 - UI text, comments, and question content are in Traditional Chinese — match this when editing.
