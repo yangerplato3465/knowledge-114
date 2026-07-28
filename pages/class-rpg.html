@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班級 RPG · 學習主頁</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <link rel="stylesheet" href="../assets/css/class-rpg.css">
+</head>
+<body>
+    <div class="wrap">
+        <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
+        <a href="class-rpg-game.html" target="_blank" class="btn game-link"><i class="fa-solid fa-gamepad"></i> 進入遊戲</a>
+        <h1>⚔️ 班級 RPG</h1>
+        <p class="subtitle">建立班級、新增學生角色，資料即時儲存到雲端。老師專用。</p>
+
+        <!-- 登入畫面（未登入時顯示） -->
+        <div id="loginScreen" class="login-screen" style="display:none">
+            <div class="login-card">
+                <div class="lock">🔐</div>
+                <h2>老師登入</h2>
+                <p class="hint">請使用管理員配發的帳號登入</p>
+                <div class="field">
+                    <label>電子郵件</label>
+                    <input id="loginEmail" type="email" autocomplete="username" placeholder="teacher@example.com">
+                </div>
+                <div class="field">
+                    <label>密碼</label>
+                    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+                </div>
+                <button class="btn" id="loginBtn">登入</button>
+                <div class="login-err" id="loginErr"></div>
+            </div>
+        </div>
+
+        <!-- 主應用（登入後顯示） -->
+        <div id="app">
+
+        <div class="auth-bar">
+            <span class="who">登入為 <b id="whoEmail">—</b></span>
+            <button class="btn btn-ghost btn-sm" id="editNameBtn" title="設定顯示名稱"><i class="fa-solid fa-pen"></i> 改名稱</button>
+            <button class="btn btn-ghost btn-sm logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> 登出</button>
+        </div>
+
+        <!-- 班級選擇 / 建立 -->
+        <div class="card">
+            <h2>🏫 選擇班級</h2>
+            <div class="class-bar">
+                <div>
+                    <label>目前班級</label>
+                    <select id="classSelect"><option value="">載入中…</option></select>
+                </div>
+                <button class="btn btn-ghost" id="newClassBtn"><i class="fa-solid fa-plus"></i> 建立新班級</button>
+                <button class="btn-danger btn btn-sm" id="delClassBtn" style="align-self:stretch">刪除此班級</button>
+            </div>
+        </div>
+
+        <!-- 新增學生 -->
+        <div class="card" id="addCard">
+            <h2>🧙 新增學生角色</h2>
+            <div class="row" style="margin-bottom:12px">
+                <div>
+                    <label>姓名 *</label>
+                    <input id="f_name" placeholder="例：小明">
+                </div>
+                <div>
+                    <label>性別</label>
+                    <select id="f_gender">
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div>
+                    <label>等級</label>
+                    <input id="f_level" type="number" value="1" min="1">
+                </div>
+            </div>
+            <div class="row" style="margin-bottom:12px">
+                <div>
+                    <label>經驗值</label>
+                    <input id="f_exp" type="number" value="0" min="0">
+                </div>
+                <div>
+                    <label>金幣</label>
+                    <input id="f_gold" type="number" value="0" min="0">
+                </div>
+            </div>
+            <div class="row" style="margin-bottom:16px">
+                <div>
+                    <label>武器</label>
+                    <input id="f_weapon" placeholder="例：木劍">
+                </div>
+                <div>
+                    <label>裝備</label>
+                    <input id="f_equipment" placeholder="例：布衣、皮靴">
+                </div>
+            </div>
+            <button class="btn" id="addStudentBtn"><i class="fa-solid fa-user-plus"></i> 新增學生</button>
+        </div>
+
+        <!-- 學生列表 -->
+        <div class="card">
+            <h2>📋 學生名冊 <span id="countBadge" style="font-size:14px;color:var(--muted);font-weight:400"></span></h2>
+            <div id="studentList" class="students"></div>
+            <div id="studentEmpty" class="state">尚未選擇班級。</div>
+        </div>
+
+        </div><!-- /#app -->
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script type="module" src="../assets/js/class-rpg.js"></script>
+    <script src="../assets/js/theme.js"></script>
+</body>
+</html>
