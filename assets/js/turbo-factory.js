@@ -498,6 +498,11 @@ function nextOrder() {
         if (cands.length) { const t = pick(cands); t.progress = t.dur * 0.5; }
     }
 
+    // 記下開工前的狀態，「重新挑戰」時原封不動還原
+    // （同一張訂單重打，才比得出換一種派工法差多少）
+    G.snapshot = order.tasks.map(t => ({ id: t.id, progress: t.progress, done: t.done }));
+    G.retries = 0;
+
     showBrief(event);
 }
 
@@ -581,32 +586,63 @@ function buildBoard() {
     });
     board.appendChild(lines);
 
+    // 接合 → 完工 橫著排：一樣是先後順序，但省下一整列高度給卡片放大
     board.appendChild(arrowEl('🔗 零件全部到齊才能接合'));
-    board.appendChild(stageEl([o.join], true));
-    board.appendChild(arrowEl(''));
-    board.appendChild(stageEl([o.finish]));
+    const tail = document.createElement('div');
+    tail.className = 'stage stage-tail';
+    tail.appendChild(taskEl(o.join, true));
+    const tailArrow = document.createElement('div');
+    tailArrow.className = 'tail-arrow';
+    tailArrow.textContent = '▶';
+    tail.appendChild(tailArrow);
+    tail.appendChild(taskEl(o.finish));
+    board.appendChild(tail);
 
     updateBoard();
     fitBoard();
 }
 
-/* 產線太高就整體縮放，保證一頁看得完
-   （觸控電視上邊玩邊捲動非常難用，寧可縮小也不要捲） */
+/* 把任務卡放到「整條產線還能一頁看完」的最大尺寸
+   （觸控電視上邊玩邊捲動非常難用；而整塊 scale() 縮放等於把按鈕又縮回去，
+     所以改成直接調卡片大小 —— 螢幕越大按鈕就真的越大） */
+const CARD_MIN = 104;   // 再小就按不準了
+const CARD_MAX = 272;
+
 function fitBoard() {
     const board = $('board');
+    const body = document.body;
     board.style.transform = '';
     board.style.marginBottom = '';
-    // 手機螢幕太窄，縮放後卡片會小到按不準；寧可讓它捲動，保住觸控目標大小
-    if (window.innerWidth <= 720) return;
-    const top = board.getBoundingClientRect().top;
-    const avail = window.innerHeight - top - 92;   // 底部留給「全員加班」按鈕
-    const full = board.offsetHeight;               // 縮放前的 layout 高度
+
+    // 手機螢幕太窄，縮到能一頁看完會小到按不準；寧可讓它捲動，保住觸控目標大小
+    if (window.innerWidth <= 720) { body.style.removeProperty('--card-w'); return; }
+
+    // 產線以外的 UI（標題、狀態列、加班鈕…）佔掉多少高度。
+    // 不能用 board 的 top 來算：body 是垂直置中的，產線一變矮整張卡就往下掉，會互相牽動
+    const overhead = document.querySelector('.tf-card').offsetHeight - board.offsetHeight;
+    const avail = window.innerHeight - overhead - 16;   // 16：body 上下留白
+
+    // 橫向也不能爆：最寬那一排是產線的欄數
+    const cols = Math.max(1, G.order.cols.length);
+    const maxByWidth = Math.floor((board.clientWidth - 24 - (cols - 1) * 22) / cols);
+
+    // 由大往小試，第一個放得下的就是最大可用尺寸
+    let best = CARD_MIN;
+    for (let w = Math.min(CARD_MAX, maxByWidth); w >= CARD_MIN; w -= 4) {
+        body.style.setProperty('--card-w', w + 'px');
+        if (board.offsetHeight <= avail) { best = w; break; }
+    }
+    body.style.setProperty('--card-w', best + 'px');
+
+    // 連最小尺寸都塞不下（很矮的螢幕）才退回整體縮放
+    const full = board.offsetHeight;
     if (full > avail && avail > 220) {
         const k = Math.max(0.6, avail / full);
+        const mb = parseFloat(getComputedStyle(board).marginBottom) || 0;
         board.style.transform = `scale(${k})`;
         // transform 不改變 layout，多出來的空間用負 margin 收回
         // （不能改 height：height 也會被 transform 縮放，底部會被裁掉）
-        board.style.marginBottom = (14 - full * (1 - k)) + 'px';
+        board.style.marginBottom = (mb - full * (1 - k)) + 'px';
     }
 }
 
@@ -634,8 +670,10 @@ function taskEl(t, wide) {
         <button class="tc-recall" title="收回工人">⤺</button>
         <div class="tc-icon">${t.icon}</div>
         <div class="tc-name">${t.name}${t.broken ? ' 🔧' : ''}</div>
-        <div class="tc-dur">${t.dur.toFixed(0)} 秒</div>
-        <div class="tc-workers"></div>
+        <div class="tc-meta">
+            <span class="tc-dur">${t.dur.toFixed(0)} 秒</span>
+            <span class="tc-workers"></span>
+        </div>
         <div class="tc-bar"><i></i></div>
     `;
     el.addEventListener('click', e => {
@@ -844,6 +882,8 @@ function finishOrder() {
 
     RUN.totalTime += T;
     RUN.stars += stars;
+    // 重新挑戰時要把這次的成績扣掉，只算最後一次
+    G.lastResult = { time: T, stars };
 
     const serialSum = G.order.tasks.filter(t => t.serial).reduce((s, t) => s + t.dur, 0);
     const serialPct = Math.round((serialSum / single) * 100);
@@ -876,11 +916,49 @@ function finishOrder() {
             <p class="term">工人閒置率 ${idleRate}%　·　電腦科學裡，這叫「阿姆達爾定律 Amdahl's Law」</p>
         </div>
         <div class="ob-btns">
+            <button class="tf-btn ghost" onclick="retryOrder()">
+                <i class="fa-solid fa-rotate-left"></i> 重新挑戰這張訂單
+            </button>
             <button class="tf-btn big" onclick="showUpgrades()">
                 ${RUN.orderNo >= TUNING.totalOrders ? '看看總成績' : '選一張升級卡'} <i class="fa-solid fa-chevron-right"></i>
             </button>
         </div>
+        <p class="retry-note">換一種派工法，看看能不能更快 —— 重打不會累積時間，只算最後一次</p>
     `);
+}
+
+/* ---------------- 重新挑戰同一張訂單 ---------------- */
+function retryOrder() {
+    if (!G || !G.snapshot) return;
+
+    // 撤銷剛剛那次的成績（總時間 / 星星只算最後一次）
+    if (G.lastResult) {
+        RUN.totalTime -= G.lastResult.time;
+        RUN.stars -= G.lastResult.stars;
+        G.lastResult = null;
+    }
+    G.retries++;
+
+    // 還原每個工作到開工前
+    const byId = {};
+    G.order.tasks.forEach(t => { byId[t.id] = t; });
+    G.snapshot.forEach(s => {
+        const t = byId[s.id];
+        t.progress = s.progress;
+        t.done = s.done;
+        t.workers = 0;
+    });
+
+    G.elapsed = 0;
+    G.running = false;
+    G.overtimeLeft = M.overtimeMax;
+    G.overtimeUntil = 0;
+    G.idleAccum = 0;
+    G.hintShown = false;
+    document.body.classList.remove('overtime-on');
+
+    toast(`🔄 重新挑戰（第 ${G.retries + 1} 次）`);
+    beginOrder();
 }
 
 /* ---------------- 三選一升級卡 ---------------- */
@@ -1038,7 +1116,7 @@ function renderBest() {
     try { best = JSON.parse(localStorage.getItem('tf-best')); } catch (e) { best = null; }
     $('bestRecord').innerHTML = best
         ? `🏅 最佳紀錄：<b>${best.stars} 顆星</b>，總共 <b>${best.totalTime.toFixed(0)} 秒</b>`
-        : '每一局的訂單、零件、升級卡都不一樣，玩幾次都不會重複 🎲';
+        : '每一局的訂單、零件、升級卡都不一樣';
 }
 
 /* ---------------- 啟動 ---------------- */
