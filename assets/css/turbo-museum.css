@@ -1,17 +1,18 @@
 /* ============================================================
-   極速工廠 Turbo Factory
+   極速博物館 Turbo Museum
    派工 roguelike · 體驗平行加速的極限（阿姆達爾定律）
-   本頁主題色：工廠琥珀橘
+   本頁主題色：青碧（銅綠）—— 共用水藍色系的一員，配古物剛好
    ============================================================ */
 
 * { box-sizing: border-box; }
 
 body {
-    --g1: #d98324;            /* 主橘 */
-    --g2: #efa94a;            /* 亮橘 */
-    --g-bg: #fbf1e4;          /* 產線底 */
-    --g-line: #ecd9bd;        /* 產線格線 */
-    --g-ink: #8a5316;         /* 橘系深字 */
+    --g1: #3f8f8a;            /* 主色 · 青碧 */
+    --g2: #7bc0b6;            /* 亮青碧 */
+    --g-bg: #e9f4f1;          /* 修復台底 */
+    --g-line: #c7e3dc;        /* 修復台格線 */
+    --g-ink: #2b6560;         /* 青碧系深字 */
+    --g-ring: rgba(63, 143, 138, 0.18);   /* 可以派人的卡片外圈 */
 
     background-color: var(--bg);
     display: flex;
@@ -28,14 +29,18 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-:root[data-theme="dark"] body { --g-bg: #2a2118; --g-line: #4a3a26; --g-ink: #f0c078; }
+:root[data-theme="dark"] body {
+    --g-bg: #16292b; --g-line: #2c4d4d; --g-ink: #8fd3c8; --g-ring: rgba(143, 211, 200, 0.20);
+}
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) body { --g-bg: #2a2118; --g-line: #4a3a26; --g-ink: #f0c078; }
+    :root:not([data-theme="light"]) body {
+        --g-bg: #16292b; --g-line: #2c4d4d; --g-ink: #8fd3c8; --g-ring: rgba(143, 211, 200, 0.20);
+    }
 }
 
 .hidden { display: none !important; }
 
-.tf-card {
+.tm-card {
     background-color: var(--surface);
     border: 8px solid var(--border);
     border-radius: 32px;
@@ -47,16 +52,16 @@ body {
 }
 
 /* ---------- 頂部標題 ---------- */
-.tf-header {
+.tm-header {
     background: linear-gradient(135deg, var(--g2) 0%, var(--g1) 100%);
     color: #fff;
     text-align: center;
     padding: 28px 40px 24px;
     position: relative;
 }
-.tf-header .header-icon { font-size: 44px; line-height: 1; margin-bottom: 4px; }
-.tf-header h1 { font-size: 34px; font-weight: 700; margin: 0; text-shadow: 1px 2px 0 rgba(0,0,0,0.10); }
-.tf-header p { font-size: 15px; margin: 8px 0 0; opacity: 0.95; font-weight: 400; }
+.tm-header .header-icon { font-size: 44px; line-height: 1; margin-bottom: 4px; }
+.tm-header h1 { font-size: 34px; font-weight: 700; margin: 0; text-shadow: 1px 2px 0 rgba(0,0,0,0.10); }
+.tm-header p { font-size: 15px; margin: 8px 0 0; opacity: 0.95; font-weight: 400; }
 
 .back-link {
     position: absolute; left: 20px; top: 20px;
@@ -73,28 +78,31 @@ body {
 }
 .foot-link:hover { color: var(--primary); }
 
-.tf-screen { padding: 28px 32px 8px; }
+.tm-screen { padding: 28px 32px 8px; }
 
-/* 遊戲進行中：把標題區縮到最小，把垂直空間全部讓給產線
-   （觸控電視畫面不高，產線一定要一頁看完） */
+/* 遊戲進行中：把標題區縮到最小，把垂直空間全部讓給修復線
+   （觸控電視畫面不高，修復線一定要一頁看完） */
 body.playing {
     padding: 4px;
     /* 任務卡寬度＝觸控目標大小。跟著視窗寬「和」高一起長：
-       螢幕越大按鈕越大，但矮螢幕不會長到讓產線一頁放不下 */
-    --card-w: clamp(150px, min(12.5vw, 21vh), 224px);
+       螢幕越大按鈕越大，但矮螢幕不會長到讓修復線一頁放不下
+       （開工後 fitBoard() 會算出實際值蓋掉這裡，這是還沒算完前的預設） */
+    --card-w: clamp(150px, min(16vw, 24vh), 300px);
 }
-/* 打起來時整張卡放到最寬，把空間全給產線 */
-body.playing .tf-card { width: 1720px; }
-body.playing .tf-header { padding: 12px 40px 11px; }
-body.playing .tf-header .header-icon,
-body.playing .tf-header p,
+/* 打起來時整張卡加寬，把空間全給修復線。
+   卡片現在會自己拉寬去填滿一排（見 fitBoard() 的 --card-wide），
+   所以容器越寬 = 中間那幾排的觸控目標越寬，1720px 幾乎用滿 1080p 的橫向空間 */
+body.playing .tm-card { width: min(1720px, 100%); }
+body.playing .tm-header { padding: 12px 40px 11px; }
+body.playing .tm-header .header-icon,
+body.playing .tm-header p,
 body.playing .foot-link { display: none; }
-body.playing .tf-header h1 { font-size: 21px; }
+body.playing .tm-header h1 { font-size: 21px; }
 body.playing .back-link { top: 11px; padding: 5px 13px; font-size: 13px; }
-body.playing .tf-screen { padding-top: 14px; }
+body.playing .tm-screen { padding-top: 14px; }
 
 /* ---------- 通用按鈕 ---------- */
-.tf-btn {
+.tm-btn {
     font-family: inherit; font-weight: 700; font-size: 17px;
     color: var(--on-primary);
     background: linear-gradient(135deg, var(--g2) 0%, var(--g1) 100%);
@@ -104,18 +112,19 @@ body.playing .tf-screen { padding-top: 14px; }
     transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.2s ease;
     touch-action: manipulation;
 }
-.tf-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 rgba(0,0,0,0.13); }
-.tf-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.13); }
-.tf-btn.big { font-size: 21px; padding: 18px 46px; }
-.tf-btn.ghost {
+.tm-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 rgba(0,0,0,0.13); }
+.tm-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.13); }
+.tm-btn.big { font-size: 21px; padding: 18px 46px; }
+.tm-btn.ghost {
     background: var(--surface-2); color: var(--ink-soft);
     border: 2px solid var(--border-strong); box-shadow: 0 4px 0 var(--border);
 }
-.tf-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: 0 4px 0 var(--border); }
+.tm-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: 0 4px 0 var(--border); }
 
 /* ---------- 開始畫面 ---------- */
 #startScreen { text-align: center; padding-bottom: 28px; }
 .start-hero { font-size: 70px; line-height: 1; margin-bottom: 6px; }
+.start-hero .w-icon { height: 84px; width: 147px; }
 #startScreen h2 { font-size: 25px; margin: 0 0 10px; }
 .start-lead { font-size: 16px; color: var(--ink-soft); line-height: 1.8; margin: 0 0 22px; }
 
@@ -129,6 +138,7 @@ body.playing .tf-screen { padding-top: 14px; }
     border-radius: 18px; padding: 16px;
 }
 .rule-icon { font-size: 28px; line-height: 1.2; }
+.rule-icon .w-icon { height: 28px; width: 49px; }
 .rule b { font-size: 15px; }
 .rule small { color: var(--muted); font-size: 13px; line-height: 1.5; display: block; margin-top: 2px; }
 
@@ -148,13 +158,30 @@ body.playing .tf-screen { padding-top: 14px; }
 .hud-order b { font-size: 19px; display: block; }
 .hud-order small { font-size: 13px; color: var(--muted); font-weight: 500; }
 
-.hud-timer, .hud-target { text-align: center; min-width: 90px; }
+.hud-timer { text-align: center; min-width: 86px; }
+.hud-goals { text-align: center; }
+.hud-goals .t-label { margin-bottom: 4px; }
 .t-label { font-size: 12px; color: var(--muted); font-weight: 600; }
 .t-value { font-size: 26px; font-weight: 700; color: var(--g-ink); line-height: 1.15; }
 .t-value small { font-size: 12px; margin-left: 2px; font-weight: 500; }
 .hud-timer.danger .t-value { color: var(--bad); }
 
-/* ---------- 工人待命區 ---------- */
+/* ---------- 星等目標 ----------
+   三級門檻同時列出來，並且「現在還拿得到哪一級」會亮起來。
+   只寫一個「目標 32 秒」的話，學生不知道那是幾顆星的線 */
+.goal-note { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.goal {
+    border: 2px solid var(--border); border-radius: 999px;
+    padding: 2px 11px; font-size: 13px; font-weight: 700;
+    color: var(--muted); background: var(--surface); white-space: nowrap;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+.goal.now { border-color: var(--good); color: var(--good); background: var(--good-bg); }
+.goal.gone { opacity: 0.4; text-decoration: line-through; }
+.overlay-box .goal-note { margin: 12px 0; }
+.overlay-box .goal-gap { font-size: 15px; font-weight: 700; color: var(--g-ink); margin: 0; }
+
+/* ---------- 學者待命區 ---------- */
 .worker-bar {
     display: flex; align-items: center; gap: 14px;
     background: var(--surface-2); border: 2px solid var(--border);
@@ -164,47 +191,52 @@ body.playing .tf-screen { padding-top: 14px; }
 .wb-slots { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-height: 34px; align-items: center; }
 .wb-count { font-size: 15px; font-weight: 700; color: var(--ink-soft); flex-shrink: 0; }
 
+/* 學者圖示：一律用 logo.png（原圖 98×56 → 寬高比 1.75，寬度都跟著高度算） */
+.w-icon {
+    display: inline-block; flex-shrink: 0; vertical-align: middle;
+    height: 24px; width: 42px;
+    background: url('../images/logo.png') center / contain no-repeat;
+}
 .worker {
-    font-size: 26px; line-height: 1;
+    height: 24px; width: 42px;
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .worker.busy { opacity: 0.22; transform: scale(0.8); }
-.worker.idle { animation: tf-yawn 2.6s ease-in-out infinite; }
-@keyframes tf-yawn {
+.worker.idle { animation: tm-yawn 2.6s ease-in-out infinite; }
+@keyframes tm-yawn {
     0%, 88%, 100% { transform: translateY(0) rotate(0); }
     93% { transform: translateY(-4px) rotate(-9deg); }
 }
 
-/* 寬螢幕：狀態列和待命工人並排成一列，省下的高度全部讓給產線
+/* 寬螢幕：狀態列和待命學者並排成一列，省下的高度全部讓給修復線
    （螢幕橫向有的是空間，縱向才是稀缺資源） */
 @media (min-width: 1000px) {
     body.playing #gameScreen {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 30%) auto;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 32%);
         gap: 12px 14px;
     }
     body.playing #gameScreen > .hud,
     body.playing #gameScreen > .worker-bar { margin-bottom: 0; }
     body.playing #gameScreen > .hud { grid-column: 1; grid-row: 1; }
     body.playing #gameScreen > .worker-bar { grid-column: 2; grid-row: 1; }
-    /* 加班鈕也擠進同一排，底下整條動作列的高度就全省給產線 */
-    body.playing #gameScreen > .action-bar {
-        grid-column: 3; grid-row: 1; padding-bottom: 0; align-items: center;
-    }
     body.playing #gameScreen > .board { grid-column: 1 / -1; grid-row: 2; margin-bottom: 0; }
 }
 
-/* ---------- 產線 ---------- */
+/* ---------- 修復線 ---------- */
 .board {
     background: var(--g-bg);
     border: 2px solid var(--g-line);
     border-radius: 22px;
     padding: 14px 12px;
     margin-bottom: 14px;
-    /* 高度不夠時由 fitBoard() 動態縮放，確保整條產線一頁看完（觸控電視必要） */
+    /* 高度不夠時由 fitBoard() 動態縮放，確保整條修復線一頁看完（觸控電視必要） */
     transform-origin: top center;
 }
 .stage { display: flex; justify-content: center; gap: clamp(12px, 1.1vw, 22px); flex-wrap: wrap; }
+/* 這兩排一律不折行：寬度差幾 px 就折行的話，會憑空多出一整列高度，
+   卡片尺寸的計算跟著全亂（寧可讓卡片縮一點也不要折） */
+.stage-lines, .stage-tail { flex-wrap: nowrap; }
 .stage-lines { align-items: flex-start; }
 
 .line-col { display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 0.7vh, 12px); }
@@ -225,8 +257,10 @@ body.playing .tf-screen { padding-top: 14px; }
 /* ---------- 任務卡（觸控主目標） ---------- */
 .task-card {
     position: relative;
-    /* 大小由 --card-w 帶動，卡片內的圖示/文字/進度條也一起等比放大 */
-    width: var(--card-w, 150px);
+    /* 高度、圖示、文字都跟著 --card-w（尺寸尺標，由垂直空間決定）；
+       --card-wide 只把寬度往橫向拉，高度完全不受影響
+       —— 後兩關列數多、垂直被壓縮時，靠這個把觸控目標補回來 */
+    width: calc(var(--card-w, 150px) * var(--card-wide, 1));
     min-height: calc(var(--card-w, 150px) * 0.6);
     background: var(--surface);
     border: 3px solid var(--border-strong);
@@ -238,16 +272,60 @@ body.playing .tf-screen { padding-top: 14px; }
     transition: transform 0.12s ease, border-color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
     display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
-.task-card.wide { width: calc(var(--card-w, 150px) * 2.3); }
+/* 讀資料 / 拼合 / 展出：一排只有一張卡，改成橫躺（圖示在左、字在右）。
+   這三排本來各佔一整張卡的高度，躺下來省一半，全部讓給要一直點的碎片卡。
+   三張都是同一個寬度（2.1 倍），所以看起來是一致的一層 */
+.task-card.flat {
+    /* 寬度由 fitBoard() 直接算好（剛好兩張並排填滿一排），三張永遠一樣寬 */
+    width: var(--flat-w, calc(var(--card-w, 150px) * 2.1));
+    max-width: 100%;
+    min-height: 0;
+    flex-direction: row; align-items: center;
+    gap: clamp(8px, calc(var(--card-w, 150px) * 0.06), 18px);
+    padding: clamp(7px, calc(var(--card-w, 150px) * 0.035), 13px) clamp(12px, calc(var(--card-w, 150px) * 0.06), 22px);
+    text-align: left;
+    overflow: hidden;   /* 底部進度條要貼齊圓角 */
+}
+/* 名稱不換行：一換行整張卡就變高，同一排的卡片高度就不一樣了 */
+.task-card.flat .tc-name {
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.task-card.flat .tc-meta { flex-shrink: 0; }
+/* 進度條改成貼在卡片底邊的細條：橫躺的卡片橫向空間要留給字和學者 */
+.task-card.flat .tc-bar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    width: auto; margin-top: 0; border-radius: 0;
+    height: clamp(6px, calc(var(--card-w, 150px) * 0.03), 10px);
+}
+.task-card.flat .tc-bar i { border-radius: 0; }
+/* 🔒 和收回鈕本來壓在角落，橫躺後排進同一列（🔒 沒有時不佔位） */
+.task-card.flat .tc-lock { position: static; }
+.task-card.flat .tc-lock:empty { display: none; }
+/* 收回鈕一律佔位、只切換看不看得見：突然多一顆鈕會把整排推歪 */
+.task-card.flat .tc-recall {
+    position: static; order: 9;
+    display: flex; visibility: hidden;
+    width: clamp(26px, calc(var(--card-w, 150px) * 0.15), 46px);
+    height: clamp(26px, calc(var(--card-w, 150px) * 0.15), 46px);
+}
+.task-card.flat.working .tc-recall { visibility: visible; }
+.task-card.flat.done::after { font-size: clamp(30px, calc(var(--card-w, 150px) * 0.22), 62px); }
 
-.tc-icon { font-size: clamp(26px, calc(var(--card-w, 150px) * 0.165), 46px); line-height: 1; }
-.tc-name { font-size: clamp(14px, calc(var(--card-w, 150px) * 0.1), 25px); font-weight: 700; line-height: 1.25; }
-/* 秒數和工人擠同一行，省下來的高度全部拿去放大卡片 */
-.tc-meta { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 18px; }
-.tc-dur { font-size: clamp(12px, calc(var(--card-w, 150px) * 0.083), 19px); color: var(--muted); font-weight: 600; }
+.tc-icon { font-size: clamp(26px, calc(var(--card-w, 150px) * 0.165), 53px); line-height: 1; }
+.tc-name { font-size: clamp(14px, calc(var(--card-w, 150px) * 0.1), 30px); font-weight: 700; line-height: 1.25; }
+/* 秒數和學者擠同一行，省下來的高度全部拿去放大卡片。
+   高度寫死：派學者進來時多出一排圖示也不會把卡片撐高 —— body 是垂直置中的，
+   任何一格變高，整頁的東西都會跟著跳，觸控時很容易點錯 */
+.tc-meta {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    height: clamp(20px, calc(var(--card-w, 150px) * 0.1), 28px);
+    flex-shrink: 0;
+}
+.tc-dur { font-size: clamp(12px, calc(var(--card-w, 150px) * 0.083), 22px); color: var(--muted); font-weight: 600; }
 
 .tc-bar {
-    width: 100%; height: clamp(10px, calc(var(--card-w, 150px) * 0.07), 19px); margin-top: auto;
+    width: 100%; height: clamp(10px, calc(var(--card-w, 150px) * 0.07), 22px); margin-top: auto;
     background: var(--surface-3); border-radius: 999px; overflow: hidden;
 }
 .tc-bar i {
@@ -255,22 +333,29 @@ body.playing .tf-screen { padding-top: 14px; }
     background: linear-gradient(90deg, var(--g2), var(--g1));
     border-radius: 999px;
 }
+/* 卡片上的學者：跟著卡片大小長。一律擠在同一行（不換行）—— 換行會撐高卡片，
+   卡片一變高整頁就位移。人多到擺不下時讓圖示自己縮，寧可小一點也不換行 */
 .tc-workers {
-    font-size: clamp(15px, calc(var(--card-w, 150px) * 0.105), 23px);
-    line-height: 1; letter-spacing: -2px;
+    --wh: clamp(11px, calc(var(--card-w, 150px) * 0.07), 21px);
+    display: flex; flex-wrap: nowrap; justify-content: center; gap: 3px;
+    line-height: 1; min-width: 0;
+}
+.tc-workers .w-icon {
+    height: var(--wh); width: calc(var(--wh) * 1.75);
+    flex-shrink: 1; min-width: 9px;
 }
 
 .tc-lock {
     position: absolute; left: 7px; top: 7px;
-    font-size: clamp(15px, calc(var(--card-w, 150px) * 0.1), 22px); line-height: 1;
+    font-size: clamp(15px, calc(var(--card-w, 150px) * 0.1), 26px); line-height: 1;
 }
 .tc-recall {
     position: absolute; right: 5px; top: 5px;
-    width: clamp(28px, calc(var(--card-w, 150px) * 0.21), 52px);
-    height: clamp(28px, calc(var(--card-w, 150px) * 0.21), 52px);
+    width: clamp(28px, calc(var(--card-w, 150px) * 0.21), 60px);
+    height: clamp(28px, calc(var(--card-w, 150px) * 0.21), 60px);
     border-radius: 50%;
     border: 2px solid var(--border-strong); background: var(--surface-2);
-    color: var(--ink-soft); font-size: clamp(13px, calc(var(--card-w, 150px) * 0.095), 22px); cursor: pointer;
+    color: var(--ink-soft); font-size: clamp(13px, calc(var(--card-w, 150px) * 0.095), 26px); cursor: pointer;
     display: none; align-items: center; justify-content: center;
     font-family: inherit; padding: 0;
     touch-action: manipulation;
@@ -287,33 +372,37 @@ body.playing .tf-screen { padding-top: 14px; }
 .task-card.locked .tc-icon { filter: grayscale(1); }
 .task-card.ready {
     border-color: var(--g1);
-    box-shadow: 0 0 0 4px rgba(217, 131, 36, 0.16);
+    box-shadow: 0 0 0 4px var(--g-ring);
 }
-.task-card.ready:hover { transform: translateY(-3px); }
+.task-card.ready:hover { transform: translateY(-2px); }
 .task-card.working {
     border-color: var(--good); background: var(--good-bg);
 }
 .task-card.done {
     border-color: var(--good); background: var(--good-bg); opacity: 0.75; cursor: default;
 }
-.task-card.done .tc-bar { display: none; }
+/* 完成後只是把進度條藏起來，不能 display:none —— 那會讓卡片縮一截，整排高度就不一樣了 */
+.task-card.done .tc-bar { visibility: hidden; }
 .task-card.done::after {
     content: '✓'; position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 54px; color: var(--good); opacity: 0.32; font-weight: 700;
+    font-size: clamp(44px, calc(var(--card-w, 150px) * 0.36), 108px);
+    color: var(--good); opacity: 0.32; font-weight: 700;
 }
 
-.task-card.shake { animation: tf-shake 0.36s ease; }
-@keyframes tf-shake {
+.task-card.shake { animation: tm-shake 0.36s ease; }
+@keyframes tm-shake {
     0%, 100% { transform: translateX(0); }
     20% { transform: translateX(-7px); }
     45% { transform: translateX(6px); }
     70% { transform: translateX(-4px); }
 }
-.task-card.pop { animation: tf-pop 0.34s ease; }
-@keyframes tf-pop {
+/* 派人成功的回饋：只做很小幅度的縮放（1.04）。
+   放太大在觸控電視上會像整排在跳，而且卡片邊界會蓋到隔壁那張 */
+.task-card.pop { animation: tm-pop 0.28s ease; }
+@keyframes tm-pop {
     0% { transform: scale(1); }
-    45% { transform: scale(1.09); }
+    45% { transform: scale(1.04); }
     100% { transform: scale(1); }
 }
 
@@ -322,16 +411,8 @@ body.playing .tf-screen { padding-top: 14px; }
     position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%);
     background: var(--warn-bg); color: var(--warn);
     border: 2px solid var(--warn-border); border-radius: 999px;
-    font-size: 11px; font-weight: 700; padding: 1px 9px; white-space: nowrap;
-}
-
-/* ---------- 底部動作 ---------- */
-.action-bar { display: flex; justify-content: center; padding-bottom: 12px; }
-.action-bar .tf-btn { font-size: clamp(15px, 1.2vw, 20px); padding: clamp(11px, 1vw, 16px) clamp(24px, 2.4vw, 40px); }
-body.overtime-on .board { animation: tf-rush 0.5s ease-in-out infinite alternate; }
-@keyframes tf-rush {
-    from { box-shadow: 0 0 0 0 rgba(217,131,36,0); }
-    to   { box-shadow: 0 0 0 6px rgba(217,131,36,0.28); }
+    font-size: clamp(11px, calc(var(--card-w, 150px) * 0.055), 17px);
+    font-weight: 700; padding: 1px 9px; white-space: nowrap;
 }
 
 /* ---------- 彈窗 ---------- */
@@ -351,9 +432,9 @@ body.overtime-on .board { animation: tf-rush 0.5s ease-in-out infinite alternate
     max-height: 92vh; overflow-y: auto;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-    animation: tf-in 0.28s ease;
+    animation: tm-in 0.28s ease;
 }
-@keyframes tf-in {
+@keyframes tm-in {
     from { opacity: 0; transform: translateY(16px) scale(0.97); }
     to { opacity: 1; transform: none; }
 }
@@ -365,17 +446,45 @@ body.overtime-on .board { animation: tf-rush 0.5s ease-in-out infinite alternate
 /* 「重新挑戰」按鈕下面的小字說明 */
 .overlay-box .retry-note { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
 
-/* 訂單簡報：流程預覽 */
+/* 委託簡報：關卡配置預覽 ----------------------------------------
+   排成等一下真的會看到的形狀：讀資料 → 3 條修復線 → 拼合 → 展出 */
 .brief-flow {
-    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
     background: var(--g-bg); border: 2px solid var(--g-line);
-    border-radius: 16px; padding: 14px; margin: 14px 0;
+    border-radius: 16px; padding: 14px 12px; margin: 14px 0;
 }
+.bf-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.bf-lines { display: flex; align-items: flex-start; justify-content: center; gap: 10px; width: 100%; }
+.bf-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1 1 0; min-width: 0; }
+.bf-col .bf-chip { width: 100%; }
+.bf-sep { font-size: 12px; color: var(--muted); font-weight: 600; }
+.bf-down { font-size: 12px; color: var(--muted-2); line-height: 1; }
+
 .bf-chip {
     background: var(--surface); border: 2px solid var(--border-strong);
     border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
 }
+.bf-chip b { color: var(--muted); font-size: 12px; margin-left: 2px; }
 .bf-chip.serial { border-color: var(--g1); color: var(--g-ink); }
+.bf-chip.serial b { color: var(--g-ink); }
+
+/* 這一關生效的升級卡 */
+.brief-card {
+    display: flex; align-items: center; gap: 12px; justify-content: center;
+    background: var(--primary-tint); border: 2px solid var(--border-strong);
+    border-radius: 16px; padding: 10px 16px; margin: 12px 0;
+    text-align: left; font-size: 14px; line-height: 1.5;
+}
+.brief-card .bc-icon { font-size: 30px; line-height: 1; flex-shrink: 0; }
+.brief-card small { color: var(--muted); font-size: 12.5px; }
+
+/* 醒目提醒（升級卡只有下一關生效…） */
+.notice {
+    background: var(--warn-bg); border: 2px solid var(--warn-border); color: var(--warn);
+    border-radius: 14px; padding: 10px 15px; margin: 4px 0 18px;
+    font-size: 13.5px; font-weight: 600; line-height: 1.7; text-align: left;
+}
 
 .stat-row {
     display: flex; gap: 12px; justify-content: center; margin: 16px 0;
@@ -401,13 +510,21 @@ body.overtime-on .board { animation: tf-rush 0.5s ease-in-out infinite alternate
 .lesson .term { font-size: 12px; color: var(--muted); margin-top: 8px; }
 
 /* ---------- 升級卡（三選一） ---------- */
-.card-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+.card-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
 .up-card {
+    position: relative;
     width: 200px; background: var(--surface);
     border: 4px solid var(--border-strong); border-radius: 22px;
-    padding: 20px 14px; cursor: pointer;
+    padding: 22px 14px 20px; cursor: pointer;
     transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     touch-action: manipulation;
+}
+/* 每張卡上都掛一個「只有下一件」的標籤，避免學生以為效果會累積 */
+.uc-tag {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--warn-bg); color: var(--warn); border: 2px solid var(--warn-border);
+    border-radius: 999px; padding: 1px 11px;
+    font-size: 11.5px; font-weight: 700; white-space: nowrap;
 }
 .up-card:hover { transform: translateY(-6px); border-color: var(--g1); box-shadow: 0 10px 22px var(--shadow); }
 .up-card:active { transform: translateY(-2px); }
@@ -435,9 +552,10 @@ body.overtime-on .board { animation: tf-rush 0.5s ease-in-out infinite alternate
     border-radius: 999px; padding: 10px 22px;
     font-size: 15px; font-weight: 600;
     box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-    animation: tf-toast 2.2s ease forwards;
+    animation: tm-toast 2.2s ease forwards;
 }
-@keyframes tf-toast {
+.toast .w-icon { height: 19px; width: 33px; margin-right: 2px; }
+@keyframes tm-toast {
     0% { opacity: 0; transform: translateY(-12px); }
     12%, 78% { opacity: 1; transform: none; }
     100% { opacity: 0; transform: translateY(-8px); }
@@ -447,63 +565,71 @@ body.overtime-on .board { animation: tf-rush 0.5s ease-in-out infinite alternate
    觸控電視 / 大螢幕：放大所有觸控目標
    ============================================================ */
 @media (min-width: 1400px) {
-    .tf-card { width: 1400px; }
-    .tf-header h1 { font-size: 40px; }
+    .tm-card { width: 1400px; }
+    .tm-header h1 { font-size: 40px; }
     /* 任務卡尺寸交給 --card-w 連續縮放，這裡只放不跟著卡片走的東西 */
     .hud-order b { font-size: 22px; }
     .t-value { font-size: 30px; }
-    .worker { font-size: 30px; }
+    .worker { height: 27px; width: 47px; }
+    .goal { font-size: 14px; }
     .up-card { width: 240px; }
-    .tf-btn { font-size: 19px; padding: 16px 34px; }
+    .tm-btn { font-size: 19px; padding: 16px 34px; }
 }
 
-/* ---------- 矮螢幕（720p 筆電等）：再擠出一點垂直空間給產線 ---------- */
+/* ---------- 矮螢幕（720p 筆電等）：再擠出一點垂直空間給修復線 ---------- */
 @media (max-height: 820px) {
-    body.playing .tf-header { padding: 8px 40px 7px; }
-    body.playing .tf-header h1 { font-size: 18px; }
-    body.playing .tf-screen { padding-top: 10px; }
+    body.playing .tm-header { padding: 8px 40px 7px; }
+    body.playing .tm-header h1 { font-size: 18px; }
+    body.playing .tm-screen { padding-top: 10px; }
     body.playing .hud { padding: 7px 16px; margin-bottom: 8px; }
     body.playing .hud-order .order-icon { font-size: 26px; }
     body.playing .hud-order b { font-size: 16px; }
     body.playing .t-value { font-size: 20px; }
     body.playing .worker-bar { padding: 5px 14px; margin-bottom: 8px; }
     body.playing .wb-slots { min-height: 26px; }
-    body.playing .worker { font-size: 21px; }
+    body.playing .worker { height: 19px; width: 33px; }
+    body.playing .goal { font-size: 12px; padding: 1px 9px; }
     body.playing .board { margin-bottom: 8px; padding: 8px; }
-    body.playing .action-bar { padding-bottom: 6px; }
-    body.playing .action-bar .tf-btn { padding: 8px 20px; font-size: 14px; }
     /* 矮螢幕上每一格高度都要省，省下來才換得到大一點的任務卡 */
     body.playing #gameScreen { gap: 8px 12px; }
     body.playing .flow-arrow { font-size: 12px; padding: 0; }
-    body.playing .tf-screen { padding-bottom: 4px; }
+    body.playing .tm-screen { padding-bottom: 4px; }
 }
 
-/* ---------- 很矮的視窗（縮小的視窗、投影機）：標題列讓位給產線 ---------- */
+/* ---------- 很矮的視窗（縮小的視窗、投影機）：標題列讓位給修復線 ---------- */
 @media (max-height: 660px) {
-    body.playing .tf-header { padding: 0; height: 0; overflow: visible; }
-    body.playing .tf-header h1 { display: none; }
+    body.playing .tm-header { padding: 0; height: 0; overflow: visible; }
+    body.playing .tm-header h1 { display: none; }
     body.playing .back-link { top: 5px; left: 8px; z-index: 3; padding: 4px 10px; font-size: 12px;
         background: var(--surface-2); color: var(--ink-soft); border: 2px solid var(--border); }
-    body.playing .tf-screen { padding: 38px 16px 4px; }
+    body.playing .tm-screen { padding: 38px 16px 4px; }
 }
 
 /* ---------- 手機 / 平板 ---------- */
 @media (max-width: 720px) {
     body { padding: 14px 8px; }
-    .tf-card { border-width: 6px; border-radius: 24px; }
-    .tf-screen { padding: 18px 14px 6px; }
-    .tf-header { padding: 22px 20px 18px; }
-    .tf-header h1 { font-size: 27px; }
-    .tf-header p { font-size: 13px; }
+    .tm-card { border-width: 6px; border-radius: 24px; }
+    .tm-screen { padding: 18px 14px 6px; }
+    .tm-header { padding: 22px 20px 18px; }
+    .tm-header h1 { font-size: 27px; }
+    .tm-header p { font-size: 13px; }
     .back-link { left: 12px; top: 14px; padding: 6px 12px; font-size: 13px; }
 
+    .start-hero .w-icon { height: 62px; width: 109px; }
     .start-rules { grid-template-columns: 1fr; }
     .hud { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
     .hud-order { flex: 1 1 100%; }
-    .hud-timer, .hud-target { flex: 1; min-width: 0; }
+    .hud-timer { flex: 0 0 auto; }
+    .hud-goals { flex: 1 1 auto; min-width: 0; }
+    .goal { font-size: 12px; padding: 1px 8px; }
 
     .task-card { width: 118px; min-height: 116px; padding: 10px 7px 8px; }
-    .task-card.wide { width: 100%; max-width: 260px; }
+    .task-card.flat { width: 100%; max-width: 300px; min-height: 0; padding: 8px 12px; }
+    /* 修復線固定 3 條：手機也要三條並排，折行成 2+1 就看不出「三條同時在做」了。
+       寬度改成平分，比 118px 窄一點，但還按得到 */
+    .stage-lines { flex-wrap: nowrap; gap: 6px; }
+    .stage-lines .line-col { flex: 1 1 0; min-width: 0; }
+    .stage-lines .task-card { width: 100%; }
     /* 窄螢幕擺不下橫的，接合 → 完工 改回上下排 */
     .stage-tail { flex-direction: column; }
     .tail-arrow { transform: rotate(90deg); }
@@ -514,6 +640,9 @@ body.overtime-on .board { animation: tf-rush 0.5s ease-in-out infinite alternate
 
     .overlay-box { padding: 22px 18px; border-width: 4px; }
     .overlay-box h3 { font-size: 21px; }
+    /* 手機上一欄只剩 ~95px，配置預覽的字寧可折行也不要被切掉 */
+    .bf-chip { white-space: normal; font-size: 11.5px; padding: 5px 8px; border-radius: 12px; }
+    .bf-lines { gap: 6px; }
     .up-card { width: 100%; max-width: 300px; padding: 16px 14px; }
     .stat-row { flex-wrap: wrap; }
 }
