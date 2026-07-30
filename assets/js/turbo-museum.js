@@ -1,101 +1,134 @@
 'use strict';
 
 /* ================================================================
-   極速工廠 Turbo Factory
+   極速博物館 Turbo Museum
    ----------------------------------------------------------------
+   故事：你是博物館館長，帶學者把一件件古物修復好、送上展櫃。
    教學目標：平行處理的「加速」與「極限」（阿姆達爾定律 Amdahl's Law）
-     · 多工人同時做不同零件 → 變快（平行）
+     · 多學者同時清不同碎片 → 變快（平行）
      · 🔒 有些工作只能一個人做 → 加人也沒用（序列部分）
      · 🔗 有些工作要等前面做完 → 關鍵路徑（依賴 / 同步）
 
    可重玩性（roguelike）三支柱：
-     1. 訂單程序化生成（產品、零件、工時、依賴、🔒 每局都不同）
-     2. 每關結束三選一升級卡，效果永久累積成不同 build
-     3. 隨機事件，每關開場可能翻盤
+     1. 委託程序化生成（古物、碎片、工時、依賴、🔒 每局都不同）
+     2. 每件古物結束三選一升級卡，效果永久累積成不同 build
+     3. 隨機事件，每件古物開場可能翻盤
 
-   平衡數值集中在 TUNING / UPGRADES / EVENTS，改這裡就好。
+   平衡數值集中在 TUNING / LEVELS / UPGRADES / EVENTS，改這裡就好。
    ================================================================ */
 
 /* ---------------- 平衡數值 ---------------- */
 const TUNING = {
-    totalOrders: 5,          // 一局幾張訂單
-    startWorkers: 3,         // 起始工人數
-    baseMaxWorkers: 3,       // 一般零件最多幾人同時做
+    totalOrders: 5,          // 一局幾件古物
+    startWorkers: 3,         // 起始學者數
+    baseMaxWorkers: 3,       // 一般碎片最多幾人同時做
     minWorkers: 2,           // 事件扣人後的保底（低於 2 就感受不到「平行」了）
     eventChance: 0.4,        // 每關出現隨機事件的機率（第 1 關不觸發，先讓學生熟悉操作）
-    targetSlack: 1.35,       // 目標時間 = 理想時間 × 這個倍率
-    star3: 1.20,             // 3 星：完成時間 ≤ 理想 × 1.20
-    star2: 1.60,             // 2 星
-    overtimeMul: 2.0,        // 加班時速度倍率
-    overtimeDur: 4.0         // 加班持續秒數
+    // 星等門檻 = 理想時間 × 倍率。理想時間是電腦用最佳派工法跑出來的，
+    // 所以倍率一定要 > 1，不然玩家再怎麼快也拿不到
+    star3: 1.20,             // ⭐⭐⭐
+    star2: 1.55              // ⭐⭐（再慢就是 ⭐，做完至少有一顆）
 };
 
-/* ---------------- 產品資料池 ---------------- */
-const PRODUCTS = [
+/* ---------------- 關卡設計（一行一件古物） ----------------
+   修復線一律 3 條。欄數固定，任務卡每關才能一樣大、位置也不會跳
+   （欄數 4~6 浮動時，卡片得跟著縮，同一台電視上每關手感都不一樣）。
+   規模與難度改成往「深度 → 🔒 數量 → 工時」三個方向疊：
+     lines  ：3 條修復線各要做幾道工序（同一塊碎片的第 2、3 道要等前一道 → 🔗）
+              碎片工作數 = 陣列總和，3 → 4 → 6 → 7 → 9，越後面越多
+     locks  ：修復線上有幾項工作是 🔒（讀資料和展出本來就是 🔒，不算在內）
+     part / prep / join / finish：各階段工時的隨機範圍（秒）
+   3 條修復線 × 每項工作最多 3 人 = 最多 9 位同時有事做，
+   學者再多就會閒著 —— 這正是要讓學生看見的「平行極限」。 */
+const LINE_COUNT = 3;
+const LEVELS = [
+    // 古物 1：3 塊碎片，最單純，先學會「點一下就派人」
+    { lines: [1, 1, 1], locks: 0, part: [6, 9],  prep: [4, 6],  join: [5, 8],  finish: [3, 4] },
+    // 古物 2：4 項碎片工作，出現第一條兩道工序的修復線 → 開始有「要等前面」
+    { lines: [2, 1, 1], locks: 1, part: [6, 10], prep: [5, 7],  join: [6, 9],  finish: [3, 5] },
+    // 古物 3：6 項，三條都變兩道，學者開始不夠分
+    { lines: [2, 2, 2], locks: 1, part: [7, 11], prep: [5, 8],  join: [7, 10], finish: [4, 5] },
+    // 古物 4：7 項，出現三道工序的長修復線，關鍵路徑明顯變長
+    { lines: [3, 2, 2], locks: 2, part: [7, 12], prep: [6, 9],  join: [8, 11], finish: [4, 6] },
+    // 古物 5：9 項、🔒 最多、工時最長 —— 加人幾乎沒用，收尾點出阿姆達爾定律
+    { lines: [3, 3, 3], locks: 3, part: [8, 13], prep: [7, 10], join: [9, 13], finish: [5, 7] }
+];
+
+/* ---------------- 古物資料池 ----------------
+   一件古物 = 一張委託：先讀資料（prep）→ 各修復台清碎片 → 拼合（join）→ 展出（finish）。
+   stages：同一塊碎片第 2、3 道工序的名字（例：頭骨 → 頭骨清理 → 頭骨加固）。
+   一條修復線做的是「同一塊碎片的好幾道工序」，學生才看得懂為什麼要排隊等。 */
+const ARTIFACTS = [
     {
-        name: '戰鬥機器人', icon: '🤖',
-        prep: { name: '看設計圖', icon: '📖' },
-        join: { name: '組裝接合', icon: '🔗' },
-        finish: { name: '上漆測試', icon: '🎨' },
+        name: '恐龍化石', icon: '🦖',
+        stages: ['清理', '加固'],
+        prep: { name: '研究文獻', icon: '📚' },
+        join: { name: '骨架拼合', icon: '🔗' },
+        finish: { name: '上架展示', icon: '🖼️' },
         parts: [
-            { name: '頭部', icon: '😀' }, { name: '左手臂', icon: '💪' }, { name: '右手臂', icon: '🦾' },
-            { name: '雙腿', icon: '🦵' }, { name: '動力電池', icon: '🔋' }, { name: '天線', icon: '📡' },
-            { name: '感應眼', icon: '👀' }, { name: '胸甲', icon: '🛡️' }
+            { name: '頭骨', icon: '💀' }, { name: '尾椎', icon: '〰️' }, { name: '前爪', icon: '🦶' },
+            { name: '肋骨', icon: '🩻' }, { name: '牙齒', icon: '🦷' }, { name: '腿骨', icon: '🦴' },
+            { name: '背鰭', icon: '🔻' }, { name: '底座', icon: '🟫' }
         ]
     },
     {
-        name: '太空火箭', icon: '🚀',
-        prep: { name: '計算軌道', icon: '📐' },
-        join: { name: '火箭組裝', icon: '🔗' },
-        finish: { name: '安全檢查', icon: '✅' },
+        name: '法老金面具', icon: '👑',
+        stages: ['清潔', '補金'],
+        prep: { name: '判讀象形文字', icon: '📜' },
+        join: { name: '面具拼合', icon: '🔗' },
+        finish: { name: '入櫃展示', icon: '🪟' },
         parts: [
-            { name: '主引擎', icon: '🔥' }, { name: '機翼', icon: '🪽' }, { name: '駕駛艙', icon: '🧑‍🚀' },
-            { name: '燃料桶', icon: '🛢️' }, { name: '降落傘', icon: '🪂' }, { name: '導航儀', icon: '🧭' },
-            { name: '隔熱層', icon: '🧊' }, { name: '通訊天線', icon: '📶' }
+            { name: '額飾', icon: '✨' }, { name: '眼線', icon: '👁️' }, { name: '假鬍', icon: '🧔' },
+            { name: '耳環', icon: '💍' }, { name: '頸圈', icon: '📿' }, { name: '寶石', icon: '💎' },
+            { name: '金箔', icon: '🟨' }, { name: '面頰', icon: '🎭' }
         ]
     },
     {
-        name: '慶生蛋糕', icon: '🎂',
-        prep: { name: '看食譜', icon: '📜' },
-        join: { name: '疊起來裝飾', icon: '🔗' },
-        finish: { name: '裝盒', icon: '📦' },
+        name: '青銅古鼎', icon: '⚱️',
+        stages: ['除鏽', '拓印'],
+        prep: { name: '判讀銘文', icon: '🔍' },
+        join: { name: '鼎身接合', icon: '🔗' },
+        finish: { name: '佈展打光', icon: '💡' },
         parts: [
-            { name: '烤蛋糕體', icon: '🍰' }, { name: '打發鮮奶油', icon: '🥛' }, { name: '切草莓', icon: '🍓' },
-            { name: '融巧克力', icon: '🍫' }, { name: '插蠟燭', icon: '🕯️' }, { name: '做糖霜', icon: '🧁' },
-            { name: '煮果醬', icon: '🍯' }, { name: '烤餅乾片', icon: '🍪' }
+            { name: '鼎足', icon: '🦵' }, { name: '鼎耳', icon: '👂' }, { name: '銘文', icon: '✍️' },
+            { name: '紋飾', icon: '🌀' }, { name: '鼎腹', icon: '🫖' }, { name: '提梁', icon: '⛓️' },
+            { name: '鏽層', icon: '🟢' }, { name: '底座', icon: '🟫' }
         ]
     },
     {
-        name: '積木城堡', icon: '🏰',
-        prep: { name: '看藍圖', icon: '🗺️' },
-        join: { name: '拼起城堡', icon: '🔗' },
-        finish: { name: '插上旗子', icon: '🚩' },
+        name: '彩繪陶罐', icon: '🏺',
+        stages: ['拼補', '上釉'],
+        prep: { name: '對照圖錄', icon: '🗂️' },
+        join: { name: '陶片拼合', icon: '🔗' },
+        finish: { name: '拍照建檔', icon: '📷' },
         parts: [
-            { name: '城牆', icon: '🧱' }, { name: '高塔', icon: '🗼' }, { name: '大門', icon: '🚪' },
-            { name: '護城河', icon: '🌊' }, { name: '屋頂', icon: '🔺' }, { name: '樓梯', icon: '🪜' },
-            { name: '窗戶', icon: '🪟' }, { name: '吊橋', icon: '🌉' }
+            { name: '罐口', icon: '⭕' }, { name: '罐身', icon: '🏺' }, { name: '彩繪', icon: '🎨' },
+            { name: '頸部', icon: '🧴' }, { name: '裂縫', icon: '⚡' }, { name: '紋路', icon: '🌀' },
+            { name: '殘片', icon: '🧩' }, { name: '罐底', icon: '🔵' }
         ]
     },
     {
-        name: '恐龍模型', icon: '🦖',
-        prep: { name: '研究化石', icon: '🔬' },
-        join: { name: '骨架接合', icon: '🔗' },
-        finish: { name: '上色展示', icon: '🖌️' },
+        name: '古代竹簡', icon: '📜',
+        stages: ['除霉', '裱褙'],
+        prep: { name: '查閱字典', icon: '📖' },
+        join: { name: '簡冊編繩', icon: '🔗' },
+        finish: { name: '翻譯導覽', icon: '🗣️' },
         parts: [
-            { name: '頭骨', icon: '💀' }, { name: '尾巴', icon: '〰️' }, { name: '爪子', icon: '🦶' },
-            { name: '背鰭', icon: '🔻' }, { name: '牙齒', icon: '🦷' }, { name: '肋骨', icon: '🩻' },
-            { name: '眼珠', icon: '👁️' }, { name: '底座', icon: '🟫' }
+            { name: '竹片', icon: '🎋' }, { name: '墨字', icon: '🖋️' }, { name: '編繩', icon: '🧵' },
+            { name: '封泥', icon: '🟤' }, { name: '蟲蛀處', icon: '🐛' }, { name: '卷軸', icon: '📃' },
+            { name: '標題簡', icon: '🏷️' }, { name: '木盒', icon: '📦' }
         ]
     },
     {
-        name: '極速賽車', icon: '🏎️',
-        prep: { name: '調校設定', icon: '📋' },
-        join: { name: '車體組裝', icon: '🔗' },
-        finish: { name: '試跑一圈', icon: '🏁' },
+        name: '石雕神像', icon: '🗿',
+        stages: ['除苔', '補土'],
+        prep: { name: '測量比例', icon: '📐' },
+        join: { name: '石件組立', icon: '🔗' },
+        finish: { name: '立座展示', icon: '🏛️' },
         parts: [
-            { name: '引擎', icon: '⚙️' }, { name: '輪胎', icon: '🛞' }, { name: '方向盤', icon: '🎡' },
-            { name: '車殼', icon: '🔧' }, { name: '尾翼', icon: '✈️' }, { name: '油箱', icon: '⛽' },
-            { name: '座椅', icon: '💺' }, { name: '煞車', icon: '🛑' }
+            { name: '頭部', icon: '🗿' }, { name: '手臂', icon: '💪' }, { name: '冠飾', icon: '👑' },
+            { name: '衣紋', icon: '〽️' }, { name: '眼睛', icon: '👁️' }, { name: '基石', icon: '🧱' },
+            { name: '銘牌', icon: '🏷️' }, { name: '底座', icon: '🟫' }
         ]
     }
 ];
@@ -103,39 +136,35 @@ const PRODUCTS = [
 /* ---------------- 升級卡（每關結束三選一） ---------------- */
 const UPGRADES = [
     {
-        id: 'hire2', icon: '👥', title: '招募工人', desc: '工人 <b>+2</b> 人',
+        id: 'hire2', icon: '👥', title: '招募學者', desc: '學者 <b>+2</b> 人',
         weight: 4, apply: M => { M.workers += 2; }
     },
     {
-        id: 'hire3', icon: '🏢', title: '大擴編', desc: '工人 <b>+3</b> 人<br>但所有工時 <b>+10%</b>',
+        id: 'hire3', icon: '🏢', title: '大擴編', desc: '學者 <b>+3</b> 人<br>但所有工時 <b>+10%</b>',
         weight: 2, apply: M => { M.workers += 3; M.allSpeed *= 0.9; }
     },
     {
-        id: 'simplify', icon: '📖', title: '簡化說明書', desc: '🔒 只能一個人做的工作<br>時間 <b>-40%</b>',
+        id: 'simplify', icon: '📖', title: '整理研究手冊', desc: '🔒 只能一個人做的工作<br>時間 <b>-40%</b>',
         weight: 4, apply: M => { M.serialSpeed *= 1.67; }
     },
     {
-        id: 'unlock', icon: '🔓', title: '拆解流程', desc: '每張訂單隨機 <b>1 個 🔒</b><br>變成大家可以一起做',
+        id: 'unlock', icon: '🔓', title: '拆解工序', desc: '每件古物隨機 <b>1 個 🔒</b><br>變成大家可以一起做',
         weight: 3, apply: M => { M.unlockSerial += 1; }
     },
     {
-        id: 'skilled', icon: '⚡', title: '熟練工人', desc: '所有工作速度 <b>+15%</b>',
+        id: 'skilled', icon: '⚡', title: '熟練學者', desc: '所有工作速度 <b>+15%</b>',
         weight: 4, apply: M => { M.allSpeed *= 1.15; }
     },
     {
-        id: 'bench', icon: '🛠️', title: '加大工作台', desc: '每個零件可容納的<br>工人 <b>+1</b> 人',
+        id: 'bench', icon: '🛠️', title: '加大修復台', desc: '每塊碎片可容納的<br>學者 <b>+1</b> 位',
         weight: 3, apply: M => { M.benchBonus += 1; }
     },
     {
-        id: 'auto', icon: '🤖', title: '自動化開場', desc: '每張訂單的<br><b>第一個工作自動完成</b>',
+        id: 'auto', icon: '📋', title: '助理先開工', desc: '每件古物的<br><b>第一項工作自動完成</b>',
         weight: 3, apply: M => { M.autoPrep = true; }
     },
     {
-        id: 'coffee', icon: '☕', title: '加班券', desc: '「全員加班」<br>可以多用 <b>1 次</b>',
-        weight: 3, apply: M => { M.overtimeMax += 1; }
-    },
-    {
-        id: 'prefab', icon: '📦', title: '預製零件', desc: '每張訂單開始時<br>隨機 <b>2 個零件做好一半</b>',
+        id: 'prefab', icon: '🧹', title: '預先清理', desc: '每件古物開始時<br>隨機 <b>2 塊碎片做好一半</b>',
         weight: 3, apply: M => { M.prefab += 2; }
     }
 ];
@@ -143,33 +172,35 @@ const UPGRADES = [
 /* ---------------- 隨機事件（每關開場） ---------------- */
 const EVENTS = [
     {
-        icon: '😷', title: '有工人請假了！', text: '這張訂單少 <b>1 位</b>工人，大家辛苦一點。',
+        icon: '😷', title: '有學者請假了！', text: '這件古物少 <b>1 位</b>學者，大家辛苦一點。',
         weight: 3, apply: O => { O.workerDelta -= 1; }
     },
     {
-        icon: '📦', title: '急件插隊！', text: '客人急著要，目標時間 <b>縮短 25%</b>。',
-        weight: 3, apply: O => { O.targetMul *= 0.75; }
+        // 門檻是「理想時間 × 1.2」，再砍太多就變成神也拿不到三顆星，10% 剛好有壓力
+        icon: '🎫', title: '特展提前開幕！', text: '館長把檔期提前，星等時間全部 <b>縮短 10%</b>。',
+        weight: 3, apply: O => { O.targetMul *= 0.90; }
     },
     {
-        icon: '🎁', title: '顧問來指導', text: '這張訂單所有 <b>🔒 工作快 30%</b>！',
+        icon: '🎓', title: '資深研究員來指導', text: '這件古物所有 <b>🔒 工作快 30%</b>！',
         weight: 3, apply: O => { O.serialMul *= 1.43; }
     },
     {
-        icon: '🔧', title: '機器故障', text: '有一個零件的工時 <b>變成兩倍</b>。',
+        icon: '💔', title: '碎片比想像脆弱', text: '有一塊碎片的工時 <b>變成兩倍</b>。',
         weight: 3, apply: O => { O.brokenPart = true; }
     },
     {
-        icon: '🍀', title: '臨時工來幫忙', text: '這張訂單多 <b>2 位</b>工人！',
+        icon: '🍀', title: '志工來幫忙', text: '這件古物多 <b>2 位</b>學者！',
         weight: 2, apply: O => { O.workerDelta += 2; }
     },
     {
-        icon: '📐', title: '客人改設計', text: '這張訂單 <b>多一個 🔒 工作</b>，只能一個人做。',
+        icon: '📐', title: '策展人改方案', text: '這件古物 <b>多一項 🔒 工作</b>，只能一個人做。',
         weight: 2, apply: O => { O.extraSerial = true; }
     }
 ];
 
 /* ---------------- 全域狀態 ---------------- */
-let M = null;      // 永久 modifier（roguelike build）
+let BASE = null;   // 一整局不變的底子（起始學者數、原始速度…）
+let M = null;      // 這一件古物實際生效的能力值 = BASE + 這件古物抽到的升級卡
 let RUN = null;    // 本局進度
 let G = null;      // 當前這關的執行狀態
 let rafId = null;
@@ -198,9 +229,10 @@ function weightedPick(list) {
     return list[list.length - 1];
 }
 
-/* 抽 n 張不重複的升級卡 */
+/* 抽 n 張不重複的升級卡
+   （升級卡只在下一件古物生效，所以同一張卡下次再出現也沒關係，不用過濾） */
 function drawUpgrades(n) {
-    const pool = UPGRADES.filter(u => !(u.id === 'auto' && M.autoPrep));
+    const pool = UPGRADES;
     const out = [];
     const used = new Set();
     let guard = 0;
@@ -241,13 +273,30 @@ function sfx(type) {
     } catch (e) { /* 音效失敗不影響遊戲 */ }
 }
 
-/* ---------------- Toast ---------------- */
+/* ---------------- Toast ----------------
+   學生會連續猛點同一張 🔒 卡片，一次跳十則一樣的訊息會蓋住整個畫面。
+   三道防線：同一則訊息有冷卻、任何訊息之間有最小間隔、畫面上最多疊 3 則。 */
+const TOAST_LIFE = 2200;   // 一則訊息在畫面上待多久（要跟 CSS 動畫長度一致）
+const TOAST_SAME = 2200;   // 同一則訊息的冷卻：講過了就等它自己消失再說
+const TOAST_ANY = 350;     // 不同訊息之間的最小間隔，避免連點時一次噴一疊
+const TOAST_MAX = 3;       // 畫面上最多同時幾則
+
+let toastLast = { msg: '', at: -1e9, anyAt: -1e9 };
+
 function toast(msg) {
+    const now = performance.now();
+    if (msg === toastLast.msg && now - toastLast.at < TOAST_SAME) return;
+    if (now - toastLast.anyAt < TOAST_ANY) return;
+    toastLast = { msg, at: now, anyAt: now };
+
+    const area = $('toastArea');
+    while (area.childElementCount >= TOAST_MAX) area.firstElementChild.remove();
+
     const el = document.createElement('div');
     el.className = 'toast';
     el.innerHTML = msg;
-    $('toastArea').appendChild(el);
-    setTimeout(() => el.remove(), 2200);
+    area.appendChild(el);
+    setTimeout(() => el.remove(), TOAST_LIFE);
 }
 
 /* ---------------- 彈窗 ---------------- */
@@ -258,28 +307,25 @@ function showOverlay(html) {
 function hideOverlay() { $('overlay').classList.remove('show'); }
 
 /* ================================================================
-   訂單生成（程序化）
-   結構：準備 → 多條產線（每條 1~2 道工序，彼此平行）→ 接合 → 完工
+   委託生成（程序化）
+   結構：讀資料 → 多條修復線（每條 1~3 道工序，彼此平行）→ 拼合 → 展出
    ================================================================ */
-/* 同一局裡不重複抽到同一個產品，玩起來才有「每張訂單都不一樣」的感覺 */
-function pickProduct() {
-    const used = (RUN && RUN.usedProducts) || [];
-    const avail = PRODUCTS.filter(p => !used.includes(p.name));
-    const p = pick(avail.length ? avail : PRODUCTS);
-    if (RUN && RUN.usedProducts) RUN.usedProducts.push(p.name);
-    return p;
+/* 同一局裡不重複抽到同一件古物，玩起來才有「每件都不一樣」的感覺 */
+function pickArtifact() {
+    const used = (RUN && RUN.usedArtifacts) || [];
+    const avail = ARTIFACTS.filter(a => !used.includes(a.name));
+    const a = pick(avail.length ? avail : ARTIFACTS);
+    if (RUN && RUN.usedArtifacts) RUN.usedArtifacts.push(a.name);
+    return a;
 }
 
 function generateOrder(orderNo) {
-    const product = pickProduct();
-    const lv = orderNo;                       // 1..5，越後面越難
+    const artifact = pickArtifact();
+    const L = LEVELS[Math.min(orderNo, LEVELS.length) - 1];
 
-    const colCount = Math.min(3 + Math.floor((lv + 1) / 2), 6);  // 4~6 條產線（越後面越寬，加人才有感）
-    const twoStepChance = lv >= 3 ? 0.45 : 0.2;                  // 產線出現第二道工序的機率
-    const serialChance = 0.08 + lv * 0.04;                       // 零件是 🔒 的機率（隨關卡上升）
-
-    const partPool = pickShuffled(product.parts, 8);
-    let p = 0;
+    // 長的修復線排在哪一條，每件古物隨機（難度一樣，但每次看起來不一樣）
+    const stepPlan = pickShuffled(L.lines, LINE_COUNT);
+    const partPool = pickShuffled(artifact.parts, LINE_COUNT);
     taskSeq = 0;
 
     const mk = (name, icon, dur, serial, stage) => ({
@@ -296,27 +342,30 @@ function generateOrder(orderNo) {
         el: null
     });
 
-    // 準備工作：永遠只能一個人做（教學上最好懂的 🔒）
-    const prep = mk(product.prep.name, product.prep.icon, rand(5, 7), true, 'prep');
+    // 讀資料：永遠只能一個人做（教學上最好懂的 🔒）
+    const prep = mk(artifact.prep.name, artifact.prep.icon, rand(L.prep[0], L.prep[1]), true, 'prep');
 
-    // 產線
+    // 修復線：固定 3 條，一條做一塊碎片的 1~3 道工序
     const cols = [];
-    for (let c = 0; c < colCount; c++) {
+    stepPlan.forEach((steps, c) => {
+        const part = partPool[c % partPool.length];
         const col = [];
-        const steps = Math.random() < twoStepChance ? 2 : 1;
         for (let s = 0; s < steps; s++) {
-            const part = partPool[p++ % partPool.length];
-            const name = steps === 2 && s === 1 ? part.name + '打磨' : part.name;
-            const t = mk(name, part.icon, rand(5, 11), Math.random() < serialChance, 'line');
-            col.push(t);
+            const name = s === 0 ? part.name : part.name + artifact.stages[s - 1];
+            col.push(mk(name, part.icon, rand(L.part[0], L.part[1]), false, 'line'));
         }
         cols.push(col);
-    }
+    });
 
-    // 接合：同步點，要等所有產線做完
-    const join = mk(product.join.name, product.join.icon, rand(6, 10), false, 'join');
-    // 完工：只能一個人做
-    const finish = mk(product.finish.name, product.finish.icon, rand(3, 5), true, 'finish');
+    // 🔒 的「數量」由關卡決定、位置隨機：序列比重才穩定，不會偶爾難爆、偶爾太輕鬆。
+    // 同一條修復線最多一個 🔒 —— 兩個 🔒 連在一起會變成誰都加速不了的長鏈，
+    // 那條路一長，加人就完全沒感覺，「先變快、後來卡住」的曲線也就看不到了
+    pickShuffled(cols, Math.min(L.locks, cols.length)).forEach(col => { pick(col).serial = true; });
+
+    // 拼合：同步點，要等所有修復線做完
+    const join = mk(artifact.join.name, artifact.join.icon, rand(L.join[0], L.join[1]), false, 'join');
+    // 展出：只能一個人做
+    const finish = mk(artifact.finish.name, artifact.finish.icon, rand(L.finish[0], L.finish[1]), true, 'finish');
 
     // 依賴關係
     cols.forEach(col => {
@@ -328,11 +377,11 @@ function generateOrder(orderNo) {
 
     const tasks = [prep, ...cols.flat(), join, finish];
 
-    return { product, orderNo, prep, cols, join, finish, tasks };
+    return { artifact, orderNo, prep, cols, join, finish, tasks };
 }
 
 /* ================================================================
-   排程模擬：估算「N 個工人最快能做多久」
+   排程模擬：估算「N 個學者最快能做多久」
    用 list scheduling 貪婪法（先餵剩餘關鍵路徑最長的工作）
    ================================================================ */
 function maxWorkersOf(task) {
@@ -360,9 +409,9 @@ function computeCriticalRemaining(tasks) {
     return memo;
 }
 
-/* 模擬 N 個工人的最佳完成時間（秒） */
+/* 模擬 N 個學者的最佳完成時間（秒） */
 function simulateOptimal(order, workerCount) {
-    // 一律從頭重跑（不看玩家當下進度），算的是這張訂單的「理想時間」
+    // 一律從頭重跑（不看玩家當下進度），算的是這件古物的「理想時間」
     const tasks = order.tasks.map(t => ({
         id: t.id, deps: t.deps, serial: t.serial, remain: t.dur, done: false
     }));
@@ -381,7 +430,7 @@ function simulateOptimal(order, workerCount) {
 
         ready.sort((a, b) => crit[b.id] - crit[a.id]);
 
-        // 分配工人：先每人一個，再把剩下的補給關鍵路徑最長的
+        // 分配學者：先每人一個，再把剩下的補給關鍵路徑最長的
         const alloc = {};
         let left = workerCount;
         for (const t of ready) { if (left <= 0) break; alloc[t.id] = 1; left--; }
@@ -415,18 +464,22 @@ function singleWorkerTime(order) {
    開始新的一局
    ================================================================ */
 function newRun() {
-    M = {
+    BASE = {
         workers: TUNING.startWorkers,
         allSpeed: 1,
         serialSpeed: 1,
         benchBonus: 0,
         unlockSerial: 0,
         autoPrep: false,
-        overtimeMax: 1,
-        prefab: 0,
-        picked: []
+        prefab: 0
     };
-    RUN = { orderNo: 0, totalTime: 0, stars: 0, usedProducts: [] };
+    M = Object.assign({}, BASE);
+    RUN = {
+        orderNo: 0, totalTime: 0, stars: 0,
+        usedArtifacts: [],
+        picked: [],        // 這一局用過哪些升級卡（純紀錄）
+        nextCard: null     // 已選好、要在下一件古物生效的那張
+    };
 }
 
 function startRun() {
@@ -438,10 +491,17 @@ function startRun() {
     nextOrder();
 }
 
-/* ---------------- 進入下一張訂單 ---------------- */
+/* ---------------- 進入下一件古物 ---------------- */
 function nextOrder() {
     RUN.orderNo++;
     if (RUN.orderNo > TUNING.totalOrders) { showFinal(); return; }
+
+    // 升級卡「只有下一件古物」生效：每件古物開頭都從底子重算一次，用完就丟。
+    // 這樣每一關的選擇都是新的判斷，不會前面選錯就整局爬不起來
+    M = Object.assign({}, BASE);
+    M.card = RUN.nextCard;
+    if (M.card) M.card.apply(M);
+    RUN.nextCard = null;
 
     const order = generateOrder(RUN.orderNo);
 
@@ -458,12 +518,13 @@ function nextOrder() {
         const locked = order.tasks.filter(t => t.serial && t.stage === 'line');
         if (locked.length) pick(locked).serial = false;
     }
-    // 事件：多一個 🔒
+    // 事件：多一個 🔒（優先挑還沒有 🔒 的修復線，一條線兩個 🔒 會變成沒人加速得了的長鏈）
     if (O.extraSerial) {
-        const free = order.tasks.filter(t => !t.serial && t.stage === 'line');
+        const clean = order.cols.filter(col => col.every(t => !t.serial));
+        const free = (clean.length ? pick(clean) : order.cols.flat()).filter(t => !t.serial);
         if (free.length) pick(free).serial = true;
     }
-    // 事件：機器故障
+    // 事件：碎片特別脆弱
     if (O.brokenPart) {
         const cands = order.tasks.filter(t => t.stage === 'line');
         if (cands.length) { const t = pick(cands); t.dur *= 2; t.broken = true; }
@@ -478,14 +539,18 @@ function nextOrder() {
 
     const workers = Math.max(TUNING.minWorkers, M.workers + O.workerDelta);
     const ideal = simulateOptimal(order, workers);
-    const target = Math.max(5, Math.round(ideal * TUNING.targetSlack * O.targetMul));
+
+    // 星等門檻先算成「整數秒」再存起來，之後評分也用同一組數字，
+    // 畫面上寫 24 秒就真的是 24 秒（不會出現 24.4 秒被判失敗這種事）
+    const t3 = Math.max(4, Math.round(ideal * TUNING.star3 * O.targetMul));
+    const t2 = Math.max(t3 + 2, Math.round(ideal * TUNING.star2 * O.targetMul));
 
     G = {
-        order, workers, ideal, target,
+        order, workers, ideal,
+        star3Time: t3,
+        star2Time: t2,
         elapsed: 0,
         running: false,
-        overtimeLeft: M.overtimeMax,
-        overtimeUntil: 0,
         idleAccum: 0,
         hintShown: false,
         crit: computeCriticalRemaining(order.tasks)
@@ -499,22 +564,45 @@ function nextOrder() {
     }
 
     // 記下開工前的狀態，「重新挑戰」時原封不動還原
-    // （同一張訂單重打，才比得出換一種派工法差多少）
+    // （同一件古物重打，才比得出換一種派工法差多少）
     G.snapshot = order.tasks.map(t => ({ id: t.id, progress: t.progress, done: t.done }));
     G.retries = 0;
 
     showBrief(event);
 }
 
-/* ---------------- 訂單簡報 ---------------- */
+/* ---------------- 委託簡報 ---------------- */
 function showBrief(event) {
     const o = G.order;
     const serialCount = o.tasks.filter(t => t.serial).length;
     const single = singleWorkerTime(o);
 
-    const chips = o.tasks.map(t =>
-        `<span class="bf-chip${t.serial ? ' serial' : ''}">${t.icon} ${t.name}${t.serial ? ' 🔒' : ''}</span>`
-    ).join('');
+    // 關卡配置預覽：排成等一下真正要玩的形狀
+    //（讀資料 → 3 條修復線 → 拼合 → 展出），先看清楚再決定怎麼派人
+    const chip = t =>
+        `<span class="bf-chip${t.serial ? ' serial' : ''}">${t.icon} ${t.name}`
+        + ` <b>${t.dur.toFixed(0)}秒</b>${t.serial ? ' 🔒' : ''}</span>`;
+
+    const layout = `
+        <div class="brief-flow">
+            <div class="bf-row">${chip(o.prep)}</div>
+            <div class="bf-sep">讀完才能開始清碎片</div>
+            <div class="bf-lines">
+                ${o.cols.map(col =>
+                    `<div class="bf-col">${col.map(chip).join('<span class="bf-down">▼</span>')}</div>`
+                ).join('')}
+            </div>
+            <div class="bf-sep">🔗 碎片全部處理完才能拼合</div>
+            <div class="bf-row">${chip(o.join)}<span class="bf-down">▶</span>${chip(o.finish)}</div>
+        </div>`;
+
+    // 本關生效的升級卡（下一關就沒了，講明白）
+    const cardHtml = M.card ? `
+        <div class="brief-card">
+            <span class="bc-icon">${M.card.icon}</span>
+            <span><b>${M.card.title}</b> 生效中<br>
+            <small>${M.card.desc.replace(/<br>/g, ' ')}　·　<b>只有這一件古物有效</b></small></span>
+        </div>` : '';
 
     const eventHtml = event ? `
         <div class="lesson" style="background:var(--warn-bg);border-color:var(--warn-border);text-align:center;">
@@ -523,13 +611,14 @@ function showBrief(event) {
         </div>` : '';
 
     showOverlay(`
-        <div class="ob-icon">${o.product.icon}</div>
-        <h3>訂單 ${RUN.orderNo} / ${TUNING.totalOrders}：${o.product.name}</h3>
-        <p>這張訂單有 <b>${o.tasks.length}</b> 個工作，其中 <b>${serialCount} 個是 🔒</b>（只能一個人做）。</p>
-        <div class="brief-flow">${chips}</div>
+        <div class="ob-icon">${o.artifact.icon}</div>
+        <h3>古物 ${RUN.orderNo} / ${TUNING.totalOrders}：${o.artifact.name}</h3>
+        <p>這件古物有 <b>${o.tasks.length}</b> 項工作，其中 <b>${serialCount} 項是 🔒</b>（只能一個人做）。</p>
+        ${cardHtml}
+        ${layout}
         <div class="stat-row">
             <div class="stat-box">
-                <div class="sb-label">你的工人</div>
+                <div class="sb-label">你的學者</div>
                 <div class="sb-value">${G.workers} 人</div>
             </div>
             <div class="stat-box">
@@ -537,13 +626,18 @@ function showBrief(event) {
                 <div class="sb-value">${single.toFixed(0)} 秒</div>
             </div>
             <div class="stat-box good">
-                <div class="sb-label">目標時間</div>
-                <div class="sb-value">${G.target} 秒</div>
+                <div class="sb-label">⭐⭐⭐ 要在</div>
+                <div class="sb-value">${G.star3Time} 秒內</div>
             </div>
+        </div>
+        <div class="goal-note">
+            <span class="goal g3">⭐⭐⭐ ${G.star3Time} 秒內</span>
+            <span class="goal g2">⭐⭐ ${G.star2Time} 秒內</span>
+            <span class="goal g1">⭐ 做完就有</span>
         </div>
         ${eventHtml}
         <div class="ob-btns">
-            <button class="tf-btn big" onclick="beginOrder()"><i class="fa-solid fa-play"></i> 開工！</button>
+            <button class="tm-btn big" onclick="beginOrder()"><i class="fa-solid fa-play"></i> 開始修復！</button>
         </div>
     `);
 }
@@ -559,14 +653,14 @@ function beginOrder() {
     rafId = requestAnimationFrame(tick);
 }
 
-/* ---------------- 建立產線 DOM ---------------- */
+/* ---------------- 建立修復線 DOM ---------------- */
 function buildBoard() {
     const o = G.order;
     const board = $('board');
     board.innerHTML = '';
 
-    board.appendChild(stageEl([o.prep]));
-    board.appendChild(arrowEl('做完才能開始做零件'));
+    board.appendChild(stageEl([o.prep], true));
+    board.appendChild(arrowEl('讀完才能開始清碎片'));
 
     const lines = document.createElement('div');
     lines.className = 'stage stage-lines';
@@ -586,8 +680,8 @@ function buildBoard() {
     });
     board.appendChild(lines);
 
-    // 接合 → 完工 橫著排：一樣是先後順序，但省下一整列高度給卡片放大
-    board.appendChild(arrowEl('🔗 零件全部到齊才能接合'));
+    // 拼合 → 展出 橫著排：一樣是先後順序，但省下一整列高度給卡片放大
+    board.appendChild(arrowEl('🔗 碎片全部處理完才能拼合'));
     const tail = document.createElement('div');
     tail.className = 'stage stage-tail';
     tail.appendChild(taskEl(o.join, true));
@@ -595,18 +689,25 @@ function buildBoard() {
     tailArrow.className = 'tail-arrow';
     tailArrow.textContent = '▶';
     tail.appendChild(tailArrow);
-    tail.appendChild(taskEl(o.finish));
+    tail.appendChild(taskEl(o.finish, true));
     board.appendChild(tail);
 
     updateBoard();
     fitBoard();
 }
 
-/* 把任務卡放到「整條產線還能一頁看完」的最大尺寸
+/* 把任務卡放到「整條修復線還能一頁看完」的最大尺寸
    （觸控電視上邊玩邊捲動非常難用；而整塊 scale() 縮放等於把按鈕又縮回去，
-     所以改成直接調卡片大小 —— 螢幕越大按鈕就真的越大） */
+     所以改成直接調卡片大小 —— 螢幕越大按鈕就真的越大）
+
+   兩個變數各管一件事：
+     --card-w    ：尺寸尺標。卡片高度、圖示、文字都跟著它，由「垂直空間」決定
+     --card-wide ：只把卡片往橫向拉寬的倍率，由「橫向剩多少」決定
+   後兩關工序多、列數多，垂直被壓得很小，但橫向其實空一大片
+   （3 欄只用掉不到七成）。分開算就能在不動高度的情況下把觸控目標放大。 */
 const CARD_MIN = 104;   // 再小就按不準了
-const CARD_MAX = 272;
+const CARD_MAX = 320;   // 尺寸尺標的上限（再大字也不會更好看）
+const WIDE_MAX = 1.8;   // 最多拉寬到 1.8 倍（約 3:1）；再寬中間的圖示和字就顯得空
 
 function fitBoard() {
     const board = $('board');
@@ -615,24 +716,51 @@ function fitBoard() {
     board.style.marginBottom = '';
 
     // 手機螢幕太窄，縮到能一頁看完會小到按不準；寧可讓它捲動，保住觸控目標大小
-    if (window.innerWidth <= 720) { body.style.removeProperty('--card-w'); return; }
+    if (window.innerWidth <= 720) {
+        body.style.removeProperty('--card-w');
+        body.style.removeProperty('--card-wide');
+        body.style.removeProperty('--flat-w');
+        return;
+    }
 
-    // 產線以外的 UI（標題、狀態列、加班鈕…）佔掉多少高度。
-    // 不能用 board 的 top 來算：body 是垂直置中的，產線一變矮整張卡就往下掉，會互相牽動
-    const overhead = document.querySelector('.tf-card').offsetHeight - board.offsetHeight;
+    // 修復線以外的 UI（標題、狀態列、待命學者…）佔掉多少高度。
+    // 不能用 board 的 top 來算：body 是垂直置中的，修復線一變矮整張卡就往下掉，會互相牽動
+    const overhead = document.querySelector('.tm-card').offsetHeight - board.offsetHeight;
     const avail = window.innerHeight - overhead - 16;   // 16：body 上下留白
 
-    // 橫向也不能爆：最寬那一排是產線的欄數
-    const cols = Math.max(1, G.order.cols.length);
-    const maxByWidth = Math.floor((board.clientWidth - 24 - (cols - 1) * 22) / cols);
+    // 卡片間距和箭頭寬度都是 clamp(…vw…)，跟著視窗變 —— 直接量，不要猜，
+    // 少算幾 px 那一排就會 flex-wrap 折行，board 憑空多一列高度
+    const tail = board.querySelector('.stage-tail');
+    const gap = parseFloat(getComputedStyle(board.querySelector('.stage')).columnGap) || 22;
+    const arrowW = tail ? tail.querySelector('.tail-arrow').offsetWidth : 26;
+    const inner = board.clientWidth - 24;
+
+    /* --- 第一步：用垂直空間決定尺寸尺標 --- */
+    // 試大尺寸時整頁會暫時超出視窗、捲軸跳出來又把寬度吃掉 15px，
+    // 量到的高度就會虛胖（那一排被擠到折行），害搜尋停在不必要的小尺寸。
+    // 量的期間先把捲軸關掉，讓幾何跟最後定案的狀態一致
+    const de = document.documentElement;
+    const prevOverflow = de.style.overflowY;
+    de.style.overflowY = 'hidden';
+
+    // 量高度時先把橫向倍率固定成 1，量完才拉寬（拉寬不影響高度）
+    body.style.setProperty('--card-wide', '1');
+    // 橫躺卡：兩張並排剛好填滿一排（扣掉中間箭頭、兩個間距，再留 4px 安全值）
+    body.style.setProperty('--flat-w', Math.floor((inner - arrowW - gap * 2 - 4) / 2) + 'px');
 
     // 由大往小試，第一個放得下的就是最大可用尺寸
     let best = CARD_MIN;
-    for (let w = Math.min(CARD_MAX, maxByWidth); w >= CARD_MIN; w -= 4) {
+    for (let w = Math.min(CARD_MAX, Math.floor(inner / LINE_COUNT)); w >= CARD_MIN; w -= 4) {
         body.style.setProperty('--card-w', w + 'px');
         if (board.offsetHeight <= avail) { best = w; break; }
     }
     body.style.setProperty('--card-w', best + 'px');
+    de.style.overflowY = prevOverflow;
+
+    /* --- 第二步：高度定案後，橫向剩下的空間全部拿去把卡片拉寬 --- */
+    const perCol = (inner - (LINE_COUNT - 1) * gap - 4) / LINE_COUNT;
+    const wide = Math.max(1, Math.min(WIDE_MAX, perCol / best));
+    body.style.setProperty('--card-wide', wide.toFixed(3));
 
     // 連最小尺寸都塞不下（很矮的螢幕）才退回整體縮放
     const full = board.offsetHeight;
@@ -646,10 +774,10 @@ function fitBoard() {
     }
 }
 
-function stageEl(tasks, wide) {
+function stageEl(tasks, flat) {
     const el = document.createElement('div');
     el.className = 'stage';
-    tasks.forEach(t => el.appendChild(taskEl(t, wide)));
+    tasks.forEach(t => el.appendChild(taskEl(t, flat)));
     return el;
 }
 
@@ -660,14 +788,15 @@ function arrowEl(label) {
     return el;
 }
 
-function taskEl(t, wide) {
+/* flat：讀資料 / 拼合 / 展出 這種一排只有一張的卡，改成橫躺省高度 */
+function taskEl(t, flat) {
     const el = document.createElement('div');
     el.className = 'task-card';
-    if (wide) el.classList.add('wide');
+    if (flat) el.classList.add('flat');
     el.dataset.id = t.id;
     el.innerHTML = `
         <div class="tc-lock">${t.serial ? '🔒' : ''}</div>
-        <button class="tc-recall" title="收回工人">⤺</button>
+        <button class="tc-recall" title="收回學者">⤺</button>
         <div class="tc-icon">${t.icon}</div>
         <div class="tc-name">${t.name}${t.broken ? ' 🔧' : ''}</div>
         <div class="tc-meta">
@@ -708,13 +837,13 @@ function assignWorker(t) {
     const cap = maxWorkersOf(t);
     if (t.workers >= cap) {
         shake(t); sfx('deny');
-        if (t.serial) toast('🔒 這個工作<b>只能一個人做</b>，派再多也不會變快！');
-        else toast(`這個零件最多 ${cap} 個人一起做`);
+        if (t.serial) toast('🔒 這項工作<b>只能一個人做</b>，派再多也不會變快！');
+        else toast(`這塊碎片最多 ${cap} 位學者一起做`);
         return;
     }
     if (assignedTotal() >= G.workers) {
         shake(t); sfx('deny');
-        toast('👷 沒有空的工人了！等別人做完吧');
+        toast('<i class="w-icon"></i> 沒有空的學者了！等別人做完吧');
         return;
     }
     t.workers++;
@@ -741,18 +870,6 @@ function pop(t) {
     t.el.classList.add('pop');
 }
 
-/* ---------------- 加班 ---------------- */
-function useOvertime() {
-    if (!G || !G.running) return;
-    if (G.overtimeLeft <= 0) { toast('加班券用完了！'); return; }
-    G.overtimeLeft--;
-    G.overtimeUntil = G.elapsed + TUNING.overtimeDur;
-    document.body.classList.add('overtime-on');
-    sfx('clear');
-    toast('⚡ 全員加班！速度變兩倍');
-    refreshHud();
-}
-
 /* ---------------- 主迴圈 ---------------- */
 function tick(now) {
     if (!G || !G.running) return;
@@ -760,17 +877,11 @@ function tick(now) {
     G.last = now;
     G.elapsed += dt;
 
-    const overtime = G.elapsed < G.overtimeUntil;
-    if (!overtime && document.body.classList.contains('overtime-on')) {
-        document.body.classList.remove('overtime-on');
-    }
-    const mul = overtime ? TUNING.overtimeMul : 1;
-
     let changed = false;
     G.order.tasks.forEach(t => {
         if (t.done || t.workers === 0) return;
         if (!isReady(t)) { t.workers = 0; changed = true; return; }
-        t.progress += dt * t.workers * mul;
+        t.progress += dt * t.workers;
         if (t.progress >= t.dur) {
             t.progress = t.dur;
             t.done = true;
@@ -784,12 +895,12 @@ function tick(now) {
     const idle = G.workers - assignedTotal();
     G.idleAccum += idle * dt;
 
-    // 提示：有空工人但沒事可做 → 這就是平行的極限
+    // 提示：有空學者但沒事可做 → 這就是平行的極限
     if (!G.hintShown && idle > 0 && G.elapsed > 3) {
         const anyAssignable = G.order.tasks.some(t => !t.done && isReady(t) && t.workers < maxWorkersOf(t));
         if (!anyAssignable) {
             G.hintShown = true;
-            toast('😴 工人沒事做了！<b>再多人也快不了</b>');
+            toast('😴 學者沒事做了！<b>再多人也快不了</b>');
         }
     }
 
@@ -812,7 +923,7 @@ function updateBoard(structural) {
         cls.toggle('working', !t.done && ready && t.workers > 0);
 
         t.barEl.style.width = Math.min(100, (t.progress / t.dur) * 100) + '%';
-        t.workersEl.textContent = t.done ? '' : '👷'.repeat(t.workers);
+        t.workersEl.innerHTML = t.done ? '' : '<i class="w-icon"></i>'.repeat(t.workers);
 
         // 等待提示
         let wait = t.el.querySelector('.tc-wait');
@@ -829,12 +940,21 @@ function updateBoard(structural) {
 
 function refreshHud() {
     const o = G.order;
-    $('hudIcon').textContent = o.product.icon;
-    $('hudName').textContent = o.product.name;
-    $('hudProgress').textContent = `訂單 ${RUN.orderNo} / ${TUNING.totalOrders}`;
+    $('hudIcon').textContent = o.artifact.icon;
+    $('hudName').textContent = o.artifact.name;
+    $('hudProgress').textContent = `古物 ${RUN.orderNo} / ${TUNING.totalOrders}`;
     $('hudTime').textContent = G.elapsed.toFixed(1);
-    $('hudTarget').textContent = G.target;
-    $('hudTime').parentElement.parentElement.classList.toggle('danger', G.elapsed > G.target);
+
+    // 三個星等門檻同時攤在檯面上：現在還拿得到哪一級（now）、哪一級已經飛了（gone）
+    const nowStars = G.elapsed <= G.star3Time ? 3 : G.elapsed <= G.star2Time ? 2 : 1;
+    [3, 2, 1].forEach(s => {
+        const el = $('goal' + s);
+        el.classList.toggle('now', s === nowStars);
+        el.classList.toggle('gone', s > nowStars);
+    });
+    $('goal3Time').textContent = G.star3Time;
+    $('goal2Time').textContent = G.star2Time;
+    $('hudTimer').classList.toggle('danger', nowStars === 1);
 
     const assigned = assignedTotal();
     const idle = G.workers - assigned;
@@ -846,18 +966,13 @@ function refreshHud() {
         slots.innerHTML = '';
         for (let i = 0; i < G.workers; i++) {
             const w = document.createElement('span');
-            w.className = 'worker';
-            w.textContent = '👷';
+            w.className = 'worker w-icon';
             slots.appendChild(w);
         }
     }
     Array.from(slots.children).forEach((w, i) => {
-        w.className = 'worker ' + (i < assigned ? 'busy' : 'idle');
+        w.className = 'worker w-icon ' + (i < assigned ? 'busy' : 'idle');
     });
-
-    const ob = $('btnOvertime');
-    ob.disabled = G.overtimeLeft <= 0;
-    ob.innerHTML = `<i class="fa-solid fa-bolt"></i> 全員加班（剩 ${G.overtimeLeft} 次）`;
 }
 
 /* ================================================================
@@ -866,19 +981,18 @@ function refreshHud() {
 function finishOrder() {
     G.running = false;
     cancelAnimationFrame(rafId);
-    document.body.classList.remove('overtime-on');
     sfx('clear');
 
     const T = G.elapsed;
-    const ideal = G.ideal;
     const single = singleWorkerTime(G.order);
     const limit = simulateOptimal(G.order, 999);
     const speedup = single / T;
     const idleRate = Math.round((G.idleAccum / (G.workers * T)) * 100);
 
+    // 用畫面上顯示的整數秒判定，玩家看到的門檻就是實際門檻
     let stars = 1;
-    if (T <= ideal * TUNING.star3) stars = 3;
-    else if (T <= ideal * TUNING.star2) stars = 2;
+    if (T <= G.star3Time) stars = 3;
+    else if (T <= G.star2Time) stars = 2;
 
     RUN.totalTime += T;
     RUN.stars += stars;
@@ -888,10 +1002,21 @@ function finishOrder() {
     const serialSum = G.order.tasks.filter(t => t.serial).reduce((s, t) => s + t.dur, 0);
     const serialPct = Math.round((serialSum / single) * 100);
 
+    // 差幾秒就升一級，講清楚才知道下一次要拚什麼
+    const nextTier = stars === 3 ? '' :
+        `<p class="goal-gap">再快 <b>${(T - (stars === 2 ? G.star3Time : G.star2Time)).toFixed(1)} 秒</b>`
+        + `就能拿到 ${stars === 2 ? '⭐⭐⭐' : '⭐⭐'}！</p>`;
+
     showOverlay(`
-        <div class="ob-icon">${stars === 3 ? '🏆' : stars === 2 ? '👍' : '📦'}</div>
-        <h3>出貨完成！</h3>
+        <div class="ob-icon">${stars === 3 ? '🏆' : stars === 2 ? '👍' : '🖼️'}</div>
+        <h3>順利展出！</h3>
         <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
+        <div class="goal-note">
+            <span class="goal g3${stars === 3 ? ' now' : ' gone'}">⭐⭐⭐ ${G.star3Time} 秒內</span>
+            <span class="goal g2${stars === 2 ? ' now' : stars < 2 ? ' gone' : ''}">⭐⭐ ${G.star2Time} 秒內</span>
+            <span class="goal g1${stars === 1 ? ' now' : ''}">⭐ 做完就有</span>
+        </div>
+        ${nextTier}
         <div class="stat-row">
             <div class="stat-box good">
                 <div class="sb-label">你的時間</div>
@@ -907,19 +1032,19 @@ function finishOrder() {
             </div>
         </div>
         <div class="lesson">
-            <h4>💡 這張訂單告訴我們</h4>
+            <h4>💡 這件古物告訴我們</h4>
             <p>
-                你有 <b>${G.workers} 位</b>工人，但只快了 <b>${speedup.toFixed(1)} 倍</b>，不是 ${G.workers} 倍。<br>
+                你有 <b>${G.workers} 位</b>學者，但只快了 <b>${speedup.toFixed(1)} 倍</b>，不是 ${G.workers} 倍。<br>
                 因為這裡面有 <b>🔒 只能一個人做</b> 的工作，占了大約 <b>${serialPct}%</b> 的時間。<br>
-                就算請來 <b>一百個工人</b>，這張訂單最快也只能到 <b>${limit.toFixed(1)} 秒</b>。
+                就算請來 <b>一百位學者</b>，這件古物最快也只能到 <b>${limit.toFixed(1)} 秒</b>。
             </p>
-            <p class="term">工人閒置率 ${idleRate}%　·　電腦科學裡，這叫「阿姆達爾定律 Amdahl's Law」</p>
+            <p class="term">學者閒置率 ${idleRate}%　·　電腦科學裡，這叫「阿姆達爾定律 Amdahl's Law」</p>
         </div>
         <div class="ob-btns">
-            <button class="tf-btn ghost" onclick="retryOrder()">
-                <i class="fa-solid fa-rotate-left"></i> 重新挑戰這張訂單
+            <button class="tm-btn ghost" onclick="retryOrder()">
+                <i class="fa-solid fa-rotate-left"></i> 重新挑戰這件古物
             </button>
-            <button class="tf-btn big" onclick="showUpgrades()">
+            <button class="tm-btn big" onclick="showUpgrades()">
                 ${RUN.orderNo >= TUNING.totalOrders ? '看看總成績' : '選一張升級卡'} <i class="fa-solid fa-chevron-right"></i>
             </button>
         </div>
@@ -927,7 +1052,7 @@ function finishOrder() {
     `);
 }
 
-/* ---------------- 重新挑戰同一張訂單 ---------------- */
+/* ---------------- 重新挑戰同一件古物 ---------------- */
 function retryOrder() {
     if (!G || !G.snapshot) return;
 
@@ -951,11 +1076,8 @@ function retryOrder() {
 
     G.elapsed = 0;
     G.running = false;
-    G.overtimeLeft = M.overtimeMax;
-    G.overtimeUntil = 0;
     G.idleAccum = 0;
     G.hintShown = false;
-    document.body.classList.remove('overtime-on');
 
     toast(`🔄 重新挑戰（第 ${G.retries + 1} 次）`);
     beginOrder();
@@ -969,18 +1091,23 @@ function showUpgrades() {
     const cards = drawUpgrades(3);
     window.__cards = cards;
 
-    // 依照下一張訂單的狀況給提示，引導思考「加人 vs 改流程」
-    const hint = M.workers >= 6
-        ? '你的工人已經很多了，想想看：<b>再加人真的有用嗎？</b>'
-        : '想想看：這一局你缺的是<b>人手</b>，還是<b>更順的流程</b>？';
+    // 修復台同時最多站得下 3 條線 × 每項工作的上限 —— 拿這個引導「加人 vs 改流程」
+    const capacity = LINE_COUNT * (TUNING.baseMaxWorkers + BASE.benchBonus);
+    const hint = `下一件古物的修復台最多只站得下 <b>${capacity} 位</b>學者，你手上有 <b>${BASE.workers} 位</b>。`
+        + `想想看：缺的是<b>人手</b>，還是<b>更順的流程</b>？`;
 
     showOverlay(`
         <div class="ob-icon">🎁</div>
-        <h3>工廠升級！選一張</h3>
+        <h3>研究室升級！選一張</h3>
         <p>${hint}</p>
+        <div class="notice">
+            ⏳ 升級卡<b>只在下一件古物生效</b>，做完就失效 —— 每一件都要重新選一張，
+            所以要看「<b>下一件古物長什麼樣</b>」來挑。選完會先讓你看配置再開工。
+        </div>
         <div class="card-row">
             ${cards.map((c, i) => `
                 <div class="up-card" onclick="chooseUpgrade(${i})">
+                    <div class="uc-tag">只有下一件</div>
                     <div class="uc-icon">${c.icon}</div>
                     <div class="uc-title">${c.title}</div>
                     <div class="uc-desc">${c.desc}</div>
@@ -992,10 +1119,11 @@ function showUpgrades() {
 
 function chooseUpgrade(i) {
     const c = window.__cards[i];
-    c.apply(M);
-    M.picked.push(c.title);
+    // 不直接改 BASE：存起來，等 nextOrder() 只套用在下一件古物上
+    RUN.nextCard = c;
+    RUN.picked.push(c.title);
     sfx('done');
-    toast(`${c.icon} 已升級：<b>${c.title}</b>`);
+    toast(`${c.icon} <b>${c.title}</b>　只有下一件古物有效！`);
     hideOverlay();
     nextOrder();
 }
@@ -1024,7 +1152,7 @@ function amdahlChart(order) {
 
     return `
     <div class="amdahl-chart">
-        <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="工人數與完成時間的關係圖">
+        <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="學者數與完成時間的關係圖">
             <line x1="${pad}" y1="${H - pad}" x2="${W - pad}" y2="${H - pad}" stroke="var(--border-strong)" stroke-width="2"/>
             <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H - pad}" stroke="var(--border-strong)" stroke-width="2"/>
             <line x1="${pad}" y1="${y(limit).toFixed(1)}" x2="${W - pad}" y2="${y(limit).toFixed(1)}"
@@ -1034,10 +1162,10 @@ function amdahlChart(order) {
             </text>
             <path d="${path}" fill="none" stroke="var(--g1)" stroke-width="4" stroke-linejoin="round"/>
             ${dots}${ticks}
-            <text x="${W / 2}" y="${H - 6}" font-size="13" text-anchor="middle" fill="var(--muted)">工人數量 →</text>
+            <text x="${W / 2}" y="${H - 6}" font-size="13" text-anchor="middle" fill="var(--muted)">學者數量 →</text>
         </svg>
         <div class="ac-caption">
-            這是最後一張訂單的模擬：工人從 1 個加到 16 個，時間<b>一開始掉很快，後來幾乎不動</b>。
+            這是最後一件古物的模擬：學者從 1 位加到 16 位，時間<b>一開始掉很快，後來幾乎不動</b>。
         </div>
     </div>`;
 }
@@ -1056,8 +1184,8 @@ function showFinal() {
     }
 
     showOverlay(`
-        <div class="ob-icon">🏭</div>
-        <h3>五張訂單全部出貨！</h3>
+        <div class="ob-icon">🏛️</div>
+        <h3>五件古物全部展出！</h3>
         <div class="stars">${'⭐'.repeat(Math.min(RUN.stars, 15))}</div>
         <div class="stat-row">
             <div class="stat-box good">
@@ -1069,8 +1197,8 @@ function showFinal() {
                 <div class="sb-value">${RUN.totalTime.toFixed(0)} 秒</div>
             </div>
             <div class="stat-box">
-                <div class="sb-label">最後工人</div>
-                <div class="sb-value">${M.workers} 人</div>
+                <div class="sb-label">用過升級卡</div>
+                <div class="sb-value">${RUN.picked.length} 張</div>
             </div>
         </div>
         ${isNew ? '<p style="color:var(--good);font-weight:700;">🎉 破紀錄了！</p>' : ''}
@@ -1078,20 +1206,20 @@ function showFinal() {
         <div class="lesson">
             <h4>💡 今天學到的事</h4>
             <p>
-                <b>一、人多真的比較快</b>——大家同時做不同的零件，這叫<b>平行處理</b>。<br>
+                <b>一、人多真的比較快</b>——大家同時處理不同的碎片，這叫<b>平行處理</b>。<br>
                 <b>二、但快不了幾倍</b>——因為 🔒 只能一個人做的工作，和 🔗 要排隊等的工作，
                 不管來幾個人，都得乖乖花那些時間。<br>
                 <b>三、所以有時候「改流程」比「加人」更有效</b>——把 🔒 拆開、縮短，
-                比多請十個工人還有用。
+                比多請十位學者還有用。
             </p>
             <p class="term">
-                電腦裡的「工人」就是 <b>CPU 核心</b>。核心從 4 個變 8 個，程式卻沒有快一倍，
+                電腦裡的「學者」就是 <b>CPU 核心</b>。核心從 4 個變 8 個，程式卻沒有快一倍，
                 就是因為這件事——這叫「<b>阿姆達爾定律</b>（Amdahl's Law）」。
             </p>
         </div>
         <div class="ob-btns">
-            <button class="tf-btn big" onclick="restartRun()"><i class="fa-solid fa-rotate-left"></i> 再開一局</button>
-            <button class="tf-btn ghost" onclick="backToStart()">回到首頁畫面</button>
+            <button class="tm-btn big" onclick="restartRun()"><i class="fa-solid fa-rotate-left"></i> 再開一局</button>
+            <button class="tm-btn ghost" onclick="backToStart()">回到首頁畫面</button>
         </div>
     `);
 }
@@ -1110,19 +1238,19 @@ function backToStart() {
     renderBest();
 }
 
-/* ---------------- 最佳紀錄 ---------------- */
+/* ---------------- 最佳紀錄 ----------------
+   儲存鍵沿用舊的 'tf-best'：改名等於把每台電腦上已經存的紀錄清成空白 */
 function renderBest() {
     let best = null;
     try { best = JSON.parse(localStorage.getItem('tf-best')); } catch (e) { best = null; }
     $('bestRecord').innerHTML = best
         ? `🏅 最佳紀錄：<b>${best.stars} 顆星</b>，總共 <b>${best.totalTime.toFixed(0)} 秒</b>`
-        : '每一局的訂單、零件、升級卡都不一樣';
+        : '每一局的古物、碎片、升級卡都不一樣';
 }
 
 /* ---------------- 啟動 ---------------- */
 document.addEventListener('DOMContentLoaded', () => {
     renderBest();
     $('btnStart').addEventListener('click', startRun);
-    $('btnOvertime').addEventListener('click', useOvertime);
     window.addEventListener('resize', () => { if (G && G.order && G.order.prep.el) fitBoard(); });
 });

@@ -3,44 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>極速工廠 · 該加人還是改流程？</title>
+    <title>極速博物館 · 該加人還是改流程？</title>
     <link rel="icon" type="image/png" href="../assets/images/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/theme.css">
-    <link rel="stylesheet" href="../assets/css/turbo-factory.css">
+    <link rel="stylesheet" href="../assets/css/turbo-museum.css">
 </head>
 <body>
 
-<div class="tf-card">
+<div class="tm-card">
 
     <!-- ---------- 頂部標題 ---------- -->
-    <div class="tf-header">
+    <div class="tm-header">
         <a href="../index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i> 主頁</a>
-        <div class="header-icon">🏭</div>
-        <h1>極速工廠</h1>
-        <p>派工人做零件，看誰最快出貨 · 該加人？還是改流程？</p>
+        <div class="header-icon">🏛️</div>
+        <h1>極速博物館</h1>
+        <p>派學者修復古物，看誰最快展出 · 該加人？還是改流程？</p>
     </div>
 
     <!-- ---------- 開始畫面 ---------- -->
-    <div class="tf-screen" id="startScreen">
-        <div class="start-hero">🤖</div>
-        <h2>今天你是工廠廠長</h2>
+    <div class="tm-screen" id="startScreen">
+        <div class="start-hero"><span class="w-icon"></span></div>
+        <h2>今天你是博物館館長</h2>
         <p class="start-lead">
-            接下 <b>5 張訂單</b>，把產品組裝出貨。<br>
-            <b>點一下零件</b>就會派工人過去做，做完就出貨！
+            接下 <b>5 件古物</b>，帶學者把它們修復好、送上展櫃。<br>
+            <b>點一下碎片</b>就會派學者過去研究，全部做完就開展！
         </p>
 
         <div class="start-rules">
             <div class="rule">
-                <div class="rule-icon">👷</div>
-                <div><b>人多做得快</b><br><small>同一個零件可以派好幾個工人，速度加倍</small></div>
+                <div class="rule-icon"><span class="w-icon"></span></div>
+                <div><b>人多做得快</b><br><small>同一塊碎片可以派好幾位學者，速度加倍</small></div>
             </div>
             <div class="rule">
                 <div class="rule-icon">🔒</div>
-                <div><b>有些工作只能一個人做</b><br><small>派再多工人也不會變快</small></div>
+                <div><b>有些工作只能一個人做</b><br><small>派再多學者也不會變快</small></div>
             </div>
             <div class="rule">
                 <div class="rule-icon">🔗</div>
@@ -50,49 +50,47 @@
 
         <div class="best-record" id="bestRecord"></div>
 
-        <button class="tf-btn big" id="btnStart">
-            <i class="fa-solid fa-play"></i> 開始經營
+        <button class="tm-btn big" id="btnStart">
+            <i class="fa-solid fa-play"></i> 開始策展
         </button>
     </div>
 
     <!-- ---------- 遊戲畫面 ---------- -->
-    <div class="tf-screen hidden" id="gameScreen">
+    <div class="tm-screen hidden" id="gameScreen">
 
         <!-- 狀態列 -->
         <div class="hud">
             <div class="hud-order">
-                <span class="order-icon" id="hudIcon">🤖</span>
+                <span class="order-icon" id="hudIcon">🦖</span>
                 <span>
-                    <b id="hudName">戰鬥機器人</b>
-                    <small id="hudProgress">訂單 1 / 5</small>
+                    <b id="hudName">恐龍化石</b>
+                    <small id="hudProgress">古物 1 / 5</small>
                 </span>
             </div>
-            <div class="hud-timer">
+            <div class="hud-timer" id="hudTimer">
                 <div class="t-label">已經過</div>
                 <div class="t-value"><span id="hudTime">0.0</span><small>秒</small></div>
             </div>
-            <div class="hud-target">
-                <div class="t-label">目標</div>
-                <div class="t-value"><span id="hudTarget">30</span><small>秒</small></div>
+            <!-- 三個星等門檻直接寫出來，不再只給一個看不出是幾顆星的「目標」 -->
+            <div class="hud-goals">
+                <div class="t-label">星等目標</div>
+                <div class="goal-note">
+                    <span class="goal g3" id="goal3">⭐⭐⭐ <b id="goal3Time">0</b> 秒內</span>
+                    <span class="goal g2" id="goal2">⭐⭐ <b id="goal2Time">0</b> 秒內</span>
+                    <span class="goal g1" id="goal1">⭐ 做完就有</span>
+                </div>
             </div>
         </div>
 
-        <!-- 工人待命區 -->
+        <!-- 學者待命區 -->
         <div class="worker-bar">
-            <div class="wb-label">待命工人</div>
+            <div class="wb-label">待命學者</div>
             <div class="wb-slots" id="workerSlots"></div>
             <div class="wb-count"><span id="idleCount">4</span> / <span id="totalCount">4</span></div>
         </div>
 
-        <!-- 產線 -->
+        <!-- 修復線 -->
         <div class="board" id="board"></div>
-
-        <!-- 底部動作 -->
-        <div class="action-bar">
-            <button class="tf-btn ghost" id="btnOvertime">
-                <i class="fa-solid fa-bolt"></i> 全員加班（限一次）
-            </button>
-        </div>
     </div>
 
     <a href="../index.html" class="foot-link"><i class="fa-solid fa-chevron-left"></i> 回到學習主頁</a>
@@ -104,7 +102,7 @@
 </div>
 <div class="toast-area" id="toastArea"></div>
 
-<script src="../assets/js/turbo-factory.js"></script>
+<script src="../assets/js/turbo-museum.js"></script>
 <script src="../assets/js/theme.js"></script>
 </body>
 </html>
