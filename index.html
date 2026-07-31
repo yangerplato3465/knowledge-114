@@ -163,6 +163,11 @@
         .page-btn .btn-desc { font-size: 13px; color: var(--muted); font-weight: 400; }
         .page-btn .btn-arrow { margin-left: auto; font-size: 16px; color: var(--muted-2); }
 
+        /* 直接連到單一頁面的大主題（沒有下拉） */
+        .category-link { display: block; text-decoration: none; color: inherit; }
+        .category-link:hover { border-color: var(--primary); }
+        .category-link:hover .cat-chevron { color: var(--primary); transform: translateX(4px); }
+
         /* ---------- 手機版 ---------- */
         @media (max-width: 600px) {
             body { padding: 24px 12px; }
@@ -272,6 +277,18 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 偵探事件簿（直接進入遊戲頁） -->
+            <a href="pages/detective.html" class="category category-link">
+                <div class="category-head">
+                    <div class="cat-icon">🔍</div>
+                    <div class="cat-text">
+                        <div class="cat-title">偵探事件簿</div>
+                        <div class="cat-desc">點擊尋找線索 · 推理破案</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right cat-chevron"></i>
+                </div>
+            </a>
 
             <!-- 素材 -->
             <div class="category">
