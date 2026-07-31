@@ -19,6 +19,7 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    min-height: 100dvh;   /* 手機網址列收合／展開時不會少一截 */
     margin: 0;
     padding: 32px 16px;
     font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
@@ -84,15 +85,36 @@ body {
    （觸控電視畫面不高，修復線一定要一頁看完） */
 body.playing {
     padding: 4px;
-    /* 任務卡寬度＝觸控目標大小。跟著視窗寬「和」高一起長：
-       螢幕越大按鈕越大，但矮螢幕不會長到讓修復線一頁放不下
-       （開工後 fitBoard() 會算出實際值蓋掉這裡，這是還沒算完前的預設） */
+    /* 滿版：整張卡撐滿視窗高度，修復線才「拿得到」剩下的所有垂直空間。
+       舊做法是把卡片垂直置中、再由 JS 把修復線縮到塞得下 —— 列數少的前幾關
+       會在上下各留一大片死白（1080p 上量到 421px）。改成撐滿後，多出來的
+       空間由 .board 的 space-evenly 變成列距，而不是螢幕外圍的白邊。
+       dvh：手機網址列收合時不會被裁掉 */
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
+    align-items: stretch;
+    /* 任務卡寬度＝觸控目標大小（開工後 fitBoard() 會算出實際值蓋掉這裡） */
     --card-w: clamp(150px, min(16vw, 24vh), 300px);
 }
-/* 打起來時整張卡加寬，把空間全給修復線。
-   卡片現在會自己拉寬去填滿一排（見 fitBoard() 的 --card-wide），
-   所以容器越寬 = 中間那幾排的觸控目標越寬，1720px 幾乎用滿 1080p 的橫向空間 */
-body.playing .tm-card { width: min(1720px, 100%); }
+/* 打起來時整張卡填滿視窗，把空間全給修復線。
+   不再用固定的 1720px 上限 —— 那在 2560 寬的螢幕上會空掉 840px。
+   真正決定內容多寬的是 --content-w（由 fitBoard() 依卡片尺寸算），
+   容器負責填滿螢幕，內容在裡面置中 */
+body.playing .tm-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+/* 垂直空間的傳遞鏈：.tm-card → #gameScreen → .board，中間任何一層漏掉
+   min-height:0，board 就會被內容撐大而不是拿到「剩下的」高度 */
+body.playing #gameScreen {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
 body.playing .tm-header { padding: 12px 40px 11px; }
 body.playing .tm-header .header-icon,
 body.playing .tm-header p,
@@ -214,6 +236,8 @@ body.playing .tm-screen { padding-top: 14px; }
     body.playing #gameScreen {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 32%);
+        /* 第二列 minmax(0,1fr)：修復線吃掉狀態列以外的全部高度 */
+        grid-template-rows: auto minmax(0, 1fr);
         gap: 12px 14px;
     }
     body.playing #gameScreen > .hud,
@@ -233,7 +257,21 @@ body.playing .tm-screen { padding-top: 14px; }
     /* 高度不夠時由 fitBoard() 動態縮放，確保整條修復線一頁看完（觸控電視必要） */
     transform-origin: top center;
 }
-.stage { display: flex; justify-content: center; gap: clamp(12px, 1.1vw, 22px); flex-wrap: wrap; }
+/* 開工後修復線佔滿剩餘高度；卡片放到最大後還有剩的空間，
+   由 space-evenly 平均分給各列之間，看起來是「排得開」而不是「下面空一塊」 */
+body.playing .board {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+/* --content-w：卡片放大到上限後、內容實際需要的寬度。
+   超寬螢幕（21:9）容器仍然滿版，但內容收在中間，不會被拉成 5:1 的長條 */
+.stage {
+    display: flex; justify-content: center; gap: clamp(12px, 1.1vw, 22px); flex-wrap: wrap;
+    width: 100%; max-width: var(--content-w, none); margin-left: auto; margin-right: auto;
+}
 /* 這兩排一律不折行：寬度差幾 px 就折行的話，會憑空多出一整列高度，
    卡片尺寸的計算跟著全亂（寧可讓卡片縮一點也不要折） */
 .stage-lines, .stage-tail { flex-wrap: nowrap; }
@@ -257,11 +295,13 @@ body.playing .tm-screen { padding-top: 14px; }
 /* ---------- 任務卡（觸控主目標） ---------- */
 .task-card {
     position: relative;
-    /* 高度、圖示、文字都跟著 --card-w（尺寸尺標，由垂直空間決定）；
-       --card-wide 只把寬度往橫向拉，高度完全不受影響
-       —— 後兩關列數多、垂直被壓縮時，靠這個把觸控目標補回來 */
+    /* 三個尺標各管一軸，任何長寬比都能把兩軸用滿：
+         --card-w    圖示、文字、內距的尺寸尺標（取兩軸較小者，字才不會爆版）
+         --card-wide 只把寬度往橫向拉的倍率（由「一欄有多寬」決定）
+         --card-h    卡片高度（由「垂直空間 ÷ 最深關卡的列數」決定）
+       高度不再是寬度的固定比例 —— 那正是 4:3、直立平板浪費垂直空間的原因 */
     width: calc(var(--card-w, 150px) * var(--card-wide, 1));
-    min-height: calc(var(--card-w, 150px) * 0.6);
+    min-height: var(--card-h, calc(var(--card-w, 150px) * 0.6));
     background: var(--surface);
     border: 3px solid var(--border-strong);
     border-radius: 18px;
@@ -429,7 +469,7 @@ body.playing .tm-screen { padding-top: 14px; }
     border-radius: 28px;
     padding: 30px 34px;
     width: 760px; max-width: 100%;
-    max-height: 92vh; overflow-y: auto;
+    max-height: 92vh; max-height: 92dvh; overflow-y: auto;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     animation: tm-in 0.28s ease;
@@ -608,6 +648,12 @@ body.playing .tm-screen { padding-top: 14px; }
 /* ---------- 手機 / 平板 ---------- */
 @media (max-width: 720px) {
     body { padding: 14px 8px; }
+    /* 手機不鎖高度：這裡本來就是「寧可捲動、保住觸控目標大小」的策略
+       （fitBoard() 在 ≤720px 也會直接放手）。若跟著鎖成 100dvh，
+       修復線會被 .tm-card 的 overflow:hidden 裁掉、而且捲不到 */
+    body.playing { height: auto; min-height: 100dvh; align-items: flex-start; }
+    body.playing .tm-card { height: auto; }
+    body.playing .board { flex: 0 0 auto; }
     .tm-card { border-width: 6px; border-radius: 24px; }
     .tm-screen { padding: 18px 14px 6px; }
     .tm-header { padding: 22px 20px 18px; }

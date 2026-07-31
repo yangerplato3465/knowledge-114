@@ -24,10 +24,20 @@ const TUNING = {
     baseMaxWorkers: 3,       // 一般碎片最多幾人同時做
     minWorkers: 2,           // 事件扣人後的保底（低於 2 就感受不到「平行」了）
     eventChance: 0.4,        // 每關出現隨機事件的機率（第 1 關不觸發，先讓學生熟悉操作）
-    // 星等門檻 = 理想時間 × 倍率。理想時間是電腦用最佳派工法跑出來的，
-    // 所以倍率一定要 > 1，不然玩家再怎麼快也拿不到
-    star3: 1.20,             // ⭐⭐⭐
-    star2: 1.55              // ⭐⭐（再慢就是 ⭐，做完至少有一顆）
+    /* 星等門檻 = 理想時間 × 倍率 + 反應寬限。理想時間是電腦用最佳派工法跑出來的，
+       玩家不可能比它快，所以門檻一定要比它寬。
+
+       關鍵是「寬多少」要拆成兩份：
+         grace  人不是機器 —— 每張卡亮起來到手指點下去的固定成本，跟關卡長短無關
+         star3  真正的難度旋鈕 —— 按比例給的餘裕
+       以前只有倍率（×1.20），於是短關卡只多給 3.6 秒、長關卡卻多給 10 秒，
+       越後面反而越好拿三星。改成 ×1.10 + 1.5 秒之後，把「每張卡最多能慢幾秒」
+       壓成第 1 關 0.82 秒、第 5 關 1.43 秒（原本是 0.87 → 2.06 秒）：
+       第 1 關門檻沒變（22 秒，還是學得起來），後面四關全部收緊
+       （29→28、39→37、48→45、61→57 秒）。 */
+    star3: 1.10,             // ⭐⭐⭐
+    star2: 1.55,             // ⭐⭐（再慢就是 ⭐，做完至少有一顆）
+    grace: 1.5               // 兩級門檻共用的反應寬限（秒）
 };
 
 /* ---------------- 關卡設計（一行一件古物） ----------------
@@ -133,39 +143,50 @@ const ARTIFACTS = [
     }
 ];
 
-/* ---------------- 升級卡（每關結束三選一） ---------------- */
+/* ---------------- 升級卡（每關結束三選一） ----------------
+   八張卡的強度用排程模擬跑過（第 2~5 關各 150 局，比「有這張卡」和「沒有」的
+   理想時間差幾 %）。原本從 0% 到 20% 都有，等於三選一裡常常有兩張是白牌：
+     加大修復台 0.0%   ← 底子只有 3 位學者、剛好 3 條修復線，
+     拆解工序   1.3%      根本湊不出第 4 個人去塞同一塊碎片，
+                          解開修復線上的 🔒 也一樣沒有多的人可以派
+     整理研究手冊/助理先開工 20.4%   ← 明顯的必選牌
+   調完之後八張都落在 10~18%，每一張都值得考慮，也才選得下去。 */
 const UPGRADES = [
     {
         id: 'hire2', icon: '👥', title: '招募學者', desc: '學者 <b>+2</b> 人',
-        weight: 4, apply: M => { M.workers += 2; }
+        weight: 4, apply: M => { M.workers += 2; }            // 17.6%
     },
     {
-        id: 'hire3', icon: '🏢', title: '大擴編', desc: '學者 <b>+3</b> 人<br>但所有工時 <b>+10%</b>',
-        weight: 2, apply: M => { M.workers += 3; M.allSpeed *= 0.9; }
+        id: 'hire3', icon: '🏢', title: '大擴編', desc: '學者 <b>+3</b> 人<br>但所有工時 <b>+5%</b>',
+        weight: 2, apply: M => { M.workers += 3; M.allSpeed *= 0.95; }   // 14.5%（原 -10% 只有 9.8%）
     },
     {
-        id: 'simplify', icon: '📖', title: '整理研究手冊', desc: '🔒 只能一個人做的工作<br>時間 <b>-40%</b>',
-        weight: 4, apply: M => { M.serialSpeed *= 1.67; }
+        id: 'simplify', icon: '📖', title: '整理研究手冊', desc: '🔒 只能一個人做的工作<br>時間 <b>-30%</b>',
+        weight: 4, apply: M => { M.serialSpeed *= 1.43; }     // 15.3%（原 -40% 是 20.4%）
     },
     {
-        id: 'unlock', icon: '🔓', title: '拆解工序', desc: '每件古物隨機 <b>1 個 🔒</b><br>變成大家可以一起做',
-        weight: 3, apply: M => { M.unlockSerial += 1; }
+        // 改成固定拆「讀資料」：那是全場最前面、大家都在乾等的 🔒，
+        // 也是「改流程」最好懂的示範。原本隨機拆修復線上的 🔒 只值 1.3%
+        id: 'unlock', icon: '🔓', title: '拆解工序', desc: '<b>讀資料</b>不再是 🔒<br>大家可以一起查',
+        weight: 3, apply: M => { M.unlockPrep = true; }       // 13.5%
     },
     {
         id: 'skilled', icon: '⚡', title: '熟練學者', desc: '所有工作速度 <b>+15%</b>',
-        weight: 4, apply: M => { M.allSpeed *= 1.15; }
+        weight: 4, apply: M => { M.allSpeed *= 1.15; }        // 13.0%
     },
     {
-        id: 'bench', icon: '🛠️', title: '加大修復台', desc: '每塊碎片可容納的<br>學者 <b>+1</b> 位',
-        weight: 3, apply: M => { M.benchBonus += 1; }
+        // 光是加容量沒有用（沒有多的人可以塞），一定要配一位學者才成立。
+        // 跟「招募學者 +2」的差別是：人少一個，但可以疊在同一塊碎片上
+        id: 'bench', icon: '🛠️', title: '加大修復台', desc: '學者 <b>+1</b> 人<br>每塊碎片可多容納 <b>1 位</b>',
+        weight: 3, apply: M => { M.workers += 1; M.benchBonus += 1; }    // 15.5%
     },
     {
-        id: 'auto', icon: '📋', title: '助理先開工', desc: '每件古物的<br><b>第一項工作自動完成</b>',
-        weight: 3, apply: M => { M.autoPrep = true; }
+        id: 'auto', icon: '📋', title: '助理先開工', desc: '每件古物的<br><b>第一項工作先做好一半</b>',
+        weight: 3, apply: M => { M.prepBoost = 0.5; }         // 10.2%（原本整項做完是 20.4%）
     },
     {
-        id: 'prefab', icon: '🧹', title: '預先清理', desc: '每件古物開始時<br>隨機 <b>2 塊碎片做好一半</b>',
-        weight: 3, apply: M => { M.prefab += 2; }
+        id: 'prefab', icon: '🧹', title: '預先清理', desc: '每件古物開始時<br>隨機 <b>3 塊碎片做好一半</b>',
+        weight: 3, apply: M => { M.prefab += 3; }             // 13.0%（原 2 塊是 8.4%）
     }
 ];
 
@@ -176,9 +197,10 @@ const EVENTS = [
         weight: 3, apply: O => { O.workerDelta -= 1; }
     },
     {
-        // 門檻是「理想時間 × 1.2」，再砍太多就變成神也拿不到三顆星，10% 剛好有壓力
-        icon: '🎫', title: '特展提前開幕！', text: '館長把檔期提前，星等時間全部 <b>縮短 10%</b>。',
-        weight: 3, apply: O => { O.targetMul *= 0.90; }
+        // 門檻本身已經收緊到「理想時間 × 1.12」，這裡再砍 10% 等於只剩 1%，
+        // 神也拿不到三顆星。跟著改成 5%，還是有壓力但不是死局
+        icon: '🎫', title: '特展提前開幕！', text: '館長把檔期提前，星等時間全部 <b>縮短 5%</b>。',
+        weight: 3, apply: O => { O.targetMul *= 0.95; }
     },
     {
         icon: '🎓', title: '資深研究員來指導', text: '這件古物所有 <b>🔒 工作快 30%</b>！',
@@ -409,12 +431,17 @@ function computeCriticalRemaining(tasks) {
     return memo;
 }
 
-/* 模擬 N 個學者的最佳完成時間（秒） */
-function simulateOptimal(order, workerCount) {
-    // 一律從頭重跑（不看玩家當下進度），算的是這件古物的「理想時間」
-    const tasks = order.tasks.map(t => ({
-        id: t.id, deps: t.deps, serial: t.serial, remain: t.dur, done: false
-    }));
+/* 模擬 N 個學者的最佳完成時間（秒）
+   head：開場就先送的進度（id → 秒），升級卡「助理先開工 / 預先清理」用。
+   不傳就是從零開始 —— 一律不看玩家當下的進度，算的是這件古物的「理想時間」 */
+function simulateOptimal(order, workerCount, head) {
+    const tasks = order.tasks.map(t => {
+        const got = (head && head[t.id]) || 0;
+        return {
+            id: t.id, deps: t.deps, serial: t.serial,
+            remain: Math.max(0, t.dur - got), done: t.dur - got <= 0
+        };
+    });
 
     const crit = computeCriticalRemaining(order.tasks);
     const byId = {};
@@ -469,8 +496,8 @@ function newRun() {
         allSpeed: 1,
         serialSpeed: 1,
         benchBonus: 0,
-        unlockSerial: 0,
-        autoPrep: false,
+        unlockPrep: false,
+        prepBoost: 0,      // 開場先幫「讀資料」做掉幾成
         prefab: 0
     };
     M = Object.assign({}, BASE);
@@ -513,11 +540,8 @@ function nextOrder() {
         event.apply(O);
     }
 
-    // 套用永久 modifier：解除 🔒
-    for (let i = 0; i < M.unlockSerial; i++) {
-        const locked = order.tasks.filter(t => t.serial && t.stage === 'line');
-        if (locked.length) pick(locked).serial = false;
-    }
+    // 升級卡「拆解工序」：讀資料改成大家可以一起查
+    if (M.unlockPrep) order.prep.serial = false;
     // 事件：多一個 🔒（優先挑還沒有 🔒 的修復線，一條線兩個 🔒 會變成沒人加速得了的長鏈）
     if (O.extraSerial) {
         const clean = order.cols.filter(col => col.every(t => !t.serial));
@@ -538,12 +562,23 @@ function nextOrder() {
     });
 
     const workers = Math.max(TUNING.minWorkers, M.workers + O.workerDelta);
-    const ideal = simulateOptimal(order, workers);
+
+    /* 開場優惠要先發，星等門檻才知道玩家已經先賺到多少。
+       以前是先算門檻、再送進度 —— 那等於白送一段時間，「助理先開工」和
+       「預先清理」兩張卡就成了穩拿三星的選擇，另外六張卡因為都算進理想時間裡
+       反而不影響星等。同樣是三選一，強度差這麼多就沒得選了 */
+    const head = {};
+    if (M.prepBoost) head[order.prep.id] = order.prep.dur * M.prepBoost;
+    for (let i = 0; i < M.prefab; i++) {
+        const cands = order.tasks.filter(t => t.stage === 'line' && !head[t.id]);
+        if (cands.length) { const t = pick(cands); head[t.id] = t.dur * 0.5; }
+    }
+    const ideal = simulateOptimal(order, workers, head);
 
     // 星等門檻先算成「整數秒」再存起來，之後評分也用同一組數字，
     // 畫面上寫 24 秒就真的是 24 秒（不會出現 24.4 秒被判失敗這種事）
-    const t3 = Math.max(4, Math.round(ideal * TUNING.star3 * O.targetMul));
-    const t2 = Math.max(t3 + 2, Math.round(ideal * TUNING.star2 * O.targetMul));
+    const t3 = Math.max(4, Math.round((ideal * TUNING.star3 + TUNING.grace) * O.targetMul));
+    const t2 = Math.max(t3 + 2, Math.round((ideal * TUNING.star2 + TUNING.grace) * O.targetMul));
 
     G = {
         order, workers, ideal,
@@ -556,12 +591,13 @@ function nextOrder() {
         crit: computeCriticalRemaining(order.tasks)
     };
 
-    // 開場優惠
-    if (M.autoPrep) { order.prep.progress = order.prep.dur; order.prep.done = true; }
-    for (let i = 0; i < M.prefab; i++) {
-        const cands = order.tasks.filter(t => t.stage === 'line' && t.progress === 0);
-        if (cands.length) { const t = pick(cands); t.progress = t.dur * 0.5; }
-    }
+    // 開場優惠：發的就是上面算門檻時已經算進去的那一份
+    Object.keys(head).forEach(id => {
+        const t = order.tasks.find(x => x.id === id);
+        if (!t) return;
+        t.progress = head[id];
+        if (t.progress >= t.dur) { t.progress = t.dur; t.done = true; }
+    });
 
     // 記下開工前的狀態，「重新挑戰」時原封不動還原
     // （同一件古物重打，才比得出換一種派工法差多少）
@@ -648,6 +684,9 @@ function beginOrder() {
     sfx('card');
     buildBoard();
     refreshHud();
+    // refreshHud() 之後才知道待命學者區有幾個圖示、星等門檻的字有多長 ——
+    // 這兩塊一換行，修復線可用的高度就少一截，卡片尺寸得重算
+    fitBoard();
     G.running = true;
     G.last = performance.now();
     rafId = requestAnimationFrame(tick);
@@ -700,78 +739,165 @@ function buildBoard() {
    （觸控電視上邊玩邊捲動非常難用；而整塊 scale() 縮放等於把按鈕又縮回去，
      所以改成直接調卡片大小 —— 螢幕越大按鈕就真的越大）
 
-   兩個變數各管一件事：
-     --card-w    ：尺寸尺標。卡片高度、圖示、文字都跟著它，由「垂直空間」決定
-     --card-wide ：只把卡片往橫向拉寬的倍率，由「橫向剩多少」決定
-   後兩關工序多、列數多，垂直被壓得很小，但橫向其實空一大片
-   （3 欄只用掉不到七成）。分開算就能在不動高度的情況下把觸控目標放大。 */
-const CARD_MIN = 104;   // 再小就按不準了
-const CARD_MAX = 320;   // 尺寸尺標的上限（再大字也不會更好看）
-const WIDE_MAX = 1.8;   // 最多拉寬到 1.8 倍（約 3:1）；再寬中間的圖示和字就顯得空
+   三個變數各管一件事，兩軸分開量：
+     --card-w    ：圖示、文字、內距的尺寸尺標 = 兩軸較小者（字才不會爆版）
+     --card-wide ：只把卡片往橫向拉寬的倍率，由「一欄有多寬」決定
+     --card-h    ：卡片高度，由「垂直空間 ÷ 列數」決定
+   高度以前是寬度的固定比例（0.6 倍）且封頂在 320 —— 結果是只要一軸鬆一軸緊
+   （4:3、直立平板鬆在垂直；21:9 鬆在水平）就一定浪費鬆的那軸。分開量才填得滿。 */
+const CARD_MIN = 104;    // 再小就按不準了
+const CARD_MAX = 320;    // 尺寸尺標的上限（圖示、文字的 clamp 到這裡也都頂到上限了）
+const WIDE_MAX = 1.9;    // 最多拉寬到 1.9 倍；再寬中間的圖示和字就顯得空
+const ASPECT_MAX = 0.90; // 卡片高 ÷ 尺標 的上限：垂直再鬆也不要變成一張直立長條
+// 高度的下限不寫死比例：圖示＋名稱＋進度條的自然高度不是尺標的固定倍數
+// （小尺標時佔比更高），寫死就會算出「塞不下卻以為塞得下」。改成每次量。
+// 一律用最深的關卡（第 5 關 3 道工序）當基準算尺寸：五關的卡片一樣大、位置不跳。
+// 觸控電視上換關卡時按鈕位移是會點錯的，比「前幾關按鈕更大」更要緊
+const BASE_ROWS = Math.max(...LEVELS.map(l => Math.max(...l.lines)));
+
+const SIZE_VARS = ['--card-w', '--card-h', '--card-wide', '--flat-w', '--content-w'];
+
+/* 修復線的可用高度不是只有視窗大小會變：待命學者變多會多一列、星等門檻的字
+   一長也會擠到換行，狀態列一變高，修復線就矮一截 —— 卡片尺寸是照舊的高度算的，
+   下面那幾排就會被 .tm-card 的 overflow:hidden 裁掉（第 4、5 關學者最多，最容易中）。
+   盯著 board 自己的尺寸重算，不管是誰把它擠矮的都補得回來 */
+let fitting = false;
+let lastFitBox = '';
+
+function watchBoardSize() {
+    if (!window.ResizeObserver) return;
+    const board = $('board');
+    new ResizeObserver(() => {
+        if (fitting || !G || !G.order || !G.order.prep.el) return;
+        if (board.clientWidth + 'x' + board.clientHeight === lastFitBox) return;
+        fitBoard();
+    }).observe(board);
+}
 
 function fitBoard() {
     const board = $('board');
     const body = document.body;
+    fitting = true;
+    try { fitBoardInner(board, body); } finally { fitting = false; }
+    lastFitBox = board.clientWidth + 'x' + board.clientHeight;
+}
+
+function fitBoardInner(board, body) {
     board.style.transform = '';
-    board.style.marginBottom = '';
 
     // 手機螢幕太窄，縮到能一頁看完會小到按不準；寧可讓它捲動，保住觸控目標大小
     if (window.innerWidth <= 720) {
-        body.style.removeProperty('--card-w');
-        body.style.removeProperty('--card-wide');
-        body.style.removeProperty('--flat-w');
+        SIZE_VARS.forEach(v => body.style.removeProperty(v));
         return;
     }
 
-    // 修復線以外的 UI（標題、狀態列、待命學者…）佔掉多少高度。
-    // 不能用 board 的 top 來算：body 是垂直置中的，修復線一變矮整張卡就往下掉，會互相牽動
-    const overhead = document.querySelector('.tm-card').offsetHeight - board.offsetHeight;
-    const avail = window.innerHeight - overhead - 16;   // 16：body 上下留白
+    // .board 已經是 flex:1（見 CSS），它的內距框「就是」可用空間 ——
+    // 不必再從 window.innerHeight 反推標題列佔多少，也不會跟卡片大小互相牽動
+    const bs = getComputedStyle(board);
+    const availW = board.clientWidth - parseFloat(bs.paddingLeft) - parseFloat(bs.paddingRight);
+    const availH = board.clientHeight - parseFloat(bs.paddingTop) - parseFloat(bs.paddingBottom);
+    if (availH < 80 || availW < 200) return;   // 還沒排版好（display:none 等），下次再算
 
-    // 卡片間距和箭頭寬度都是 clamp(…vw…)，跟著視窗變 —— 直接量，不要猜，
+    // 間距和箭頭寬度都是 clamp(…vw…)，跟著視窗變 —— 直接量，不要猜，
     // 少算幾 px 那一排就會 flex-wrap 折行，board 憑空多一列高度
     const tail = board.querySelector('.stage-tail');
     const gap = parseFloat(getComputedStyle(board.querySelector('.stage')).columnGap) || 22;
     const arrowW = tail ? tail.querySelector('.tail-arrow').offsetWidth : 26;
-    const inner = board.clientWidth - 24;
+    const colW = (availW - (LINE_COUNT - 1) * gap - 4) / LINE_COUNT;   // 一欄能用多寬
+    const rowStep = rowStepHeight(board);   // 多一道工序要多花的高度（▼ 加兩個列距）
 
-    /* --- 第一步：用垂直空間決定尺寸尺標 --- */
-    // 試大尺寸時整頁會暫時超出視窗、捲軸跳出來又把寬度吃掉 15px，
-    // 量到的高度就會虛胖（那一排被擠到折行），害搜尋停在不必要的小尺寸。
-    // 量的期間先把捲軸關掉，讓幾何跟最後定案的狀態一致
-    const de = document.documentElement;
-    const prevOverflow = de.style.overflowY;
-    de.style.overflowY = 'hidden';
-
-    // 量高度時先把橫向倍率固定成 1，量完才拉寬（拉寬不影響高度）
-    body.style.setProperty('--card-wide', '1');
-    // 橫躺卡：兩張並排剛好填滿一排（扣掉中間箭頭、兩個間距，再留 4px 安全值）
-    body.style.setProperty('--flat-w', Math.floor((inner - arrowW - gap * 2 - 4) / 2) + 'px');
-
-    // 由大往小試，第一個放得下的就是最大可用尺寸
-    let best = CARD_MIN;
-    for (let w = Math.min(CARD_MAX, Math.floor(inner / LINE_COUNT)); w >= CARD_MIN; w -= 4) {
-        body.style.setProperty('--card-w', w + 'px');
-        if (board.offsetHeight <= avail) { best = w; break; }
+    /* 先用「一欄有多寬」開一個尺標，再看垂直塞不塞得下：
+       塞不下就按比例縮尺標（橫躺卡、箭頭、卡片內容的自然高度都會跟著變小），
+       直到 BASE_ROWS 列剛好放得進去。通常一兩輪就收斂 */
+    let u = clampNum(colW, CARD_MIN, CARD_MAX);
+    let h = u * 0.6;
+    for (let i = 0; i < 6; i++) {
+        applyCardScale(u, colW, gap, arrowW, availW);
+        const { fixed, rows, cardMin } = probeBoardHeight(board);
+        // fixed 是「這一關」的固定成本；補上到 BASE_ROWS 還差幾列，五關才會一樣大
+        const perRow = (availH - fixed - (BASE_ROWS - rows) * rowStep) / BASE_ROWS;
+        if (perRow >= cardMin || u <= CARD_MIN) {
+            h = clampNum(perRow, cardMin, u * ASPECT_MAX);
+            break;
+        }
+        // 差多少就縮多少（再多縮 2% 當安全值），下一輪重量
+        u = clampNum(u * (perRow / cardMin) * 0.98, CARD_MIN, CARD_MAX);
+        h = cardMin;
     }
-    body.style.setProperty('--card-w', best + 'px');
-    de.style.overflowY = prevOverflow;
+    applyCardScale(u, colW, gap, arrowW, availW);
+    body.style.setProperty('--card-h', Math.floor(h) + 'px');
 
-    /* --- 第二步：高度定案後，橫向剩下的空間全部拿去把卡片拉寬 --- */
-    const perCol = (inner - (LINE_COUNT - 1) * gap - 4) / LINE_COUNT;
-    const wide = Math.max(1, Math.min(WIDE_MAX, perCol / best));
+    // 連最小尺寸都塞不下（很矮的視窗）才退回整體縮放。
+    // board 的高度已經被 flex/grid 釘死，所以不必再用負 margin 把多出來的空間收回
+    const need = boardContentHeight(board);
+    if (need > availH + 2) {
+        board.style.transform = `scale(${Math.max(0.6, availH / need)})`;
+    }
+}
+
+const clampNum = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+/* 修復線上多一道工序要多花多少高度：一個 ▼ 加上它前後兩個列距。
+   第 1、2 關可能一個 ▼ 都沒有，量不到就臨時放一個進去量 */
+function rowStepHeight(board) {
+    const col = board.querySelector('.line-col');
+    if (!col) return 30;
+    const gap = parseFloat(getComputedStyle(col).rowGap) || 8;
+    let arrow = board.querySelector('.mini-arrow');
+    let temp = null;
+    if (!arrow) {
+        temp = document.createElement('div');
+        temp.className = 'mini-arrow';
+        temp.textContent = '▼';
+        col.appendChild(temp);
+        arrow = temp;
+    }
+    const step = arrow.offsetHeight + gap * 2;
+    if (temp) temp.remove();
+    return step;
+}
+
+/* 修復線需要的高度 = 固定成本 + 列數 × 卡片高，對卡片高是線性的。
+   與其去猜每一列、每個箭頭、每個間距各幾 px（改個 CSS 就會算錯），
+   不如直接餵兩個高度量兩次，斜率就是列數、截距就是固定成本 */
+function probeBoardHeight(board) {
+    const body = document.body;
+    // cardMin：卡片被圖示、名稱、進度條撐出來的自然高度，--card-h 再小也壓不下去。
+    // 要取所有卡片的最大值 —— 名字長到折行的那張會比別人高，只看第一張會低估
+    body.style.setProperty('--card-h', '0px');
+    let cardMin = 0;
+    board.querySelectorAll('.stage-lines .task-card').forEach(c => {
+        cardMin = Math.max(cardMin, c.offsetHeight);
+    });
+    const p1 = 240, p2 = 340;   // 兩個探測高度都遠高於 cardMin，斜率才準
+    body.style.setProperty('--card-h', p1 + 'px');
+    const h1 = boardContentHeight(board);
+    body.style.setProperty('--card-h', p2 + 'px');
+    const h2 = boardContentHeight(board);
+    const rows = Math.max(1, Math.round((h2 - h1) / (p2 - p1)));
+    return { rows, cardMin, fixed: h1 - rows * p1 };
+}
+
+/* 修復線「真正需要」多高。不能直接量 board：它被 flex:1 / grid 1fr 撐滿了容器，
+   量到的永遠是容器高度。各列本身的高度不受容器影響，加起來才是需求
+   （.board 沒有設 row-gap，子元素也沒有上下 margin） */
+function boardContentHeight(board) {
+    let h = 0;
+    for (const el of board.children) h += el.offsetHeight;
+    return h;
+}
+
+/* 尺標定了之後，把寬度相關的變數一起算出來 */
+function applyCardScale(u, colW, gap, arrowW, availW) {
+    const body = document.body;
+    const wide = clampNum(colW / u, 1, WIDE_MAX);
+    // 卡片放大到上限後、內容實際需要的寬度。超寬螢幕就靠它把內容收在中間
+    const contentW = Math.min(availW, u * wide * LINE_COUNT + (LINE_COUNT - 1) * gap);
+    body.style.setProperty('--card-w', Math.floor(u) + 'px');
     body.style.setProperty('--card-wide', wide.toFixed(3));
-
-    // 連最小尺寸都塞不下（很矮的螢幕）才退回整體縮放
-    const full = board.offsetHeight;
-    if (full > avail && avail > 220) {
-        const k = Math.max(0.6, avail / full);
-        const mb = parseFloat(getComputedStyle(board).marginBottom) || 0;
-        board.style.transform = `scale(${k})`;
-        // transform 不改變 layout，多出來的空間用負 margin 收回
-        // （不能改 height：height 也會被 transform 縮放，底部會被裁掉）
-        board.style.marginBottom = (mb - full * (1 - k)) + 'px';
-    }
+    body.style.setProperty('--content-w', Math.floor(contentW) + 'px');
+    // 橫躺卡：兩張並排剛好填滿一排（扣掉中間箭頭、兩個間距，再留 4px 安全值）
+    body.style.setProperty('--flat-w', Math.floor((contentW - arrowW - gap * 2 - 4) / 2) + 'px');
 }
 
 function stageEl(tasks, flat) {
@@ -1253,4 +1379,5 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBest();
     $('btnStart').addEventListener('click', startRun);
     window.addEventListener('resize', () => { if (G && G.order && G.order.prep.el) fitBoard(); });
+    watchBoardSize();
 });
