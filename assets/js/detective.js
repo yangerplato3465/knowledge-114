@@ -26,6 +26,7 @@ await app.init({
     resolution: window.devicePixelRatio || 1,
     autoDensity: true,
 });
+globalThis.__PIXI_APP__ = app;               // Pixi Devtools 的標準掛勾，方便除錯
 app.stage.eventMode = 'static';              // 濾鏡謎題要靠 stage 收拖曳事件
 await document.fonts.ready;                  // 等中文字型載好再畫文字
 await preloadImages(CASE);                   // 有正式素材才會載，缺圖不影響
@@ -36,9 +37,10 @@ container.appendChild(app.canvas);
 const root = new Container();
 const sceneLayer = new Container();
 const hotLayer = new Container();
-const hudLayer = new Container();
-const overlayLayer = new Container();
-root.addChild(sceneLayer, hotLayer, hudLayer, overlayLayer);
+const objLayer = new Container();             // 可拖移物件（每個資產編號一個實體）
+const hudLayer = new Container();             // ↑ 要疊在 hotLayer 上面，否則物件被拖到熱點上時，
+const overlayLayer = new Container();         //   熱點那塊透明的判定框會把點擊吃掉
+root.addChild(sceneLayer, hotLayer, objLayer, hudLayer, overlayLayer);
 app.stage.addChild(root);
 
 function layout() {
@@ -55,6 +57,9 @@ const state = {
     clues: [],
     items: [],
     examined: new Set(),
+    stored: new Set(),        // 收進物品欄的物件 id
+    storedOrder: [],          // 收納順序（物品欄顯示用）
+    combined: new Set(),      // 已組合掉的物件 id（例如裝回底座的轉輪）
     solved: false,
 };
 
@@ -62,6 +67,14 @@ const clueById = id => CASE.clues.find(c => c.id === id);
 const itemById = id => CASE.items.find(i => i.id === id);
 const hasClue = id => state.clues.includes(id);
 const hasItem = id => state.items.includes(id);
+// 有些物件在拿到某道具後說法會變（例如解密盤裝好之後）
+const lookOf = h => (h.doneItem && hasItem(h.doneItem) && h.lookDone) || h.look;
+
+// 所有場景的物件索引（物品欄的圖示點擊要靠它找回資料）
+const OBJ_INDEX = {};
+for (const sc of Object.values(CASE.scenes)) {
+    for (const o of sc.objects || []) OBJ_INDEX[o.id] = o;
+}
 
 // ============================================================
 // HUD
@@ -73,22 +86,57 @@ titleText.anchor.set(0, 0.5);
 titleText.position.set(22, 27);
 hudLayer.addChild(titleText);
 
-// 道具格
-const itemSlot = new Container();
-itemSlot.position.set(536, 10);
-itemSlot.addChild(new Graphics().roundRect(0, 0, 104, 34, 17).fill({ color: 0x574c42 }));
-const itemLabel = mkText('', 15, 0xfff6e9);
-itemLabel.anchor.set(0.5);
-itemLabel.position.set(52, 17);
-itemSlot.addChild(itemLabel);
-itemSlot.visible = false;
-itemSlot.eventMode = 'static';
-itemSlot.cursor = 'pointer';
-itemSlot.on('pointertap', () => {
-    const it = itemById(state.items[0]);
-    if (it) say(`${it.icon} ${it.name}：${it.desc}`);
-});
-hudLayer.addChild(itemSlot);
+// ============================================================
+// 物品欄（畫面最下方）：
+// 拖移物件放進來收納，道具（透鏡等）也會出現在這裡，點一下隨時查看。
+// ============================================================
+const trayBar = new Container();
+hudLayer.addChild(trayBar);
+trayBar.addChild(
+    new Graphics().roundRect(30, 542, 900, 52, 16).fill({ color: COL.bar, alpha: 0.95 })
+);
+const trayLabel = mkText('🎒', 20, 0xffffff);
+trayLabel.anchor.set(0.5);
+trayLabel.position.set(54, 568);
+trayBar.addChild(trayLabel);
+const trayChips = new Container();
+trayBar.addChild(trayChips);
+const trayPulses = [];                          // 物品欄裡還沒查看過的東西閃提示
+const TRAY_Y = 520;                             // 拖到這條線以下就算「放進物品欄」
+
+function renderTray() {
+    trayChips.removeChildren();
+    trayPulses.length = 0;
+    const entries = [
+        ...state.storedOrder.map(id => ({ kind: 'obj', id })),
+        ...state.items.map(id => ({ kind: 'item', id })),
+    ];
+    entries.forEach((en, i) => {
+        const chip = new Container();
+        chip.position.set(92 + i * 46, 568);
+        chip.addChild(new Graphics().circle(0, 0, 19).fill({ color: 0x574c42 }));
+        const icon = en.kind === 'obj'
+            ? (OBJ_INDEX[en.id].icon || '📦')
+            : itemById(en.id).icon;
+        const t = mkText(icon, 18, 0xffffff);
+        t.anchor.set(0.5);
+        chip.addChild(t);
+        if (en.kind === 'obj' && !state.examined.has(en.id)) {
+            const dot = new Graphics().circle(13, -13, 5).fill({ color: COL.hint });
+            chip.addChild(dot);
+            trayPulses.push(dot);
+        }
+        chip.eventMode = 'static';
+        chip.cursor = 'pointer';
+        chip.on('pointertap', () => {
+            if (overlayLayer.children.length) return;
+            if (en.kind === 'obj') { onHotspot(OBJ_INDEX[en.id]); return; }
+            const it = itemById(en.id);
+            say(`${it.icon} ${it.name}：${it.desc}`);
+        });
+        trayChips.addChild(chip);
+    });
+}
 
 const clueBtn = mkButton({
     label: '', x: 656, y: 10, w: 134, h: 34,
@@ -99,42 +147,122 @@ const accuseBtn = mkButton({
 });
 hudLayer.addChild(clueBtn, accuseBtn);
 
-// 場景名牌
+// 場景名牌：放在頂欄正中間，不擋場景
 const sceneTag = new Container();
-sceneTag.position.set(22, 68);
 const sceneTagBg = new Graphics();
-const sceneTagText = mkText('', 16, COL.ink, { weight: '700' });
-sceneTagText.position.set(16, 8);
+const sceneTagText = mkText('', 15, COL.ink, { weight: '700' });
+sceneTagText.anchor.set(0, 0.5);
+sceneTagText.position.set(16, 17);
 sceneTag.addChild(sceneTagBg, sceneTagText);
 hudLayer.addChild(sceneTag);
 
-// 對話框
-hudLayer.addChild(
-    new Graphics().roundRect(30, 452, 900, 130, 22)
+// 對話框（左邊坐著助手小貓喵喵）—— 可以收起來，把整個場景看個清楚
+// 下方要讓位給物品欄，所以比較扁；太長的訊息會自動縮小字級。
+const dlgBox = new Container();
+hudLayer.addChild(dlgBox);
+dlgBox.addChild(
+    new Graphics().roundRect(30, 452, 900, 84, 18)
         .fill({ color: COL.panel }).stroke({ width: 4, color: COL.border })
 );
-const dlgText = mkText('', 18, COL.ink, { wrap: 848, lineHeight: 29 });
-dlgText.position.set(52, 468);
-hudLayer.addChild(dlgText);
+// 喵喵只住在對話框裡：點頭像＝跟助手求提示（場景中不再出現）
+const catBtn = new Container();
+catBtn.position.set(66, 494);
+catBtn.addChild(new Graphics().circle(0, 0, 22).fill({ color: COL.panel2 }).stroke({ width: 3, color: COL.border }));
+const dlgCat = mkText('🐱', 24, 0xffffff);
+dlgCat.anchor.set(0.5);
+catBtn.addChild(dlgCat);
+const catTip = mkText('提示', 9, COL.muted, { weight: '700' });
+catTip.anchor.set(0.5);
+catTip.position.set(0, 16);
+catBtn.addChild(catTip);
+catBtn.eventMode = 'static';
+catBtn.cursor = 'pointer';
+catBtn.on('pointerover', () => { catBtn.scale.set(1.1); });
+catBtn.on('pointerout', () => { catBtn.scale.set(1); });
+catBtn.on('pointertap', () => {
+    if (overlayLayer.children.length) return;
+    const hints = CASE.hints || [];
+    const line = hints.find(e =>
+        (e.unless && !hasClue(e.unless)) || (e.unlessItem && !hasItem(e.unlessItem))
+    ) || hints[hints.length - 1];
+    if (line) say(line.text);
+});
+dlgBox.addChild(catBtn);
+const dlgText = mkText('', 16, COL.ink, { wrap: 760, lineHeight: 23 });
+dlgText.position.set(98, 462);
+dlgBox.addChild(dlgText);
 
-const say = text => { dlgText.text = text; };
+// 圓形小按鈕（收起 / 展開）
+function mkRoundBtn(x, y, rad, label, size, onClick) {
+    const c = new Container();
+    c.position.set(x, y);
+    c.addChild(
+        new Graphics().circle(0, 0, rad)
+            .fill({ color: COL.panel }).stroke({ width: 3, color: COL.border })
+    );
+    const t = mkText(label, size, COL.ink, { weight: '700' });
+    t.anchor.set(0.5);
+    c.addChild(t);
+    c.eventMode = 'static';
+    c.cursor = 'pointer';
+    c.on('pointerover', () => { c.alpha = 0.8; });
+    c.on('pointerout', () => { c.alpha = 1; });
+    c.on('pointertap', onClick);
+    return c;
+}
+
+let dlgOpen = true, dlgUnread = false;
+
+dlgBox.addChild(mkRoundBtn(900, 470, 13, '✕', 14, () => setDialog(false)));
+
+const showBtn = mkRoundBtn(56, 512, 22, '💬', 20, () => setDialog(true));
+const unreadDot = new Graphics().circle(16, -16, 6).fill({ color: COL.red });
+showBtn.addChild(unreadDot);
+hudLayer.addChild(showBtn);
+
+function setDialog(open) {
+    dlgOpen = open;
+    dlgBox.visible = open;
+    showBtn.visible = !open;
+    if (open) dlgUnread = false;
+    unreadDot.visible = dlgUnread;
+}
+
+let lastMsg = '';
+const say = text => {
+    // 對話框變扁了，太長的訊息自動縮小字級塞進去
+    for (const [size, lh] of [[16, 23], [14, 20], [12, 17]]) {
+        dlgText.style.fontSize = size;
+        dlgText.style.lineHeight = lh;
+        dlgText.text = text;
+        if (dlgText.height <= 70) break;
+    }
+    // 新訊息強制跳出對話框一次；同一則訊息之後由使用者自由開關
+    if (text !== lastMsg) {
+        lastMsg = text;
+        if (!dlgOpen) setDialog(true);
+    } else if (!dlgOpen) {
+        dlgUnread = true;
+        unreadDot.visible = true;
+    }
+};
+
+setDialog(true);
 
 function setSceneTag(name) {
     sceneTagText.text = name;
+    const w = sceneTagText.width + 32;
     sceneTagBg.clear()
-        .roundRect(0, 0, sceneTagText.width + 32, 36, 18)
+        .roundRect(0, 0, w, 34, 17)
         .fill({ color: COL.panel, alpha: 0.92 })
         .stroke({ width: 3, color: COL.border });
+    sceneTag.position.set(480 - w / 2, 10);       // 頂欄置中
 }
 
 function refreshHud() {
     clueBtn.setLabel(`🔎 線索 ${state.clues.length}/${CASE.clues.length}`);
     accuseBtn.setLocked(state.clues.length < CASE.clues.length && !state.solved);
-    if (state.items.length) {
-        const it = itemById(state.items[0]);
-        itemLabel.text = `${it.icon} ${it.name}`;
-        itemSlot.visible = true;
-    }
+    renderTray();
 }
 
 // ============================================================
@@ -149,15 +277,181 @@ function renderScene(id) {
     sceneLayer.removeChildren();
     drawProps(scene.bg ? [{ t: 'img', src: scene.bg, x: 0, y: 0, w: W, h: H }, ...scene.props] : scene.props, sceneLayer);
     setSceneTag(scene.name);
-    renderHotspots();
+    renderInteractives();
     say(scene.intro || '點擊場景中的東西開始調查。');
 }
 
-function renderHotspots() {
-    hotLayer.removeChildren();
+// 物件（可拖移）畫在熱點底下，兩邊都會重畫
+function renderInteractives() {
     pulses.length = 0;
+    objLayer.removeChildren();
+    hotLayer.removeChildren();
+    for (const o of CASE.scenes[state.scene].objects || []) {
+        if (state.stored.has(o.id) || state.combined.has(o.id)) continue;   // 收進物品欄／已組合掉的不畫
+        objLayer.addChild(makeObject(o));
+    }
     for (const h of CASE.scenes[state.scene].hotspots) hotLayer.addChild(makeHotspot(h));
 }
+
+// ============================================================
+// 可拖移物件：一個資產編號 → 一個實體
+// 資料寫在 scenes.<場景>.objects[]：
+//   { id（資產編號，例如 'SP01'）, name, x, y, w, h, draggable?,
+//     art:[ ...props，座標以物件左上角為原點... ],
+//     其餘互動欄位（look / after / gives / givesItem / puzzle / requires…）
+//     跟 hotspot 完全一樣，所以行為不用另外寫。}
+// 換成正式美術時，art 換成 [{ t:'img', src:'...', x:0, y:0, w, h }] 就好。
+// ============================================================
+const objPositions = {};                       // 玩家拖過的位置記在這，重畫也不會跑回去
+let drag = null;                               // { o, node }
+let dragOff = { x: 0, y: 0 }, dragFrom = { x: 0, y: 0 }, dragDist = 0;
+const DRAG_SLOP = 6;                           // 移動超過這距離才算「拖」，否則當成點一下
+
+function makeObject(o) {
+    const c = new Container();
+    const p = objPositions[o.id] || { x: o.x, y: o.y };
+    c.position.set(p.x, p.y);
+    c.eventMode = 'static';
+    c.cursor = o.draggable ? 'grab' : 'pointer';
+    c.hitArea = new Rectangle(0, 0, o.w, o.h);
+
+    // 美術本體：pivot 放中心，拖起來時可以從中心稍微放大
+    const art = new Container();
+    art.pivot.set(o.w / 2, o.h / 2);
+    art.position.set(o.w / 2, o.h / 2);
+    // 拿到某道具後外觀會變（例如解密盤裝好轉輪）
+    drawProps((o.doneItem && hasItem(o.doneItem) && o.artDone) || o.art, art);
+    c.addChild(art);
+    c.art = art;
+
+    const outline = new Graphics()
+        .roundRect(-4, -4, o.w + 8, o.h + 8, 12)
+        .stroke({ width: 4, color: COL.hint });
+    outline.alpha = 0;
+    c.addChild(outline);
+
+    const lt = mkText(o.draggable ? `${o.name} ✋` : o.name, 16, COL.ink, { weight: '700' });
+    lt.position.set(14, 7);
+    const label = new Container();
+    label.addChild(
+        new Graphics().roundRect(0, 0, lt.width + 28, 34, 17)
+            .fill({ color: COL.panel }).stroke({ width: 3, color: COL.border }),
+        lt
+    );
+    label.alpha = 0;
+    c.addChild(label);
+    // 名牌跟著物件跑；靠近畫面上緣時改掛在下面，才不會被工具列吃掉
+    c.placeLabel = () => label.position.set(
+        o.w / 2 - (lt.width + 28) / 2,
+        c.y - 44 < 58 ? o.h + 10 : -44
+    );
+    c.placeLabel();
+
+    if (!state.examined.has(o.id)) {
+        const dot = new Graphics().circle(0, 0, 7).fill({ color: COL.hint });
+        dot.position.set(o.w - 8, 10);
+        c.addChild(dot);
+        pulses.push(dot);
+    }
+
+    c.on('pointerover', () => { outline.alpha = 1; label.alpha = 1; });
+    c.on('pointerout', () => {
+        if (drag && drag.node === c) return;
+        outline.alpha = 0; label.alpha = 0;
+    });
+
+    c.on('pointerdown', e => {
+        if (!o.draggable || overlayLayer.children.length) return;
+        drag = { o, node: c };
+        const g = root.toLocal(e.global);
+        dragOff = { x: g.x - c.x, y: g.y - c.y };
+        dragFrom = { x: c.x, y: c.y };
+        dragDist = 0;
+        objLayer.addChild(c);                  // 拉到最上層
+        c.cursor = 'grabbing';
+        art.scale.set(1.06);
+        art.alpha = 0.92;
+    });
+    // 放開時只移動了一點點 → 當成「點一下查看」，而不是拖曳
+    // （不可拖的物件沒有 pointerdown 流程，直接當點擊）
+    c.on('pointerup', () => {
+        if (!o.draggable) { onHotspot(o); return; }
+        if (drag && drag.node === c && dragDist < DRAG_SLOP) onHotspot(o);
+    });
+
+    return c;
+}
+
+function onObjMove(e) {
+    if (!drag) return;
+    const g = root.toLocal(e.global);
+    const { o, node } = drag;
+    const nx = Math.min(Math.max(g.x - dragOff.x, 6), W - o.w - 6);
+    const ny = Math.min(Math.max(g.y - dragOff.y, 60), H - o.h - 6);
+    node.position.set(nx, ny);
+    dragDist = Math.max(dragDist, Math.hypot(nx - dragFrom.x, ny - dragFrom.y));
+    node.placeLabel();
+}
+
+function onObjUp() {
+    if (!drag) return;
+    const { o, node } = drag;
+    drag = null;
+    node.cursor = 'grab';
+    node.art.scale.set(1);
+    node.art.alpha = 1;
+    if (dragDist < DRAG_SLOP) return;                  // 只是點一下，位置不動
+
+    const cx = node.x + o.w / 2, cy = node.y + o.h / 2;
+
+    // 1) 拖到組合目標上（例如轉輪 → 底座）
+    if (o.dropTarget) {
+        const t = OBJ_INDEX[o.dropTarget];
+        const tp = objPositions[t.id] || { x: t.x, y: t.y };
+        const hit = node.x < tp.x + t.w && tp.x < node.x + o.w &&
+                    node.y < tp.y + t.h && tp.y < node.y + o.h;
+        if (hit) {
+            state.combined.add(o.id);
+            let msg = o.dropSay || '';
+            if (o.dropGivesItem && !hasItem(o.dropGivesItem)) {
+                state.items.push(o.dropGivesItem);
+                const it = itemById(o.dropGivesItem);
+                msg += `\n🎒 取得道具：${it.icon} ${it.name}`;
+            }
+            say(msg);
+            refreshHud();
+            renderInteractives();
+            return;
+        }
+        // 組合零件不收進物品欄，免得卡關
+        if (cy > TRAY_Y) {
+            say(`${o.name}要裝回去才有用 —— 把它拖到${OBJ_INDEX[o.dropTarget].name}上吧。`);
+            node.position.set(dragFrom.x, dragFrom.y);
+            node.placeLabel();
+            return;
+        }
+    }
+
+    // 2) 拖到下方 → 收進物品欄
+    if (!o.dropTarget && cy > TRAY_Y && cx > 30 && cx < 930) {
+        state.stored.add(o.id);
+        state.storedOrder.push(o.id);
+        delete objPositions[o.id];
+        say(`🎒 ${o.name}收進物品欄了。點下方的圖示隨時查看。`);
+        refreshHud();
+        renderInteractives();
+        return;
+    }
+
+    // 3) 一般放下：別藏到對話框後面
+    const maxY = (dlgOpen ? 446 : 536) - o.h;
+    if (node.y > maxY) { node.y = Math.max(60, maxY); node.placeLabel(); }
+    objPositions[o.id] = { x: node.x, y: node.y };
+}
+
+app.stage.on('globalpointermove', onObjMove);
+app.stage.on('pointerup', onObjUp);
+app.stage.on('pointerupoutside', onObjUp);
 
 function makeHotspot(h) {
     const c = new Container();
@@ -224,24 +518,25 @@ function onHotspot(h) {
 
     // 謎題：解開才算調查完成
     if (h.puzzle && !state.examined.has(h.id)) {
-        say(h.look);
+        say(lookOf(h));
         openPuzzle(h);
         return;
     }
     if (state.examined.has(h.id)) {
-        say(h.after || h.look);
+        say(h.after || lookOf(h));
         return;
     }
-    award(h, h.look);
+    award(h, lookOf(h));
 }
 
 function award(h, text) {
     state.examined.add(h.id);
     let msg = text;
 
-    if (h.givesItem && !hasItem(h.givesItem)) {
-        state.items.push(h.givesItem);
-        const it = itemById(h.givesItem);
+    for (const id of [].concat(h.givesItem || [])) {
+        if (hasItem(id)) continue;
+        state.items.push(id);
+        const it = itemById(id);
         msg += `\n🎒 取得道具：${it.icon} ${it.name}`;
     }
     for (const id of [].concat(h.gives || [])) {
@@ -253,7 +548,7 @@ function award(h, text) {
 
     say(msg);
     refreshHud();
-    renderHotspots();
+    renderInteractives();
 
     if (state.clues.length === CASE.clues.length && !state.solved) {
         setTimeout(() => say('線索蒐集完成！點右上角的「🕵️ 指認犯人」說出你的推理。'), 3000);
@@ -289,6 +584,7 @@ function transitionTo(id) {
 app.ticker.add(() => {
     const a = 0.35 + 0.45 * (1 + Math.sin(performance.now() / 320)) / 2;
     for (const d of pulses) d.alpha = a;
+    for (const d of trayPulses) d.alpha = a;
 });
 
 // ============================================================
@@ -314,11 +610,11 @@ function closePanel() {
 function openPuzzle(h) {
     const cfg = h.puzzle;
     openPanel(panel => {
-        const box = panelBase(panel, { title: cfg.title });
+        const box = panelBase(panel, { title: cfg.title, ...(cfg.box || {}) });
         const ctx = { app, root, say };
         panelCleanup = PUZZLES[cfg.type](ctx, panel, box, cfg, () => {
             closePanel();
-            award(h, h.solvedText || h.look);
+            award(h, h.solvedText || lookOf(h));
         }) || null;
         panel.addChild(mkButton({
             label: '稍後再解', x: box.x + box.w - 130, y: box.y + 14, w: 110, h: 32,
@@ -372,25 +668,30 @@ function showAccuse() {
         tip.position.set(box.cx, box.y + 64);
         panel.addChild(tip);
 
+        const n = CASE.suspects.length;
+        const cw = 142, chh = 216, gap = 22;
+        const startX = box.cx - (n * cw + (n - 1) * gap) / 2;
         CASE.suspects.forEach((s, i) => {
-            const cw = 180, chh = 230;
-            const cx = box.x + 40 + i * (cw + 30);
-            const cy = box.y + 108;
+            const cx = startX + i * (cw + gap);
+            const cy = box.y + 112;
             const card = new Container();
             const bg = new Graphics();
             const paint = color => bg.clear().roundRect(cx, cy, cw, chh, 20)
                 .fill({ color: COL.panel2 }).stroke({ width: 3, color });
             paint(COL.border);
-            const face = mkText(s.emoji, 62, 0xffffff);
+            const face = mkText(s.emoji, 50, 0xffffff);
             face.anchor.set(0.5);
-            face.position.set(cx + cw / 2, cy + 74);
-            const name = mkText(s.name, 20, COL.ink, { weight: '700' });
+            face.position.set(cx + cw / 2, cy + 56);
+            const name = mkText(s.name, 19, COL.ink, { weight: '700' });
             name.anchor.set(0.5);
-            name.position.set(cx + cw / 2, cy + 146);
-            const role = mkText(s.role, 14, COL.muted);
+            name.position.set(cx + cw / 2, cy + 106);
+            const role = mkText(s.role, 13, COL.muted);
             role.anchor.set(0.5);
-            role.position.set(cx + cw / 2, cy + 176);
-            card.addChild(bg, face, name, role);
+            role.position.set(cx + cw / 2, cy + 130);
+            const memo = mkText(s.testimony || '', 11, COL.muted, { wrap: cw - 24, align: 'center', lineHeight: 16 });
+            memo.anchor.set(0.5, 0);
+            memo.position.set(cx + cw / 2, cy + 152);
+            card.addChild(bg, face, name, role, memo);
             card.eventMode = 'static';
             card.cursor = 'pointer';
             card.on('pointerover', () => paint(COL.gold));
