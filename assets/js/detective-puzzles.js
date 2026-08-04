@@ -1,5 +1,5 @@
 import { Circle, Container, Graphics } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
-import { COL, mkText, mkButton } from './detective-ui.js';
+import { COL, mkText, mkButton, drawProps, hasTexture } from './detective-ui.js';
 
 // ============================================================
 // 偵探事件簿 · 四個學習謎題
@@ -255,19 +255,22 @@ function safe(ctx, panel, box, cfg, onSolve) {
 //    單色透鏡只看得到一團色塊，兩片疊在一起才會合成紫光。
 // ------------------------------------------------------------
 function lens(ctx, panel, box, cfg, onSolve) {
-    const FW = 140, FH = 110;
+    const FW = cfg.lensW || 150, FH = cfg.lensH || 130;
 
     // 分三層：畫框 → 可拖的透鏡 → 按鈕。
     // 按鈕一定要在最上層，否則透鏡被拖到按鈕上面時會把點擊整個吃掉。
     const artLayer = new Container(), lensLayer = new Container(), uiLayer = new Container();
     panel.addChild(artLayer, lensLayer, uiLayer);
 
+    // 畫框尺寸由資料指定，方便對齊正式畫作的比例
+    const PW = cfg.paintW || 200, PH = cfg.paintH || 220, GAP = cfg.paintGap || 40;
+    const startX = cfg.paintX != null ? cfg.paintX : box.x + 70;
     const paintings = cfg.paintings.map((p, i) => ({
         cfg: p,
-        x: box.x + 38 + i * 216,
-        y: box.y + 104,
-        w: 196,
-        h: 150,
+        x: startX + i * (PW + GAP),
+        y: box.y + (cfg.paintY || 108),
+        w: PW,
+        h: PH,
         read: false,
     }));
 
@@ -276,105 +279,127 @@ function lens(ctx, panel, box, cfg, onSolve) {
     tip.position.set(box.cx, box.y + 56);
     artLayer.addChild(tip);
 
-    // ---- 畫框本體：一堆亂線 ----
+    // ---- 畫框本體：有正式畫作就貼圖，沒有就退回一堆亂線 ----
     const rnd = seed => { let s = seed; return () => (s = (s * 9301 + 49297) % 233280) / 233280; };
     for (const p of paintings) {
         artLayer.addChild(
-            new Graphics().roundRect(p.x, p.y, p.w, p.h, 8)
-                .fill({ color: 0xf7f1e4 }).stroke({ width: 4, color: 0x8a5c33 })
+            new Graphics().roundRect(p.x - 7, p.y - 7, p.w + 14, p.h + 14, 8).fill({ color: 0x8a5c33 })
         );
-        const r = rnd(p.x);
-        for (const color of [COL.red, COL.blue]) {
-            const g = new Graphics();
-            for (let i = 0; i < 16; i++) {
-                g.moveTo(p.x + 8 + r() * (p.w - 16), p.y + 8 + r() * (p.h - 16))
-                    .lineTo(p.x + 8 + r() * (p.w - 16), p.y + 8 + r() * (p.h - 16));
+        artLayer.addChild(
+            new Graphics().roundRect(p.x, p.y, p.w, p.h, 3).fill({ color: 0xf7f1e4 })
+        );
+        if (hasTexture(p.cfg.img)) {
+            drawProps([{ t: 'img', src: p.cfg.img, x: p.x, y: p.y, w: p.w, h: p.h }], artLayer);
+        } else {
+            const r = rnd(p.x);
+            for (const color of [COL.red, COL.blue]) {
+                const g = new Graphics();
+                for (let i = 0; i < 16; i++) {
+                    g.moveTo(p.x + 8 + r() * (p.w - 16), p.y + 8 + r() * (p.h - 16))
+                        .lineTo(p.x + 8 + r() * (p.w - 16), p.y + 8 + r() * (p.h - 16));
+                }
+                artLayer.addChild(g.stroke({ width: 2, color, cap: 'round' }));
             }
-            artLayer.addChild(g.stroke({ width: 2, color, cap: 'round' }));
         }
         const nm = mkText(p.cfg.name, 13, COL.muted);
         nm.anchor.set(0.5);
-        nm.position.set(p.x + p.w / 2, p.y - 12);
+        nm.position.set(p.x + p.w / 2, p.y - 20);
         artLayer.addChild(nm);
     }
 
     // ---- 每幅畫在各種透鏡底下的樣子（用遮罩裁切）----
+    // 有對應的濾鏡圖就直接換圖；沒有圖才退回色塊 ＋ 符號。
     const masks = { red: [], blue: [], purple: [] };
+    const IMG_KEY = { red: 'imgRed', blue: 'imgBlue', purple: 'imgPurple' };
+    const TINT = { red: 0xf0b7b7, blue: 0xb7c4f0, purple: 0xd8bcee };
 
-    const tinted = (p, color, build) => {
+    const addView = (p, key, build) => {
         const c = new Container();
-        c.addChild(new Graphics().roundRect(p.x, p.y, p.w, p.h, 8).fill({ color }));
-        build(c, p);
+        const src = p.cfg[IMG_KEY[key]];
+        const isImg = hasTexture(src);
+        if (isImg) drawProps([{ t: 'img', src, x: p.x, y: p.y, w: p.w, h: p.h }], c);
+        else c.addChild(new Graphics().roundRect(p.x, p.y, p.w, p.h, 3).fill({ color: TINT[key] }));
+        if (build) build(c, isImg);
+        const m = new Graphics().rect(0, 0, FW, FH).fill({ color: 0xffffff });
+        m.visible = false;
+        artLayer.addChild(m, c);
+        c.mask = m;
+        masks[key].push(m);
         return c;
     };
 
     for (const p of paintings) {
-        // 單色透鏡：只看得到一團色塊和半個看不懂的符號
+        // 單色透鏡：沒有正式圖時只看得到一團色塊和看不懂的符號
         for (const key of ['red', 'blue']) {
-            const view = tinted(p, key === 'red' ? 0xf0b7b7 : 0xb7c4f0, (c) => {
+            addView(p, key, (c, isImg) => {
+                if (isImg) return;
                 const q = mkText('？', 54, 0x00000030, { weight: '700' });
                 q.anchor.set(0.5);
                 q.position.set(p.x + p.w / 2, p.y + p.h / 2);
                 c.addChild(q);
             });
-            const m = new Graphics().rect(0, 0, FW, FH).fill({ color: 0xffffff });
-            m.visible = false;
-            artLayer.addChild(m, view);
-            view.mask = m;
-            masks[key].push(m);
         }
 
-        // 紫光透鏡：真正的符號現形
-        const sym = new Container();
-        const icon = mkText(p.cfg.icon, 46, 0xffffff);
-        icon.anchor.set(0.5);
-        icon.position.set(0, -26);
-        const label = mkText(p.cfg.reveal, 24, 0x2c1a3f, { weight: '700' });
-        label.anchor.set(0.5);
-        label.position.set(0, 22);
-        sym.addChild(icon, label);
-        sym.position.set(p.x + p.w / 2, p.y + p.h / 2);
-        if (p.cfg.mirrored) sym.scale.x = -1;
-        p.sym = sym;
-
-        const view = tinted(p, 0xd8bcee, c => c.addChild(sym));
-        const m = new Graphics().rect(0, 0, FW, FH).fill({ color: 0xffffff });
-        m.visible = false;
-        artLayer.addChild(m, view);
-        view.mask = m;
-        masks.purple.push(m);
+        // 紫光透鏡：真正的內容現形
+        const view = addView(p, 'purple', (c, isImg) => {
+            if (isImg) return;
+            const sym = new Container();
+            const icon = mkText(p.cfg.icon, 46, 0xffffff);
+            icon.anchor.set(0.5);
+            icon.position.set(0, -26);
+            const label = mkText(p.cfg.reveal, 24, 0x2c1a3f, { weight: '700' });
+            label.anchor.set(0.5);
+            label.position.set(0, 22);
+            sym.addChild(icon, label);
+            sym.position.set(p.x + p.w / 2, p.y + p.h / 2);
+            c.addChild(sym);
+            p.flip = sym;                       // 沒有圖時翻的是符號
+        });
+        if (!p.flip) {
+            // 有圖時翻的是整張畫：樞紐移到畫的中心，翻轉才會繞著中心轉
+            // （沒有圖的符號原點本來就在中心，不能再動 pivot）
+            p.flip = view;
+            view.pivot.set(p.x + p.w / 2, p.y + p.h / 2);
+            view.position.set(p.x + p.w / 2, p.y + p.h / 2);
+        }
+        if (p.cfg.mirrored) p.flip.scale.x = -1;
     }
 
     // ---- 說明文字 ----
+    const capY = paintings[0].y + PH + 16;
     const captions = paintings.map(p => {
-        const t = mkText('', 14, COL.ok, { weight: '700', wrap: p.w + 20, align: 'center' });
+        const t = mkText('', 14, COL.ok, { weight: '700', wrap: p.w + 30, align: 'center' });
         t.anchor.set(0.5, 0);
-        t.position.set(p.x + p.w / 2, p.y + p.h + 10);
+        t.position.set(p.x + p.w / 2, capY);
         artLayer.addChild(t);
         return t;
     });
 
     const status = mkText('', 14, COL.muted, { wrap: box.w - 120, align: 'center' });
     status.anchor.set(0.5, 0);
-    status.position.set(box.cx, box.y + 344);
+    status.position.set(box.cx, capY + 46);
     artLayer.addChild(status);
 
-    // 鏡像的畫要翻正才讀得懂
-    const flipBtn = mkButton({
-        label: '🔄 把符號翻正', x: paintings[0].x + 28, y: box.y + 292, w: 140, h: 34,
-        size: 14, color: COL.border, textColor: COL.ink,
-        onClick: () => {
-            const p = paintings[0];
-            p.sym.scale.x *= -1;
-            if (p.sym.scale.x === 1) {
-                p.read = true;
-                captions[0].text = p.cfg.caption;
-                check();
-            }
-        },
-    });
-    flipBtn.visible = false;
-    uiLayer.addChild(flipBtn);
+    // 鏡像的畫要翻正才讀得懂（只有標了 mirrored 的畫才會有這顆按鈕）
+    const flipIdx = paintings.findIndex(p => p.cfg.mirrored);
+    let flipBtn = null;
+    if (flipIdx >= 0) {
+        flipBtn = mkButton({
+            label: '🔄 把畫面翻正', x: paintings[flipIdx].x + PW / 2 - 70, y: capY + 74, w: 140, h: 34,
+            size: 14, color: COL.border, textColor: COL.ink,
+            onClick: () => {
+                const p = paintings[flipIdx];
+                p.flip.scale.x *= -1;
+                if (p.flip.scale.x === 1) {
+                    p.read = true;
+                    captions[flipIdx].text = p.cfg.caption;
+                    check();
+                }
+            },
+        });
+        flipBtn.visible = false;
+        uiLayer.addChild(flipBtn);
+    }
 
     const okBtn = mkButton({
         label: '✅ 兩個特徵都拿到了', x: box.cx - 130, y: box.y + box.h - 58, w: 260, h: 44,
@@ -403,8 +428,9 @@ function lens(ctx, panel, box, cfg, onSolve) {
         return g;
     };
 
-    let redL = mkLens('red', '紅光透鏡', COL.red, box.x + 512, box.y + 96);
-    let blueL = mkLens('blue', '藍光透鏡', COL.blue, box.x + 512, box.y + 232);
+    const dockX = cfg.dockX != null ? cfg.dockX : box.x + box.w - FW - 110;
+    let redL = mkLens('red', '紅光透鏡', COL.red, dockX, box.y + 110);
+    let blueL = mkLens('blue', '藍光透鏡', COL.blue, dockX, box.y + 130 + FH + 30);
     let purpleL = null;
 
     const center = f => ({ x: f.x + FW / 2, y: f.y + FH / 2 });
@@ -443,9 +469,9 @@ function lens(ctx, panel, box, cfg, onSolve) {
             paintings.forEach((p, i) => {
                 if (!over(purpleL, p)) return;
                 if (p.cfg.mirrored) {
-                    flipBtn.visible = true;
-                    if (!p.read && p.sym.scale.x === -1) {
-                        status.text = '這幅畫的字是反過來的……有辦法把它翻正嗎？';
+                    if (flipBtn) flipBtn.visible = true;
+                    if (!p.read && p.flip.scale.x === -1) {
+                        status.text = '這幅畫是反過來的……有辦法把它翻正嗎？';
                     }
                 } else if (!p.read) {
                     p.read = true;

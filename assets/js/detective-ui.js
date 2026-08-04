@@ -143,14 +143,34 @@ export function drawProps(list, layer) {
 }
 
 // 把資料檔裡所有 { t:'img' } 的圖先載進來（缺圖不會讓遊戲當掉）
+// 掃描範圍：場景背景、props、物件的 art / artDone、謎題畫作的四種濾鏡圖。
+const PAINT_KEYS = ['img', 'imgRed', 'imgBlue', 'imgPurple'];
+
 export async function preloadImages(caseData) {
     const srcs = new Set();
+    const fromProps = list => {
+        for (const p of list || []) if (p.t === 'img' && p.src) srcs.add(p.src);
+    };
+    const fromPuzzle = puzzle => {
+        for (const p of puzzle?.paintings || []) {
+            for (const k of PAINT_KEYS) if (p[k]) srcs.add(p[k]);
+        }
+    };
     for (const sc of Object.values(caseData.scenes)) {
         if (sc.bg) srcs.add(sc.bg);
-        for (const p of sc.props) if (p.t === 'img' && p.src) srcs.add(p.src);
+        fromProps(sc.props);
+        for (const o of sc.objects || []) {
+            fromProps(o.art);
+            fromProps(o.artDone);
+            fromPuzzle(o.puzzle);
+        }
+        for (const h of sc.hotspots || []) fromPuzzle(h.puzzle);
     }
     for (const src of srcs) {
         try { await Assets.load(src); }
         catch { console.warn('[偵探事件簿] 找不到素材，先用替代圖形：', src); }
     }
 }
+
+// 圖載進來了沒？（沒有就讓呼叫端退回向量替代圖形）
+export const hasTexture = src => !!src && Assets.cache.has(src);

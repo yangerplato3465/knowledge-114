@@ -13,6 +13,7 @@
 //   ITEM01B 解密盤內圈轉輪    objects：可拖移，拖到底座上組裝
 //   ITEM02/03/04 紅/藍/紫透鏡 items：出現在下方物品欄
 //   HIDDEN01/02 鏡像符號/手套壓印  藏在 SP04 的透鏡謎題裡（paintings）
+//     └ HIDDEN01 已改用正式畫作：picture1 / _red / _blue / _purple（見 IMG）
 //   UI01  告示板              scenes.deduction.objects：固定，開邏輯矩陣
 //   UI02  鑑識報告紙條        scenes.deduction.objects：可拖移
 //   UI03A~D 嫌疑人檔案卡      scenes.deduction.objects：固定，點擊看證詞
@@ -44,6 +45,11 @@
 //   dropTarget / dropSay / dropGivesItem（拖到某物件上組合）、
 //   doneItem / lookDone / artDone（拿到某道具後換說法與外觀）
 // ============================================================
+
+// 圖片資料夾（路徑相對於 pages/detective.html）
+//   assets/images/detective/            → 遊戲實際載入的優化圖（720px JPG）
+//   assets/images/detective/original/   → 美術原檔備份（1984×2170 PNG），遊戲不載入
+const IMG = '../assets/images/detective/';
 
 // 喵喵的防卡關提示：兩個場景共用同一條提示鏈（挑第一條還沒達成的講）
 const OWL_HINTS = [
@@ -300,16 +306,11 @@ window.DETECTIVE_CASE = {
                     // SP04 掛畫框（兩幅一組）
                     id: 'SP04', name: '掛畫框', x: 586, y: 84, w: 256, h: 144,
                     art: [
+                        // 畫作一：直接掛正式畫作（原圖，未套濾鏡）
                         { t: 'rect', x: 0, y: 0, w: 120, h: 144, c: 0x8a5c33, r: 6 },
                         { t: 'rect', x: 11, y: 11, w: 98, h: 122, c: 0xf7f1e4 },
-                        { t: 'line', pts: [18, 20, 100, 54], c: 0xe23b3b, w: 2 },
-                        { t: 'line', pts: [24, 106, 104, 32], c: 0xe23b3b, w: 2 },
-                        { t: 'line', pts: [16, 64, 94, 124], c: 0xe23b3b, w: 2 },
-                        { t: 'line', pts: [54, 16, 34, 126], c: 0xe23b3b, w: 2 },
-                        { t: 'line', pts: [14, 38, 106, 82], c: 0x2f5bd0, w: 2 },
-                        { t: 'line', pts: [20, 124, 102, 16], c: 0x2f5bd0, w: 2 },
-                        { t: 'line', pts: [82, 14, 74, 128], c: 0x2f5bd0, w: 2 },
-                        { t: 'line', pts: [14, 88, 104, 106], c: 0x2f5bd0, w: 2 },
+                        { t: 'img', src: IMG + 'picture1.jpg', x: 11, y: 18, w: 98, h: 107 },
+                        // 畫作二：還沒有正式畫作，先用亂線示意
                         { t: 'rect', x: 136, y: 0, w: 120, h: 144, c: 0x8a5c33, r: 6 },
                         { t: 'rect', x: 147, y: 11, w: 98, h: 122, c: 0xf7f1e4 },
                         { t: 'line', pts: [152, 24, 240, 66], c: 0xe23b3b, w: 2 },
@@ -326,14 +327,26 @@ window.DETECTIVE_CASE = {
                     puzzle: {
                         type: 'lens',
                         title: '🔴🔵 光學疊影 · 合成紫光透鏡',
+                        // 面板放大，讓直式畫作放得下
+                        box: { x: 60, y: 40, w: 840, h: 520 },
+                        paintW: 200, paintH: 219, paintGap: 44, paintX: 120, paintY: 112,
+                        lensW: 150, lensH: 130,
                         paintings: [
                             {
-                                // HIDDEN01 鏡像倒置符號
-                                name: '畫作一', icon: '🧐', reveal: '單片眼鏡',
-                                mirrored: true, caption: '特徵①：配戴單片眼鏡',
+                                // HIDDEN01：四張圖依濾鏡切換
+                                //   img=原圖 / imgRed=紅光 / imgBlue=藍光 / imgPurple=紫光
+                                name: '畫作一', caption: '特徵①：配戴單片眼鏡',
+                                img: IMG + 'picture1.jpg',
+                                imgRed: IMG + 'picture1_red.jpg',
+                                imgBlue: IMG + 'picture1_blue.jpg',
+                                imgPurple: IMG + 'picture1_purple.jpg',
+                                // 想恢復「鏡像→要按鈕翻正」的機關，把這行改成 true
+                                mirrored: false,
+                                icon: '🧐', reveal: '單片眼鏡',
                             },
                             {
-                                // HIDDEN02 手套壓印圖騰
+                                // HIDDEN02 手套壓印圖騰：還沒有正式畫作，先用向量符號
+                                // 之後補圖時照上面加 img / imgRed / imgBlue / imgPurple 即可
                                 name: '畫作二', icon: '🧤', reveal: '左手施力',
                                 mirrored: false, caption: '特徵②：左手施力（左撇子）',
                             },
