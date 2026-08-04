@@ -90,19 +90,38 @@ hudLayer.addChild(titleText);
 // 物品欄（畫面最下方）：
 // 拖移物件放進來收納，道具（透鏡等）也會出現在這裡，點一下隨時查看。
 // ============================================================
+// 整條通到底的橫幅（和頂欄同樣是滿版），順便蓋掉背景圖最下面補出來的那條地板。
+// 要調高低就改 TRAY_TOP，圖示會跟著置中。
+const TRAY_TOP = 514;
 const trayBar = new Container();
 hudLayer.addChild(trayBar);
 trayBar.addChild(
-    new Graphics().roundRect(30, 542, 900, 52, 16).fill({ color: COL.bar, alpha: 0.95 })
+    new Graphics().rect(0, TRAY_TOP, W, H - TRAY_TOP).fill({ color: COL.bar, alpha: 0.95 })
 );
-const trayLabel = mkText('🎒', 20, 0xffffff);
+const TRAY_MID = TRAY_TOP + (H - TRAY_TOP) / 2;
+const trayLabel = mkText('道具', 19, 0xfff6e9, { weight: '700' });
 trayLabel.anchor.set(0.5);
-trayLabel.position.set(54, 568);
+trayLabel.position.set(46, TRAY_MID);
 trayBar.addChild(trayLabel);
+
+// 格子：先畫一整排空格當底，撿到東西再把「有東西的格子」疊上去。
+// 想調格數／大小就改這三個常數，位置會自己算。
+const SLOT_N = 12, SLOT_SIZE = 60, SLOT_PITCH = 71, SLOT_X0 = 84;
+const slotY = TRAY_MID - SLOT_SIZE / 2;
+const slotCX = i => SLOT_X0 + i * SLOT_PITCH + SLOT_SIZE / 2;
+const emptySlots = new Graphics();
+for (let i = 0; i < SLOT_N; i++) {
+    emptySlots
+        .roundRect(SLOT_X0 + i * SLOT_PITCH, slotY, SLOT_SIZE, SLOT_SIZE, 12)
+        .fill({ color: 0x2b241e, alpha: 0.5 })
+        .stroke({ width: 2, color: 0x6b5b4d });
+}
+trayBar.addChild(emptySlots);
+
 const trayChips = new Container();
 trayBar.addChild(trayChips);
 const trayPulses = [];                          // 物品欄裡還沒查看過的東西閃提示
-const TRAY_Y = 520;                             // 拖到這條線以下就算「放進物品欄」
+const TRAY_Y = TRAY_TOP + 6;                    // 拖到這條線以下就算「放進物品欄」
 
 function renderTray() {
     trayChips.removeChildren();
@@ -111,18 +130,24 @@ function renderTray() {
         ...state.storedOrder.map(id => ({ kind: 'obj', id })),
         ...state.items.map(id => ({ kind: 'item', id })),
     ];
-    entries.forEach((en, i) => {
+    entries.slice(0, SLOT_N).forEach((en, i) => {
         const chip = new Container();
-        chip.position.set(92 + i * 46, 568);
-        chip.addChild(new Graphics().circle(0, 0, 19).fill({ color: 0x574c42 }));
+        chip.position.set(slotCX(i), TRAY_MID);
+        // 有東西的格子換成亮一點的底＋金色外框，一眼看得出哪幾格滿了
+        chip.addChild(
+            new Graphics()
+                .roundRect(-SLOT_SIZE / 2, -SLOT_SIZE / 2, SLOT_SIZE, SLOT_SIZE, 12)
+                .fill({ color: 0x574c42 })
+                .stroke({ width: 2, color: COL.gold })
+        );
         const icon = en.kind === 'obj'
             ? (OBJ_INDEX[en.id].icon || '📦')
             : itemById(en.id).icon;
-        const t = mkText(icon, 18, 0xffffff);
+        const t = mkText(icon, 30, 0xffffff);
         t.anchor.set(0.5);
         chip.addChild(t);
         if (en.kind === 'obj' && !state.examined.has(en.id)) {
-            const dot = new Graphics().circle(13, -13, 5).fill({ color: COL.hint });
+            const dot = new Graphics().circle(21, -21, 6).fill({ color: COL.hint });
             chip.addChild(dot);
             trayPulses.push(dot);
         }
@@ -268,8 +293,6 @@ function refreshHud() {
 // ============================================================
 // 場景與熱點
 // ============================================================
-const pulses = [];
-
 function renderScene(id) {
     state.scene = id;
     const scene = CASE.scenes[id];
@@ -283,7 +306,6 @@ function renderScene(id) {
 
 // 物件（可拖移）畫在熱點底下，兩邊都會重畫
 function renderInteractives() {
-    pulses.length = 0;
     objLayer.removeChildren();
     hotLayer.removeChildren();
     for (const o of CASE.scenes[state.scene].objects || []) {
@@ -346,13 +368,6 @@ function makeObject(o) {
         c.y - 44 < 58 ? o.h + 10 : -44
     );
     c.placeLabel();
-
-    if (!state.examined.has(o.id)) {
-        const dot = new Graphics().circle(0, 0, 7).fill({ color: COL.hint });
-        dot.position.set(o.w - 8, 10);
-        c.addChild(dot);
-        pulses.push(dot);
-    }
 
     c.on('pointerover', () => { outline.alpha = 1; label.alpha = 1; });
     c.on('pointerout', () => {
@@ -443,8 +458,8 @@ function onObjUp() {
         return;
     }
 
-    // 3) 一般放下：別藏到對話框後面
-    const maxY = (dlgOpen ? 446 : 536) - o.h;
+    // 3) 一般放下：別藏到對話框或物品欄後面
+    const maxY = (dlgOpen ? 446 : TRAY_TOP - 6) - o.h;
     if (node.y > maxY) { node.y = Math.max(60, maxY); node.placeLabel(); }
     objPositions[o.id] = { x: node.x, y: node.y };
 }
@@ -480,23 +495,11 @@ function makeHotspot(h) {
     label.alpha = 0;
     c.addChild(label);
 
-    if (h.exit) {
-        // 出口一直看得到
-        const arrow = mkText(h.dir === 'left' ? '⬅️' : '➡️', 40, 0xffffff);
-        arrow.anchor.set(0.5);
-        arrow.position.set(h.x + h.w / 2, h.y + h.h / 2);
-        c.addChild(arrow);
-        label.alpha = 0.95;
-    } else if (!state.examined.has(h.id)) {
-        // 還沒查過的東西閃一下
-        const dot = new Graphics().circle(0, 0, 7).fill({ color: COL.hint });
-        dot.position.set(h.x + h.w - 10, h.y + 12);
-        c.addChild(dot);
-        pulses.push(dot);
-    }
+    // 出口不再另外畫箭頭、名牌也不常駐 —— 通往別的房間的門畫在背景圖裡，
+    // 跟其他熱點一樣滑過去才亮框和名牌。
 
     c.on('pointerover', () => { outline.alpha = 1; label.alpha = 1; });
-    c.on('pointerout', () => { outline.alpha = 0; label.alpha = h.exit ? 0.95 : 0; });
+    c.on('pointerout', () => { outline.alpha = 0; label.alpha = 0; });
     c.on('pointertap', () => onHotspot(h));
     return c;
 }
@@ -580,10 +583,9 @@ function transitionTo(id) {
     app.ticker.add(tick);
 }
 
-// 提示光點的呼吸效果
+// 提示光點的呼吸效果（場景裡的光點已移除，只剩物品欄裡還沒查看過的道具）
 app.ticker.add(() => {
     const a = 0.35 + 0.45 * (1 + Math.sin(performance.now() / 320)) / 2;
-    for (const d of pulses) d.alpha = a;
     for (const d of trayPulses) d.alpha = a;
 });
 
