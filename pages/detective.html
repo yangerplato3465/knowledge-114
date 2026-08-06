@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>偵探事件簿 · 黃金貓頭鷹雕像失竊事件</title>
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <link rel="stylesheet" href="../assets/css/detective.css">
+</head>
+<body>
+    <div class="game-bar">
+        <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
+        <h1>🔍 偵探事件簿</h1>
+        <!-- 全螢幕鈕不放在這裡：畫布右上角的 HUD 已經有一顆 ⛶（見 detective.js 的 fsHudBtn），
+             全螢幕時這條 HTML 頂欄本來就會整條收起來，放兩顆只會重複 -->
+    </div>
+
+    <div id="gameContainer">
+        <div id="gameLoading" class="game-loading">案件卷宗載入中…</div>
+    </div>
+
+    <!-- 案件資料要先於引擎載入（引擎讀取 window.DETECTIVE_CASE） -->
+    <script src="../assets/js/detective-case-owl.js"></script>
+    <script type="module" src="../assets/js/detective.js"></script>
+    <script src="../assets/js/theme.js"></script>
+</body>
+</html>
