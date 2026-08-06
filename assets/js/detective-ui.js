@@ -67,14 +67,21 @@ export function mkButton({ label, x, y, w, h, color = COL.gold, textColor = COL.
 }
 
 // 覆蓋面板的底：白卡片 + 標題，回傳可用的內容範圍
-export function panelBase(panel, { x = 140, y = 64, w = 680, h = 472, title }) {
-    panel.addChild(
-        new Graphics().roundRect(x, y, w, h, 28)
-            .fill({ color: COL.panel }).stroke({ width: 6, color: COL.border })
-    );
+// bg 給了正式美術底圖（例如推理板的羊皮紙）就整張鋪在面板範圍上 ——
+// 撕邊、圖釘那些都畫在圖裡，所以不再另外描白卡片的圓角框。缺圖時自動退回白卡片。
+// titleY 是標題離面板上緣的距離，底圖上緣有東西（推理板那顆圖釘）時往下讓一點
+export function panelBase(panel, { x = 140, y = 64, w = 680, h = 472, title, bg, titleY = 22 }) {
+    if (hasTexture(bg)) {
+        drawProps([{ t: 'img', src: bg, x, y, w, h }], panel);
+    } else {
+        panel.addChild(
+            new Graphics().roundRect(x, y, w, h, 28)
+                .fill({ color: COL.panel }).stroke({ width: 6, color: COL.border })
+        );
+    }
     const t = mkText(title, 25, COL.ink, { weight: '700' });
     t.anchor.set(0.5, 0);
-    t.position.set(x + w / 2, y + 22);
+    t.position.set(x + w / 2, y + titleY);
     panel.addChild(t);
     return { x, y, w, h, cx: x + w / 2 };
 }
@@ -135,6 +142,9 @@ export function drawProps(list, layer) {
                 if (p.h) node.height = p.h;
                 if (p.anchor) node.anchor.set(p.anchor);
                 if (p.a != null) node.alpha = p.a;
+                // tint：把素材壓成場景的色溫。平光的向量素材直接貼進畫好的房間裡
+                // 會亮得像貼紙，乘上一個暖色就融進去了
+                if (p.tint != null) node.tint = p.tint;
                 break;
             }
         }
@@ -143,7 +153,8 @@ export function drawProps(list, layer) {
 }
 
 // 把資料檔裡所有 { t:'img' } 的圖先載進來（缺圖不會讓遊戲當掉）
-// 掃描範圍：場景背景、props、物件的 art / artDone、謎題畫作的四種濾鏡圖。
+// 掃描範圍：場景背景、props、物件的 art / artDone、謎題畫作的四種濾鏡圖，
+// 還有放大檢視面板（zoom.img）用的特寫圖。
 const PAINT_KEYS = ['img', 'imgRed', 'imgBlue', 'imgPurple'];
 
 export async function preloadImages(caseData) {
@@ -155,16 +166,32 @@ export async function preloadImages(caseData) {
         for (const p of puzzle?.paintings || []) {
             for (const k of PAINT_KEYS) if (p[k]) srcs.add(p[k]);
         }
+        // 凱撒盤的正式美術：信紙、外圈底座、內轉盤；bgImg 是謎題面板的底圖
+        for (const k of ['bgImg', 'noteImg', 'dialImg', 'dialInnerImg']) {
+            if (puzzle?.[k]) srcs.add(puzzle[k]);
+        }
+    };
+    if (caseData.assistantImg) srcs.add(caseData.assistantImg);   // 對話框左邊的助手立繪
+    // 放大檢視可以給單張（img）或一疊（imgs）
+    const fromZoom = z => {
+        if (!z) return;
+        if (z.img) srcs.add(z.img);
+        for (const s of z.imgs || []) srcs.add(s);
     };
     for (const sc of Object.values(caseData.scenes)) {
         if (sc.bg) srcs.add(sc.bg);
         fromProps(sc.props);
+        for (const r of sc.records || []) if (r.img) srcs.add(r.img);   // 黑板上的證詞紀錄表
         for (const o of sc.objects || []) {
             fromProps(o.art);
             fromProps(o.artDone);
             fromPuzzle(o.puzzle);
+            fromZoom(o.zoom);
         }
-        for (const h of sc.hotspots || []) fromPuzzle(h.puzzle);
+        for (const h of sc.hotspots || []) {
+            fromPuzzle(h.puzzle);
+            fromZoom(h.zoom);
+        }
     }
     for (const src of srcs) {
         try { await Assets.load(src); }
