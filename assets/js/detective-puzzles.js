@@ -4,7 +4,7 @@ import { COL, mkText, mkButton, drawProps, hasTexture } from './detective-ui.js'
 // ============================================================
 // 偵探事件簿 · 四個學習謎題
 // 每個謎題都是 (ctx, panel, box, cfg, onSolve) => cleanup?
-//   ctx  : { app, root, say }
+//   ctx  : { app, root, say, api }（api＝進度查詢：hasClue / hasItem / examined / …）
 //   panel: 要把東西加進去的容器（已經有白底和標題了）
 //   box  : { x, y, w, h, cx } 面板可用範圍
 //   cfg  : 案件資料檔裡的 puzzle 設定
@@ -13,12 +13,12 @@ import { COL, mkText, mkButton, drawProps, hasTexture } from './detective-ui.js'
 // ============================================================
 
 // ------------------------------------------------------------
-// 提示分兩段（★ 這是解謎遊戲，答案不能一打開面板就攤在那裡）
-//   cfg.hint     —— 常駐顯示，只負責「推一把」：指出該注意什麼、該去哪裡看，
-//                   不講計算過程、不報數字、不列出對照表
-//   cfg.hintMore —— 真正把做法講白的那段，玩家按 💡 才換上去
-// 沒寫 hintMore 就不會有按鈕（等於維持舊行為）。
-// 真的卡死還有第三層：關掉面板點對話框左邊的喜拿，那條提示鏈才會直接指路。
+// 謎題面板上的常駐提示（★ 這是解謎遊戲，答案不能一打開面板就攤在那裡）
+//   cfg.hint —— 只負責「推一把」：指出該注意什麼、該去哪裡看，
+//               不講計算過程、不報數字、不列出對照表
+// 卡死的時候還有第二層：關掉面板點對話框左邊的喜拿，那條提示鏈才會直接指路。
+// ★ 原本這裡有一顆「💡 再給我一點提示」的按鈕（把做法整段講白），已經拿掉 ——
+//   直接給做法會把解謎過程跳過去，要指路請走喜拿那條提示鏈。
 // ------------------------------------------------------------
 function hintBlock(layer, cfg, opt) {
     const t = mkText(cfg.hint || '', opt.size || 13, COL.muted, {
@@ -28,22 +28,9 @@ function hintBlock(layer, cfg, opt) {
     t.position.set(opt.x, opt.y);
     layer.addChild(t);
 
-    let btn = null;
-    if (cfg.hintMore) {
-        btn = mkButton({
-            label: '💡 再給我一點提示', x: opt.btnX, y: opt.btnY, w: 176, h: 32, size: 13,
-            color: COL.border, textColor: COL.ink,
-            onClick: () => { t.text = cfg.hintMore; btn.visible = false; },
-        });
-        layer.addChild(btn);
-    }
     return {
         text: t,
-        // 解開之後把整塊收掉；按鈕一旦用過就不再回來
-        setVisible(v) {
-            t.visible = v;
-            if (btn) btn.visible = v && t.text !== cfg.hintMore;
-        },
+        setVisible(v) { t.visible = v; },      // 解開之後整塊收掉
     };
 }
 
@@ -231,12 +218,11 @@ function caesar(ctx, panel, box, cfg, onSolve) {
     note.position.set(RX, noteY);
     panel.addChild(note);
 
-    // 提示文字排在右欄的信紙下面，💡 按鈕放左邊轉盤底下那塊空地
+    // 提示文字排在右欄的信紙下面
     hintBlock(panel, cfg, {
         x: RX, y: noteY + 26, ax: 0, align: 'left', wrap: RW,
         size: hasTexture(cfg.noteImg) ? 12 : 13,
         lineHeight: hasTexture(cfg.noteImg) ? 17 : 20,
-        btnX: CX - 88, btnY: btnY + 50,
     });
 
     // ★ 轉到正確位移時「什麼都不會發生」—— 對錯一律等玩家自己按下這顆才揭曉。
@@ -339,11 +325,8 @@ function safe(ctx, panel, box, cfg, onSolve) {
         }));
     });
 
-    // 鍵盤最後一排收在 box.y+396，提示接在下面，💡 按鈕貼著面板下緣
-    hintBlock(panel, cfg, {
-        x: box.cx, y: box.y + 404, wrap: box.w - 120,
-        btnX: box.cx - 88, btnY: box.y + box.h - 42,
-    });
+    // 鍵盤最後一排收在 box.y+396，提示接在下面
+    hintBlock(panel, cfg, { x: box.cx, y: box.y + 404, wrap: box.w - 120 });
 
     function render() {
         display.text = entered.split('').join(' ') || '– – –';
@@ -400,7 +383,7 @@ function lens(ctx, panel, box, cfg, onSolve) {
     }));
 
     // ★ 只說「透鏡可以拖」——「紅＋藍＝紫」是這關要玩家自己發現的那一步，
-    //   別在標題底下先講掉（真的卡住，按 💡 或問喜拿才會講）
+    //   別在標題底下先講掉（真的卡住，問喜拿才會講）
     const tip = mkText('兩片透鏡都可以拖。拿去照照看這兩幅畫吧。', 15, COL.muted);
     tip.anchor.set(0.5, 0);
     tip.position.set(box.cx, box.y + 56);
@@ -510,7 +493,6 @@ function lens(ctx, panel, box, cfg, onSolve) {
 
     const hintB = hintBlock(uiLayer, cfg, {
         x: box.cx, y: capY + 76, wrap: box.w - 200, size: 13, lineHeight: 20,
-        btnX: box.x + 40, btnY: box.y + box.h - 54,
     });
 
     // 鏡像的畫要翻正才讀得懂（只有標了 mirrored 的畫才會有這顆按鈕）
@@ -656,7 +638,7 @@ function lens(ctx, panel, box, cfg, onSolve) {
 }
 
 // ------------------------------------------------------------
-// 4) 邏輯矩陣：四名嫌疑人 × 四項物證交叉驗證
+// 4) 邏輯矩陣：嫌疑人 × 物證交叉驗證（列高照人數自動調整）
 //    每格點一下換成 ✓，再點一下換成 ✗，再點一下清空。
 //    全部填對（而且只有真兇整列都是 ✓）才算解開。
 // ------------------------------------------------------------
@@ -675,7 +657,16 @@ const PAPER = {
 //   紙上那條紅色分隔線落在 box.y+86，下面那張撕紙條落在 box.y+506～569，
 //   所以標題壓在線上面、按鈕正好坐在撕紙條上。換底圖時這幾個數字要一起對。
 function deduce(ctx, panel, box, cfg, onSolve) {
-    const sus = cfg.suspects, ev = cfg.evidence;
+    const sus = cfg.suspects;
+    // 證據欄除了字串，也可以寫成 { label, needsClue, lockedLabel }：
+    // 對應的線索還沒到手時那一欄只顯示問號、也不能填。
+    // ★ 這樣「少一條線索」＝少一欄，而不是整塊推理板都打不開 ——
+    //   玩家可以先把查得到的欄位比對完，剩下的欄位就是還要去現場查什麼的清單。
+    const ev = cfg.evidence.map(e => {
+        const col = typeof e === 'string' ? { label: e } : e;
+        return { ...col, locked: !!(col.needsClue && ctx.api && !ctx.api.hasClue(col.needsClue)) };
+    });
+    const lockedCount = ev.filter(e => e.locked).length;
     let marks = deduceMarks.get(cfg);                  // 0 空白 / 1 ✓ / 2 ✗
     if (!marks) {
         marks = sus.map(() => ev.map(() => 0));
@@ -683,21 +674,30 @@ function deduce(ctx, panel, box, cfg, onSolve) {
     }
     const MARK = ['', '✓', '✗'];
 
-    const lead = mkText(cfg.lead || '', 14, COL.ink, { weight: '700', align: 'center', wrap: box.w - 60 });
+    // lead 也可以寫成函式 —— 標題那行會列出要比對的項目，沒查到的一樣要遮起來
+    const leadStr = typeof cfg.lead === 'function' ? cfg.lead(ctx.api) : (cfg.lead || '');
+    const lead = mkText(leadStr, 14, COL.ink, { weight: '700', align: 'center', wrap: box.w - 60 });
     lead.anchor.set(0.5, 0);
     lead.position.set(box.cx, box.y + 92);
     panel.addChild(lead);
 
     // 版面：左邊只掛名牌（證詞不再抄一份過來，見下方），省下來的寬度全給格子；
     // 左右各留 33 —— 再寬就壓到紙的撕邊上了
-    const gx = box.x + 33, labelW = 154, cw = 120, rowH = 66;
+    const gx = box.x + 33, labelW = 154, cw = 120;
+    // 表格的垂直範圍是固定的（欄位標題下方 → 提示區上方），列高照人數平分、最高 66。
+    // 人變多就自動壓扁，不會頂到下面的提示、判定訊息和按鈕。
+    const gridTop = box.y + 158, gridBottom = box.y + 420;
+    const rowH = Math.min(66, (gridBottom - gridTop) / sus.length);
+    const markSize = rowH >= 60 ? 26 : 22;
     const colX = j => gx + labelW + j * cw;
-    const rowY = i => box.y + 164 + i * rowH;
+    const rowY = i => gridTop + i * rowH;
 
     ev.forEach((e, j) => {
-        const t = mkText(e, 13, COL.ink, { weight: '700', align: 'center', lineHeight: 18 });
+        const label = e.locked ? (e.lockedLabel || '？') : e.label;
+        const t = mkText(label, 13, e.locked ? PAPER.note : COL.ink,
+            { weight: '700', align: 'center', lineHeight: 18 });
         t.anchor.set(0.5, 0.5);
-        t.position.set(colX(j) + cw / 2, box.y + 140);
+        t.position.set(colX(j) + cw / 2, gridTop - 22);
         panel.addChild(t);
     });
 
@@ -719,9 +719,23 @@ function deduce(ctx, panel, box, cfg, onSolve) {
         ev.forEach((e, j) => {
             const x = colX(j);
             const cell = new Container();
+
+            // 還沒查出來的欄位：畫成名牌那種底色的「空格」，只有問號、點不動
+            if (e.locked) {
+                const bg = new Graphics().roundRect(x + 5, y + 5, cw - 12, rowH - 20, 9)
+                    .fill({ color: PAPER.plate }).stroke({ width: 2, color: PAPER.plateEdge });
+                const q = mkText('？', markSize - 2, PAPER.note, { weight: '700' });
+                q.anchor.set(0.5);
+                q.position.set(x + cw / 2 - 1, y + (rowH - 8) / 2);
+                cell.addChild(bg, q);
+                panel.addChild(cell);
+                cellMarks[i].push(q);
+                return;
+            }
+
             const bg = new Graphics().roundRect(x + 5, y + 5, cw - 12, rowH - 20, 9)
                 .fill({ color: PAPER.cell }).stroke({ width: 2, color: PAPER.cellEdge });
-            const mk = mkText(MARK[marks[i][j]], 26, COL.ink, { weight: '700' });
+            const mk = mkText(MARK[marks[i][j]], markSize, COL.ink, { weight: '700' });
             mk.anchor.set(0.5);
             mk.position.set(x + cw / 2 - 1, y + (rowH - 8) / 2);
             if (marks[i][j]) mk.style.fill = marks[i][j] === 1 ? COL.ok : COL.red;
@@ -743,7 +757,6 @@ function deduce(ctx, panel, box, cfg, onSolve) {
     // 底部三層依序排開：提示 → 檢查結果 → 按鈕，彼此不重疊
     hintBlock(panel, cfg, {
         x: box.cx, y: box.y + 428, wrap: box.w - 90, size: 12, lineHeight: 19,
-        btnX: box.cx - 88, btnY: box.y + 452,
     }).text.style.fill = PAPER.note;
 
     const result = mkText('', 14, COL.red, { weight: '700', align: 'center', wrap: box.w - 90 });
@@ -755,13 +768,24 @@ function deduce(ctx, panel, box, cfg, onSolve) {
     panel.addChild(mkButton({
         label: '🔍 檢查推理', x: box.cx - 100, y: box.y + 512, w: 200, h: 42,
         onClick: () => {
+            // 沒解鎖的欄位不算進來 —— 那幾格本來就填不了
             let blank = 0, wrong = 0;
             sus.forEach((s, i) => ev.forEach((e, j) => {
+                if (e.locked) return;
                 if (marks[i][j] === 0) blank++;
                 else if ((marks[i][j] === 1) !== cfg.truth[i][j]) wrong++;
             }));
+            result.style.fill = COL.red;
             if (blank) { result.text = `還有 ${blank} 格沒填，每一格都要判斷符不符合。`; return; }
             if (wrong) { result.text = `有 ${wrong} 格對不上，再讀一次證詞吧！`; return; }
+            // 填得到的都填對了，但還有欄位沒查出來 → 不能結案，也不該罵人
+            if (lockedCount) {
+                result.style.fill = COL.ok;
+                result.text = `填得完的欄位都對了！可是「？」那 ${lockedCount} 欄的物證還沒查出來，`
+                    + `光靠現在這幾欄還沒辦法把真兇單獨挑出來。`
+                    + (cfg.lockedText ? `\n${cfg.lockedText}` : '');
+                return;
+            }
             onSolve();
         },
     }));

@@ -433,16 +433,20 @@ function renderScene(id) {
 
 // ============================================================
 // 黑板上的證詞紀錄表
-// 場景寫 board: { x, y, w, h } 指定黑板在畫面上的位置，
+// 場景寫 board: { x, y, w, h, cols? } 指定黑板在畫面上的位置（cols 沒寫就兩欄），
 // 再寫 records: [ { emoji, name, role, facts:[四則短句], note }, … ]，
-// 進場就會把它們排成 2×2 貼在黑板上（純顯示，不用點）。
+// 進場就會把它們排成格子貼在黑板上（純顯示，不用點）。
+// 最後一列排不滿時會置中，五張卡（三欄）才不會整塊偏左。
 // facts 的順序固定是：身高 / 慣用手 / 單片眼鏡 / 案發時段。
 //
 // ★ record 寫了 img 就改貼正式美術（等比縮進格子裡置中）。
-//   黑板上的格子很小，卡片上的字一定看不清楚 —— 那是給人「認得出有四張卡」用的，
+//   黑板上的格子很小，卡片上的字一定看不清楚 —— 那是給人「認得出黑板上貼著卡」用的，
 //   要讀內容請點黑板，用放大檢視一張一張看。
 // ============================================================
 const BOARD_MARGIN = 8, BOARD_GAP = 7;
+// 缺圖時的替代卡照這個尺寸畫版面，再整張縮進格子裡 ——
+// 欄數變多、格子變窄時，字會跟著等比縮小，而不是擠成一團
+const CARD_DW = 160, CARD_DH = 90;
 
 function renderBoard() {
     boardLayer.removeChildren();
@@ -450,14 +454,19 @@ function renderBoard() {
     const area = scene?.board, records = scene?.records;
     if (!area || !records?.length) return;
 
-    const cw = (area.w - BOARD_MARGIN * 2 - BOARD_GAP) / 2;
-    const ch = (area.h - BOARD_MARGIN * 2 - BOARD_GAP) / 2;
+    const cols = Math.max(1, area.cols || 2);
+    const rows = Math.ceil(records.length / cols);
+    const cw = (area.w - BOARD_MARGIN * 2 - BOARD_GAP * (cols - 1)) / cols;
+    const ch = (area.h - BOARD_MARGIN * 2 - BOARD_GAP * (rows - 1)) / rows;
 
-    records.slice(0, 4).forEach((r, i) => {
+    records.forEach((r, i) => {
+        const row = Math.floor(i / cols);
+        const inRow = Math.min(cols, records.length - row * cols);   // 這一列實際有幾張
+        const rowW = inRow * cw + (inRow - 1) * BOARD_GAP;
         const card = new Container();
         card.position.set(
-            area.x + BOARD_MARGIN + (i % 2) * (cw + BOARD_GAP),
-            area.y + BOARD_MARGIN + Math.floor(i / 2) * (ch + BOARD_GAP)
+            area.x + (area.w - rowW) / 2 + (i - row * cols) * (cw + BOARD_GAP),
+            area.y + BOARD_MARGIN + row * (ch + BOARD_GAP)
         );
 
         // 有正式美術就直接貼圖，等比縮到格子裡置中
@@ -470,30 +479,37 @@ function renderBoard() {
             return;
         }
 
+        // 缺圖的替代卡：先照 CARD_DW × CARD_DH 排版，最後整張縮進格子
+        const face = new Container();
+        const s = Math.min(cw / CARD_DW, ch / CARD_DH);
+        face.scale.set(s);
+        face.position.set((cw - CARD_DW * s) / 2, (ch - CARD_DH * s) / 2);
+        card.addChild(face);
+
         // 紙、影子，還有黏在上緣的紙膠帶
-        card.addChild(new Graphics().roundRect(2, 3, cw, ch, 5).fill({ color: 0x000000, alpha: 0.25 }));
-        card.addChild(
-            new Graphics().roundRect(0, 0, cw, ch, 5)
+        face.addChild(new Graphics().roundRect(2, 3, CARD_DW, CARD_DH, 5).fill({ color: 0x000000, alpha: 0.25 }));
+        face.addChild(
+            new Graphics().roundRect(0, 0, CARD_DW, CARD_DH, 5)
                 .fill({ color: 0xfdf6e6 }).stroke({ width: 2, color: 0xd8cdbc })
         );
-        card.addChild(
-            new Graphics().roundRect(cw / 2 - 22, -5, 44, 11, 2).fill({ color: 0xf2e6c8, alpha: 0.9 })
+        face.addChild(
+            new Graphics().roundRect(CARD_DW / 2 - 22, -5, 44, 11, 2).fill({ color: 0xf2e6c8, alpha: 0.9 })
         );
 
-        const put = (s, x, y, size, color, weight) => {
-            const t = mkText(s, size, color, weight ? { weight } : {});
+        const put = (str, x, y, size, color, weight) => {
+            const t = mkText(str, size, color, weight ? { weight } : {});
             t.position.set(x, y);
-            card.addChild(t);
+            face.addChild(t);
         };
 
         const em = mkText(r.emoji || '❓', 17, 0xffffff);
         em.anchor.set(0.5);
         em.position.set(17, 17);
-        card.addChild(em);
+        face.addChild(em);
         put(r.name || '', 32, 5, 14, COL.ink, '700');
         put(r.role || '', 80, 9, 10, COL.muted);
-        card.addChild(
-            new Graphics().moveTo(10, 27).lineTo(cw - 10, 27).stroke({ width: 2, color: 0xd8cdbc })
+        face.addChild(
+            new Graphics().moveTo(10, 27).lineTo(CARD_DW - 10, 27).stroke({ width: 2, color: 0xd8cdbc })
         );
 
         // 四則短句排成 2×2
@@ -964,7 +980,8 @@ function openPuzzle(h) {
     const cfg = h.puzzle;
     openPanel(panel => {
         const box = panelBase(panel, { title: cfg.title, bg: cfg.bgImg, ...(cfg.box || {}) });
-        const ctx = { app, root, say };
+        // api 讓謎題自己查進度（例如推理板要知道哪幾欄的物證還沒到手）
+        const ctx = { app, root, say, api: txtApi };
         panelCleanup = PUZZLES[cfg.type](ctx, panel, box, cfg, () => {
             closePanel();
             award(h, h.solvedText || lookOf(h));
@@ -984,7 +1001,7 @@ function openPuzzle(h) {
 //
 // B. 多張圖冊：一次看一張，用 ◀ ▶ 翻頁
 //    { btn?, title, imgs: [...], captions?: [...], okLabel? }
-//    黑板上的四張證詞紀錄表縮得很小、字根本看不清楚，靠這個版型一張一張放大讀。
+//    黑板上的證詞紀錄表縮得很小、字根本看不清楚，靠這個版型一張一張放大讀。
 // ============================================================
 function showZoom(cfg) {
     const imgs = cfg.imgs || (cfg.img ? [cfg.img] : []);
@@ -996,10 +1013,13 @@ function showZoom(cfg) {
         const top = box.y + 76;
 
         // ---- 左：實物特寫，外面加一圈木框，像把東西端到眼前 ----
-        const IW = cfg.imgW || 260, IH = cfg.imgH || 210;
-        const ix = box.x + 36, iy = top;
+        // ★ 對齊的是「木框外緣」，不是圖本身 —— 木框往外多 FRAME 一圈，
+        //   所以圖要往下讓一個 FRAME，兩欄的頂端才會切齊右邊那張註解卡。
+        const IW = cfg.imgW || 260, IH = cfg.imgH || 210, FRAME = 7;
+        const ix = box.x + 36 + FRAME, iy = top + FRAME;
         panel.addChild(
-            new Graphics().roundRect(ix - 7, iy - 7, IW + 14, IH + 14, 10).fill({ color: 0x6b4a2f })
+            new Graphics().roundRect(box.x + 36, top, IW + FRAME * 2, IH + FRAME * 2, 10)
+                .fill({ color: 0x6b4a2f })
         );
         if (hasTexture(cfg.img)) {
             drawProps([{ t: 'img', src: cfg.img, x: ix, y: iy, w: IW, h: IH }], panel);
@@ -1014,21 +1034,31 @@ function showZoom(cfg) {
         }
 
         // ---- 右：中文註解卡（英文在左邊那張圖上已經看得清清楚楚了）----
-        const px = box.x + 328, pw = 323, ph = 300, pad = 22;
+        // ★ 卡片高度照內容算，不是寫死的 —— 寫死的話文字短的時候下面會空一大塊，
+        //   上下左右的留白就對不起來。先把每段文字做出來量高度，再決定卡片多高。
+        const PAD = 22;                                     // 上下左右統一用這個間距
+        const GAP = 12;                                     // 段落之間（跟外框留白無關）
+        const px = box.x + 328, pw = 323;
+        const wrap = pw - PAD * 2;
+        const blocks = [];
+        if (cfg.lead) blocks.push(mkText(cfg.lead, 19, COL.ink, { weight: '700', lineHeight: 28, wrap }));
+        for (const line of cfg.notes || []) blocks.push(mkText(line, 16, COL.ink, { lineHeight: 26, wrap }));
+
+        const contentH = blocks.reduce((s, t) => s + t.height, 0) + Math.max(0, blocks.length - 1) * GAP;
+        // 內容真的很長時就讓卡片停在按鈕上面，不要壓過去
+        const maxH = (box.y + box.h - 52) - 14 - top;
+        const ph = Math.min(contentH + PAD * 2, maxH);
         panel.addChild(
             new Graphics().roundRect(px, top, pw, ph, 12)
                 .fill({ color: COL.panel2 }).stroke({ width: 3, color: COL.border })
         );
 
-        let ty = top + pad;
-        const put = (str, size, color, opt) => {
-            const t = mkText(str, size, color, { wrap: pw - pad * 2, ...opt });
-            t.position.set(px + pad, ty);
+        let ty = top + PAD;
+        for (const t of blocks) {
+            t.position.set(px + PAD, ty);
             panel.addChild(t);
-            ty += t.height + 12;
-        };
-        if (cfg.lead) put(cfg.lead, 19, COL.ink, { weight: '700', lineHeight: 28 });
-        for (const line of cfg.notes || []) put(line, 16, COL.ink, { lineHeight: 26 });
+            ty += t.height + GAP;
+        }
 
         panel.addChild(mkButton({
             label: cfg.okLabel || '👍 看清楚了',
@@ -1144,16 +1174,20 @@ function showAccuse() {
         return;
     }
     openPanel(panel => {
+        // ★ 卡片上不放 emoji 大頭 —— 只留名字、職稱和證詞（卡片高度跟著縮短）
+        // 面板寬度照人數算：卡片維持 142 寬，人多就把面板撐開，而不是把卡片壓扁
+        const n = CASE.suspects.length;
+        const cw = 142, chh = 168, gap = 22;
+        const pw = Math.min(W - 40, Math.max(680, n * cw + (n - 1) * gap + 56));
         // 卡片拿掉 emoji 之後矮了 48，面板跟著收高，才不會下半部空一大塊
-        const box = panelBase(panel, { y: 96, h: 400, title: '🕵️ 誰帶走了黃金貓頭鷹？' });
+        const box = panelBase(panel, {
+            x: (W - pw) / 2, y: 96, w: pw, h: 400, title: '🕵️ 誰帶走了黃金貓頭鷹？',
+        });
         const tip = mkText('想一想筆記裡的線索，點選你認為的犯人。', 16, COL.muted);
         tip.anchor.set(0.5, 0);
         tip.position.set(box.cx, box.y + 64);
         panel.addChild(tip);
 
-        // ★ 卡片上不放 emoji 大頭 —— 只留名字、職稱和證詞（卡片高度跟著縮短）
-        const n = CASE.suspects.length;
-        const cw = 142, chh = 168, gap = 22;
         const startX = box.cx - (n * cw + (n - 1) * gap) / 2;
         CASE.suspects.forEach((s, i) => {
             const cx = startX + i * (cw + gap);
