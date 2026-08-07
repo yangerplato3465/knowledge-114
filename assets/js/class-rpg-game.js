@@ -28,7 +28,7 @@ container.appendChild(app.canvas);
 
 // ---- 角色圖集 ----
 const CELL = 64;
-const sheet = await Assets.load('../assets/images/char/char1.png');
+const sheet = await Assets.load('../assets/images/char/char1.webp');
 sheet.source.scaleMode = 'nearest';            // 像素風：放大不模糊
 
 const frameAt = (col, row) =>
