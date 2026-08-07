@@ -79,16 +79,24 @@
 //   doneItem / lookDone / artDone（拿到某道具後換說法與外觀）
 // ============================================================
 
-// 圖片資料夾（路徑相對於 pages/detective.html）
+// 圖片資料夾
 //   assets/images/detective/            → 遊戲實際載入的優化圖
-//                                         畫作 720px JPG／背景 1440×900 JPG
-//   assets/images/detective/original/   → 美術原檔備份（PNG），遊戲不載入
+//                                         畫作 720px WebP／背景 1440×900 WebP
+//   assets/images/detective/original/   → 美術原檔備份，遊戲不載入
+//
+// ★ 這裡要算成「絕對網址」，不能直接寫死 '../assets/images/detective/'：
+//   瀏覽器載 <script>／<link> 會照標準把 ../ 解析對，但 Pixi 的 Assets 是自己
+//   接字串——它把 document.baseURI 整串當成資料夾。網址結尾有副檔名時
+//   （/pages/detective.html）剛好算得對，可是 Netlify 的 Pretty URLs 會把它
+//   美化成 /pages/detective，Pixi 就少算一層，全部圖都去要 /pages/assets/... 而 404。
+//   改用 currentScript.src 當基準交給瀏覽器算，網址長什麼樣都不會歪，
+//   放在子目錄（例如 GitHub Pages 的 /knowledge-114/）也一樣正確。
 //
 // ★ 背景圖規格：畫面是 960×600（16:10）。background1.webp 已經把原稿
 //   2808×1536 在「下緣」補到 2808×1755 再縮成 1440×900，補出來的那條
 //   地板正好被下方對話框蓋住，所以整張圖不會被拉扁。
 //   之後要換背景，照同樣的 16:10 比例出圖就好。
-const IMG = '../assets/images/detective/';
+const IMG = new URL('../images/detective/', document.currentScript.src).href;
 
 // 喜拿的防卡關提示：兩個場景共用同一條提示鏈（挑第一條還沒達成的講）。
 // text 可以寫成函式（吃引擎給的進度查詢 api）—— 提示指的東西大多在校長室，
