@@ -4,18 +4,18 @@
 // 由 assets/js/detective.js（引擎）讀取 window.DETECTIVE_CASE。
 //
 // 資產編號對照（美術替換時照這張表找）：
-//   BG01  校長室背景          scenes.principal.bg → background1.jpg（整張正式背景圖）
+//   BG01  校長室背景          scenes.principal.bg → background1.webp（整張正式背景圖）
 //     └ 保險箱／掛畫框／書櫃／窗戶／盆栽／掛鐘／大門都「畫在背景裡」，
 //       所以它們不是 objects，而是蓋在背景上的透明 hotspots（只有座標，沒有 art）
 //   BOOK01 書櫃上的書        scenes.principal.props → books_upright / books_stand /
 //                             books_row / books_trio / books_stack / books_lean（去背 PNG）
-//                             ＝ original/books.png 那張素材表切出來的六組，純裝飾、點不到
-//   NPC01 校長立繪            scenes.principal.props → president.png（去背 PNG）
+//                             ＝ original/books.webp 那張素材表切出來的六組，純裝飾、點不到
+//   NPC01 校長立繪            scenes.principal.props → president.webp（去背 PNG）
 //                             ＋ hotspots 的 principalNpc（判定框跟著立繪走）
 //   SP01  密碼紙條            objects：可拖移，可收進物品欄
 //   SP02  數字保險箱          hotspots：窗邊矮櫃上那個鐵保險箱，點擊開謎題
 //   SP03  空白貓頭鷹底座      objects：擺在校長桌左半邊，點擊查看
-//                             art 用 trophy.png（去背 PNG）＋上方浮一個金色「？」
+//                             art 用 trophy.webp（去背 PNG）＋上方浮一個金色「？」
 //   SP04  掛畫框              hotspots × 2（左框、右框）—— 兩個共用同一個 id 'SP04'，
 //                             所以解開任何一邊，另一邊也一起變成「已調查」
 //   ITEM01A 解密盤外圈底座    objects：固定在桌上，等內圈裝回來
@@ -24,12 +24,12 @@
 //   HIDDEN01/02 單片眼鏡/右手施力  藏在 SP04 的透鏡謎題裡（paintings）
 //     └ 兩幅都已改用正式畫作：picture1 / picture2（各含 _red / _blue / _purple）
 //       正式畫作同時也貼在背景圖那兩個金色空畫框裡（見 props 最上面）
-//   BG02  推理室背景          scenes.deduction.bg → background2.jpg（整張正式背景圖）
+//   BG02  推理室背景          scenes.deduction.bg → background2.webp（整張正式背景圖）
 //     └ 同樣地，推理板／黑板／照片牆／長桌／大門都畫在圖裡，是透明 hotspots
 //   UI01  推理板              scenes.deduction.hotspots：左邊那塊軟木板，開邏輯矩陣
 //   UI02  鑑識報告紙條        scenes.deduction.objects：可拖移，釘在右邊軟木板下半部
-//   UI03  邏輯矩陣面板底圖    UI01 的 puzzle.bgImg → report_paper.png（羊皮紙，去背 PNG）
-//                             ＝ original/screening_report.png 補掉中間畫死的假格子後的版本
+//   UI03  邏輯矩陣面板底圖    UI01 的 puzzle.bgImg → report_paper.webp（羊皮紙，去背 PNG）
+//                             ＝ original/screening_report.webp 補掉中間畫死的假格子後的版本
 //   UI03A~D 嫌疑人證詞紀錄表  scenes.deduction.records：四張一起貼在黑板上，不用點
 //   UI_BT01 指認真兇按鈕      右上角 HUD「🕵️ 指認犯人」
 //   UI_BT02 偵探大耳狗提示    對話框左側的喜拿頭像（點頭像給提示，不在場景中）
@@ -42,7 +42,7 @@
 //   推理室｜UI02 鑑識報告 → UI01 邏輯矩陣 → 指認真兇
 //
 // ★ 換正式美術：objects 的 art 座標以「物件左上角」為原點，
-//   整段換成 [{ t:'img', src:'.../SP01.png', x:0, y:0, w, h }] 即可。
+//   整段換成 [{ t:'img', src:'.../SP01.webp', x:0, y:0, w, h }] 即可。
 //   props / hotspots 座標以 960 × 600 畫面為準。
 //
 // 圖形 props 寫法：
@@ -84,7 +84,7 @@
 //                                         畫作 720px JPG／背景 1440×900 JPG
 //   assets/images/detective/original/   → 美術原檔備份（PNG），遊戲不載入
 //
-// ★ 背景圖規格：畫面是 960×600（16:10）。background1.jpg 已經把原稿
+// ★ 背景圖規格：畫面是 960×600（16:10）。background1.webp 已經把原稿
 //   2808×1536 在「下緣」補到 2808×1755 再縮成 1440×900，補出來的那條
 //   地板正好被下方對話框蓋住，所以整張圖不會被拉扁。
 //   之後要換背景，照同樣的 16:10 比例出圖就好。
@@ -147,10 +147,10 @@ const SP04 = {
                 // HIDDEN01：四張圖依濾鏡切換
                 //   img=原圖 / imgRed=紅光 / imgBlue=藍光 / imgPurple=紫光
                 name: '畫作一', caption: '特徵①：配戴單片眼鏡',
-                img: IMG + 'picture1.jpg',
-                imgRed: IMG + 'picture1_red.jpg',
-                imgBlue: IMG + 'picture1_blue.jpg',
-                imgPurple: IMG + 'picture1_purple.jpg',
+                img: IMG + 'picture1.webp',
+                imgRed: IMG + 'picture1_red.webp',
+                imgBlue: IMG + 'picture1_blue.webp',
+                imgPurple: IMG + 'picture1_purple.webp',
                 // 想恢復「鏡像→要按鈕翻正」的機關，把這行改成 true
                 mirrored: false,
                 icon: '🧐', reveal: '單片眼鏡',
@@ -158,10 +158,10 @@ const SP04 = {
             {
                 // HIDDEN02：右手拿筆＋地板上的右手掌印
                 name: '畫作二', caption: '特徵②：右手施力（右撇子）',
-                img: IMG + 'picture2.jpg',
-                imgRed: IMG + 'picture2_red.jpg',
-                imgBlue: IMG + 'picture2_blue.jpg',
-                imgPurple: IMG + 'picture2_purple.jpg',
+                img: IMG + 'picture2.webp',
+                imgRed: IMG + 'picture2_red.webp',
+                imgBlue: IMG + 'picture2_blue.webp',
+                imgPurple: IMG + 'picture2_purple.webp',
                 mirrored: false,
                 icon: '🧤', reveal: '右手施力',
             },
@@ -189,10 +189,10 @@ window.DETECTIVE_CASE = {
     startScene: 'principal',
 
     // 助手頭像：對話框左邊那位（點下去給提示）。
-    // 從 detective.png 裁出頭部（帽子＋雙耳＋放大鏡）再套圓形遮罩 ——
+    // 從 detective.webp 裁出頭部（帽子＋雙耳＋放大鏡）再套圓形遮罩 ——
     // 全身版縮到 62px 時頭只剩 26px 看不清楚，改用頭像後同樣空間放大一倍。
-    // （全身版留在 assistant.png，之後要用在別的地方可以拿）
-    assistantImg: IMG + 'assistant_head.png',
+    // （全身版留在 assistant.webp，之後要用在別的地方可以拿）
+    assistantImg: IMG + 'assistant_head.webp',
 
     // UI_BT02 偵探小貓提示：喜拿住在對話框左側的頭像裡，點頭像依進度給提示
     hints: OWL_HINTS,
@@ -262,7 +262,7 @@ window.DETECTIVE_CASE = {
             // BG01：整張正式背景圖，引擎會自動鋪滿 960×600 並畫在所有東西最底下。
             // 場景裡的家具（矮櫃上的保險箱、兩個金畫框、書櫃、窗戶、盆栽、掛鐘、大門）
             // 都已經畫在圖裡了，所以下面的 props 只補「圖上沒有的東西」。
-            bg: IMG + 'background1.jpg',
+            bg: IMG + 'background1.webp',
 
             intro: '「大偵探！你看，書櫃裡那個展示座空了 —— 黃金貓頭鷹不見了！我們快調查看看吧！」',
             // 回訪時別重講開場白（換場景每次都會播 intro，很出戲）
@@ -290,28 +290,28 @@ window.DETECTIVE_CASE = {
                 // 下面的座標是「對準灰底中心、四邊各多蓋 2px」——
                 // 多出來的部分壓在框內側的深棕線上，灰底就不會從邊緣漏出來。
                 //   左：中心 (253, 171.5)　右：中心 (716, 196)
-                // 畫作原稿是 0.914 的比例，比開口寬，所以另外做了 *_frame.jpg ——
+                // 畫作原稿是 0.914 的比例，比開口寬，所以另外做了 *_frame.webp ——
                 // 從原稿置中裁成開口的比例，鋪滿時不會變形。
-                // ★ 透鏡謎題用的仍是未裁切的 picture1/2.jpg（那裡才要看細節，不能裁掉）。
-                { t: 'img', src: IMG + 'picture1_frame.jpg', x: 202, y: 102, w: 102, h: 139 },
-                { t: 'img', src: IMG + 'picture2_frame.jpg', x: 665, y: 125, w: 102, h: 142 },
+                // ★ 透鏡謎題用的仍是未裁切的 picture1/2.webp（那裡才要看細節，不能裁掉）。
+                { t: 'img', src: IMG + 'picture1_frame.webp', x: 202, y: 102, w: 102, h: 139 },
+                { t: 'img', src: IMG + 'picture2_frame.webp', x: 665, y: 125, w: 102, h: 142 },
 
-                // ---- BOOK01 書櫃上的書（books.png 切出來的六組去背 PNG）----
+                // ---- BOOK01 書櫃上的書（books.webp 切出來的六組去背 PNG）----
                 // 每組的底邊都貼齊層板的上表面（y = 156 / 219 / 282），
                 // 中間刻意留大片空位 —— 劇情是「整排校史紀錄都被抽走了」。
                 // ★ 第三層 x 431–530 是綠椅的椅背（畫在背景圖裡），書擺過去會蓋到椅子，
                 //   所以那一層只放左右兩側。尺寸要照各張圖的原比例等比縮。
-                { t: 'img', src: IMG + 'books_upright.png', x: 356, y: 106, w: 40, h: 50 },
-                { t: 'img', src: IMG + 'books_stand.png', x: 545, y: 102, w: 52, h: 54 },
-                { t: 'img', src: IMG + 'books_row.png', x: 358, y: 165, w: 78, h: 54 },
-                { t: 'img', src: IMG + 'books_trio.png', x: 562, y: 166, w: 38, h: 53 },
-                { t: 'img', src: IMG + 'books_stack.png', x: 356, y: 244, w: 69, h: 38 },
-                { t: 'img', src: IMG + 'books_lean.png', x: 536, y: 228, w: 57, h: 54 },
+                { t: 'img', src: IMG + 'books_upright.webp', x: 356, y: 106, w: 40, h: 50 },
+                { t: 'img', src: IMG + 'books_stand.webp', x: 545, y: 102, w: 52, h: 54 },
+                { t: 'img', src: IMG + 'books_row.webp', x: 358, y: 165, w: 78, h: 54 },
+                { t: 'img', src: IMG + 'books_trio.webp', x: 562, y: 166, w: 38, h: 53 },
+                { t: 'img', src: IMG + 'books_stack.webp', x: 356, y: 244, w: 69, h: 38 },
+                { t: 'img', src: IMG + 'books_lean.webp', x: 536, y: 228, w: 57, h: 54 },
 
                 // ---- 校長：正式立繪（去背 PNG），站在桌子右邊的地板上 ----
                 // 圖的長寬比是 360:475（≈0.758），改大小時要一起換才不會變形。
                 // 腳底壓在 y=444，剛好落在下方對話框（y=452）上面一點。
-                { t: 'img', src: IMG + 'president.png', x: 698, y: 289, w: 117, h: 155 },
+                { t: 'img', src: IMG + 'president.webp', x: 698, y: 289, w: 117, h: 155 },
             ],
 
             // ============================================================
@@ -328,7 +328,7 @@ window.DETECTIVE_CASE = {
                     // 縮到 78×80 之後那些字根本看不清楚，要看就點下面 zoom 的「放大看銘牌」。
                     art: [
                         { t: 'ellipse', x: 39, y: 113, rx: 40, ry: 5, c: 0x000000, a: 0.3 },
-                        { t: 'img', src: IMG + 'trophy.png', x: 0, y: 34, w: 78, h: 80 },
+                        { t: 'img', src: IMG + 'trophy.webp', x: 0, y: 34, w: 78, h: 80 },
                         // 「？」浮在底座上方，提示雕像不見了
                         { t: 'text', s: '？', x: 39, y: 16, size: 32, c: 0xffd966, weight: '700', ax: 0.5, ay: 0.5 },
                     ],
@@ -336,11 +336,11 @@ window.DETECTIVE_CASE = {
                     //   調查完會進偵探筆記 —— 但別在第一眼就替玩家講完）
                     look: '雕像不見了。抽屜被拉開、層架上的書被翻過 —— 可是玻璃罩被「輕輕地」取下來擺在一邊，底座連一道刮痕都沒有，門鎖也完好無缺。\n這樣的現場，真的像是被闖空門嗎？',
                     // 底座正面那塊銅牌上刻的英文，縮圖看不清楚 → 拉近看，順便認幾個英文字
-                    // trophy_plaque.jpg 是從 original/trophy_base.png 裁下來的銘牌特寫
+                    // trophy_plaque.webp 是從 original/trophy_base.webp 裁下來的銘牌特寫
                     zoom: {
                         btn: '🔍 放大看銘牌',
                         title: '🔍 展示座銘牌 · 放大檢視',
-                        img: IMG + 'trophy_plaque.jpg',
+                        img: IMG + 'trophy_plaque.webp',
                         note: '銅牌被擦得發亮，連一點灰塵都沒有 —— 有人很常擦它。',
                         lead: '銘牌上刻的是什麼？',
                         notes: [
@@ -359,10 +359,10 @@ window.DETECTIVE_CASE = {
                     id: 'SP01', name: '密碼紙條', x: 216, y: 388, w: 84, h: 58,
                     hiddenUntil: 'drawer',
                     draggable: true, icon: '📜',
-                    // 正式美術：stationery.png 裁出信紙上半截（JROGHQ ＋ 影子署名）
+                    // 正式美術：stationery.webp 裁出信紙上半截（JROGHQ ＋ 影子署名）
                     // 原比例 1870:1010，等比縮到 84 寬 → 高 45，置中留 6px
                     art: [
-                        { t: 'img', src: IMG + 'stationery_note.jpg', x: 0, y: 6, w: 84, h: 45 },
+                        { t: 'img', src: IMG + 'stationery_note.webp', x: 0, y: 6, w: 84, h: 45 },
                     ],
                     requires: 'dial',
                     // 轉輪找到沒，決定下半句往哪裡指
@@ -386,9 +386,9 @@ window.DETECTIVE_CASE = {
                         hint: '「往後飛 3 格」是要往哪一邊轉？兩邊都試試看 —— 轉對的時候，右邊會拼出一個看得懂的英文單字。',
                         hintMore: '「往後飛」＝把字母往字母表的前面推。以第一個字母 J 為例：I、H、G，往前數 3 個就是 G。剩下五個字母照同樣的方法推推看。',
                         // 正式美術：右欄放整封怪盜的信；左邊解密盤用 roulette 切出的兩層
-                        noteImg: IMG + 'stationery.jpg',
-                        dialImg: IMG + 'roulette_ring.png',
-                        dialInnerImg: IMG + 'roulette_inner.png',
+                        noteImg: IMG + 'stationery.webp',
+                        dialImg: IMG + 'roulette_ring.webp',
+                        dialInnerImg: IMG + 'roulette_inner.webp',
                         // 輪軸不在圖片正中央（量測值：中心 (1027.8,1059.5)／2048）
                         dialPivot: { x: 0.502, y: 0.517 },
                         dialOuterR: 0.4766,             // 輪盤外緣半徑佔圖寬的比例
@@ -406,21 +406,21 @@ window.DETECTIVE_CASE = {
                     id: 'ITEM01A', name: '解密盤底座', x: 540, y: 292, w: 56, h: 56,
                     hiddenUntil: 'drawer',
                     draggable: true, storeAs: 'dial',
-                    // 正式美術：roulette.png 切成的外圈底座（中間是空的，等轉輪裝回來）
+                    // 正式美術：roulette.webp 切成的外圈底座（中間是空的，等轉輪裝回來）
                     // ★ 為什麼不是正圓：roulette 是平光的向量圖，原樣貼上去會像一張
                     //   立在桌上的貼紙。壓成橢圓（56×36）＝「平躺在桌面上」，再加一片
                     //   接地陰影和暖色 tint，才吃得進這個暖色暗調的房間。
                     //   物件框仍是 56×56（拖曳判定不變），圖只是靠著框的下緣畫。
                     art: [
                         { t: 'ellipse', x: 28, y: 50, rx: 28, ry: 7, c: 0x000000, a: 0.28 },
-                        { t: 'img', src: IMG + 'roulette_ring.png', x: 0, y: 20, w: 56, h: 36, tint: 0xccb599 },
+                        { t: 'img', src: IMG + 'roulette_ring.webp', x: 0, y: 20, w: 56, h: 36, tint: 0xccb599 },
                     ],
                     doneItem: 'dial',
                     // 裝好＝內轉盤疊回外圈（兩張圖同座標疊放就是完整輪盤）
                     artDone: [
                         { t: 'ellipse', x: 28, y: 50, rx: 28, ry: 7, c: 0x000000, a: 0.28 },
-                        { t: 'img', src: IMG + 'roulette_inner.png', x: 0, y: 20, w: 56, h: 36, tint: 0xccb599 },
-                        { t: 'img', src: IMG + 'roulette_ring.png', x: 0, y: 20, w: 56, h: 36, tint: 0xccb599 },
+                        { t: 'img', src: IMG + 'roulette_inner.webp', x: 0, y: 20, w: 56, h: 36, tint: 0xccb599 },
+                        { t: 'img', src: IMG + 'roulette_ring.webp', x: 0, y: 20, w: 56, h: 36, tint: 0xccb599 },
                     ],
                     // 轉輪已經在場上的話就別再問「滾去哪了」，直接教玩家組起來
                     look: api => api.examined('plant')
@@ -438,11 +438,11 @@ window.DETECTIVE_CASE = {
                     dropTarget: 'ITEM01A',
                     dropSay: '咔！內圈轉輪裝回了底座 —— 雙層解密盤完好如初，轉動就能對照字母了。',
                     dropGivesItem: 'dial',
-                    // 正式美術：roulette.png 切出的金色內轉盤（中間是貓頭鷹）
+                    // 正式美術：roulette.webp 切出的金色內轉盤（中間是貓頭鷹）
                     // 一樣壓成平躺的橢圓＋陰影＋暖色，才和底座、和地板對得上（見 ITEM01A）
                     art: [
                         { t: 'ellipse', x: 22, y: 39, rx: 22, ry: 5, c: 0x000000, a: 0.25 },
-                        { t: 'img', src: IMG + 'roulette_inner.png', x: 0, y: 16, w: 44, h: 28, tint: 0xccb599 },
+                        { t: 'img', src: IMG + 'roulette_inner.webp', x: 0, y: 16, w: 44, h: 28, tint: 0xccb599 },
                     ],
                     // 底座還沒從抽屜翻出來之前，不能叫玩家「拖到桌上的底座」—— 桌上根本沒有
                     look: api => api.examined('drawer')
@@ -534,7 +534,7 @@ window.DETECTIVE_CASE = {
 
             // BG02：整張正式背景圖。左邊的門通回校長室，兩塊軟木板、黑板、長桌
             // 通通畫在圖裡了，所以它們一樣是「沒有 art、只有座標」的透明 hotspot。
-            bg: IMG + 'background2.jpg',
+            bg: IMG + 'background2.webp',
 
             intro: '「這裡是我們的推理室！把蒐集到的證據和四個嫌疑人的證詞好好比對一下吧。」',
             introBack: api => api.solved()
@@ -563,26 +563,26 @@ window.DETECTIVE_CASE = {
             board: { x: 312, y: 90, w: 343, h: 202 },
             records: [
                 {
-                    img: IMG + 'suspect1.png',
+                    img: IMG + 'suspect1.webp',
                     emoji: '🧹', name: '張工友', role: '校工',
                     facts: ['175 cm', '右撇子', '沒戴眼鏡', '18:30 離校'],
                     note: '鞋底沾有泥土',
                 },
                 {
-                    img: IMG + 'suspect2.png',
+                    img: IMG + 'suspect2.webp',
                     emoji: '👔', name: '李主任', role: '教務主任',
                     facts: ['168 cm', '左撇子', '戴單片眼鏡', '全程開會'],
                     // ★ 別寫「等於 173cm」—— 加起來這一步正是這題唯一的陷阱，要留給玩家自己算
                     note: '厚底鞋 +5cm',
                 },
                 {
-                    img: IMG + 'suspect3.png',
+                    img: IMG + 'suspect3.webp',
                     emoji: '📚', name: '陳老師', role: '美術老師',
                     facts: ['172 cm', '右撇子', '戴單片眼鏡', '離席 15 分鐘'],
                     note: '右手手套沾有油墨',
                 },
                 {
-                    img: IMG + 'suspect4.png',
+                    img: IMG + 'suspect4.webp',
                     emoji: '📖', name: '林館長', role: '圖書館館長',
                     facts: ['180 cm', '左撇子', '沒戴眼鏡', '全程在圖書館'],
                     note: '18:45 有借書系統紀錄',
@@ -594,15 +594,15 @@ window.DETECTIVE_CASE = {
                     // UI02 現場物證報告紙條（可拖移）—— 釘在右邊軟木板的下半部
                     id: 'UI02', name: '鑑識報告', x: 676, y: 182, w: 96, h: 97,
                     draggable: true, icon: '📋',
-                    // 正式美術：report_card.png（連紅色圖釘一起去背，直接就是「釘在板子上」的樣子）
+                    // 正式美術：report_card.webp（連紅色圖釘一起去背，直接就是「釘在板子上」的樣子）
                     art: [
-                        { t: 'img', src: IMG + 'report_card.png', x: 0, y: 0, w: 96, h: 97 },
+                        { t: 'img', src: IMG + 'report_card.webp', x: 0, y: 0, w: 96, h: 97 },
                     ],
                     look: '現場鑑識報告：地毯上的鞋印推算身高 170cm 以上（也可能穿了厚底鞋）；展示座上的溫度殘留把案發時間框在 18:30～19:00 之間。',
                     zoom: {
                         btn: '🔍 放大看報告',
                         title: '🔍 現場鑑識報告',
-                        img: IMG + 'report_card.png',
+                        img: IMG + 'report_card.webp',
                         imgW: 258, imgH: 260,
                         note: '報告是喜拿送去鑑識科加急做出來的，右下角蓋著偵探社的徽章。',
                         lead: '報告告訴我們兩件事',
@@ -632,10 +632,10 @@ window.DETECTIVE_CASE = {
                     puzzle: {
                         type: 'deduce',
                         title: '🧩 邏輯矩陣 · 四名嫌疑人交叉驗證',
-                        // UI03 推理板面板底圖：screening_report.png 去掉中間畫死的假格子、
+                        // UI03 推理板面板底圖：screening_report.webp 去掉中間畫死的假格子、
                         // 只留羊皮紙本身（撕邊、圖釘、分隔線、下緣那條撕紙條）。
                         // box 的比例是照這張圖抓的（700×574），改一邊就要一起改，不然紙會被拉扁。
-                        bgImg: IMG + 'report_paper.png',
+                        bgImg: IMG + 'report_paper.webp',
                         // titleY 44：讓標題避開紙上緣那顆紅色圖釘（會一起傳給 panelBase）
                         box: { x: 130, y: 16, w: 700, h: 574, titleY: 44 },
                         lead: '要比對的四件事：戴單片眼鏡 · 右手施力 · 身高 170cm 以上 · 18:30～19:00 有機會作案',
@@ -683,10 +683,10 @@ window.DETECTIVE_CASE = {
                         btn: '🔍 放大看卡片',
                         title: '📋 四位嫌疑人的證詞紀錄表',
                         imgs: [
-                            IMG + 'suspect1.png',
-                            IMG + 'suspect2.png',
-                            IMG + 'suspect3.png',
-                            IMG + 'suspect4.png',
+                            IMG + 'suspect1.webp',
+                            IMG + 'suspect2.webp',
+                            IMG + 'suspect3.webp',
+                            IMG + 'suspect4.webp',
                         ],
                         captions: [
                             '張工友 · 校工　　鞋底沾有泥土',

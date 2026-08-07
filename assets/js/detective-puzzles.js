@@ -663,7 +663,7 @@ function lens(ctx, panel, box, cfg, onSolve) {
 // 玩家填過的 ✓／✗ 記在這裡（用 cfg 當 key），關掉面板再打開不會白填一次
 const deduceMarks = new WeakMap();
 
-// 面板底圖換成羊皮紙（report_paper.png）之後，白底的證詞欄和格子都太跳，
+// 面板底圖換成羊皮紙（report_paper.webp）之後，白底的證詞欄和格子都太跳，
 // 改成壓在紙上的黃銅名牌色。缺圖退回白卡片時這組顏色一樣看得清楚。
 const PAPER = {
     plate: 0xe6d0ab, plateEdge: 0x9d7d55,   // 左邊的證詞名牌
@@ -671,7 +671,7 @@ const PAPER = {
     note: 0x6b5a48,                          // 紙上的小字（COL.muted 在紙上偏淡）
 };
 
-// ★ 版面是照 report_paper.png 排的（案件資料把 box 設成 700×574）：
+// ★ 版面是照 report_paper.webp 排的（案件資料把 box 設成 700×574）：
 //   紙上那條紅色分隔線落在 box.y+86，下面那張撕紙條落在 box.y+506～569，
 //   所以標題壓在線上面、按鈕正好坐在撕紙條上。換底圖時這幾個數字要一起對。
 function deduce(ctx, panel, box, cfg, onSolve) {
