@@ -1,11 +1,27 @@
 // ============================================================
-// 班級 RPG · Firestore 安全規則
+// Firestore 安全規則（班級 RPG + 偵探事件簿驗證碼）
 // 貼到 Firebase 主控台 → Firestore Database → 規則 → 發布
-// 效果：老師必須登入，且只能讀寫「自己建立」的班級與學生
+//
+//  ⚠️ 發布前請先確認下面 isOwner() 的信箱白名單，跟 Firebase Authentication
+//     裡實際存在的帳號一字不差。實際登入的信箱可在 pages/detective-admin.html
+//     登入後於右上角看到。
 // ============================================================
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // 誰可以產生／管理偵探驗證碼。
+    // 陣列裡的每個信箱權限完全相同：都能產碼、看到所有明文碼與備註、作廢、刪除。
+    // 要多開一位老師就加一行；不想給了就刪掉那一行，下次發布規則即刻生效。
+    // 注意：這裡比對的是「信箱」，之後若在主控台改了帳號的信箱，記得回來同步改。
+    function isOwner() {
+      return request.auth != null
+             && request.auth.token.email in [
+                  'nini900219@gmail.com',      // 主要帳號
+                  'yangerplato3465@gmail.com'
+                  // , 'weini900219@gmail.com'  // 測試帳號：把行首的 // 拿掉就生效
+                ];
+    }
 
     // 班級：只有擁有者(ownerId == 自己uid)能讀寫
     match /classes/{classId} {
@@ -21,6 +37,40 @@ service cloud.firestore {
         allow read, write: if request.auth != null
           && get(/databases/$(database)/documents/classes/$(classId)).data.ownerId == request.auth.uid;
       }
+    }
+
+    // ============================================================
+    // 偵探事件簿 · 上課驗證碼
+    // 文件 ID = PBKDF2(關卡 + 碼) 的雜湊，資料庫裡沒有明文碼。
+    // ============================================================
+    match /unlockCodes/{codeHash} {
+
+      // 學生端沒有登入，允許他們「拿一個已經知道的碼去對」。
+      // 到期用 request.time（伺服器時間）判斷，把電腦時鐘調回昨天沒有用。
+      allow get: if isOwner()
+                 || (resource.data.active == true
+                     && resource.data.expiresAt > request.time
+                     && (resource.data.maxUses == 0
+                         || resource.data.usedCount < resource.data.maxUses));
+
+      // ★ 整套機制最重要的一行：不准列出集合內容。
+      //   沒有這行，任何人都能把所有有效的碼一次撈光。
+      allow list: if isOwner();
+
+      // 解鎖成功時累計使用次數。只准 usedCount 剛好 +1、
+      // 且只准動 usedCount / lastUsedAt，其他欄位（尤其 expiresAt）一律不准碰。
+      allow update: if isOwner()
+                    || (request.resource.data.diff(resource.data)
+                          .affectedKeys().hasOnly(['usedCount', 'lastUsedAt'])
+                        && request.resource.data.usedCount == resource.data.usedCount + 1);
+
+      allow create, delete: if isOwner();
+    }
+
+    // 明文碼與備註，只有擁有者讀得到。
+    // 雜湊是單向的，不另存這一份，後台就沒辦法把發過的碼列回來給你看。
+    match /unlockCodesAdmin/{codeHash} {
+      allow read, write: if isOwner();
     }
   }
 }

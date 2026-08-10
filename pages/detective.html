@@ -18,15 +18,34 @@
         <h1>🔍 偵探事件簿</h1>
         <!-- 全螢幕鈕不放在這裡：畫布右上角的 HUD 已經有一顆 ⛶（見 detective.js 的 fsHudBtn），
              全螢幕時這條 HTML 頂欄本來就會整條收起來，放兩顆只會重複 -->
+        <button type="button" id="lockBtn" class="lock-btn" hidden
+                title="鎖回去，下次進來要重新輸入驗證碼">🔒 上鎖</button>
     </div>
 
     <div id="gameContainer">
         <div id="gameLoading" class="game-loading">案件卷宗載入中…</div>
     </div>
 
+    <!-- 上課驗證碼門檻。驗證通過前 detective.js 不會被載入，
+         所以遮罩後面沒有東西可以偷看（見 detective-gate.js）。 -->
+    <div id="gate" class="gate" hidden>
+        <div class="gate-card">
+            <div class="gate-icon">🔒</div>
+            <h2>需要遊戲驗證碼</h2>
+            <p class="gate-hint">這個案件只能在課堂上遊玩。<br>請輸入老師當堂提供的驗證碼。</p>
+            <input id="gateCode" type="text" autocomplete="off" spellcheck="false"
+                   autocapitalize="characters" maxlength="16" placeholder="OWL-XXXX-XX">
+            <button type="button" id="gateBtn" class="gate-btn">開啟案件</button>
+            <div id="gateErr" class="gate-err" role="alert"></div>
+            <a href="../index.html" class="gate-back">← 回學習主頁</a>
+        </div>
+    </div>
+
+    <script>window.DETECTIVE_GAME_ID = 'owl';</script>
     <!-- 案件資料要先於引擎載入（引擎讀取 window.DETECTIVE_CASE） -->
     <script src="../assets/js/detective-case-owl.js"></script>
-    <script type="module" src="../assets/js/detective.js"></script>
+    <!-- 引擎（detective.js）改由 gate 在驗證通過後才動態 import -->
+    <script type="module" src="../assets/js/detective-gate.js"></script>
     <script src="../assets/js/theme.js"></script>
 </body>
 </html>

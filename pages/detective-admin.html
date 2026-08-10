@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>偵探事件簿 · 驗證碼後台</title>
+    <link rel="icon" type="image/webp" href="../assets/images/favicon.webp">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <!-- 沿用班級 RPG 的後台外觀（.wrap / .card / .btn / .login-screen / .toast） -->
+    <link rel="stylesheet" href="../assets/css/class-rpg.css">
+    <style>
+        /* 這一頁專屬的樣式，量不多就不另開檔案 */
+        .fresh {
+            margin-top: 18px; padding: 22px; text-align: center;
+            background: var(--good-bg); border: 2px solid var(--good-border); border-radius: 18px;
+        }
+        .fresh-code {
+            font-size: 34px; font-weight: 700; letter-spacing: 4px;
+            color: var(--ink); margin: 6px 0 4px; word-break: break-all;
+        }
+        .fresh-code + .fresh-code { border-top: 1px dashed var(--good-border); padding-top: 10px; }
+        .fresh-meta { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+        .codes { display: flex; flex-direction: column; gap: 10px; }
+        .code-row {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            padding: 12px 14px; background: var(--surface-2);
+            border: 2px solid var(--border); border-radius: 14px;
+        }
+        .code-row.dead { opacity: 0.55; }
+        .code-val { font-size: 19px; font-weight: 700; letter-spacing: 2px; min-width: 150px; }
+        .code-info { flex: 1; min-width: 180px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+        .code-info b { color: var(--ink-soft); font-weight: 600; }
+        .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .tag.live { background: var(--good-bg); color: var(--good); border: 1px solid var(--good-border); }
+        .tag.dead { background: var(--surface-3); color: var(--muted); border: 1px solid var(--border); }
+        .code-actions { display: flex; gap: 6px; }
+
+        details.setup { margin-top: 10px; }
+        details.setup summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+        details.setup ol { color: var(--ink-soft); font-size: 14px; line-height: 1.9; padding-left: 20px; }
+        details.setup code {
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: 6px; padding: 1px 6px; font-size: 13px;
+        }
+        .whoami { font-size: 12px; color: var(--muted-2); }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
+        <h1>🔑 偵探事件簿 · 驗證碼後台</h1>
+        <p class="subtitle">產生上課用的限時驗證碼。學生沒有碼就打不開案件，避免先偷玩壞了上課體驗。</p>
+
+        <!-- 登入畫面（未登入時顯示） -->
+        <div id="loginScreen" class="login-screen" style="display:none">
+            <div class="login-card">
+                <div class="lock">🔐</div>
+                <h2>管理者登入</h2>
+                <p class="hint">只有指定帳號能產生驗證碼</p>
+                <div class="field">
+                    <label>電子郵件</label>
+                    <input id="loginEmail" type="email" autocomplete="username" placeholder="teacher@example.com">
+                </div>
+                <div class="field">
+                    <label>密碼</label>
+                    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+                </div>
+                <button class="btn" id="loginBtn">登入</button>
+                <div class="login-err" id="loginErr"></div>
+            </div>
+        </div>
+
+        <!-- 主應用（登入後顯示） -->
+        <div id="app">
+            <div class="auth-bar">
+                <span class="who">登入為 <b id="whoEmail">—</b> <span class="whoami" id="whoUid"></span></span>
+                <button class="btn btn-ghost btn-sm logout" id="logoutBtn" style="margin-left:auto">
+                    <i class="fa-solid fa-right-from-bracket"></i> 登出
+                </button>
+            </div>
+
+            <div class="card">
+                <h2>➕ 產生驗證碼</h2>
+                <div class="row" style="margin-bottom:12px">
+                    <div>
+                        <label>案件（關卡）</label>
+                        <select id="f_game"></select>
+                    </div>
+                    <div>
+                        <label>有效時間</label>
+                        <select id="f_hours">
+                            <option value="2">2 小時（單堂課）</option>
+                            <option value="4">4 小時（半天）</option>
+                            <option value="12" selected>12 小時（當天）</option>
+                            <option value="24">24 小時</option>
+                            <option value="72">3 天</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>份數</label>
+                        <select id="f_count">
+                            <option value="1" selected>1 組</option>
+                            <option value="2">2 組</option>
+                            <option value="3">3 組</option>
+                            <option value="5">5 組</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom:14px">
+                    <div style="flex:2">
+                        <label>備註（只有你看得到）</label>
+                        <input id="f_note" placeholder="例：五甲 週三第三節">
+                    </div>
+                    <div>
+                        <label>使用次數上限（0 = 不限）</label>
+                        <input id="f_max" type="number" value="0" min="0">
+                    </div>
+                </div>
+                <button class="btn" id="genBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> 產生</button>
+
+                <div id="fresh" class="fresh" style="display:none"></div>
+            </div>
+
+            <div class="card">
+                <h2>📋 已發出的驗證碼</h2>
+                <div class="row" style="margin-bottom:14px">
+                    <div>
+                        <label>篩選案件</label>
+                        <select id="filterGame"></select>
+                    </div>
+                    <button class="btn btn-ghost" id="refreshBtn"><i class="fa-solid fa-rotate"></i> 重新整理</button>
+                    <button class="btn btn-danger" id="purgeBtn"><i class="fa-solid fa-broom"></i> 清除已失效</button>
+                </div>
+                <div id="codeList" class="codes"></div>
+                <div id="codeEmpty" class="state" style="display:none">還沒有發出任何驗證碼。</div>
+            </div>
+
+            <div class="card">
+                <h2>🛠️ 第一次使用要做的事</h2>
+                <details class="setup">
+                    <summary>展開設定步驟（做過一次就不用再做）</summary>
+                    <ol>
+                        <li>把 <code>pages/firestore.rules.txt</code> 的內容整份貼到 Firebase 主控台 →
+                            Firestore Database → 規則 → 發布。</li>
+                        <li>規則裡的 <code>isOwner()</code> 是一份 email 白名單，已經填好
+                            <code>nini900219@gmail.com</code> 與 <code>yangerplato3465@gmail.com</code>。
+                            你目前登入的是 <b id="setupEmail">登入後顯示</b> —— 如果它不在名單裡，
+                            就會產不出碼，請把它補進規則再重新發布。</li>
+                        <li>（選用）Firestore → TTL → 對 <code>unlockCodes</code> 集合的
+                            <code>expiresAt</code> 欄位建立政策，過期的碼會自動被清掉。
+                            不做也不影響安全，規則本來就擋著，只是資料會慢慢累積。</li>
+                    </ol>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module" src="../assets/js/detective-admin.js"></script>
+    <script src="../assets/js/theme.js"></script>
+</body>
+</html>

@@ -66,7 +66,87 @@ body.fs-fallback #gameContainer {
     color: var(--muted); font-size: 15px;
 }
 
+/* ---- 上課驗證碼門檻（見 assets/js/detective-gate.js）---- */
+
+/* 頂欄的上鎖鈕：解鎖後才由 gate 拿掉 hidden */
+.lock-btn {
+    margin-left: auto;
+    padding: 6px 14px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+.lock-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* 遮罩本體。用 :not([hidden]) 而不是 .gate{display:flex}，
+   否則 flex 會蓋掉 hidden 屬性，遮罩在不該出現時也會冒出來。 */
+.gate:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--bg);
+}
+.gate-card {
+    width: 100%;
+    max-width: 380px;
+    padding: 34px 28px 26px;
+    text-align: center;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    border-radius: 26px;
+    box-shadow: 0 10px 30px var(--shadow);
+}
+.gate-icon { font-size: 44px; line-height: 1; margin-bottom: 8px; }
+.gate-card h2 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
+.gate-hint { margin: 0 0 22px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+#gateCode {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--border-strong);
+    border-radius: 14px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-align: center;
+    text-transform: uppercase;
+}
+#gateCode:focus { outline: none; border-color: var(--primary); }
+#gateCode:disabled { opacity: 0.6; }
+
+.gate-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 13px;
+    border: none;
+    border-radius: 14px;
+    background: var(--grad);
+    color: var(--on-primary);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.gate-btn:hover:not(:disabled) { box-shadow: 0 6px 16px var(--primary-shadow); }
+.gate-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.gate-err { min-height: 20px; margin-top: 12px; color: var(--bad); font-size: 13px; }
+.gate-back { display: inline-block; margin-top: 4px; color: var(--muted); font-size: 13px; text-decoration: none; }
+.gate-back:hover { color: var(--primary); }
+
 @media (max-width: 600px) {
     body { padding: 10px; }
     .game-bar h1 { font-size: 18px; }
+    .lock-btn { padding: 5px 10px; font-size: 12px; }
 }

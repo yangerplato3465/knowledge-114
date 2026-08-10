@@ -34,6 +34,13 @@ Each lesson is largely **independent** — there is no shared component framewor
   - Bottom block, rows 4–7: `walk` = cols 0–5 (6-frame cycle); `run` reuses the walk cycle with frames 3 & 6 replaced by cols 6–7, i.e. column sequence `0, 1, 6, 3, 4, 7`.
   - Frames are sliced as `Texture` rectangles into the `ANIMS[direction][state]` lookup in `class-rpg-game.js`; one `AnimatedSprite` swaps its `textures` array on state/facing change. Keep `scaleMode = 'nearest'` for pixel art.
 
+### detective specifics
+
+- **`pages/detective.html` does not load the engine directly.** It loads `assets/js/detective-gate.js`, which only `import()`s `detective.js` after an unlock code checks out. Anything that assumes the engine boots on page load is wrong — set `localStorage['detective.unlock.owl'] = '{"exp":<future ms>}'` to bypass the gate while developing.
+- Unlock codes are generated in **`pages/detective-admin.html`** (Firebase Auth, owner-only) and verified against Firestore. `assets/js/detective-code.js` holds the derivation shared by both sides — the Firestore document ID is `PBKDF2(gameId + ':' + normalizedCode)`, so **changing `PEPPER`, the iteration count, or the normalizer invalidates every code already issued**.
+- Enforcement lives in `pages/firestore.rules.txt`, not in the client: `allow list: if isOwner()` is what stops anyone from dumping the code collection, and expiry is compared against `request.time` (server clock). `isOwner()` is an email allowlist that must be edited before the rules are published.
+- Adding a case = add an entry to `DETECTIVE_GAMES` in `detective-code.js` and set `window.DETECTIVE_GAME_ID` in the new page; the admin dropdown and code prefix follow automatically.
+
 ## Conventions
 
 - UI text, comments, and question content are in Traditional Chinese — match this when editing.
