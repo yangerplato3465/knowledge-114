@@ -49,6 +49,23 @@
             border-radius: 6px; padding: 1px 6px; font-size: 13px;
         }
         .whoami { font-size: 12px; color: var(--muted-2); }
+
+        /* 登入卡片放大版（只影響這一頁，班級 RPG 沿用 class-rpg.css 的原尺寸）。
+           置中是靠 .login-screen 的 flex，JS 顯示它時必須設 flex 不能設 block。 */
+        .login-card { width: 440px; padding: 44px 40px; border-radius: 26px; }
+        .login-card .lock { font-size: 56px; margin-bottom: 10px; }
+        .login-card h2 { font-size: 26px; }
+        .login-card p.hint { font-size: 14px; margin-bottom: 26px; }
+        .login-card .field { margin-bottom: 16px; }
+        .login-card label { font-size: 14px; }
+        .login-card input { padding: 13px 15px; font-size: 16px; border-radius: 14px; }
+        .login-card .btn { padding: 14px; font-size: 17px; border-radius: 14px; margin-top: 10px; }
+
+        @media (max-width: 520px) {
+            .login-card { width: 100%; padding: 30px 22px; border-radius: 22px; }
+            .login-card .lock { font-size: 46px; }
+            .login-card h2 { font-size: 23px; }
+        }
     </style>
 </head>
 <body>

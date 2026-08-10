@@ -296,6 +296,7 @@ onAuthStateChanged(auth, user => {
         loadCodes();
     } else {
         $('app').style.display = 'none';
-        $('loginScreen').style.display = 'block';
+        // 一定要是 flex：.login-screen 靠 flex 置中，設成 block 會讓卡片貼到左邊
+        $('loginScreen').style.display = 'flex';
     }
 });
