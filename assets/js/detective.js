@@ -43,8 +43,13 @@ const fxLayer = new Container();              // 落地的灰塵等特效
 const labelLayer = new Container();           // 滑鼠名牌：獨立一層疊在最上面，
                                               //   否則會被前面的物件蓋住（例如桌上的獎盃擋住「抽屜」名牌）
 const hudLayer = new Container();             // ↑ objLayer 要疊在 hotLayer 上面，否則物件被拖到熱點上時，
-const overlayLayer = new Container();         //   熱點那塊透明的判定框會把點擊吃掉
-root.addChild(sceneLayer, boardLayer, hotLayer, objLayer, fxLayer, labelLayer, hudLayer, overlayLayer);
+                                              //   熱點那塊透明的判定框會把點擊吃掉
+// ★ 拖曳中的物件搬到這一層 —— 它疊在 hudLayer 之上，所以往下拖去收納時，
+//   物件會蓋在道具欄橫幅（和對話框）上面，而不是鑽到它們後面消失。
+//   放手之後就搬回 objLayer，靜置的物件仍然在 HUD 底下。
+const dragLayer = new Container();
+const overlayLayer = new Container();
+root.addChild(sceneLayer, boardLayer, hotLayer, objLayer, fxLayer, labelLayer, hudLayer, dragLayer, overlayLayer);
 app.stage.addChild(root);
 
 function layout() {
@@ -146,7 +151,39 @@ const TRAY_Y = TRAY_TOP + 6;                    // 拖到這條線以下就算�
 // 可是盤子還擺在校長桌上）。這種道具在玩家真的把它拖進物品欄之前不該佔一格，
 // 不然同一樣東西會同時出現在桌上和物品欄裡。
 const stillOnStage = id => Object.values(OBJ_INDEX)
-    .some(o => o.storeAs === id && !state.stored.has(o.id));
+    .some(o => o.storeAs === id && !state.stored.has(o.id) && !state.combined.has(o.id));
+
+// 組合零件的另一半：可能是「零件 → 本體」（dropTarget），也可能反過來查
+const partnerOf = id => OBJ_INDEX[id]?.dropTarget
+    ? OBJ_INDEX[OBJ_INDEX[id].dropTarget]
+    : Object.values(OBJ_INDEX).find(o => o.dropTarget === id);
+
+// 兩個半邊都收在物品欄裡時，點其中一個就直接組起來。
+// ★ 零件現在可以單獨收進物品欄（解密盤的內外圈各收各的），所以一定要有這條
+//   「在包包裡組裝」的路 —— 不然兩半都收進去就再也裝不起來了。
+function combineInTray(id) {
+    const a = OBJ_INDEX[id], b = partnerOf(id);
+    if (!a || !b) return false;
+    if (!state.stored.has(a.id) || !state.stored.has(b.id)) return false;
+
+    const part = a.dropTarget ? a : b;           // 帶著 dropSay / dropGivesItem 的是零件那一半
+    for (const o of [a, b]) {
+        state.combined.add(o.id);
+        state.stored.delete(o.id);
+        const k = state.storedOrder.indexOf(o.id);
+        if (k >= 0) state.storedOrder.splice(k, 1);
+    }
+    let msg = part.dropSay || `${a.name}和${b.name}裝在一起了。`;
+    if (part.dropGivesItem && !hasItem(part.dropGivesItem)) {
+        state.items.push(part.dropGivesItem);
+        const it = itemById(part.dropGivesItem);
+        msg += `\n🎒 取得道具：${it.icon} ${it.name}`;
+    }
+    say(msg);
+    refreshHud();
+    renderInteractives();
+    return true;
+}
 
 function renderTray() {
     trayChips.removeChildren();
@@ -180,7 +217,11 @@ function renderTray() {
         chip.cursor = 'pointer';
         chip.on('pointertap', () => {
             if (overlayLayer.children.length) return;
-            if (en.kind === 'obj') { onHotspot(OBJ_INDEX[en.id]); return; }
+            if (en.kind === 'obj') {
+                if (combineInTray(en.id)) return;      // 兩個半邊都在包包裡 → 點一下就組起來
+                onHotspot(OBJ_INDEX[en.id]);
+                return;
+            }
             const it = itemById(en.id);
             // 道具寫了 opens: '<物件 id>' 就直接開那個物件的介面
             //（例如解密盤 → 打開凱撒轉盤），沒寫的才只顯示說明
@@ -525,6 +566,7 @@ function renderBoard() {
 // 物件（可拖移）畫在熱點底下，兩邊都會重畫
 function renderInteractives() {
     objLayer.removeChildren();
+    dragLayer.removeChildren();      // 上一次拖曳留在這層的節點也要清掉，否則會變成孤兒殘留在畫面上
     hotLayer.removeChildren();
     labelLayer.removeChildren();
     for (const o of CASE.scenes[state.scene].objects || []) {
@@ -684,6 +726,7 @@ function makeObject(o) {
     );
     label.alpha = 0;
     labelLayer.addChild(label);                // 放獨立圖層，座標改成畫面絕對座標
+    c.label = label;                           // 拖曳時名牌要跟著物件一起搬到 dragLayer
     // 名牌跟著物件跑；靠近畫面上緣時改掛在下面，才不會被工具列吃掉
     c.placeLabel = () => label.position.set(
         c.x + o.w / 2 - (lt.width + 28) / 2,
@@ -704,7 +747,9 @@ function makeObject(o) {
         dragOff = { x: g.x - c.x, y: g.y - c.y };
         dragFrom = { x: c.x, y: c.y };
         dragDist = 0;
-        objLayer.addChild(c);                  // 拉到最上層
+        // 拖曳中搬到最上層：蓋過道具欄橫幅和對話框，才看得到自己拖到哪裡了
+        dragLayer.addChild(c);
+        dragLayer.addChild(c.label);
         c.cursor = 'grabbing';
         art.scale.set(1.06);
         art.alpha = 0.92;
@@ -749,6 +794,10 @@ function onObjUp() {
     node.cursor = 'grab';
     node.art.scale.set(1);
     node.art.alpha = 1;
+    // 放手就搬回原本的圖層（收納／組合那幾條路會 renderInteractives 整個重畫，
+    // 但「只是點一下」和「一般放下」不會，留在 dragLayer 就會蓋在 HUD 上面）
+    objLayer.addChild(node);
+    labelLayer.addChild(node.label);
     if (dragDist < DRAG_SLOP) return;                  // 只是點一下，位置不動
 
     const cx = node.x + o.w / 2, cy = node.y + o.h / 2;
@@ -778,31 +827,16 @@ function onObjUp() {
             renderInteractives();
             return;
         }
-        // 組合零件不收進物品欄，免得卡關
-        // ★ 目標還沒被翻出來時別直接報它的名字 —— 玩家根本還沒看過那個東西
-        if (cy > TRAY_Y) {
-            const t = OBJ_INDEX[o.dropTarget];
-            say(isHidden(t)
-                ? `${o.name}是某個東西缺掉的零件，先收不起來 —— 它的本體還藏在房間裡，再找找看。`
-                : `${o.name}要裝回去才有用 —— 把它拖到${t.name}上吧。`);
-            node.position.set(dragFrom.x, dragFrom.y);
-            node.placeLabel();
-            return;
-        }
+        // 沒對準就往下走 —— 組合零件現在也可以單獨收進物品欄，
+        // 兩個半邊都收進去之後在包包裡點一下就能組起來（見 combineInTray）
     }
 
     // 2) 拖到下方 → 收進物品欄
-    if (!o.dropTarget && cy > TRAY_Y && cx > 30 && cx < 930) {
-        // storeAs：這個物件已經有一個對應的道具（例如裝好的解密盤 → 道具 dial）。
-        //   還沒拿到那個道具就不准收，否則零件收走會卡關；
-        //   收起來時也只從場景移除，不再另外佔一格，免得同一樣東西出現兩次。
-        if (o.storeAs) {
-            if (!hasItem(o.storeAs)) {
-                say(`${o.name}還沒組好，先別收起來。`);
-                node.position.set(dragFrom.x, dragFrom.y);
-                node.placeLabel();
-                return;
-            }
+    if (cy > TRAY_Y && cx > 30 && cx < 930) {
+        // storeAs：這個物件對應到某個道具（裝好的解密盤 → 道具 dial）。
+        //   已經拿到那個道具時只從場景移除、不另外佔一格，免得同一樣東西出現兩次；
+        //   還沒組好就當成普通零件收，之後在物品欄裡組裝。
+        if (o.storeAs && hasItem(o.storeAs)) {
             const it = itemById(o.storeAs);
             state.stored.add(o.id);
             delete objPositions[o.id];
@@ -814,7 +848,11 @@ function onObjUp() {
         state.stored.add(o.id);
         state.storedOrder.push(o.id);
         delete objPositions[o.id];
-        say(`🎒 ${o.name}收進物品欄了。點下方的圖示隨時查看。`);
+        // 另一半也在包包裡的話，直接把「點一下就能組」講出來，免得玩家以為卡住了
+        const partner = partnerOf(o.id);
+        say(partner && state.stored.has(partner.id)
+            ? `🎒 ${o.name}收進物品欄了。${partner.name}也在裡面 —— 點其中一個就能把它們裝起來。`
+            : `🎒 ${o.name}收進物品欄了。點下方的圖示隨時查看。`);
         refreshHud();
         renderInteractives();
         return;
@@ -887,8 +925,10 @@ function onHotspot(h) {
     setZoom(h.zoom);
 
     // 謎題：解開才算調查完成
-    if (h.puzzle && !state.examined.has(h.id)) {
-        say(lookOf(h));
+    // ★ reopen: true 的謎題解開之後還是打得開（推理板要能隨時回去看比對結果，
+    //   破案之後也一樣）——面板會保留玩家填過的 ✓／✗。
+    if (h.puzzle && (!state.examined.has(h.id) || h.reopen)) {
+        say(state.examined.has(h.id) ? (txt(h.after) || lookOf(h)) : lookOf(h));
         openPuzzle(h);
         return;
     }
@@ -984,6 +1024,9 @@ function openPuzzle(h) {
         const ctx = { app, root, say, api: txtApi };
         panelCleanup = PUZZLES[cfg.type](ctx, panel, box, cfg, () => {
             closePanel();
+            // 重看時再按一次「檢查推理」不該重新宣布一次破案（也會再觸發一次
+            // 「線索蒐集完成」的提示），只把已調查過的說法講一遍就好
+            if (state.examined.has(h.id)) { say(txt(h.after) || lookOf(h)); return; }
             award(h, h.solvedText || lookOf(h));
         }) || null;
         panel.addChild(mkButton({
@@ -1077,15 +1120,31 @@ function showGallery(cfg, imgs) {
     let idx = 0;
 
     openPanel(panel => {
-        const box = panelBase(panel, { x: 190, y: 16, w: 580, h: 568, title: cfg.title || '🔍 放大看' });
+        // 面板放寬到 760：最長的那行說明單行要 676px，寬度不夠就會折行往下擠到按鈕上。
+        // 說明能排成一行，省下來的高度就全部還給卡片（卡片是直式的，高度才是瓶頸）。
+        const box = panelBase(panel, { x: 100, y: 16, w: 760, h: 568, title: cfg.title || '🔍 放大看' });
+        const CAP_WRAP = box.w - 60;
+
+        // ★ 由下往上排版，各佔一條、互不重疊：
+        //   標題 → 頁碼 → 卡片 → 說明 → 按鈕
+        //   說明先量過「所有頁裡最高的那一段」再定高度 —— 逐頁改高度的話，
+        //   翻頁時上面的卡片會跟著上下跳。
+        const BTN_H = 40, GAP = 14;
+        const btnY = box.y + box.h - 54;
+        const probe = mkText('', 16, COL.ink, { weight: '700', align: 'center', wrap: CAP_WRAP });
+        let capH = 26;
+        for (const c of captions) { probe.text = c || ''; capH = Math.max(capH, probe.height); }
+        probe.destroy();
+        const capY = btnY - GAP - capH;
 
         const counter = mkText('', 14, COL.muted);
         counter.anchor.set(0.5, 0);
-        counter.position.set(box.cx, box.y + 64);
+        counter.position.set(box.cx, box.y + 62);
         panel.addChild(counter);
 
-        // 卡片區：襯底 ＋ 圖
-        const AREA_Y = box.y + 86, AREA_H = 378;
+        // 卡片區：襯底 ＋ 圖。襯底往外多 10，所以起點要留在頁碼下面 24 的地方
+        const AREA_Y = box.y + 96;
+        const AREA_H = capY - GAP - AREA_Y;
         panel.addChild(
             new Graphics().roundRect(box.cx - 190, AREA_Y - 10, 380, AREA_H + 20, 14)
                 .fill({ color: 0x3f5147 }).stroke({ width: 3, color: 0x2d3a33 })
@@ -1093,9 +1152,9 @@ function showGallery(cfg, imgs) {
         const holder = new Container();
         panel.addChild(holder);
 
-        const caption = mkText('', 16, COL.ink, { weight: '700', align: 'center', wrap: box.w - 60 });
+        const caption = mkText('', 16, COL.ink, { weight: '700', align: 'center', wrap: CAP_WRAP });
         caption.anchor.set(0.5, 0);
-        caption.position.set(box.cx, AREA_Y + AREA_H + 22);
+        caption.position.set(box.cx, capY);
         panel.addChild(caption);
 
         function show(n) {
@@ -1127,7 +1186,7 @@ function showGallery(cfg, imgs) {
         }));
         panel.addChild(mkButton({
             label: cfg.okLabel || '👍 看完了',
-            x: box.cx - 80, y: box.y + box.h - 54, w: 160, h: 40,
+            x: box.cx - 80, y: btnY, w: 160, h: BTN_H,
             onClick: closePanel,
         }));
 
@@ -1232,19 +1291,47 @@ function accuse(s) {
     }
 }
 
+// 結局：左邊擺失竊的本尊（ending.img），右邊講故事。
+// 沒給 ending.img 就退回原本的滿版單欄，版面不會垮。
 function showEnding() {
     openPanel(panel => {
-        // 破案說明很長，面板放大並讓字級自動縮到按鈕上方，才不會被按鈕壓到
-        const box = panelBase(panel, { x: 90, y: 40, w: 780, h: 520, title: '🎉 案件偵破！' });
+        // 面板吃滿畫面（960×600 留 32 的邊）—— 左邊那尊本尊要夠大，右邊的故事才不會被壓成小字
+        const box = panelBase(panel, { x: 90, y: 32, w: 780, h: 536, title: '🎉 案件偵破！' });
         const btnY = box.y + box.h - 62;
-        const maxH = btnY - (box.y + 62) - 14;
-        const body = mkText(CASE.solution, 15, COL.ink, { wrap: box.w - 76, lineHeight: 25 });
-        for (const [size, lh] of [[15, 25], [14, 23], [13, 21], [12, 19]]) {
+        const top = box.y + 62;
+        const end = CASE.ending || {};
+
+        // ---- 左欄：本尊 ----
+        // 玩家找了一整場都只看到空底座，最後這一眼才是報酬 —— 高度給滿到按鈕上方
+        let textX = box.x + 38, textW = box.w - 76;
+        if (hasTexture(end.img)) {
+            const tex = Assets.get(end.img);
+            const capH = end.caption ? 40 : 0;
+            const maxIH = btnY - 16 - capH - top;
+            const COL_W = 210;
+            const s = Math.min(COL_W / tex.width, maxIH / tex.height);
+            const iw = tex.width * s, ih = tex.height * s;
+            const ix = box.x + 40 + (COL_W - iw) / 2;
+            drawProps([{ t: 'img', src: end.img, x: ix, y: top, w: iw, h: ih }], panel);
+            if (end.caption) {
+                const cap = mkText(end.caption, 13, COL.muted, { align: 'center', wrap: COL_W, lineHeight: 19 });
+                cap.anchor.set(0.5, 0);
+                cap.position.set(box.x + 40 + COL_W / 2, top + ih + 12);
+                panel.addChild(cap);
+            }
+            textX = box.x + 40 + COL_W + 28;
+            textW = box.x + box.w - 38 - textX;
+        }
+
+        // ---- 右欄：破案的故事（字級自動縮到按鈕上方，長文也壓不到按鈕）----
+        const maxH = btnY - top - 14;
+        const body = mkText(CASE.solution, 15, COL.ink, { wrap: textW, lineHeight: 25 });
+        for (const [size, lh] of [[15, 25], [14, 23], [13, 21], [12, 19], [11, 17]]) {
             body.style.fontSize = size;
             body.style.lineHeight = lh;
             if (body.height <= maxH) break;
         }
-        body.position.set(box.x + 38, box.y + 62);
+        body.position.set(textX, top);
         panel.addChild(body);
         panel.addChild(mkButton({
             label: '🔁 再查一次', x: box.cx - 200, y: btnY, w: 180, h: 44,

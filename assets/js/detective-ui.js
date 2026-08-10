@@ -172,6 +172,7 @@ export async function preloadImages(caseData) {
         }
     };
     if (caseData.assistantImg) srcs.add(caseData.assistantImg);   // 對話框左邊的助手立繪
+    if (caseData.ending?.img) srcs.add(caseData.ending.img);       // 結局面板裡的失竊本尊
     // 放大檢視可以給單張（img）或一疊（imgs）
     const fromZoom = z => {
         if (!z) return;
