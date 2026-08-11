@@ -2,7 +2,8 @@ import {
     Application, Assets, Container, Graphics, Rectangle
 } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
 import {
-    W, H, COL, mkText, mkButton, panelBase, drawProps, preloadImages, hasTexture
+    W, H, COL, mkText, mkButton, panelBase, drawProps,
+    preloadImages, ensureSceneLoaded, hasTexture
 } from './detective-ui.js';
 import { PUZZLES } from './detective-puzzles.js';
 
@@ -28,8 +29,14 @@ await app.init({
 });
 globalThis.__PIXI_APP__ = app;               // Pixi Devtools 的標準掛勾，方便除錯
 app.stage.eventMode = 'static';              // 濾鏡謎題要靠 stage 收拖曳事件
-await document.fonts.ready;                  // 等中文字型載好再畫文字
-await preloadImages(CASE);                   // 有正式素材才會載，缺圖不影響
+// 字型和圖片沒有先後關係，兩件事同時等 —— 分開 await 的話，
+// 十幾個 woff2 子集載完才會開始抓圖，白白多花一段時間。
+// 圖只等「起始場景 + 全域」那批，其他場景在背景繼續載
+//（見 detective-ui.js 的 preloadImages）。缺圖不影響，會退回向量替代圖形。
+await Promise.all([
+    document.fonts.ready,
+    preloadImages(CASE, CASE.startScene),
+]);
 document.getElementById('gameLoading')?.remove();
 container.appendChild(app.canvas);
 
@@ -972,12 +979,19 @@ fader.eventMode = 'none';
 root.addChild(fader);
 
 function transitionTo(id) {
+    // 目標場景的圖通常在背景早就載完了，這個 Promise 會立刻 resolve；
+    // 萬一還沒好（網路慢、剛開場就衝去下一個場景），就停在全黑等它，
+    // 而不是切過去看到一個沒有背景的空場景。
+    let ready = false;
+    ensureSceneLoaded(CASE, id).then(() => { ready = true; });
+
     let t = 0, switched = false;
     const tick = ticker => {
         t += ticker.deltaMS;
         if (t < 200) {
             fader.alpha = t / 200;
         } else if (!switched) {
+            if (!ready) { t = 200; return; }       // 全黑不動，等圖到齊
             switched = true;
             renderScene(id);
         } else if (t < 400) {
