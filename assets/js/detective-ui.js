@@ -152,52 +152,83 @@ export function drawProps(list, layer) {
     }
 }
 
-// 把資料檔裡所有 { t:'img' } 的圖先載進來（缺圖不會讓遊戲當掉）
+// 把資料檔裡所有 { t:'img' } 的圖載進來（缺圖不會讓遊戲當掉）
 // 掃描範圍：場景背景、props、物件的 art / artDone、謎題畫作的四種濾鏡圖，
 // 還有放大檢視面板（zoom.img）用的特寫圖。
 const PAINT_KEYS = ['img', 'imgRed', 'imgBlue', 'imgPurple'];
 
-export async function preloadImages(caseData) {
-    const srcs = new Set();
-    const fromProps = list => {
-        for (const p of list || []) if (p.t === 'img' && p.src) srcs.add(p.src);
+// 依場景把圖分堆：{ global, byScene }
+// global 是不屬於任何場景的（助手立繪、結局的本尊）。
+export function collectImages(caseData) {
+    const global = new Set();
+    const byScene = {};
+    const add = (set, s) => { if (s) set.add(s); };
+    const fromProps = (set, list) => {
+        for (const p of list || []) if (p.t === 'img' && p.src) add(set, p.src);
     };
-    const fromPuzzle = puzzle => {
+    const fromPuzzle = (set, puzzle) => {
         for (const p of puzzle?.paintings || []) {
-            for (const k of PAINT_KEYS) if (p[k]) srcs.add(p[k]);
+            for (const k of PAINT_KEYS) add(set, p[k]);
         }
         // 凱撒盤的正式美術：信紙、外圈底座、內轉盤；bgImg 是謎題面板的底圖
-        for (const k of ['bgImg', 'noteImg', 'dialImg', 'dialInnerImg']) {
-            if (puzzle?.[k]) srcs.add(puzzle[k]);
-        }
+        for (const k of ['bgImg', 'noteImg', 'dialImg', 'dialInnerImg']) add(set, puzzle?.[k]);
     };
-    if (caseData.assistantImg) srcs.add(caseData.assistantImg);   // 對話框左邊的助手立繪
-    if (caseData.ending?.img) srcs.add(caseData.ending.img);       // 結局面板裡的失竊本尊
     // 放大檢視可以給單張（img）或一疊（imgs）
-    const fromZoom = z => {
+    const fromZoom = (set, z) => {
         if (!z) return;
-        if (z.img) srcs.add(z.img);
-        for (const s of z.imgs || []) srcs.add(s);
+        add(set, z.img);
+        for (const s of z.imgs || []) add(set, s);
     };
-    for (const sc of Object.values(caseData.scenes)) {
-        if (sc.bg) srcs.add(sc.bg);
-        fromProps(sc.props);
-        for (const r of sc.records || []) if (r.img) srcs.add(r.img);   // 黑板上的證詞紀錄表
+
+    add(global, caseData.assistantImg);            // 對話框左邊的助手立繪，一開場就會出現
+    for (const [id, sc] of Object.entries(caseData.scenes)) {
+        const set = byScene[id] = new Set();
+        add(set, sc.bg);
+        fromProps(set, sc.props);
+        for (const r of sc.records || []) add(set, r.img);   // 黑板上的證詞紀錄表
         for (const o of sc.objects || []) {
-            fromProps(o.art);
-            fromProps(o.artDone);
-            fromPuzzle(o.puzzle);
-            fromZoom(o.zoom);
+            fromProps(set, o.art);
+            fromProps(set, o.artDone);
+            fromPuzzle(set, o.puzzle);
+            fromZoom(set, o.zoom);
         }
         for (const h of sc.hotspots || []) {
-            fromPuzzle(h.puzzle);
-            fromZoom(h.zoom);
+            fromPuzzle(set, h.puzzle);
+            fromZoom(set, h.zoom);
         }
     }
-    for (const src of srcs) {
-        try { await Assets.load(src); }
-        catch { console.warn('[偵探事件簿] 找不到素材，先用替代圖形：', src); }
-    }
+    // 結局的失竊本尊排最後：整場只有破案那一刻會用到
+    add(global, caseData.ending?.img);
+    return { global, byScene };
+}
+
+// 一次把一堆圖平行載進來。單張失敗只是那張沒有正式美術，會退回向量替代圖形，
+// 所以每張各自 catch，不讓一張壞圖拖垮整批。
+export function loadImages(srcs) {
+    return Promise.all([...srcs].map(src => Assets.load(src).catch(() => {
+        console.warn('[偵探事件簿] 找不到素材，先用替代圖形：', src);
+    })));
+}
+
+// 開場只等「起始場景 + 全域」那一批，其餘場景在背景繼續載 ——
+// 玩家在校長室摸索的時間，足夠把推理室的圖載完。
+// 真的還沒載完就走過去也不會出事：transitionTo 會等 ensureSceneLoaded()。
+export async function preloadImages(caseData, startScene) {
+    const { global, byScene } = collectImages(caseData);
+    const first = new Set([...global, ...(byScene[startScene] || [])]);
+    await loadImages(first);
+    const rest = Object.entries(byScene)
+        .filter(([id]) => id !== startScene)
+        .flatMap(([, set]) => [...set])
+        .filter(s => !first.has(s));
+    loadImages(rest);          // 故意不 await：背景載，不擋開場
+    return { first: first.size, rest: rest.length };
+}
+
+// 進場景前確認它的圖都到齊了。通常背景那批早就載完，會立刻 resolve。
+export function ensureSceneLoaded(caseData, id) {
+    const { byScene } = collectImages(caseData);
+    return loadImages(byScene[id] || []);
 }
 
 // 圖載進來了沒？（沒有就讓呼叫端退回向量替代圖形）
