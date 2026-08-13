@@ -27,6 +27,10 @@ const GROUPS_KEY = `detective.groups.${GAME_ID}`;
 // 從遊戲裡按「新增組別」跳回來時的一次性旗標：告訴 gate 這次要打新的碼，
 // 別把游標留在組別清單上。用 sessionStorage 是因為它只該影響這一次重新載入。
 const GATE_FOCUS_KEY = `detective.gateFocus.${GAME_ID}`;
+// 開發用旁路：設成 '1' 就跳過驗碼直接進遊戲（不讀也不寫進度）。
+// 刻意用一個「只可能是手動設定」的獨立 key —— 以前是靠偽造 session 達成，
+// 結果變成一條誰都可能不小心留下、又不用驗碼的後門。
+const DEV_KEY = `detective.dev.${GAME_ID}`;
 const MAX_GROUPS = 12;        // 記太多沒意義，一台電視一學期也用不到這麼多組
 const MAX_TRIES = 3;          // 連錯這麼多次就先冷卻，純粹防亂猜手癢
 const COOLDOWN_MS = 30000;
@@ -68,10 +72,15 @@ let busy = false;
 
 // ---- 解鎖場次（存在瀏覽器，到期時間取自伺服器回來的 expiresAt）----
 
+// ★ 一定要有 codeId 才算數。只看 exp 的話，瀏覽器裡留著一筆
+//   {"exp": 未來時間} 就能不驗碼直接進遊戲 —— 對「沒有碼就不能玩」這件事來說
+//   等於整道門形同虛設。開發要跳過驗碼請改用下面的 DEV_KEY。
 function readSession() {
     try {
         const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-        return s && typeof s.exp === 'number' && s.exp > Date.now() ? s : null;
+        const ok = s && typeof s.exp === 'number' && s.exp > Date.now()
+                     && typeof s.codeId === 'string' && s.codeId;
+        return ok ? s : null;
     } catch {
         return null;
     }
@@ -213,10 +222,12 @@ function wireGroupSwitch(session) {
     const menu = $('groupMenu');
     if (!box || !btn || !menu) return;
 
-    btn.textContent = session?.label
-        ? (saveBlocked ? `${session.label}（未連線）` : session.label)
-        : '（未命名的組別）';
-    btn.classList.toggle('offline', saveBlocked);
+    // 沒有 codeId ＝ 開發旁路進來的，要標得很明顯，
+    // 不然看起來就只是「一組沒取名字的組別」，會以為是正常場次
+    const name = session?.label
+        || (session?.codeId ? '（未命名的組別）' : '⚠️ 開發模式 · 未驗碼');
+    btn.textContent = saveBlocked ? `${name}（未連線）` : name;
+    btn.classList.toggle('offline', saveBlocked || !session?.codeId);
     box.hidden = false;
 
     const closeMenu = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
@@ -453,8 +464,15 @@ async function verify() {
 //   不再像以前那樣完全不碰網路，但省下的是重新輸碼的麻煩。）
 
 const existing = readSession();
+let devMode = false;
+try { devMode = localStorage.getItem(DEV_KEY) === '1'; } catch { /* 無痕模式讀不到 */ }
+
 if (existing) {
     boot(existing);
+} else if (devMode) {
+    // 開發旁路：不驗碼、不記進度。頂欄會標成「開發模式」，不會被誤認成正常場次。
+    clearSession();
+    boot(null);
 } else {
     clearSession();
     showGate();
