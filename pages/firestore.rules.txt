@@ -59,10 +59,24 @@ service cloud.firestore {
 
       // 解鎖成功時累計使用次數。只准 usedCount 剛好 +1、
       // 且只准動 usedCount / lastUsedAt，其他欄位（尤其 expiresAt）一律不准碰。
+      //
+      // 第三條是遊戲存檔回寫（學生端沒有登入）：一樣用 hasOnly 鎖死可動的欄位，
+      // 所以 expiresAt / active / maxUses 這些關乎安全的欄位還是碰不到。
+      // 另外要求這筆碼「還有效」才准寫 —— 過期或作廢之後就不再接受存檔。
+      //
+      // ⚠️ 規則沒辦法檢查 progress 裡面裝了什麼，只能限制欄位數量。
+      //    拿到碼的人可以往自己那組塞垃圾資料，最壞的情況是那一組的存檔壞掉
+      //    （遊戲端讀到壞資料會當作沒有存檔），刪掉重發一組碼即可。
+      //    28 是給存檔欄位留的上限，之後存檔多加欄位超過這個數字要記得回來調。
       allow update: if isOwner()
                     || (request.resource.data.diff(resource.data)
                           .affectedKeys().hasOnly(['usedCount', 'lastUsedAt'])
-                        && request.resource.data.usedCount == resource.data.usedCount + 1);
+                        && request.resource.data.usedCount == resource.data.usedCount + 1)
+                    || (request.resource.data.diff(resource.data)
+                          .affectedKeys().hasOnly(['progress', 'progressAt'])
+                        && request.resource.data.progress.size() <= 28
+                        && resource.data.active == true
+                        && resource.data.expiresAt > request.time);
 
       allow create, delete: if isOwner();
     }

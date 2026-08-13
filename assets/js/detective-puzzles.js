@@ -768,16 +768,19 @@ function deduce(ctx, panel, box, cfg, onSolve) {
     panel.addChild(mkButton({
         label: '🔍 檢查推理', x: box.cx - 100, y: box.y + 512, w: 200, h: 42,
         onClick: () => {
-            // 沒解鎖的欄位不算進來 —— 那幾格本來就填不了
-            let blank = 0, wrong = 0;
+            // 沒解鎖的欄位不算進來 —— 那幾格本來就填不了。
+            // ★ 錯的地方刻意只記「有沒有」而不記「幾格」：講出數字的話，
+            //   玩家只要翻一格再按一次檢查、看數字有沒有變，就能一格一格試出答案，
+            //   變成猜謎而不是推理。所以這裡用 boolean，不是計數器。
+            let blank = 0, wrong = false;
             sus.forEach((s, i) => ev.forEach((e, j) => {
                 if (e.locked) return;
                 if (marks[i][j] === 0) blank++;
-                else if ((marks[i][j] === 1) !== cfg.truth[i][j]) wrong++;
+                else if ((marks[i][j] === 1) !== cfg.truth[i][j]) wrong = true;
             }));
             result.style.fill = COL.red;
             if (blank) { result.text = `還有 ${blank} 格沒填，每一格都要判斷符不符合。`; return; }
-            if (wrong) { result.text = `有 ${wrong} 格對不上，再讀一次證詞吧！`; return; }
+            if (wrong) { result.text = '有地方對不上。再讀一次證詞，把每個人的說法交叉比對看看！'; return; }
             // 填得到的都填對了，但還有欄位沒查出來 → 不能結案，也不該罵人
             if (lockedCount) {
                 result.style.fill = COL.ok;

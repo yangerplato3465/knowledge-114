@@ -33,9 +33,14 @@ app.stage.eventMode = 'static';              // 濾鏡謎題要靠 stage 收拖�
 // 十幾個 woff2 子集載完才會開始抓圖，白白多花一段時間。
 // 圖只等「起始場景 + 全域」那批，其他場景在背景繼續載
 //（見 detective-ui.js 的 preloadImages）。缺圖不影響，會退回向量替代圖形。
+// 有存檔的話開場會直接進存檔記的那個場景，所以要先載「那個」場景的圖，
+// 不是起始場景的 —— 否則會進到一個沒有背景的空場景（實際踩過的 bug）。
+const savedScene = window.DETECTIVE_SESSION?.progress?.scene;
+const bootScene = (savedScene && CASE.scenes[savedScene]) ? savedScene : CASE.startScene;
+
 await Promise.all([
     document.fonts.ready,
-    preloadImages(CASE, CASE.startScene),
+    preloadImages(CASE, bootScene),
 ]);
 document.getElementById('gameLoading')?.remove();
 container.appendChild(app.canvas);
@@ -189,6 +194,7 @@ function combineInTray(id) {
     say(msg);
     refreshHud();
     renderInteractives();
+    saveProgress();
     return true;
 }
 
@@ -459,6 +465,101 @@ function refreshHud() {
 }
 
 // ============================================================
+// 進度存檔
+//
+// 存檔寫回「開啟這一台的那組驗證碼」那筆文件（實際寫入在 detective-gate.js），
+// 所以一組碼＝一組學生的進度；四組輪流用同一台電視也不會互相蓋掉。
+//
+// 這裡只負責把記憶體裡的狀態壓成一包純資料 —— Set 一律轉成陣列，Firestore 存不了 Set。
+// SAVE_VERSION 之後改存檔格式時，用來擋掉讀不懂的舊資料。
+// ============================================================
+const SAVE_VERSION = 1;
+const SAVE_DELAY = 1200;                       // 連續操作只寫最後一次，省掉一堆沒必要的寫入
+
+function snapshotState() {
+    return {
+        v: SAVE_VERSION,
+        scene: state.scene,
+        clues: [...state.clues],
+        items: [...state.items],
+        examined: [...state.examined],
+        stored: [...state.stored],
+        storedOrder: [...state.storedOrder],
+        combined: [...state.combined],
+        solved: state.solved,
+        visited: [...visitedScenes],           // 進過的場景，免得回頭時又講一次開場白
+        dropPlayed: [...dropPlayed],           // 播過掉落動畫的，讀檔回來別再播一次
+        objPositions: { ...objPositions },     // 玩家把東西拖到哪裡去了
+        pickOrder: [...pickOrder],             // 疊放順序，少了它讀檔回來東西會互相埋住
+        // 下面兩個純粹給後台清單顯示用，遊戲本身讀不到也不影響
+        clueTotal: CASE.clues.length,
+        sceneName: CASE.scenes[state.scene]?.name || '',
+    };
+}
+
+let saveTimer = null;
+function saveProgress() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+        saveTimer = null;
+        window.DETECTIVE_SESSION?.saveProgress?.(snapshotState());
+    }, SAVE_DELAY);
+}
+
+// 離場之前要把還在等的那一次存檔先寫掉，不然最後 1.2 秒內做的事
+// 會跟著頁面重新整理一起消失。回傳「有沒有存成功」讓 gate 決定要不要放行。
+//
+// force = true 是「登出並儲存」用的：不管有沒有待寫的東西都真的寫一次，
+// 這樣回報的成敗是問過伺服器的結果，而不是靠「剛好沒東西要寫」推論出來的。
+window.DETECTIVE_FLUSH = async (force = false) => {
+    if (!saveTimer && !force) return true;
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    const save = window.DETECTIVE_SESSION?.saveProgress;
+    if (!save) return false;
+    return (await save(snapshotState())) !== false;
+};
+
+// 讀檔：把存檔倒回 state，成功回傳 true。
+//
+// 存檔是學生端寫上去的，安全規則管得住「能改哪些欄位」但管不住「裡面裝什麼」，
+// 所以這裡一律當成不可信的資料在處理：認不得的 id 一個個丟掉、
+// 格式不對就整份放棄從頭開始。寧可讓學生重玩，也不能卡在白畫面。
+function restoreProgress(p) {
+    if (!p || p.v !== SAVE_VERSION) return false;
+    if (!p.scene || !CASE.scenes[p.scene]) return false;   // 場景不存在的話 renderScene 會炸
+    try {
+        const ids = v => (Array.isArray(v) ? v : []).filter(x => typeof x === 'string');
+        const keep = (v, ok) => ids(v).filter(ok);
+
+        state.scene = p.scene;
+        state.solved = p.solved === true;
+        state.clues = keep(p.clues, id => !!clueById(id));
+        state.items = keep(p.items, id => !!itemById(id));
+        state.examined = new Set(ids(p.examined));         // 熱點 id 只當旗標用，多認不得的也無害
+        state.stored = new Set(keep(p.stored, id => !!OBJ_INDEX[id]));
+        state.storedOrder = keep(p.storedOrder, id => state.stored.has(id));
+        state.combined = new Set(keep(p.combined, id => !!OBJ_INDEX[id]));
+
+        // 下面三個是 state 以外的：進過的場景、播過的掉落動畫、物件被拖到哪。
+        // 少了它們畫面還是對的，只是會重講開場白、重播動畫、東西跳回原位。
+        for (const id of ids(p.visited)) if (CASE.scenes[id]) visitedScenes.add(id);
+        for (const id of keep(p.dropPlayed, id => !!OBJ_INDEX[id])) dropPlayed.add(id);
+        pickOrder.length = 0;
+        pickOrder.push(...keep(p.pickOrder, id => !!OBJ_INDEX[id]));
+        for (const [id, pos] of Object.entries(p.objPositions || {})) {
+            if (OBJ_INDEX[id] && Number.isFinite(pos?.x) && Number.isFinite(pos?.y)) {
+                objPositions[id] = { x: pos.x, y: pos.y };
+            }
+        }
+        return true;
+    } catch (err) {
+        console.warn('[detective] 存檔讀不懂，改成從頭開始', err);
+        return false;
+    }
+}
+
+// ============================================================
 // 場景與熱點
 // ============================================================
 const visitedScenes = new Set();
@@ -477,6 +578,7 @@ function renderScene(id) {
     const first = !visitedScenes.has(id);
     visitedScenes.add(id);
     say(txt(first ? scene.intro : (scene.introBack || scene.intro)) || '點擊場景中的東西開始調查。');
+    saveProgress();
 }
 
 // ============================================================
@@ -576,11 +678,17 @@ function renderInteractives() {
     dragLayer.removeChildren();      // 上一次拖曳留在這層的節點也要清掉，否則會變成孤兒殘留在畫面上
     hotLayer.removeChildren();
     labelLayer.removeChildren();
-    for (const o of CASE.scenes[state.scene].objects || []) {
-        if (state.stored.has(o.id) || state.combined.has(o.id)) continue;   // 收進物品欄／已組合掉的不畫
-        if (isHidden(o)) continue;                                          // 還沒被翻出來的不畫
-        objLayer.addChild(makeObject(o));
-    }
+    // 玩家搬動過的物件要疊在上層，最後拿起的那個排最上面。
+    // ★ 少了這段排序，重畫就會退回案件資料的宣告順序 —— 把「宣告在前面的東西」
+    //   放到「宣告在後面的東西」上面之後，只要畫面重繪一次，前者就被埋住、
+    //   再也點不到也拖不動（放手當下是好的，過一會兒突然壞掉，很難查）。
+    //   pickOrder 裡沒有的是 -1，會排在最前面（＝最底層）並保持宣告順序。
+    const drawList = (CASE.scenes[state.scene].objects || [])
+        .filter(o => !state.stored.has(o.id)      // 收進物品欄的不畫
+                  && !state.combined.has(o.id)    // 已經組合掉的不畫
+                  && !isHidden(o))                // 還沒被翻出來的不畫
+        .sort((a, b) => pickOrder.indexOf(a.id) - pickOrder.indexOf(b.id));
+    for (const o of drawList) objLayer.addChild(makeObject(o));
     for (const h of CASE.scenes[state.scene].hotspots) hotLayer.addChild(makeHotspot(h));
 }
 
@@ -701,6 +809,7 @@ function fadeOut(node, ms) {
 }
 
 const objPositions = {};                       // 玩家拖過的位置記在這，重畫也不會跑回去
+const pickOrder = [];                          // 玩家拿起過的物件 id，越後面＝疊得越上層（見 renderInteractives）
 let drag = null;                               // { o, node }
 let dragOff = { x: 0, y: 0 }, dragFrom = { x: 0, y: 0 }, dragDist = 0;
 const DRAG_SLOP = 6;                           // 移動超過這距離才算「拖」，否則當成點一下
@@ -749,6 +858,10 @@ function makeObject(o) {
 
     c.on('pointerdown', e => {
         if (!o.draggable || overlayLayer.children.length) return;
+        // 剛拿起來的排到最上層，之後重畫也維持這個疊法
+        const k = pickOrder.indexOf(o.id);
+        if (k >= 0) pickOrder.splice(k, 1);
+        pickOrder.push(o.id);
         drag = { o, node: c };
         const g = root.toLocal(e.global);
         dragOff = { x: g.x - c.x, y: g.y - c.y };
@@ -798,43 +911,63 @@ function onObjUp() {
     if (!drag) return;
     const { o, node } = drag;
     drag = null;
+
+    // ★ 物件自己的 pointerup 會先跑，冒泡到 stage（這裡）之前就可能已經
+    //   onHotspot → award → renderInteractives()，把圖層清空、另外造了一顆新的。
+    //   這時手上這顆已經是沒有 parent 的孤兒，再 addChild 回去，
+    //   畫面上就會同時出現新舊兩顆一模一樣的東西。removeChildren() 會把
+    //   parent 設成 null，正好可以拿來判斷「我這顆是不是已經被換掉了」。
+    if (!node.parent) return;
+
     node.cursor = 'grab';
     node.art.scale.set(1);
     node.art.alpha = 1;
-    // 放手就搬回原本的圖層（收納／組合那幾條路會 renderInteractives 整個重畫，
-    // 但「只是點一下」和「一般放下」不會，留在 dragLayer 就會蓋在 HUD 上面）
+    // 放手就搬回原本的圖層（沒有重畫的那幾條路留在 dragLayer 的話，
+    // 節點會蓋在道具欄橫幅和對話框上面）
     objLayer.addChild(node);
     labelLayer.addChild(node.label);
     if (dragDist < DRAG_SLOP) return;                  // 只是點一下，位置不動
 
     const cx = node.x + o.w / 2, cy = node.y + o.h / 2;
 
-    // 1) 拖到組合目標上（例如轉輪 → 底座）
-    if (o.dropTarget) {
-        const t = OBJ_INDEX[o.dropTarget];
-        const tp = objPositions[t.id] || { x: t.x, y: t.y };
-        // 目標本身還沒被翻出來時不能組合，否則會對著一塊空地「裝上去」
-        const hit = !isHidden(t) &&
-                    node.x < tp.x + t.w && tp.x < node.x + o.w &&
-                    node.y < tp.y + t.h && tp.y < node.y + o.h;
+    // 1) 拖到另一半上面 → 組裝（轉輪拖到底座，或反過來把底座拖到轉輪上）
+    // ★ 兩個方向都要能組。以前只認 o.dropTarget，等於只有「零件拖到本體」算數；
+    //   會沒事純粹是因為零件剛好宣告在後面、永遠疊在上層抓得到。自從疊放順序
+    //   改成跟著玩家的拿取順序走（見 renderInteractives），那個巧合就不成立了 ——
+    //   把底座拖到轉輪上，底座會蓋住轉輪，而這個方向又不組裝，玩家就卡在原地。
+    const mate = partnerOf(o.id);
+    if (mate && !state.stored.has(mate.id) && !state.combined.has(mate.id)) {
+        const tp = objPositions[mate.id] || { x: mate.x, y: mate.y };
+        // 另一半還沒被翻出來時不能組合，否則會對著一塊空地「裝上去」
+        const hit = !isHidden(mate) &&
+                    node.x < tp.x + mate.w && tp.x < node.x + o.w &&
+                    node.y < tp.y + mate.h && tp.y < node.y + o.h;
         if (hit) {
-            state.combined.add(o.id);
-            let msg = o.dropSay || '';
-            if (o.dropGivesItem && !hasItem(o.dropGivesItem)) {
-                state.items.push(o.dropGivesItem);
-                const it = itemById(o.dropGivesItem);
+            // 帶著 dropSay / dropGivesItem 的是「零件」那一半，組好之後它消失；
+            // 另一半留在場上換成組好的樣子（跟 combineInTray 同一套判斷）
+            const part = o.dropTarget ? o : mate;
+            state.combined.add(part.id);
+            // 留在場上的如果是玩家剛拖的這一個，位置要記下來，
+            // 否則重畫時它會跳回資料裡的初始座標
+            if (part.id !== o.id) objPositions[o.id] = { x: node.x, y: node.y };
+
+            let msg = part.dropSay || '';
+            if (part.dropGivesItem && !hasItem(part.dropGivesItem)) {
+                state.items.push(part.dropGivesItem);
+                const it = itemById(part.dropGivesItem);
                 // 組好的東西還擺在場景裡（storeAs），這時候物品欄不會多一格 ——
                 // 別報「取得道具」，改成告訴玩家要收起來得自己拖下去
-                msg += stillOnStage(o.dropGivesItem)
+                msg += stillOnStage(part.dropGivesItem)
                     ? `\n（${it.name}就擺在原地。想收進物品欄的話，把它拖到下面那排格子裡。）`
                     : `\n🎒 取得道具：${it.icon} ${it.name}`;
             }
             say(msg);
             refreshHud();
             renderInteractives();
+            saveProgress();
             return;
         }
-        // 沒對準就往下走 —— 組合零件現在也可以單獨收進物品欄，
+        // 沒對準就往下走 —— 組合零件也可以單獨收進物品欄，
         // 兩個半邊都收進去之後在包包裡點一下就能組起來（見 combineInTray）
     }
 
@@ -850,6 +983,7 @@ function onObjUp() {
             say(`🎒 ${o.name}收起來了。要用的時候點道具欄裡的 ${it.icon} ${it.name}。`);
             refreshHud();
             renderInteractives();
+            saveProgress();
             return;
         }
         state.stored.add(o.id);
@@ -862,6 +996,7 @@ function onObjUp() {
             : `🎒 ${o.name}收進物品欄了。點下方的圖示隨時查看。`);
         refreshHud();
         renderInteractives();
+        saveProgress();
         return;
     }
 
@@ -869,6 +1004,7 @@ function onObjUp() {
     const maxY = (dlgOpen ? 446 : TRAY_TOP - 6) - o.h;
     if (node.y > maxY) { node.y = Math.max(60, maxY); node.placeLabel(); }
     objPositions[o.id] = { x: node.x, y: node.y };
+    saveProgress();
 }
 
 app.stage.on('globalpointermove', onObjMove);
@@ -966,6 +1102,7 @@ function award(h, text) {
     say(msg);
     refreshHud();
     renderInteractives();
+    saveProgress();
 
     if (state.clues.length === CASE.clues.length && !state.solved) {
         setTimeout(() => say('線索蒐集完成！點右上角的「🕵️ 指認犯人」說出你的推理。'), 3000);
@@ -1298,6 +1435,7 @@ function showAccuse() {
 function accuse(s) {
     if (s.id === CASE.culprit) {
         state.solved = true;
+        saveProgress();
         showEnding();
     } else {
         closePanel();
@@ -1373,6 +1511,32 @@ function showBrief() {
     });
 }
 
-renderScene(CASE.startScene);
+// ---- 開場 ----
+// 有讀得回來的存檔就接續上次（跳過案件簡報，直接回到現場），
+// 沒有或壞掉就當新遊戲，照原本的流程走。
+const sess = window.DETECTIVE_SESSION;
+const resumed = restoreProgress(sess?.progress);
+const firstScene = resumed ? state.scene : CASE.startScene;
+
+// 上面已經照存檔預載過一次，這裡通常立刻 resolve。但存檔如果被判定壞掉、
+// 退回起始場景，預載的就不是這一個了 —— 所以還是要等一次，理由跟
+// transitionTo() 裡那段一樣：寧可多等，也不要畫出一個沒有背景的空場景。
+await ensureSceneLoaded(CASE, firstScene);
+
+renderScene(firstScene);
 refreshHud();
-showBrief();
+
+if (resumed) {
+    // 蓋掉 renderScene 剛講的 introBack，改成講「接續上次」，
+    // 老師一眼就能確認讀檔有生效、而且讀到的是正確那一組
+    say(`📁 接續上次的進度${sess?.label ? `（${sess.label}）` : ''}\n`
+        + `目前線索 ${state.clues.length}/${CASE.clues.length}，繼續調查吧！`);
+} else {
+    showBrief();
+}
+
+// 存檔讀不到時（斷線、碼被刪或過期）遊戲照樣能玩，但這次不會被記錄。
+// 一定要講出來，否則學生玩了一整堂課才發現沒存到。
+if (sess?.saveBlocked) {
+    setTimeout(() => say('⚠️ 連不上進度伺服器 —— 這次玩的內容不會被記錄下來，請先告訴老師。'), 5000);
+}

@@ -72,9 +72,11 @@ async function generate() {
     if (!game) { toast('請先選擇案件'); return; }
 
     const hours = Number($('f_hours').value);
+    // 下拉選單的文字（「7 天（跨週續玩）」）比自己換算好讀，直接拿來顯示
+    const hoursLabel = $('f_hours').selectedOptions[0]?.textContent.trim() || `${hours} 小時`;
     const count = Number($('f_count').value);
     const maxUses = Math.max(0, Math.trunc(Number($('f_max').value) || 0));
-    const note = $('f_note').value.trim();
+    const baseName = $('f_note').value.trim();
     const expiresAt = Timestamp.fromMillis(Date.now() + hours * 3600000);
 
     $('genBtn').disabled = true;
@@ -83,29 +85,39 @@ async function generate() {
         for (let i = 0; i < count; i++) {
             const code = randomCode(game.prefix);
             const codeId = await deriveCodeId(gameId, code);
+            // 一次產多組時自動編號，省得四組碼發下去分不出誰是誰。
+            // 只產一組就用原字串，你想手動打「A班第3組」也不會被加料。
+            const label = count > 1 ? `${baseName}第${i + 1}組` : baseName;
 
-            // 學生端查的那一筆（不含明文碼）
+            // 學生端查的那一筆（不含明文碼）。
+            // label 學生端讀得到，之後遊戲畫面要靠它顯示「現在是哪一組」；
+            // 組別名稱本來就不是秘密，寫在這裡沒有安全問題。
             await setDoc(doc(db, 'unlockCodes', codeId), {
-                gameId, expiresAt, maxUses, usedCount: 0, active: true,
+                gameId, label, expiresAt, maxUses, usedCount: 0, active: true,
                 createdAt: serverTimestamp(),
             });
-            // 後台自己看的那一筆（含明文碼與備註）
+            // 後台自己看的那一筆（含明文碼與組別名稱）。
+            // 欄位沿用 note，之前發過的碼才不會在清單上變成空白
             await setDoc(doc(db, 'unlockCodesAdmin', codeId), {
-                code, gameId, note, expiresAt,
+                code, gameId, note: label, expiresAt,
                 createdAt: serverTimestamp(), createdBy: currentUser.uid,
             });
-            made.push(code);
+            made.push({ code, label });
         }
 
         const box = $('fresh');
-        box.innerHTML = made.map(c => `<div class="fresh-code">${escapeHtml(c)}</div>`).join('')
+        box.innerHTML = made.map(m => `<div class="fresh-code">${
+                m.label ? `<span class="fresh-label">${escapeHtml(m.label)}</span>` : ''
+            }${escapeHtml(m.code)}</div>`).join('')
             + `<div class="fresh-meta">${escapeHtml(game.name)} ·
-                 有效到 ${fmtTime(expiresAt.toMillis())}（${hours} 小時）·
+                 有效到 ${fmtTime(expiresAt.toMillis())}（${escapeHtml(hoursLabel)}）·
                  ${maxUses === 0 ? '不限次數' : `上限 ${maxUses} 次`}</div>
                <button class="btn btn-ghost btn-sm" id="copyFresh" style="margin-top:12px">
                  <i class="fa-regular fa-copy"></i> 複製</button>`;
         box.style.display = '';
-        $('copyFresh').onclick = () => copy(made.join('\n'));
+        // 複製出來一行一組，有名稱就用 Tab 隔開，貼到記事本或表格都對得起來
+        $('copyFresh').onclick = () => copy(
+            made.map(m => m.label ? `${m.label}\t${m.code}` : m.code).join('\n'));
 
         $('f_note').value = '';
         toast(`已產生 ${made.length} 組驗證碼`);
@@ -169,6 +181,23 @@ function statusOf(r) {
     return { ok: true, label: fmtLeft(expMs) };
 }
 
+// 這一組玩到哪了。資料是遊戲端自己寫回 unlockCodes 的 progress 欄位，
+// 舊的碼（做這個功能之前發的）沒有這欄，就顯示「尚未開始」。
+function progressOf(live) {
+    const p = live?.progress;
+    if (!p) return '<span class="prog-none">尚未開始</span>';
+
+    const at = live.progressAt?.toMillis?.();
+    const when = at ? `（最後遊玩 ${fmtTime(at)}）` : '';
+    if (p.solved) return `<span class="prog-done">✅ 已破關</span>${escapeHtml(when)}`;
+
+    const got = p.clues?.length ?? 0;
+    const total = p.clueTotal ?? '?';
+    const where = p.sceneName ? ` · 目前在${p.sceneName}` : '';
+    return `<span class="prog-live">🔎 線索 ${got}/${escapeHtml(String(total))}</span>`
+         + `${escapeHtml(where + when)}`;
+}
+
 function renderCodes() {
     const listEl = $('codeList');
     $('codeEmpty').style.display = rows.length ? 'none' : '';
@@ -182,9 +211,10 @@ function renderCodes() {
         <div class="code-row ${st.ok ? '' : 'dead'}">
             <div class="code-val">${escapeHtml(r.code)}</div>
             <div class="code-info">
+                ${r.note ? `<div class="code-group">${escapeHtml(r.note)}</div>` : ''}
+                <div class="code-prog">${progressOf(live)}</div>
                 <span class="tag ${st.ok ? 'live' : 'dead'}">${escapeHtml(st.label)}</span>
                 到期 <b>${expMs ? fmtTime(expMs) : '—'}</b> · 已用 <b>${used}${cap}</b> 次
-                ${r.note ? `<br>${escapeHtml(r.note)}` : ''}
             </div>
             <div class="code-actions">
                 <button class="btn btn-ghost btn-sm" data-copy="${escapeHtml(r.code)}">複製</button>

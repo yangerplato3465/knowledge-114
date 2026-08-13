@@ -68,19 +68,77 @@ body.fs-fallback #gameContainer {
 
 /* ---- 上課驗證碼門檻（見 assets/js/detective-gate.js）---- */
 
-/* 頂欄的上鎖鈕：解鎖後才由 gate 拿掉 hidden */
-.lock-btn {
-    margin-left: auto;
-    padding: 6px 14px;
-    border: 2px solid var(--border);
-    border-radius: 12px;
+/* 組別切換器。用 :not([hidden]) 才設 display，否則 display 會蓋掉 hidden 屬性，
+   還沒解鎖時就會冒出一顆空按鈕（跟下面 .gate 是同一個坑）。
+   position:relative 是給底下的下拉選單定位用的。 */
+.group-switch:not([hidden]) {
+    position: relative;
+    margin-left: auto;              /* 整組推到頂欄最右邊 */
+}
+
+/* 目前是哪一組。名字本身就是開選單的按鈕。 */
+.group-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 13px;
+    border: 2px solid var(--primary);
+    border-radius: 999px;
     background: var(--surface);
-    color: var(--muted);
+    color: var(--primary);
     font-family: inherit;
     font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
     cursor: pointer;
 }
-.lock-btn:hover { border-color: var(--primary); color: var(--primary); }
+.group-tag:hover { background: var(--primary); color: var(--surface); }
+.group-tag::after { content: '▾'; font-size: 11px; opacity: 0.8; }
+
+/* 連不上進度伺服器：整顆轉成警示色，讓老師走過去就看得到 */
+.group-tag.offline { border-color: var(--bad); color: var(--bad); }
+.group-tag.offline:hover { background: var(--bad); color: var(--surface); }
+
+/* 下拉選單。z-index 要壓過遊戲畫布。 */
+.group-menu:not([hidden]) {
+    display: block;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 900;
+    min-width: 240px;
+    padding: 8px;
+    border: 2px solid var(--border-strong);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+.group-menu button {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 10px;
+    background: none;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.group-menu button:hover:not(:disabled) { background: var(--surface-2); }
+/* 目前這一組：留在清單裡當作標示，但不能點 */
+.group-menu button:disabled {
+    color: var(--primary);
+    font-weight: 700;
+    cursor: default;
+}
+.group-menu hr {
+    margin: 8px 4px;
+    border: none;
+    border-top: 2px solid var(--border);
+}
 
 /* 遮罩本體。用 :not([hidden]) 而不是 .gate{display:flex}，
    否則 flex 會蓋掉 hidden 屬性，遮罩在不該出現時也會冒出來。 */
@@ -107,6 +165,61 @@ body.fs-fallback #gameContainer {
 .gate-icon { font-size: 44px; line-height: 1; margin-bottom: 8px; }
 .gate-card h2 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
 .gate-hint { margin: 0 0 22px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+/* 這台裝置記住的組別。同樣用 :not([hidden]) 才設 display，
+   沒有記住任何組別時整塊不該出現。 */
+.gate-groups:not([hidden]) { display: block; margin-bottom: 20px; }
+.gate-groups-title {
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+.gate-group-list { display: flex; flex-direction: column; gap: 8px; }
+.gate-group {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--primary);
+    border-radius: 14px;
+    background: var(--surface-2);
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.gate-group:hover { background: var(--primary); color: var(--surface); }
+.gate-group:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.gate-forget {
+    margin-top: 10px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.gate-forget:hover { color: var(--bad); }
+
+/* 「或輸入驗證碼」的分隔線 */
+.gate-or {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+.gate-or::before,
+.gate-or::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+}
 
 #gateCode {
     width: 100%;
@@ -148,5 +261,6 @@ body.fs-fallback #gameContainer {
 @media (max-width: 600px) {
     body { padding: 10px; }
     .game-bar h1 { font-size: 18px; }
-    .lock-btn { padding: 5px 10px; font-size: 12px; }
+    .group-tag { padding: 4px 10px; font-size: 12px; }
+    .group-menu:not([hidden]) { min-width: 200px; }
 }

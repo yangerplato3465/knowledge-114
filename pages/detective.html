@@ -21,8 +21,15 @@
         <h1>🔍 偵探事件簿</h1>
         <!-- 全螢幕鈕不放在這裡：畫布右上角的 HUD 已經有一顆 ⛶（見 detective.js 的 fsHudBtn），
              全螢幕時這條 HTML 頂欄本來就會整條收起來，放兩顆只會重複 -->
-        <button type="button" id="lockBtn" class="lock-btn" hidden
-                title="鎖回去，下次進來要重新輸入驗證碼">🔒 上鎖</button>
+        <!-- 目前是哪一組。四組輪流用同一台電視，這個標籤是唯一能一眼確認
+             「現在記的是不是這一組」的地方（內容來自驗證碼上的組別名稱）-->
+        <!-- 組別切換器：目前組別的名字本身就是按鈕，點開就能直接換到這台
+             記住的其他組，不用先跳回驗證碼畫面。只有「新增組別」才需要輸入碼。 -->
+        <div id="groupSwitch" class="group-switch" hidden>
+            <button type="button" id="groupBtn" class="group-tag" aria-haspopup="true" aria-expanded="false"
+                    title="切換組別"></button>
+            <div id="groupMenu" class="group-menu" hidden></div>
+        </div>
     </div>
 
     <div id="gameContainer">
@@ -36,6 +43,17 @@
             <div class="gate-icon">🔒</div>
             <h2>需要遊戲驗證碼</h2>
             <p class="gate-hint">這個案件只能在課堂上遊玩。<br>請輸入老師當堂提供的驗證碼。</p>
+
+            <!-- 這台裝置上驗過、而且還沒過期的組別。一台電視輪流跑三四組，
+                 每次換組都要重打驗證碼太麻煩，所以可以直接點名字切換。
+                 只記 codeId 與組別名稱，不記明文驗證碼（見 detective-gate.js）。-->
+            <div id="gateGroups" class="gate-groups" hidden>
+                <p class="gate-groups-title">這台裝置上的組別</p>
+                <div id="gateGroupList" class="gate-group-list"></div>
+                <button type="button" id="gateForget" class="gate-forget">清除這台記住的組別</button>
+                <div class="gate-or">或輸入驗證碼</div>
+            </div>
+
             <input id="gateCode" type="text" autocomplete="off" spellcheck="false"
                    autocapitalize="characters" maxlength="16" placeholder="OWL-XXXX-XX">
             <button type="button" id="gateBtn" class="gate-btn">開啟案件</button>
