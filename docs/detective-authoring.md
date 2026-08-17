@@ -10,23 +10,45 @@
 
 ## 0. 檔案地圖
 
+命名規則一句話：**`detective-` 開頭而不帶案件 id ＝整個系列共用；帶案件 id ＝那一案專屬。**
+
+系列共用（所有案件一起用，改了會影響全部）：
+
 | 檔案 | 放什麼 |
 |---|---|
-| `assets/js/detective-case-owl.js` | 案件資料，純資料無程式碼 |
 | `assets/js/detective.js` | 引擎：圖層、拖曳、場景、HUD、存檔 |
 | `assets/js/detective-puzzles.js` | 四種謎題（caesar / safe / lens / deduce） |
 | `assets/js/detective-ui.js` | 共用元件、圖片預載 |
 | `assets/js/detective-gate.js` | 驗證碼門檻、組別切換、進度讀寫 |
 | `assets/js/detective-code.js` | 碼的推導（後台與遊戲共用，改了就全部失效） |
+| `pages/detective-admin.html` ＋ `detective-admin.js` | 後台產碼與進度查看 |
+
+案件專屬（一案一份，互不干擾）：
+
+| 檔案 | 放什麼 |
+|---|---|
+| `pages/detective-<id>.html` | 那一案的入口頁，設 `window.DETECTIVE_GAME_ID` |
+| `assets/js/detective-case-<id>.js` | 案件資料，純資料無程式碼 |
+| `assets/images/detective/<id>/` | 那一案的圖 |
+
+### ★ 圖一定要分資料夾放
+
+第一案的圖用的是 `background1.webp`、`suspect1.webp` 這種通用名。要是兩案的圖混在同一層，**下一案的背景圖會直接覆蓋掉上一案的**——不是難看，是壞掉。
+
+好消息是引擎沒有寫死任何圖片路徑，全部走案件檔自己的 `IMG` 常數與 `assistantImg`，所以整案的圖要搬只要改 `IMG` 那一行。
 
 新增一個案件的最小步驟：
 
 1. `detective-code.js` 的 `DETECTIVE_GAMES` 加一行（id / prefix / name）
-2. 複製一份 `detective-case-owl.js` 改成新案件
-3. 新的 `pages/<name>.html`，設 `window.DETECTIVE_GAME_ID`，照 detective.html 的結構抄
-4. `index.html` 加一顆 `.page-btn`
+   —— **id 會進驗證碼的推導金鑰，發過碼之後就不能再改**，第一次就要定案
+2. 複製一份 `detective-case-owl.js` 改成 `detective-case-<id>.js`，把 `IMG` 指到自己的資料夾
+3. 新的 `pages/detective-<id>.html`，設 `window.DETECTIVE_GAME_ID`，照 `detective-owl.html` 的結構抄
+4. 開 `assets/images/detective/<id>/` 放圖
+5. `index.html` 加一顆 `.page-btn`
 
 後台的案件下拉選單、驗證碼前綴會自動跟著長出來。
+
+檔名可以隨時改（存檔與驗證碼都認 `DETECTIVE_GAME_ID` 那個字串，不認檔名），但改了要記得一起更新 `index.html` 的連結。
 
 ---
 

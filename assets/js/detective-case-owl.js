@@ -84,15 +84,19 @@
 // ============================================================
 
 // 圖片資料夾
-//   assets/images/detective/            → 遊戲實際載入的優化圖
-//                                         畫作 720px WebP／背景 1440×900 WebP
-//   assets/images/detective/original/   → 美術原檔備份，遊戲不載入
+//   assets/images/detective/owl/   → 這一案的圖，遊戲實際載入的優化圖
+//                                    畫作 720px WebP／背景 1440×900 WebP
+//
+// ★ 每個案件的圖各自放在 assets/images/detective/<案件 id>/ 底下。
+//   這一案的檔名是 background1 / suspect1 這種通用名，要是跟別案混在同一層，
+//   下一案的背景圖就會直接覆蓋掉這一案的。引擎沒有寫死任何圖片路徑
+//   （全部走下面這個 IMG 和 assistantImg），所以整案的圖要搬只要改這一行。
 //
 // ★ 這裡要算成「絕對網址」，不能直接寫死 '../assets/images/detective/'：
 //   瀏覽器載 <script>／<link> 會照標準把 ../ 解析對，但 Pixi 的 Assets 是自己
 //   接字串——它把 document.baseURI 整串當成資料夾。網址結尾有副檔名時
-//   （/pages/detective.html）剛好算得對，可是 Netlify 的 Pretty URLs 會把它
-//   美化成 /pages/detective，Pixi 就少算一層，全部圖都去要 /pages/assets/... 而 404。
+//   （/pages/detective-owl.html）剛好算得對，可是 Netlify 的 Pretty URLs 會把它
+//   美化成 /pages/detective-owl，Pixi 就少算一層，全部圖都去要 /pages/assets/... 而 404。
 //   改用 currentScript.src 當基準交給瀏覽器算，網址長什麼樣都不會歪，
 //   放在子目錄（例如 GitHub Pages 的 /knowledge-114/）也一樣正確。
 //
@@ -100,7 +104,7 @@
 //   2808×1536 在「下緣」補到 2808×1755 再縮成 1440×900，補出來的那條
 //   地板正好被下方對話框蓋住，所以整張圖不會被拉扁。
 //   之後要換背景，照同樣的 16:10 比例出圖就好。
-const IMG = new URL('../images/detective/', document.currentScript.src).href;
+const IMG = new URL('../images/detective/owl/', document.currentScript.src).href;
 
 // 喜拿的防卡關提示：兩個場景共用同一條提示鏈（挑第一條還沒達成的講）。
 // text 可以寫成函式（吃引擎給的進度查詢 api）—— 提示指的東西大多在校長室，
@@ -250,7 +254,7 @@ window.DETECTIVE_CASE = {
     ],
 
     // ---- 嫌疑人 ----
-    // ★ 這份資料的來源是嫌疑人卡片圖（assets/images/detective/suspect1–5.webp）——
+    // ★ 這份資料的來源是嫌疑人卡片圖（assets/images/detective/owl/suspect1–5.webp）——
     //   身高／慣用手／眼鏡／案發時段都印在圖上，字是烘進圖裡的。
     //   所以改這裡的數值就必須一起重生那張圖，否則玩家會同時看到兩個版本。
     //   要加減嫌疑人的話，記得同步：records（黑板）／puzzle.suspects／puzzle.truth，
