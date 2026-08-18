@@ -82,6 +82,10 @@ const state = {
     storedOrder: [],          // 收納順序（物品欄顯示用）
     combined: new Set(),      // 已組合掉的物件 id（例如裝回底座的轉輪）
     solved: false,
+    // ---- 多結局用的兩個欄位（案件沒宣告 endings 就完全用不到，行為跟以前一樣）----
+    misjudge: 0,              // 指認錯人的次數
+    closed: false,            // 誤判用盡被強制結案（沒抓到人也要有結局）
+    flags: {},                // 謎題寫進來的自訂進度，例如審訊室洗清了哪些人
 };
 
 const clueById = id => CASE.clues.find(c => c.id === id);
@@ -100,6 +104,8 @@ const txtApi = {
     stored: id => state.stored.has(id),
     scene: () => state.scene,
     solved: () => state.solved,
+    misjudge: () => state.misjudge,
+    flag: k => state.flags[k],
 };
 const txt = v => (typeof v === 'function' ? v(txtApi) : v);
 
@@ -460,7 +466,10 @@ function setSceneTag(name) {
 
 function refreshHud() {
     clueBtn.setLabel(`🔎 線索 ${state.clues.length}/${CASE.clues.length}`);
-    accuseBtn.setLocked(state.clues.length < CASE.clues.length && !state.solved);
+    // ★ 這裡的門檻要跟 showAccuse() 用同一個數字，否則按鈕鎖著、
+    //   放寬 accuseMinClues 也按不下去（多結局的假高潮就是這樣被擋掉的）
+    const need = Number.isFinite(CASE.accuseMinClues) ? CASE.accuseMinClues : CASE.clues.length;
+    accuseBtn.setLocked(state.clues.length < need && !state.solved && !state.closed);
     renderTray();
 }
 
@@ -473,7 +482,7 @@ function refreshHud() {
 // 這裡只負責把記憶體裡的狀態壓成一包純資料 —— Set 一律轉成陣列，Firestore 存不了 Set。
 // SAVE_VERSION 之後改存檔格式時，用來擋掉讀不懂的舊資料。
 // ============================================================
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;   // 2：多結局加了 misjudge / closed / flags 三個欄位
 const SAVE_DELAY = 1200;                       // 連續操作只寫最後一次，省掉一堆沒必要的寫入
 
 function snapshotState() {
@@ -487,6 +496,9 @@ function snapshotState() {
         storedOrder: [...state.storedOrder],
         combined: [...state.combined],
         solved: state.solved,
+        misjudge: state.misjudge,
+        closed: state.closed,
+        flags: state.flags,          // 謎題自己寫進來的，形狀由謎題決定
         visited: [...visitedScenes],           // 進過的場景，免得回頭時又講一次開場白
         dropPlayed: [...dropPlayed],           // 播過掉落動畫的，讀檔回來別再播一次
         objPositions: { ...objPositions },     // 玩家把東西拖到哪裡去了
@@ -534,6 +546,11 @@ function restoreProgress(p) {
 
         state.scene = p.scene;
         state.solved = p.solved === true;
+        state.misjudge = Number.isFinite(p.misjudge) && p.misjudge >= 0 ? p.misjudge : 0;
+        state.closed = p.closed === true;
+        // flags 的內容是謎題自己定義的，引擎不認得也不該亂改，
+        // 只確認它是個物件就整包收下（存檔一律當不可信資料）
+        state.flags = (p.flags && typeof p.flags === 'object' && !Array.isArray(p.flags)) ? p.flags : {};
         state.clues = keep(p.clues, id => !!clueById(id));
         state.items = keep(p.items, id => !!itemById(id));
         state.examined = new Set(ids(p.examined));         // 熱點 id 只當旗標用，多認不得的也無害
@@ -1172,7 +1189,8 @@ function openPuzzle(h) {
     openPanel(panel => {
         const box = panelBase(panel, { title: cfg.title, bg: cfg.bgImg, ...(cfg.box || {}) });
         // api 讓謎題自己查進度（例如推理板要知道哪幾欄的物證還沒到手）
-        const ctx = { app, root, say, api: txtApi };
+        // flags / save 讓謎題把自己的進度寫進存檔（審訊室的洗清狀態要留到結局才用）
+        const ctx = { app, root, say, api: txtApi, flags: state.flags, save: saveProgress };
         panelCleanup = PUZZLES[cfg.type](ctx, panel, box, cfg, () => {
             closePanel();
             // 重看時再按一次「檢查推理」不該重新宣布一次破案（也會再觸發一次
@@ -1378,9 +1396,13 @@ function showNotebook() {
 }
 
 function showAccuse() {
-    if (state.solved) { showEnding(); return; }
-    if (state.clues.length < CASE.clues.length) {
-        say(`線索還不夠（${state.clues.length}/${CASE.clues.length}），再找找看吧！`);
+    if (state.solved || state.closed) { showEnding(); return; }
+    // ★ 門檻可以放寬：多結局的案件需要讓玩家「太早指認」真的指得下去，
+    //   否則靠誤判推進的劇情（例如 AI 展覽館的凱文假高潮）根本觸發不了。
+    //   沒宣告 accuseMinClues 就維持原本的「線索收齊才准指認」。
+    const need = Number.isFinite(CASE.accuseMinClues) ? CASE.accuseMinClues : CASE.clues.length;
+    if (state.clues.length < need) {
+        say(`線索還不夠（${state.clues.length}/${need}），再找找看吧！`);
         return;
     }
     openPanel(panel => {
@@ -1391,7 +1413,8 @@ function showAccuse() {
         const pw = Math.min(W - 40, Math.max(680, n * cw + (n - 1) * gap + 56));
         // 卡片拿掉 emoji 之後矮了 48，面板跟著收高，才不會下半部空一大塊
         const box = panelBase(panel, {
-            x: (W - pw) / 2, y: 96, w: pw, h: 400, title: '🕵️ 誰帶走了黃金貓頭鷹？',
+            x: (W - pw) / 2, y: 96, w: pw, h: 400,
+            title: CASE.accuseTitle || '🕵️ 誰是犯人？',
         });
         const tip = mkText('想一想筆記裡的線索，點選你認為的犯人。', 16, COL.muted);
         tip.anchor.set(0.5, 0);
@@ -1437,21 +1460,56 @@ function accuse(s) {
         state.solved = true;
         saveProgress();
         showEnding();
-    } else {
-        closePanel();
-        say(`❌ 不對喔 —— ${s.wrong}`);
+        return;
     }
+    closePanel();
+    state.misjudge++;
+    saveProgress();
+    say(`❌ 不對喔 —— ${s.wrong}`);
+
+    // 誤判用完就強制結案 —— 沒抓到人也要有結局，不能讓人卡在那裡重試到放棄。
+    // 沒宣告 misjudgeLimit 的案件（黃金貓頭鷹）永遠不會走到這裡，行為跟以前一樣。
+    if (Number.isFinite(CASE.misjudgeLimit) && state.misjudge >= CASE.misjudgeLimit) {
+        state.closed = true;
+        saveProgress();
+        setTimeout(showEnding, 2600);
+    }
+}
+
+// ============================================================
+// 選出這一輪該播哪一個結局
+//
+// CASE.endings 是一個由嚴到寬排好的清單，取第一個 when() 成立的。
+// 沒宣告 endings 的案件就回 null，showEnding() 會退回舊的單一結局（CASE.solution）。
+// when() 讀得到：誤判次數、謎題寫進來的 flags、有沒有抓到真兇。
+// ============================================================
+function pickEnding() {
+    const api = {
+        ...txtApi,
+        misjudge: state.misjudge,
+        flags: state.flags,
+        caught: state.solved,
+    };
+    for (const e of CASE.endings || []) {
+        try { if (!e.when || e.when(api)) return e; }
+        catch (err) { console.warn('[detective] 結局條件出錯，跳過', e.id, err); }
+    }
+    return null;
 }
 
 // 結局：左邊擺失竊的本尊（ending.img），右邊講故事。
 // 沒給 ending.img 就退回原本的滿版單欄，版面不會垮。
 function showEnding() {
+    const chosen = pickEnding();
     openPanel(panel => {
         // 面板吃滿畫面（960×600 留 32 的邊）—— 左邊那尊本尊要夠大，右邊的故事才不會被壓成小字
-        const box = panelBase(panel, { x: 90, y: 32, w: 780, h: 536, title: '🎉 案件偵破！' });
+        const box = panelBase(panel, {
+            x: 90, y: 32, w: 780, h: 536,
+            title: chosen?.title || '🎉 案件偵破！',
+        });
         const btnY = box.y + box.h - 62;
         const top = box.y + 62;
-        const end = CASE.ending || {};
+        const end = chosen || CASE.ending || {};
 
         // ---- 左欄：本尊 ----
         // 玩家找了一整場都只看到空底座，最後這一眼才是報酬 —— 高度給滿到按鈕上方
@@ -1477,7 +1535,7 @@ function showEnding() {
 
         // ---- 右欄：破案的故事（字級自動縮到按鈕上方，長文也壓不到按鈕）----
         const maxH = btnY - top - 14;
-        const body = mkText(CASE.solution, 15, COL.ink, { wrap: textW, lineHeight: 25 });
+        const body = mkText(txt(chosen?.text) || CASE.solution, 15, COL.ink, { wrap: textW, lineHeight: 25 });
         for (const [size, lh] of [[15, 25], [14, 23], [13, 21], [12, 19], [11, 17]]) {
             body.style.fontSize = size;
             body.style.lineHeight = lh;

@@ -100,13 +100,14 @@ export function interrogate(ctx, panel, box, cfg, done) {
     const evidence = cfg.evidence || [];
 
     // ---- 這一場審訊的狀態 ----
-    // 存檔要接上的時候，把這個物件塞進 snapshotState() 就好（見 CLAUDE.md 的存檔那條）。
-    const st = cfg.state || (cfg.state = {
+    // 放在 ctx.flags 裡，引擎的 snapshotState() 會整包存進去 ——
+    // 關掉面板、換場景、甚至隔天重開同一組碼，審到一半的進度都還在。
+    // 結局也是讀這裡的 cleared 判斷洗清了幾個無辜者。
+    const st = ctx.flags.interro || (ctx.flags.interro = {
         defense: {},        // 每個嫌疑人的防線段數 0/1/2
         cleared: {},        // 洗清了沒
         unlocked: {},       // 每個嫌疑人已經解鎖哪些證物（露出破綻才會亮）
         asked: {},          // 問過哪些關鍵字，問過的就不再閃
-        misjudge: 0,
     });
     for (const s of suspects) {
         st.defense[s.id] ??= 0;
@@ -344,6 +345,7 @@ export function interrogate(ctx, panel, box, cfg, done) {
         if (k.advance) st.defense[s.id] = Math.min(STAGES.length - 1, st.defense[s.id] + 1);
         if (k.clear) st.cleared[s.id] = true;
         drawBody();
+        ctx.save?.();
         checkDone();
     }
 
@@ -357,6 +359,7 @@ export function interrogate(ctx, panel, box, cfg, done) {
         if (rule.clear) st.cleared[s.id] = true;
         if (rule.unlock && !st.unlocked[s.id].includes(rule.unlock)) st.unlocked[s.id].push(rule.unlock);
         drawBody();
+        ctx.save?.();
         checkDone();
     }
 

@@ -1,6 +1,7 @@
 import { Assets, Circle, Container, Graphics, Sprite } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
 import { interrogate } from './interrogation.js';
 import { spotdiff } from './spotdiff.js';
+import { wave } from './wave.js';
 import { COL, mkText, mkButton, drawProps, hasTexture } from './ui.js';
 
 // ============================================================
@@ -798,4 +799,4 @@ function deduce(ctx, panel, box, cfg, onSolve) {
 
 // 審訊室住在自己的檔案裡（它有一份跨開關的狀態，跟這裡四種一次性謎題的
 // 生命週期不一樣），但一樣掛在 PUZZLES 上，案件資料才能用 type 指到它。
-export const PUZZLES = { caesar, safe, lens, deduce, interrogate, spotdiff };
+export const PUZZLES = { caesar, safe, lens, deduce, interrogate, spotdiff, wave };
