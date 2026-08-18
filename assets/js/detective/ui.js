@@ -48,19 +48,38 @@ export function mkButton({ label, x, y, w, h, color = COL.gold, textColor = COL.
     const c = new Container();
     c.position.set(x, y);
     c.addChild(new Graphics().roundRect(0, 0, w, h, h / 2).fill({ color }));
+    // 滑過去的亮片：疊一層白色圓角蓋在鈕面上，用 alpha 控制亮度。
+    // 不用 tint 是因為 tint 只能把顏色乘暗，做不出「變亮」；
+    // 也不用縮放整顆鈕 —— 容器的原點在左上角，放大會往右下歪掉，
+    // 而改 pivot 會動到所有呼叫端算好的 x/y。
+    const gloss = new Graphics().roundRect(0, 0, w, h, h / 2).fill({ color: 0xffffff });
+    gloss.alpha = 0;
+    gloss.eventMode = 'none';
+    c.addChild(gloss);
     const t = mkText(label, size, textColor, { weight: '700' });
     t.anchor.set(0.5);
     t.position.set(w / 2, h / 2);
     c.addChild(t);
     c.eventMode = 'static';
     c.cursor = 'pointer';
-    c.on('pointerover', () => { if (!c.locked) c.alpha = 0.85; });
-    c.on('pointerout', () => { c.alpha = c.locked ? 0.45 : 1; });
+    // 按下去整顆往下沉 2px、亮片收掉，放開再浮回來 —— 實體按鍵的手感
+    const lift = dy => c.position.set(x, y + dy);
+    c.on('pointerover', () => { if (!c.locked) { c.alpha = 0.94; gloss.alpha = 0.20; } });
+    c.on('pointerout', () => { c.alpha = c.locked ? 0.45 : 1; gloss.alpha = 0; lift(0); });
+    c.on('pointerdown', () => { if (!c.locked) { gloss.alpha = 0.06; lift(2); } });
+    c.on('pointerup', () => { if (!c.locked) { gloss.alpha = 0.20; lift(0); } });
+    c.on('pointerupoutside', () => { gloss.alpha = 0; lift(0); });
     c.on('pointertap', () => { if (!c.locked && onClick) onClick(); });
     c.setLabel = s => { t.text = s; };
+    // 讓外面（引擎）可以借這層亮片做「數字跳動了」的閃光。
+    // 動畫本身交給呼叫端的 tween 驅動 —— ui.js 沒有 app/ticker，
+    // 在這裡自己開一支 requestAnimationFrame 會變成第二套時間軸。
+    c.setGloss = v => { gloss.alpha = v; };
     c.setLocked = v => {
         c.locked = v;
         c.alpha = v ? 0.45 : 1;
+        gloss.alpha = 0;
+        lift(0);
         c.cursor = v ? 'default' : 'pointer';
     };
     return c;
