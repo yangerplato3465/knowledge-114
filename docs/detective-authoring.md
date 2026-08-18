@@ -16,8 +16,11 @@
 assets/js/detective/
   engine.js          引擎：圖層、拖曳、場景、HUD、存檔
   ui.js              共用元件、圖片預載（面板、按鈕、文字、drawProps）
-  puzzles.js         四種謎題（caesar / safe / lens / deduce）＋ 註冊 interrogate
+  puzzles.js         謎題註冊表：caesar / safe / lens / deduce 四種寫在這裡，
+                     另外三種住在自己的檔案（下面），一起掛在 PUZZLES 上
   interrogation.js   全息審訊室（證詞面板、關鍵字追問、三段防線、洗清標記）
+  spotdiff.js        雙圖找不同 ＋ 時間戳篩選
+  wave.js            三位數頻率轉輪（對上才成形，沒有距離提示）
   gate.js            驗證碼門檻、組別切換、進度讀寫
   code.js            碼的推導（後台與遊戲共用，改了就全部失效）
   admin.js           後台產碼與進度查看（配 pages/detective-admin.html）
@@ -194,6 +197,10 @@ assets/js/detective/
 
 進度存檔在 `engine.js` 的「進度存檔」區塊。
 
+- **謎題自己的進度請寫進 `ctx.flags`**，不要掛在 `cfg` 上。`cfg` 是案件資料物件，
+  關掉面板還在、但重新整理就沒了；`ctx.flags` 會被 `snapshotState()` 整包存進去。
+  審訊室（`flags.interro`）、找不同（`flags.spot`）、波形盤（`flags.wave`）都是這樣做的。
+  改完記得呼叫 `ctx.save?.()`。
 - **新增任何會影響畫面的狀態變數，就要加進 `snapshotState()`**。`state` 以外還有三個容易漏掉的：`visitedScenes`、`dropPlayed`、`objPositions`、`pickOrder`。漏了的話讀檔回來會重講開場白、重播動畫、東西跳回原位、互相埋住。
 - 存檔格式改變就把 `SAVE_VERSION` 加一，舊存檔會被判定為讀不懂而從頭開始（不會崩）。
 - **Firestore 安全規則限制 `progress` 最多 28 個頂層欄位**（`pages/firestore.rules.txt`）。超過會靜默存檔失敗。

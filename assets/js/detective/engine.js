@@ -61,16 +61,166 @@ const hudLayer = new Container();             // ↑ objLayer 要疊在 hotLayer
 //   放手之後就搬回 objLayer，靜置的物件仍然在 HUD 底下。
 const dragLayer = new Container();
 const overlayLayer = new Container();
-root.addChild(sceneLayer, boardLayer, hotLayer, objLayer, fxLayer, labelLayer, hudLayer, dragLayer, overlayLayer);
+
+// 暗角：把視線壓回畫面中央，順便讓平光的背景圖多一點房間的縱深。
+// 做法是「整片矩形挖一個橢圓洞」疊 12 層 —— 洞一層比一層大，
+// 於是越外圈疊到的層數越多＝越暗，正中央一層都沒疊到＝完全乾淨。
+// ★ 不用 FillGradient 是因為引擎鎖在 pixi 8.6.6，那版還沒有徑向漸層。
+// ★ 挖的洞一定要完全落在矩形內（rx < W/2、ry < H/2），超出去 cut() 不會正確三角化。
+const vignette = new Graphics();
+for (let i = 0; i < 12; i++) {
+    const k = i / 11;
+    vignette.rect(0, 0, W, H).fill({ color: 0x120c05, alpha: 0.030 });
+    vignette.ellipse(W / 2, H / 2, W * (0.22 + k * 0.26), H * (0.24 + k * 0.25)).cut();
+}
+vignette.eventMode = 'none';                  // 純裝飾，不能吃掉底下熱點的點擊
+
+// 正在淡出的面板暫放層。放在 overlayLayer「底下」是刻意的：
+// closePanel() 常常是 openPanel() 的第一步，新面板必須蓋在正在消失的舊面板上面。
+const closingLayer = new Container();
+closingLayer.eventMode = 'none';
+
+root.addChild(sceneLayer, boardLayer, hotLayer, objLayer, fxLayer, vignette, labelLayer, hudLayer, dragLayer, closingLayer, overlayLayer);
 app.stage.addChild(root);
+
+// root 的定位拆成「基準位置 ＋ 震動偏移」兩段：layout() 只算基準，
+// 震動由 shake() 疊加，兩者才不會互相蓋掉
+//（若 layout() 仍直接寫 root.position，震動中一遇到 resize 就會被打回原點）。
+const rootBase = { x: 0, y: 0 };
 
 function layout() {
     const s = Math.min(app.screen.width / W, app.screen.height / H);
     root.scale.set(s);
-    root.position.set((app.screen.width - W * s) / 2, (app.screen.height - H * s) / 2);
+    rootBase.x = (app.screen.width - W * s) / 2;
+    rootBase.y = (app.screen.height - H * s) / 2;
+    root.position.set(rootBase.x, rootBase.y);
 }
 app.renderer.on('resize', layout);
 layout();
+
+// ============================================================
+// 特效工具箱
+// 所有動畫都走同一支 tween()，好處是節奏（緩動曲線）統一，
+// 而且每段動畫結束一定會自己 app.ticker.remove()，不會累積殭屍 ticker。
+// ============================================================
+const easeOut = k => 1 - Math.pow(1 - k, 3);              // 快進慢出：大部分動作用這條
+const easeIn = k => k * k * k;
+const easeBack = k => {                                    // 回彈：收尾會稍微過頭再拉回來
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2);
+};
+
+function tween(ms, fn, done) {
+    let t = 0;
+    const tick = ticker => {
+        t += ticker.deltaMS;
+        const k = Math.min(t / ms, 1);
+        fn(k);
+        if (k >= 1) { app.ticker.remove(tick); if (done) done(); }
+    };
+    app.ticker.add(tick);
+    return () => app.ticker.remove(tick);                   // 回傳「取消」，用來打斷上一段動畫
+}
+
+// 畫面微震：重物落地、開出線索時給一點手感。
+//
+// ★ 預設關閉。每幀隨機往不同方向抖的畫面看久了會不舒服，
+//   小朋友和對晃動敏感的人（前庭反應）更明顯，而這是給學生用的網站。
+//   落地和取得線索本來就有灰塵、光環、火花在報告「有事發生」，
+//   少了震動一樣讀得出來。想試試看的話把下面改成 true 就會回來。
+const SHAKE_ON = false;
+
+let shakeAmp = 0, shakeLeft = 0, shakeDur = 1;
+function shake(amp = 5, ms = 260) {
+    if (!SHAKE_ON) return;
+    shakeAmp = Math.max(shakeAmp, amp);                    // 連續觸發取最大值，不要疊加成暴衝
+    shakeLeft = Math.max(shakeLeft, ms);
+    shakeDur = Math.max(shakeDur, ms);
+}
+app.ticker.add(ticker => {
+    if (shakeLeft <= 0) return;
+    shakeLeft -= ticker.deltaMS;
+    if (shakeLeft <= 0) { shakeAmp = 0; root.position.set(rootBase.x, rootBase.y); return; }
+    const f = shakeLeft / shakeDur;
+    const a = shakeAmp * f * f;
+    root.position.set(
+        rootBase.x + (Math.random() - 0.5) * 2 * a,
+        rootBase.y + (Math.random() - 0.5) * 2 * a,
+    );
+});
+
+// 擴散光環：從一點盪開的細圓環，落地、拿起、開出線索都用它當「這裡有事發生」的訊號
+function ring(cx, cy, { color = 0xf0b429, r0 = 6, r1 = 46, ms = 460, width = 3 } = {}) {
+    const g = new Graphics();
+    g.position.set(cx, cy);
+    g.eventMode = 'none';
+    fxLayer.addChild(g);
+    tween(ms, k => {
+        const e = easeOut(k);
+        g.clear().circle(0, 0, r0 + (r1 - r0) * e).stroke({ width: width * (1 - e * 0.7), color });
+        g.alpha = 0.75 * (1 - e);
+    }, () => g.destroy());
+}
+
+// 金色火花：往上噴再落下的小亮點，用在「拿到東西」的正向回饋
+function sparks(cx, cy, n = 14, color = 0xffd166) {
+    const bits = [];
+    for (let i = 0; i < n; i++) {
+        const g = new Graphics().circle(0, 0, 1.6 + Math.random() * 2.6).fill({ color });
+        g.position.set(cx, cy);
+        g.eventMode = 'none';
+        fxLayer.addChild(g);
+        const ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.4;
+        const sp = 1.6 + Math.random() * 3.2;
+        bits.push({ g, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp });
+    }
+    tween(700, k => {
+        for (const b of bits) {
+            b.g.x += b.vx; b.g.y += b.vy;
+            b.vy += 0.16;                                   // 重力
+            b.vx *= 0.985;
+            b.g.alpha = 1 - k * k;
+            b.g.scale.set(1 - k * 0.5);
+        }
+    }, () => bits.forEach(b => b.g.destroy()));
+}
+
+// 道具飛進物品欄：拿到東西時，一個分身圖示從來源畫弧線飛進格子。
+// 目前「拿到了」只有對話框那行小字，小朋友很容易沒發現東西進了背包。
+// ★ 放在 dragLayer（HUD 之上），放 fxLayer 會鑽到道具欄橫幅底下看不見。
+function flyToTray(icon, sx, sy, slotIndex) {
+    const t = mkText(icon, 30, 0xffffff);
+    t.anchor.set(0.5);
+    t.position.set(sx, sy);
+    t.eventMode = 'none';
+    dragLayer.addChild(t);
+
+    const tx = slotCX(slotIndex), ty = TRAY_MID;
+    const lift = Math.min(150, Math.abs(ty - sy) * 0.55 + 40);   // 弧線最高點
+    tween(620, k => {
+        const e = easeIn(k);                                     // 起步慢、越飛越快，像被吸進去
+        t.x = sx + (tx - sx) * k;
+        t.y = sy + (ty - sy) * e - lift * Math.sin(Math.PI * k);
+        t.scale.set(1.25 - 0.65 * k);
+        t.alpha = k > 0.86 ? (1 - k) / 0.14 : 1;                 // 最後一小段才淡掉，收在格子上
+    }, () => t.destroy());
+}
+
+// 滑鼠名牌的進出場：從「alpha 0/1 硬切」改成淡入＋往上浮 6px。
+// 位移量存在 label.riseOff，實際套用交給 place()（物件的名牌會跟著物件跑，
+// 位置每幀重算，所以不能直接寫死 label.y）。
+// 進場比出場慢一點點 —— 滑過去要看得清楚，移開則要讓得乾脆。
+function labelShow(label, on, place) {
+    if (label._fx) label._fx();                             // 打斷上一段，避免快速進出時兩段動畫打架
+    const a0 = label.alpha, a1 = on ? 1 : 0;
+    const r0 = label.riseOff || 0, r1 = on ? 0 : 6;
+    label._fx = tween(on ? 170 : 130, k => {
+        const e = easeOut(k);
+        label.alpha = a0 + (a1 - a0) * e;
+        label.riseOff = r0 + (r1 - r0) * e;
+        place();
+    });
+}
 
 // ---- 遊戲狀態 ----
 const state = {
@@ -82,6 +232,10 @@ const state = {
     storedOrder: [],          // 收納順序（物品欄顯示用）
     combined: new Set(),      // 已組合掉的物件 id（例如裝回底座的轉輪）
     solved: false,
+    // ---- 多結局用的兩個欄位（案件沒宣告 endings 就完全用不到，行為跟以前一樣）----
+    misjudge: 0,              // 指認錯人的次數
+    closed: false,            // 誤判用盡被強制結案（沒抓到人也要有結局）
+    flags: {},                // 謎題寫進來的自訂進度，例如審訊室洗清了哪些人
 };
 
 const clueById = id => CASE.clues.find(c => c.id === id);
@@ -100,6 +254,8 @@ const txtApi = {
     stored: id => state.stored.has(id),
     scene: () => state.scene,
     solved: () => state.solved,
+    misjudge: () => state.misjudge,
+    flag: k => state.flags[k],
 };
 const txt = v => (typeof v === 'function' ? v(txtApi) : v);
 
@@ -186,17 +342,37 @@ function combineInTray(id) {
         if (k >= 0) state.storedOrder.splice(k, 1);
     }
     let msg = part.dropSay || `${a.name}和${b.name}裝在一起了。`;
+    let got = null;
     if (part.dropGivesItem && !hasItem(part.dropGivesItem)) {
         state.items.push(part.dropGivesItem);
         const it = itemById(part.dropGivesItem);
         msg += `\n🎒 取得道具：${it.icon} ${it.name}`;
+        got = it;
     }
     say(msg);
     refreshHud();
     renderInteractives();
     saveProgress();
+    // 組合出來的道具也要飛進格子。這條路徑沒有經過 award()，
+    // 一開始漏掉了 —— 同樣是「拿到東西」，回饋不一致玩家會覺得少了一下。
+    if (got) flyItemToSlot(got, W / 2, TRAY_MID - 150);
     return true;
 }
+
+// 算出某個道具會落在第幾格，然後播飛入動畫。
+// ★ entries 的算法必須跟 renderTray 一模一樣，不然會飛到錯的格子。
+function flyItemToSlot(item, sx, sy) {
+    const entries = [
+        ...state.storedOrder.map(x => ({ kind: 'obj', id: x })),
+        ...state.items.filter(x => !stillOnStage(x)).map(x => ({ kind: 'item', id: x })),
+    ];
+    const idx = entries.findIndex(e => e.kind === 'item' && e.id === item.id);
+    if (idx < 0 || idx >= SLOT_N) return;               // 格子滿了就不飛，免得飛到畫面外
+    flyToTray(item.icon, sx, sy, idx);
+}
+
+const seenTrayIds = new Set();                 // 已經出現過的格子內容，用來認出「這格是新的」
+let trayFirstRender = true;
 
 function renderTray() {
     trayChips.removeChildren();
@@ -206,6 +382,10 @@ function renderTray() {
         ...state.items.filter(id => !stillOnStage(id)).map(id => ({ kind: 'item', id })),
     ];
     entries.slice(0, SLOT_N).forEach((en, i) => {
+        // 第一次繪製（含讀存檔進來）整排都算「新的」，那時不該整排一起閃
+        const isNew = !trayFirstRender && !seenTrayIds.has(en.id);
+        seenTrayIds.add(en.id);
+
         const chip = new Container();
         chip.position.set(slotCX(i), TRAY_MID);
         // 有東西的格子換成亮一點的底＋金色外框，一眼看得出哪幾格滿了
@@ -222,7 +402,13 @@ function renderTray() {
         t.anchor.set(0.5);
         chip.addChild(t);
         if (en.kind === 'obj' && !state.examined.has(en.id)) {
-            const dot = new Graphics().circle(21, -21, 6).fill({ color: COL.hint });
+            // 圓心畫在 (0,0)、再用 position 移到格子右上角 ——
+            // 這樣呼吸動畫縮放時是以光點自己為中心，不會繞著格子左上角甩。
+            // 外圈再加一層半透明的光暈，小圓點在正式背景圖上比較不會被吃掉。
+            const dot = new Graphics()
+                .circle(0, 0, 10).fill({ color: COL.hint, alpha: 0.28 })
+                .circle(0, 0, 6).fill({ color: COL.hint });
+            dot.position.set(21, -21);
             chip.addChild(dot);
             trayPulses.push(dot);
         }
@@ -242,7 +428,19 @@ function renderTray() {
             say(`${it.icon} ${it.name}：${it.desc}`);
         });
         trayChips.addChild(chip);
+
+        // 新進格子閃一下：白色亮片蓋在格子上淡掉。
+        // 跟飛入動畫的落點是同一格，飛過來 → 這裡亮一下，動作是接得上的。
+        if (isNew) {
+            const flash = new Graphics()
+                .roundRect(-SLOT_SIZE / 2, -SLOT_SIZE / 2, SLOT_SIZE, SLOT_SIZE, 12)
+                .fill({ color: 0xffffff });
+            flash.eventMode = 'none';
+            chip.addChild(flash);
+            tween(560, k => { flash.alpha = 0.75 * (1 - easeOut(k)); }, () => flash.destroy());
+        }
     });
+    trayFirstRender = false;
 }
 
 const clueBtn = mkButton({
@@ -267,10 +465,13 @@ hudLayer.addChild(sceneTag);
 // 下方要讓位給物品欄，所以比較扁；太長的訊息會自動縮小字級。
 const dlgBox = new Container();
 hudLayer.addChild(dlgBox);
-dlgBox.addChild(
-    new Graphics().roundRect(30, 452, 900, 84, 18)
-        .fill({ color: COL.panel }).stroke({ width: 4, color: COL.border })
-);
+// 對話框底板。設成可點是為了「點一下跳到全文」（見 finishTyping）——
+// 這塊區域本來就在 HUD 最上層蓋著，物件也被限制不能拖到 y>446，
+// 所以讓它吃點擊不會擋到任何原本點得到的東西。
+const dlgBg = new Graphics().roundRect(30, 452, 900, 84, 18)
+    .fill({ color: COL.panel }).stroke({ width: 4, color: COL.border });
+dlgBg.eventMode = 'static';
+dlgBox.addChild(dlgBg);
 // 喜拿只住在對話框裡：點頭像＝跟助手求提示（場景中不再出現）
 // 圓底 → 頭像 → 圓框，三層疊出標準頭像；缺圖時退回 🐶 emoji，版面不會垮。
 // 半徑 26：頭像 34–86，對話文字從 x=98 開始，連 hover 放大 1.1 倍都碰不到。
@@ -321,8 +522,23 @@ function mkRoundBtn(x, y, rad, label, size, onClick) {
     c.addChild(t);
     c.eventMode = 'static';
     c.cursor = 'pointer';
-    c.on('pointerover', () => { c.alpha = 0.8; });
-    c.on('pointerout', () => { c.alpha = 1; });
+    // 圓鈕的圖形本來就以 (0,0) 為圓心，所以直接縮放整個容器就是「從中心脹大」。
+    // 滑過去 = 帶回彈的脹大（easeBack 會稍微過頭再拉回，手感比線性放大明顯）
+    // 按下去 = 立刻縮小，放開才彈回，按起來才有實體按鍵的感覺。
+    let hoverFx = null;
+    const popTo = (target, ms, ease) => {
+        if (hoverFx) hoverFx();
+        const s0 = c.scale.x;
+        hoverFx = tween(ms, k => {
+            const e = ease(k);
+            c.scale.set(s0 + (target - s0) * e);
+        });
+    };
+    c.on('pointerover', () => { c.alpha = 0.88; popTo(1.12, 220, easeBack); });
+    c.on('pointerout', () => { c.alpha = 1; popTo(1, 180, easeOut); });
+    c.on('pointerdown', () => { popTo(0.92, 90, easeOut); });
+    c.on('pointerup', () => { popTo(1.12, 240, easeBack); });
+    c.on('pointerupoutside', () => { c.alpha = 1; popTo(1, 180, easeOut); });
     c.on('pointertap', onClick);
     c.setLabel = s => { t.text = s; };
     return c;
@@ -399,6 +615,39 @@ function setDialog(open) {
 }
 
 let lastMsg = '';
+
+// ---- 逐字顯示 ----
+// ★ 字級一定要先用「完整字串」量過再開始播。邊播邊量的話，
+//   字還沒排滿時會誤判成放得下，播到後面才突然縮字級，整段文字跳一下。
+// ★ Text 每改一次 text 就要重畫 canvas 再上傳 GPU，是 v8 裡偏貴的操作，
+//   所以只在「可見字數真的變了」才寫入，不是每幀都寫（學校電腦扛得住的關鍵）。
+const TYPE_MS_PER_CHAR = 26;
+const TYPE_MAX_MS = 1500;                      // 再長的敘述也不會讓人等超過 1.5 秒
+let typeCancel = null, typeFull = '';
+
+function startTyping(text) {
+    if (typeCancel) typeCancel();
+    typeFull = text;
+    let shown = -1;
+    dlgText.text = '';
+    typeCancel = tween(Math.min(TYPE_MAX_MS, text.length * TYPE_MS_PER_CHAR), k => {
+        const n = Math.ceil(text.length * k);
+        if (n === shown) return;
+        shown = n;
+        dlgText.text = text.slice(0, n);
+    }, () => { dlgText.text = typeFull; typeCancel = null; });
+}
+
+// 點對話框 = 不等了，直接看全文
+function finishTyping() {
+    if (!typeCancel) return false;
+    typeCancel();
+    typeCancel = null;
+    dlgText.text = typeFull;
+    return true;
+}
+dlgBg.on('pointertap', finishTyping);
+
 const say = text => {
     // 對話框變扁了，太長的訊息自動縮小字級塞進去
     for (const [size, lh] of [[16, 23], [14, 20], [12, 17]]) {
@@ -411,6 +660,7 @@ const say = text => {
     if (text !== lastMsg) {
         lastMsg = text;
         if (!dlgOpen) setDialog(true);
+        startTyping(text);                     // 只有新訊息才逐字播；重看舊訊息直接給全文
     } else if (!dlgOpen) {
         dlgUnread = true;
         unreadDot.visible = true;
@@ -458,9 +708,20 @@ function setSceneTag(name) {
     sceneTag.position.set(480 - w / 2, 10);       // 頂欄置中
 }
 
+let lastClueCount = 0;
+
 function refreshHud() {
     clueBtn.setLabel(`🔎 線索 ${state.clues.length}/${CASE.clues.length}`);
-    accuseBtn.setLocked(state.clues.length < CASE.clues.length && !state.solved);
+    // 線索數往上跳時讓按鈕亮一下。這是震動拿掉之後補回「進度前進了」的訊號，
+    // 而且完全不移動任何東西，不會有暈的問題。
+    if (state.clues.length > lastClueCount) {
+        tween(460, k => clueBtn.setGloss(0.55 * (1 - k)));
+    }
+    lastClueCount = state.clues.length;
+    // ★ 這裡的門檻要跟 showAccuse() 用同一個數字，否則按鈕鎖著、
+    //   放寬 accuseMinClues 也按不下去（多結局的假高潮就是這樣被擋掉的）
+    const need = Number.isFinite(CASE.accuseMinClues) ? CASE.accuseMinClues : CASE.clues.length;
+    accuseBtn.setLocked(state.clues.length < need && !state.solved && !state.closed);
     renderTray();
 }
 
@@ -473,7 +734,7 @@ function refreshHud() {
 // 這裡只負責把記憶體裡的狀態壓成一包純資料 —— Set 一律轉成陣列，Firestore 存不了 Set。
 // SAVE_VERSION 之後改存檔格式時，用來擋掉讀不懂的舊資料。
 // ============================================================
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;   // 2：多結局加了 misjudge / closed / flags 三個欄位
 const SAVE_DELAY = 1200;                       // 連續操作只寫最後一次，省掉一堆沒必要的寫入
 
 function snapshotState() {
@@ -487,6 +748,9 @@ function snapshotState() {
         storedOrder: [...state.storedOrder],
         combined: [...state.combined],
         solved: state.solved,
+        misjudge: state.misjudge,
+        closed: state.closed,
+        flags: state.flags,          // 謎題自己寫進來的，形狀由謎題決定
         visited: [...visitedScenes],           // 進過的場景，免得回頭時又講一次開場白
         dropPlayed: [...dropPlayed],           // 播過掉落動畫的，讀檔回來別再播一次
         objPositions: { ...objPositions },     // 玩家把東西拖到哪裡去了
@@ -534,6 +798,11 @@ function restoreProgress(p) {
 
         state.scene = p.scene;
         state.solved = p.solved === true;
+        state.misjudge = Number.isFinite(p.misjudge) && p.misjudge >= 0 ? p.misjudge : 0;
+        state.closed = p.closed === true;
+        // flags 的內容是謎題自己定義的，引擎不認得也不該亂改，
+        // 只確認它是個物件就整包收下（存檔一律當不可信資料）
+        state.flags = (p.flags && typeof p.flags === 'object' && !Array.isArray(p.flags)) ? p.flags : {};
         state.clues = keep(p.clues, id => !!clueById(id));
         state.items = keep(p.items, id => !!itemById(id));
         state.examined = new Set(ids(p.examined));         // 熱點 id 只當旗標用，多認不得的也無害
@@ -713,35 +982,63 @@ const isHidden = o => !!o.hiddenUntil && !state.examined.has(o.hiddenUntil);
 // ============================================================
 const dropPlayed = new Set();
 
-// 落地的灰塵：往兩側噴開，帶重力和空氣阻力，邊放大邊淡出
+// 落地的灰塵：往兩側噴開，帶重力和空氣阻力，邊放大邊淡出。
+// 三種深淺的土色隨機挑，而不是整團同一個顏色 ——
+// 單一色的粒子一多就會糊成一塊色斑，看起來像貼圖破了。
+// 另外貼地補一圈往兩側擴散的扁環，讓「撞到桌面」這件事有著力點。
+const DUST = [0xcbb894, 0xb9a681, 0xded0b0];
+
 function puff(cx, cy, spread) {
     const bits = [];
-    for (let i = 0; i < 9; i++) {
-        const g = new Graphics().circle(0, 0, 2 + Math.random() * 3.5).fill({ color: 0xcbb894 });
-        g.position.set(cx + (Math.random() - 0.5) * spread * 0.8, cy + (Math.random() - 0.5) * 5);
+    for (let i = 0; i < 16; i++) {
+        const g = new Graphics()
+            .circle(0, 0, 1.8 + Math.random() * 3.6)
+            .fill({ color: DUST[(Math.random() * DUST.length) | 0] });
+        g.position.set(cx + (Math.random() - 0.5) * spread * 0.85, cy + (Math.random() - 0.5) * 5);
         g.alpha = 0.9;
+        g.eventMode = 'none';
         fxLayer.addChild(g);
         const dir = Math.random() < 0.5 ? -1 : 1;
-        bits.push({ g, vx: dir * (0.5 + Math.random() * 1.4), vy: -0.5 - Math.random() * 0.9 });
+        bits.push({
+            g,
+            vx: dir * (0.6 + Math.random() * 1.9),
+            vy: -0.4 - Math.random() * 1.1,
+            sp: 0.9 + Math.random() * 1.3,                 // 每顆放大的速度不一樣，散得比較自然
+        });
     }
-    let t = 0;
-    const tick = ticker => {
-        t += ticker.deltaMS;
-        const k = Math.min(t / 540, 1);
+
+    // 貼地的扁環：沿桌面往外推的那一圈氣浪
+    const wave = new Graphics();
+    wave.position.set(cx, cy);
+    wave.eventMode = 'none';
+    fxLayer.addChild(wave);
+
+    tween(600, k => {
+        const e = easeOut(k);
         for (const b of bits) {
             b.g.x += b.vx; b.g.y += b.vy;
             b.vy += 0.05; b.vx *= 0.96;
             b.g.alpha = 0.9 * (1 - k) * (1 - k);
-            b.g.scale.set(1 + k * 1.4);
+            b.g.scale.set(1 + k * 1.4 * b.sp);
         }
-        if (k >= 1) { bits.forEach(b => b.g.destroy()); app.ticker.remove(tick); }
-    };
-    app.ticker.add(tick);
+        wave.clear()
+            .ellipse(0, 0, (spread * 0.35) + spread * 0.75 * e, 4 + spread * 0.16 * e)
+            // 線寬保底 0.1：收到 0 的描邊跟半徑 0 的洞一樣會讓三角化爆掉，
+            // 淡出交給 alpha 處理就好
+            .stroke({ width: Math.max(0.1, 2.5 * (1 - e)), color: 0xd8c7a4 });
+        wave.alpha = 0.55 * (1 - e);
+    }, () => {
+        bits.forEach(b => b.g.destroy());
+        wave.destroy();
+    });
 }
 
 function playDrop(node, o, from) {
     const toX = node.x, toY = node.y;
-    const DUR = 640, FLY = 0.72, ARC = 34;
+    // FLY 從 0.72 降到 0.60、DUR 從 640 拉到 760 ——
+    // 下墜段的實際時間幾乎沒變（461ms → 456ms），但落地後的整理時間
+    // 從 179ms 變成 304ms，才擺得下「陷下去再彈回來」這兩拍。
+    const DUR = 760, FLY = 0.60, ARC = 34;
     // 接地陰影：越接近地面越大越濃
     const shadow = new Graphics()
         .ellipse(0, 0, o.w * 0.44, Math.max(5, o.w * 0.15))
@@ -770,15 +1067,36 @@ function playDrop(node, o, from) {
             shadow.alpha = 0.06 + 0.22 * fall;
             shadow.scale.set(0.45 + 0.55 * fall);
         } else {
-            if (!landed) { landed = true; puff(toX + o.w / 2, toY + o.h - 3, o.w); }
+            if (!landed) {
+                landed = true;
+                puff(toX + o.w / 2, toY + o.h - 3, o.w);
+                shake(Math.min(7, Math.max(3, o.w * 0.06)), 240);   // 預設是 no-op，見 SHAKE_ON
+                ring(toX + o.w / 2, toY + o.h - 3, { color: 0xd8c7a4, r0: o.w * 0.2, r1: o.w * 0.9, ms: 400, width: 2.5 });
+            }
+            // 重量感改由「物件自己」表現，完全不動畫面（畫面震動已停用）。
+            // 落地後分成兩拍，而不是把下陷和回彈疊在一起 ——
+            // 疊加的話回彈的 sin 一開始就把物件拉上去，下陷只剩 1 幀、2px，等於看不見。
+            //   第一拍（前 22%）陷下去再回到檯面，同時壓扁 —— 這一拍就是「咚」
+            //   第二拍（其餘）兩下遞減回彈，收乾淨
             const f = (k - FLY) / (1 - FLY);
-            const decay = (1 - f) * (1 - f);
+            const SINK_F = 0.22;
+            const sinkMax = Math.min(6, 2 + o.w * 0.035);         // 越大的東西陷越深，上限 6px
+            let dy, sq;
+            if (f < SINK_F) {
+                const half = Math.sin((f / SINK_F) * Math.PI);    // 0 → 1 → 0
+                dy = sinkMax * half;
+                sq = 1 - 0.34 * half;                             // 陷最深時壓最扁
+            } else {
+                const g = (f - SINK_F) / (1 - SINK_F);
+                const decay = (1 - g) * (1 - g);
+                dy = -Math.abs(Math.sin(g * Math.PI * 2.0)) * 13 * decay;
+                sq = 1 - 0.14 * Math.max(0, Math.cos(g * Math.PI * 2.0)) * decay;
+            }
             node.x = toX;
-            node.y = toY - Math.abs(Math.sin(f * Math.PI * 2.2)) * 16 * decay;   // 兩下遞減回彈
+            node.y = toY + dy;
             if (art) {
                 art.rotation *= 0.74;
-                const sq = 1 - 0.24 * Math.max(0, Math.cos(f * Math.PI * 2.2)) * decay;
-                art.scale.set(2 - sq, sq);                        // 落地壓扁再彈回
+                art.scale.set(2 - sq, sq);                        // 壓扁時橫向補胖，體積看起來才守恆
             }
             shadow.alpha = 0.28 * (1 - f * 0.25);
             shadow.scale.set(1);
@@ -797,15 +1115,11 @@ function playDrop(node, o, from) {
     app.ticker.add(tick);
 }
 
+// 淡出銷毀。曲線從等速改成 easeIn：一開始幾乎不動、最後一口氣收掉，
+// 眼睛比較不會盯著一個「慢慢變淡」的殘影看。
 function fadeOut(node, ms) {
     const a0 = node.alpha;
-    let t = 0;
-    const tick = ticker => {
-        t += ticker.deltaMS;
-        node.alpha = a0 * Math.max(0, 1 - t / ms);
-        if (t >= ms) { node.destroy(); app.ticker.remove(tick); }
-    };
-    app.ticker.add(tick);
+    tween(ms, k => { node.alpha = a0 * (1 - easeIn(k)); }, () => node.destroy());
 }
 
 const objPositions = {};                       // 玩家拖過的位置記在這，重畫也不會跑回去
@@ -841,19 +1155,22 @@ function makeObject(o) {
         lt
     );
     label.alpha = 0;
+    label.eventMode = 'none';                  // 同 makeHotspot：名牌不能參與 hit-test
     labelLayer.addChild(label);                // 放獨立圖層，座標改成畫面絕對座標
     c.label = label;                           // 拖曳時名牌要跟著物件一起搬到 dragLayer
     // 名牌跟著物件跑；靠近畫面上緣時改掛在下面，才不會被工具列吃掉
+    // riseOff 是名牌淡入時的上浮位移，疊在算好的座標上（見 labelShow）
+    label.riseOff = 6;
     c.placeLabel = () => label.position.set(
         c.x + o.w / 2 - (lt.width + 28) / 2,
-        c.y - 44 < 58 ? c.y + o.h + 10 : c.y - 44
+        (c.y - 44 < 58 ? c.y + o.h + 10 : c.y - 44) + (label.riseOff || 0)
     );
     c.placeLabel();
 
-    c.on('pointerover', () => { label.alpha = 1; });
+    c.on('pointerover', () => labelShow(label, true, c.placeLabel));
     c.on('pointerout', () => {
         if (drag && drag.node === c) return;
-        label.alpha = 0;
+        labelShow(label, false, c.placeLabel);
     });
 
     c.on('pointerdown', e => {
@@ -871,8 +1188,14 @@ function makeObject(o) {
         dragLayer.addChild(c);
         dragLayer.addChild(c.label);
         c.cursor = 'grabbing';
-        art.scale.set(1.06);
         art.alpha = 0.92;
+        // 拿起來：從 1.18 彈回 1.06（原本是直接跳到 1.06，沒有「抓住」的頓點），
+        // 再從物件中心盪一圈金環，明確告訴玩家「這個東西現在在你手上」。
+        tween(260, k => {
+            const e = easeOut(k);
+            art.scale.set(1.18 - 0.12 * e);
+        });
+        ring(c.x + o.w / 2, c.y + o.h / 2, { color: 0xf0b429, r0: o.w * 0.25, r1: o.w * 0.8, ms: 380, width: 2.5 });
     });
     // 放開時只移動了一點點 → 當成「點一下查看」，而不是拖曳
     // （不可拖的物件沒有 pointerdown 流程，直接當點擊）
@@ -902,6 +1225,15 @@ function onObjMove(e) {
     const { o, node } = drag;
     const nx = Math.min(Math.max(g.x - dragOff.x, 6), W - o.w - 6);
     const ny = Math.min(Math.max(g.y - dragOff.y, 60), H - o.h - 6);
+
+    // 拖曳傾斜：往哪邊移就往哪邊倒一點，手感像真的抓著東西甩。
+    // 只在這裡「加上去」，回正交給每幀的衰減（見下面 trayPulses 那支 ticker）——
+    // 指標停住時不會再有 move 事件，光靠這裡是永遠回不了正的。
+    if (node.art) {
+        const push = Math.max(-0.22, Math.min(0.22, (nx - node.x) * 0.014));
+        node.art.rotation = Math.max(-0.22, Math.min(0.22, node.art.rotation + push));
+    }
+
     node.position.set(nx, ny);
     dragDist = Math.max(dragDist, Math.hypot(nx - dragFrom.x, ny - dragFrom.y));
     node.placeLabel();
@@ -922,6 +1254,14 @@ function onObjUp() {
     node.cursor = 'grab';
     node.art.scale.set(1);
     node.art.alpha = 1;
+    // 放手就回正。留著傾斜的話東西會歪歪地停在桌上。
+    // 用起始角度插值（不是每幀連乘）才不會受幀率影響；
+    // 中途若被 renderInteractives 換掉整顆物件，art 會被 destroy，所以要擋一下。
+    const r0 = node.art.rotation;
+    tween(200, k => {
+        if (node.art.destroyed) return;
+        node.art.rotation = r0 * (1 - easeOut(k));
+    });
     // 放手就搬回原本的圖層（沒有重畫的那幾條路留在 dragLayer 的話，
     // 節點會蓋在道具欄橫幅和對話框上面）
     objLayer.addChild(node);
@@ -952,19 +1292,24 @@ function onObjUp() {
             if (part.id !== o.id) objPositions[o.id] = { x: node.x, y: node.y };
 
             let msg = part.dropSay || '';
+            let got = null;
             if (part.dropGivesItem && !hasItem(part.dropGivesItem)) {
                 state.items.push(part.dropGivesItem);
                 const it = itemById(part.dropGivesItem);
                 // 組好的東西還擺在場景裡（storeAs），這時候物品欄不會多一格 ——
                 // 別報「取得道具」，改成告訴玩家要收起來得自己拖下去
-                msg += stillOnStage(part.dropGivesItem)
-                    ? `\n（${it.name}就擺在原地。想收進物品欄的話，把它拖到下面那排格子裡。）`
-                    : `\n🎒 取得道具：${it.icon} ${it.name}`;
+                if (stillOnStage(part.dropGivesItem)) {
+                    msg += `\n（${it.name}就擺在原地。想收進物品欄的話，把它拖到下面那排格子裡。）`;
+                } else {
+                    msg += `\n🎒 取得道具：${it.icon} ${it.name}`;
+                    got = it;                          // 只有真的進了格子才飛，還擺在場上就沒有終點
+                }
             }
             say(msg);
             refreshHud();
             renderInteractives();
             saveProgress();
+            if (got) flyItemToSlot(got, node.x + o.w / 2, node.y + o.h / 2);
             return;
         }
         // 沒對準就往下走 —— 組合零件也可以單獨收進物品欄，
@@ -1031,18 +1376,25 @@ function makeHotspot(h) {
     // 那種在資料裡加 labelBelow: true 改掛到下面。
     // ★ 別把「放不下就一律翻到下面」寫成通則 —— 高的熱點（書櫃）翻下去會壓到
     //   擺在它裡面的東西（展示座）。
-    label.position.set(
-        Math.min(Math.max(h.x + h.w / 2 - (lt.width + 28) / 2, 8), W - lt.width - 36),
-        h.labelBelow ? h.y + h.h + 10 : Math.max(h.y - 44, 58)
-    );
+    const labelX = Math.min(Math.max(h.x + h.w / 2 - (lt.width + 28) / 2, 8), W - lt.width - 36);
+    const labelY = h.labelBelow ? h.y + h.h + 10 : Math.max(h.y - 44, 58);
     label.alpha = 0;
+    label.riseOff = 6;                         // 淡入時往上浮的位移（見 labelShow）
+    // ★ 名牌純粹是裝飾，一定要退出 hit-test。
+    //   alpha = 0 在 Pixi 裡「看不見」但「還是會被打到」——而 passive 的子樹會把這次
+    //   hit 吃掉又不回傳任何 target，搜尋就此停住、掉回 stage，底下的熱點永遠輪不到。
+    //   實際災情：「右邊的掛畫」的名牌（y 66~100）壓住掛鐘熱點（y 56~92）的下半部，
+    //   掛鐘只剩上面 15px 點得到，所以「有時候點得開、有時候沒反應」。
+    label.eventMode = 'none';
+    const placeLabel = () => label.position.set(labelX, labelY + label.riseOff);
+    placeLabel();
     labelLayer.addChild(label);                // 放獨立圖層，才不會被前面的物件蓋住
 
     // 出口不再另外畫箭頭、名牌也不常駐 —— 通往別的房間的門畫在背景圖裡，
     // 跟其他熱點一樣滑過去才亮框和名牌。
 
-    c.on('pointerover', () => { label.alpha = 1; });
-    c.on('pointerout', () => { label.alpha = 0; });
+    c.on('pointerover', () => labelShow(label, true, placeLabel));
+    c.on('pointerout', () => labelShow(label, false, placeLabel));
     c.on('pointertap', () => onHotspot(h));
     return c;
 }
@@ -1085,18 +1437,33 @@ function onHotspot(h) {
 function award(h, text) {
     state.examined.add(h.id);
     let msg = text;
+    let gained = 0;                            // 這次真的拿到幾樣東西（重看舊熱點不算）
+    const flying = [];                         // 這次要播飛入動畫的道具
 
     for (const id of [].concat(h.givesItem || [])) {
         if (hasItem(id)) continue;
         state.items.push(id);
         const it = itemById(id);
         msg += `\n🎒 取得道具：${it.icon} ${it.name}`;
+        gained++;
+        flying.push({ id, icon: it.icon });
     }
     for (const id of [].concat(h.gives || [])) {
         if (hasClue(id)) continue;
         state.clues.push(id);
         const cl = clueById(id);
         msg += `\n📌 新線索：${cl.icon} ${cl.name}（${state.clues.length}/${CASE.clues.length}）`;
+        gained++;
+    }
+
+    // 有收穫才放金光。單純重看一次已經查過的東西不放 ——
+    // 特效要跟「進度真的前進了」綁在一起，到處都閃就等於沒有訊號。
+    if (gained > 0) {
+        const cx = (typeof h.x === 'number') ? h.x + (h.w || 0) / 2 : W / 2;
+        const cy = (typeof h.y === 'number') ? h.y + (h.h || 0) / 2 : H / 2;
+        sparks(cx, cy, 10 + gained * 8);
+        ring(cx, cy, { color: 0xf0b429, r0: 10, r1: 90, ms: 560, width: 4 });
+        shake(4, 200);
     }
 
     say(msg);
@@ -1104,16 +1471,38 @@ function award(h, text) {
     renderInteractives();
     saveProgress();
 
+    // 道具飛進物品欄。要在 refreshHud()（裡面會 renderTray）之後才算得出格子位置。
+    if (flying.length) {
+        const sx = (typeof h.x === 'number') ? h.x + (h.w || 0) / 2 : W / 2;
+        const sy = (typeof h.y === 'number') ? h.y + (h.h || 0) / 2 : H / 2;
+        // 一次拿到兩樣（例如保險箱裡的紅藍透鏡）就錯開來飛，不然兩個圖示會疊在一起
+        flying.forEach((f, n) => setTimeout(() => flyItemToSlot(f, sx, sy), n * 150));
+    }
+
     if (state.clues.length === CASE.clues.length && !state.solved) {
         setTimeout(() => say('線索蒐集完成！點右上角的「🕵️ 指認犯人」說出你的推理。'), 3000);
     }
 }
 
-// 換場景的淡入淡出
-const fader = new Graphics().rect(0, 0, W, H).fill({ color: 0x2b2320 });
-fader.alpha = 0;
+// 換場景：從整片淡入淡出改成「圓圈收合」（老偵探片的轉場）。
+// 每幀重畫一次遮罩＝一塊深色大布，中間挖一個圓洞，洞越縮越小直到全黑，
+// 換完場景再把洞放回去。
+// ★ 布要畫得比畫面大一圈（-400 起、寬高各多 800）：cut() 要求洞完全落在形狀內，
+//   洞最大時半徑 600 已經超過畫面的 480，布不夠大的話這個洞就切不出來。
+const FADE_R = 600;                            // 洞開到這個半徑，四個角（對角線 566）就完全露出來了
+const fader = new Graphics();
 fader.eventMode = 'none';
+fader.visible = false;
 root.addChild(fader);
+
+function drawIris(r) {
+    fader.clear().rect(-400, -400, W + 800, H + 800).fill({ color: 0x2b2320 });
+    // ★ 半徑收到 0 時千萬不能還去 cut()：空路徑進到三角化會炸
+    //   （TypeError: Cannot read properties of undefined (reading 'next')，
+    //    而且是在 render 當下才爆，堆疊全在 pixi 內部，從錯誤訊息看不出是這裡）。
+    //   洞小到看不見時直接畫整片，視覺上完全一樣。
+    if (r > 1) fader.circle(W / 2, H / 2, r).cut();
+}
 
 function transitionTo(id) {
     // 目標場景的圖通常在背景早就載完了，這個 Promise 會立刻 resolve；
@@ -1122,29 +1511,43 @@ function transitionTo(id) {
     let ready = false;
     ensureSceneLoaded(CASE, id).then(() => { ready = true; });
 
+    const CLOSE = 300, OPEN = 380;
+    fader.visible = true;
+
     let t = 0, switched = false;
     const tick = ticker => {
         t += ticker.deltaMS;
-        if (t < 200) {
-            fader.alpha = t / 200;
+        if (t < CLOSE) {
+            drawIris(FADE_R * (1 - easeIn(t / CLOSE)));    // 收：先慢後快，像快門闔上
         } else if (!switched) {
-            if (!ready) { t = 200; return; }       // 全黑不動，等圖到齊
+            drawIris(0);
+            if (!ready) { t = CLOSE; return; }             // 全黑不動，等圖到齊
             switched = true;
             renderScene(id);
-        } else if (t < 400) {
-            fader.alpha = 1 - (t - 200) / 200;
+        } else if (t < CLOSE + OPEN) {
+            drawIris(FADE_R * easeOut((t - CLOSE) / OPEN)); // 開：一口氣張開再放慢收尾
         } else {
-            fader.alpha = 0;
+            fader.visible = false;                         // 收工就別畫了，省下每幀的圓洞三角化
             app.ticker.remove(tick);
         }
     };
     app.ticker.add(tick);
 }
 
-// 提示光點的呼吸效果（場景裡的光點已移除，只剩物品欄裡還沒查看過的道具）
+// 物品欄裡還沒查看過的道具：呼吸光點。
+// 從「只有透明度變化」改成 透明度＋大小 一起呼吸，
+// 縮放中心在光點自己身上（見 renderTray 把圓心畫在 0,0 再移位），
+// 不然會以整個格子的左上角為支點甩來甩去。
 app.ticker.add(() => {
-    const a = 0.35 + 0.45 * (1 + Math.sin(performance.now() / 320)) / 2;
-    for (const d of trayPulses) d.alpha = a;
+    const s = (1 + Math.sin(performance.now() / 320)) / 2;   // 0~1
+    const a = 0.35 + 0.45 * s;
+    for (const d of trayPulses) {
+        d.alpha = a;
+        d.scale.set(0.82 + 0.34 * s);
+    }
+    // 拖曳傾斜的回正：指標停住就不再有 move 事件，所以衰減必須放在每幀這裡。
+    // 一直在動的話 onObjMove 每次補回去的量大於這裡衰減掉的，傾斜就維持著。
+    if (drag && drag.node.art) drag.node.art.rotation *= 0.86;
 });
 
 // ============================================================
@@ -1160,11 +1563,42 @@ function openPanel(builder) {
     const panel = new Container();
     overlayLayer.addChild(panel);
     builder(panel);
+
+    // 進場：遮罩淡入，面板從 0.94 脹回 1。
+    // ★ pivot 和 position 都設在畫面中心 —— 兩者相抵，位移淨值是 0，
+    //   所以謎題那些照 960×600 硬座標畫的內容位置完全不受影響，
+    //   只是縮放的支點從左上角換成了畫面中央。
+    panel.pivot.set(W / 2, H / 2);
+    panel.position.set(W / 2, H / 2);
+    dim.alpha = 0;
+    panel.alpha = 0;
+    tween(190, k => {
+        const e = easeOut(k);
+        dim.alpha = e;                          // 底色本身已含 alpha 0.58，這裡只從 0 疊到 1
+        panel.alpha = e;
+        panel.scale.set(0.94 + 0.06 * e);
+    });
 }
 
 function closePanel() {
     if (panelCleanup) { panelCleanup(); panelCleanup = null; }
-    overlayLayer.removeChildren();
+    // ★ overlayLayer 必須「立刻」空掉 —— onHotspot()、zoomBtn 等地方是用
+    //   overlayLayer.children.length 判斷「現在有沒有面板開著」，
+    //   把淡出中的面板留在原地會讓整個場景在動畫期間點不動。
+    //   所以整批搬到 closingLayer 再慢慢淡掉。
+    const dying = overlayLayer.removeChildren();
+    if (!dying.length) return;
+    const bag = new Container();
+    bag.eventMode = 'none';
+    bag.pivot.set(W / 2, H / 2);
+    bag.position.set(W / 2, H / 2);
+    for (const c of dying) bag.addChild(c);
+    closingLayer.addChild(bag);
+    tween(140, k => {
+        const e = easeIn(k);
+        bag.alpha = 1 - e;
+        bag.scale.set(1 - 0.03 * e);
+    }, () => closingLayer.removeChild(bag));    // 只移除不 destroy，跟原本 removeChildren() 的語意一致
 }
 
 function openPuzzle(h) {
@@ -1172,7 +1606,8 @@ function openPuzzle(h) {
     openPanel(panel => {
         const box = panelBase(panel, { title: cfg.title, bg: cfg.bgImg, ...(cfg.box || {}) });
         // api 讓謎題自己查進度（例如推理板要知道哪幾欄的物證還沒到手）
-        const ctx = { app, root, say, api: txtApi };
+        // flags / save 讓謎題把自己的進度寫進存檔（審訊室的洗清狀態要留到結局才用）
+        const ctx = { app, root, say, api: txtApi, flags: state.flags, save: saveProgress };
         panelCleanup = PUZZLES[cfg.type](ctx, panel, box, cfg, () => {
             closePanel();
             // 重看時再按一次「檢查推理」不該重新宣布一次破案（也會再觸發一次
@@ -1378,9 +1813,13 @@ function showNotebook() {
 }
 
 function showAccuse() {
-    if (state.solved) { showEnding(); return; }
-    if (state.clues.length < CASE.clues.length) {
-        say(`線索還不夠（${state.clues.length}/${CASE.clues.length}），再找找看吧！`);
+    if (state.solved || state.closed) { showEnding(); return; }
+    // ★ 門檻可以放寬：多結局的案件需要讓玩家「太早指認」真的指得下去，
+    //   否則靠誤判推進的劇情（例如 AI 展覽館的凱文假高潮）根本觸發不了。
+    //   沒宣告 accuseMinClues 就維持原本的「線索收齊才准指認」。
+    const need = Number.isFinite(CASE.accuseMinClues) ? CASE.accuseMinClues : CASE.clues.length;
+    if (state.clues.length < need) {
+        say(`線索還不夠（${state.clues.length}/${need}），再找找看吧！`);
         return;
     }
     openPanel(panel => {
@@ -1391,7 +1830,8 @@ function showAccuse() {
         const pw = Math.min(W - 40, Math.max(680, n * cw + (n - 1) * gap + 56));
         // 卡片拿掉 emoji 之後矮了 48，面板跟著收高，才不會下半部空一大塊
         const box = panelBase(panel, {
-            x: (W - pw) / 2, y: 96, w: pw, h: 400, title: '🕵️ 誰帶走了黃金貓頭鷹？',
+            x: (W - pw) / 2, y: 96, w: pw, h: 400,
+            title: CASE.accuseTitle || '🕵️ 誰是犯人？',
         });
         const tip = mkText('想一想筆記裡的線索，點選你認為的犯人。', 16, COL.muted);
         tip.anchor.set(0.5, 0);
@@ -1437,21 +1877,56 @@ function accuse(s) {
         state.solved = true;
         saveProgress();
         showEnding();
-    } else {
-        closePanel();
-        say(`❌ 不對喔 —— ${s.wrong}`);
+        return;
     }
+    closePanel();
+    state.misjudge++;
+    saveProgress();
+    say(`❌ 不對喔 —— ${s.wrong}`);
+
+    // 誤判用完就強制結案 —— 沒抓到人也要有結局，不能讓人卡在那裡重試到放棄。
+    // 沒宣告 misjudgeLimit 的案件（黃金貓頭鷹）永遠不會走到這裡，行為跟以前一樣。
+    if (Number.isFinite(CASE.misjudgeLimit) && state.misjudge >= CASE.misjudgeLimit) {
+        state.closed = true;
+        saveProgress();
+        setTimeout(showEnding, 2600);
+    }
+}
+
+// ============================================================
+// 選出這一輪該播哪一個結局
+//
+// CASE.endings 是一個由嚴到寬排好的清單，取第一個 when() 成立的。
+// 沒宣告 endings 的案件就回 null，showEnding() 會退回舊的單一結局（CASE.solution）。
+// when() 讀得到：誤判次數、謎題寫進來的 flags、有沒有抓到真兇。
+// ============================================================
+function pickEnding() {
+    const api = {
+        ...txtApi,
+        misjudge: state.misjudge,
+        flags: state.flags,
+        caught: state.solved,
+    };
+    for (const e of CASE.endings || []) {
+        try { if (!e.when || e.when(api)) return e; }
+        catch (err) { console.warn('[detective] 結局條件出錯，跳過', e.id, err); }
+    }
+    return null;
 }
 
 // 結局：左邊擺失竊的本尊（ending.img），右邊講故事。
 // 沒給 ending.img 就退回原本的滿版單欄，版面不會垮。
 function showEnding() {
+    const chosen = pickEnding();
     openPanel(panel => {
         // 面板吃滿畫面（960×600 留 32 的邊）—— 左邊那尊本尊要夠大，右邊的故事才不會被壓成小字
-        const box = panelBase(panel, { x: 90, y: 32, w: 780, h: 536, title: '🎉 案件偵破！' });
+        const box = panelBase(panel, {
+            x: 90, y: 32, w: 780, h: 536,
+            title: chosen?.title || '🎉 案件偵破！',
+        });
         const btnY = box.y + box.h - 62;
         const top = box.y + 62;
-        const end = CASE.ending || {};
+        const end = chosen || CASE.ending || {};
 
         // ---- 左欄：本尊 ----
         // 玩家找了一整場都只看到空底座，最後這一眼才是報酬 —— 高度給滿到按鈕上方
@@ -1464,6 +1939,29 @@ function showEnding() {
             const s = Math.min(COL_W / tex.width, maxIH / tex.height);
             const iw = tex.width * s, ih = tex.height * s;
             const ix = box.x + 40 + (COL_W - iw) / 2;
+
+            // 破案犒賞：本尊背後的金色光暈，緩慢呼吸。
+            // 玩家找了一整場都只看到空底座，這一眼是整個案件的報酬，值得多給一點。
+            // ★ 加在 drawProps 之前 → 疊在面板底圖之上、雕像之下。
+            // ★ 面板關掉時 halo 會跟著被搬走，parent 變成 null，ticker 自己收工；
+            //   showEnding 沒有 panelCleanup 可以掛，所以自我了斷是唯一乾淨的辦法。
+            const hcx = ix + iw / 2, hcy = top + ih / 2;
+            const halo = new Graphics();
+            halo.eventMode = 'none';
+            panel.addChild(halo);
+            let ht = 0;
+            const haloTick = ticker => {
+                if (!halo.parent || halo.destroyed) { app.ticker.remove(haloTick); return; }
+                ht += ticker.deltaMS;
+                const p = (1 + Math.sin(ht / 900)) / 2;             // 慢呼吸，1.8 秒一輪
+                halo.clear();
+                for (let i = 6; i >= 0; i--) {
+                    halo.circle(hcx, hcy, iw * 0.34 + i * 15 + p * 12)
+                        .fill({ color: 0xf0b429, alpha: 0.05 + 0.018 * p });
+                }
+            };
+            app.ticker.add(haloTick);
+
             drawProps([{ t: 'img', src: end.img, x: ix, y: top, w: iw, h: ih }], panel);
             if (end.caption) {
                 const cap = mkText(end.caption, 13, COL.muted, { align: 'center', wrap: COL_W, lineHeight: 19 });
@@ -1477,7 +1975,7 @@ function showEnding() {
 
         // ---- 右欄：破案的故事（字級自動縮到按鈕上方，長文也壓不到按鈕）----
         const maxH = btnY - top - 14;
-        const body = mkText(CASE.solution, 15, COL.ink, { wrap: textW, lineHeight: 25 });
+        const body = mkText(txt(chosen?.text) || CASE.solution, 15, COL.ink, { wrap: textW, lineHeight: 25 });
         for (const [size, lh] of [[15, 25], [14, 23], [13, 21], [12, 19], [11, 17]]) {
             body.style.fontSize = size;
             body.style.lineHeight = lh;

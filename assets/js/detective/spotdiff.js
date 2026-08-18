@@ -37,8 +37,8 @@ export function spotdiff(ctx, panel, box, cfg, done) {
     const diffs = cfg.diffs || [];
     const realIds = diffs.filter(d => d.real).map(d => d.id);
 
-    // 狀態掛在 cfg 上，面板關掉再打開不會從頭來過
-    const st = cfg.state || (cfg.state = { found: [], marked: [], solved: false });
+    // 狀態放進 ctx.flags 才會跟著存檔走（面板關掉、重新整理、隔天續玩都還在）
+    const st = ctx.flags.spot || (ctx.flags.spot = { found: [], marked: [], solved: false });
 
     let layer = null;
 
@@ -160,6 +160,7 @@ export function spotdiff(ctx, panel, box, cfg, done) {
                     k < 0 ? st.marked.push(d.id) : st.marked.splice(k, 1);
                     msg = '';
                     redraw();
+                    ctx.save?.();
                 });
             }
             // 判定正確後，跟案子有關的那幾處露出數字
@@ -192,6 +193,7 @@ export function spotdiff(ctx, panel, box, cfg, done) {
     function find(d) {
         if (st.found.includes(d.id)) { msg = `${d.name}：${d.desc}（感測器時間 ${d.time}）`; redraw(); return; }
         st.found.push(d.id);
+        ctx.save?.();
         msg = `找到了！${d.name}——${d.desc}。感測器記錄的時間是 ${d.time}。`;
         if (st.found.length === diffs.length) {
             msg += `\n六處都找齊了。案子發生在 ${cfg.caseTime || '14:00'}，哪幾處才跟案子有關？點卡片打勾。`;
