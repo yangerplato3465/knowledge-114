@@ -4,12 +4,12 @@ import {
 import {
     W, H, COL, mkText, mkButton, panelBase, drawProps,
     preloadImages, ensureSceneLoaded, hasTexture
-} from './detective-ui.js';
-import { PUZZLES } from './detective-puzzles.js';
+} from './ui.js';
+import { PUZZLES } from './puzzles.js';
 
 // ============================================================
 // 偵探事件簿 · 點擊解謎引擎（Pixi.js v8）
-// 案件資料由 assets/js/detective-case-owl.js 先載入，掛在 window.DETECTIVE_CASE。
+// 案件資料由 assets/js/detective/cases/<案件名>.js 先載入，掛在 window.DETECTIVE_CASE。
 // 畫面用固定的 960 × 600 設計尺寸畫，再整個縮放置中到容器裡，
 // 這樣熱點座標永遠對得上，換成正式美術素材時也不用重寫。
 // 圖層：scene（場景）→ hot（熱點）→ hud（固定介面）→ overlay（面板）

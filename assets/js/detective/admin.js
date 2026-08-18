@@ -20,7 +20,7 @@ import {
     getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
-import { DETECTIVE_GAMES, deriveCodeId, randomCode } from './detective-code.js';
+import { DETECTIVE_GAMES, deriveCodeId, randomCode } from './code.js';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBW7V3sXHn8MsaP4KFmHDOHUFXSz3ksRDM",

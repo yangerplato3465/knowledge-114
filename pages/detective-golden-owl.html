@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>偵探事件簿 · 黃金貓頭鷹雕像失竊事件</title>
+    <link rel="icon" type="image/webp" href="../assets/images/favicon.webp">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 引擎的 Pixi 是從 jsdelivr 動態 import 的，先把連線建好，
+         省下驗證通過後才開始做 DNS／TLS 的那段等待 -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <link rel="stylesheet" href="../assets/css/detective.css">
+</head>
+<body>
+    <div class="game-bar">
+        <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
+        <h1>🔍 偵探事件簿</h1>
+        <!-- 全螢幕鈕不放在這裡：畫布右上角的 HUD 已經有一顆 ⛶（見 detective/engine.js 的 fsHudBtn），
+             全螢幕時這條 HTML 頂欄本來就會整條收起來，放兩顆只會重複 -->
+        <!-- 目前是哪一組。四組輪流用同一台電視，這個標籤是唯一能一眼確認
+             「現在記的是不是這一組」的地方（內容來自驗證碼上的組別名稱）-->
+        <!-- 組別切換器：目前組別的名字本身就是按鈕，點開就能直接換到這台
+             記住的其他組，不用先跳回驗證碼畫面。只有「新增組別」才需要輸入碼。 -->
+        <div id="groupSwitch" class="group-switch" hidden>
+            <button type="button" id="groupBtn" class="group-tag" aria-haspopup="true" aria-expanded="false"
+                    title="切換組別"></button>
+            <div id="groupMenu" class="group-menu" hidden></div>
+        </div>
+    </div>
+
+    <div id="gameContainer">
+        <div id="gameLoading" class="game-loading">案件卷宗載入中…</div>
+    </div>
+
+    <!-- 上課驗證碼門檻。驗證通過前 detective/engine.js 不會被載入，
+         所以遮罩後面沒有東西可以偷看（見 detective/gate.js）。 -->
+    <div id="gate" class="gate" hidden>
+        <div class="gate-card">
+            <div class="gate-icon">🔒</div>
+            <h2>需要遊戲驗證碼</h2>
+            <p class="gate-hint">這個案件只能在課堂上遊玩。<br>請輸入老師當堂提供的驗證碼。</p>
+
+            <!-- 這台裝置上驗過、而且還沒過期的組別。一台電視輪流跑三四組，
+                 每次換組都要重打驗證碼太麻煩，所以可以直接點名字切換。
+                 只記 codeId 與組別名稱，不記明文驗證碼（見 detective/gate.js）。-->
+            <div id="gateGroups" class="gate-groups" hidden>
+                <p class="gate-groups-title">這台裝置上的組別</p>
+                <div id="gateGroupList" class="gate-group-list"></div>
+                <button type="button" id="gateForget" class="gate-forget">清除這台記住的組別</button>
+                <div class="gate-or">或輸入驗證碼</div>
+            </div>
+
+            <input id="gateCode" type="text" autocomplete="off" spellcheck="false"
+                   autocapitalize="characters" maxlength="16" placeholder="OWL-XXXX-XX">
+            <button type="button" id="gateBtn" class="gate-btn">開啟案件</button>
+            <div id="gateErr" class="gate-err" role="alert"></div>
+            <a href="../index.html" class="gate-back">← 回學習主頁</a>
+        </div>
+    </div>
+
+    <!-- ★ id 是 'owl' 而檔名是 golden-owl，這個不一致是故意的，不要「順手改成一致」：
+         這個字串會進驗證碼的推導金鑰（PBKDF2('owl:' + 碼) → Firestore 文件 ID），
+         也決定 localStorage 的 detective.unlock.owl / detective.groups.owl。
+         改掉它 = 已經發出去的碼全部失效、各組已存的進度再也讀不回來。
+         檔名可以隨時改，id 一旦發過碼就是固定的。 -->
+    <script>window.DETECTIVE_GAME_ID = 'owl';</script>
+    <!-- 案件資料要先於引擎載入（引擎讀取 window.DETECTIVE_CASE） -->
+    <script src="../assets/js/detective/cases/golden-owl.js"></script>
+    <!-- 引擎（detective/engine.js）改由 gate 在驗證通過後才動態 import -->
+    <script type="module" src="../assets/js/detective/gate.js"></script>
+    <script src="../assets/js/theme.js"></script>
+</body>
+</html>

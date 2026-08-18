@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>偵探事件簿 · 黃金貓頭鷹雕像失竊事件</title>
+    <title>偵探事件簿 · AI 展覽館的消失記憶</title>
     <link rel="icon" type="image/webp" href="../assets/images/favicon.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,12 +19,6 @@
     <div class="game-bar">
         <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
         <h1>🔍 偵探事件簿</h1>
-        <!-- 全螢幕鈕不放在這裡：畫布右上角的 HUD 已經有一顆 ⛶（見 detective.js 的 fsHudBtn），
-             全螢幕時這條 HTML 頂欄本來就會整條收起來，放兩顆只會重複 -->
-        <!-- 目前是哪一組。四組輪流用同一台電視，這個標籤是唯一能一眼確認
-             「現在記的是不是這一組」的地方（內容來自驗證碼上的組別名稱）-->
-        <!-- 組別切換器：目前組別的名字本身就是按鈕，點開就能直接換到這台
-             記住的其他組，不用先跳回驗證碼畫面。只有「新增組別」才需要輸入碼。 -->
         <div id="groupSwitch" class="group-switch" hidden>
             <button type="button" id="groupBtn" class="group-tag" aria-haspopup="true" aria-expanded="false"
                     title="切換組別"></button>
@@ -36,17 +30,14 @@
         <div id="gameLoading" class="game-loading">案件卷宗載入中…</div>
     </div>
 
-    <!-- 上課驗證碼門檻。驗證通過前 detective.js 不會被載入，
-         所以遮罩後面沒有東西可以偷看（見 detective-gate.js）。 -->
+    <!-- 上課驗證碼門檻。驗證通過前 detective/engine.js 不會被載入，
+         所以遮罩後面沒有東西可以偷看（見 detective/gate.js）。 -->
     <div id="gate" class="gate" hidden>
         <div class="gate-card">
             <div class="gate-icon">🔒</div>
             <h2>需要遊戲驗證碼</h2>
             <p class="gate-hint">這個案件只能在課堂上遊玩。<br>請輸入老師當堂提供的驗證碼。</p>
 
-            <!-- 這台裝置上驗過、而且還沒過期的組別。一台電視輪流跑三四組，
-                 每次換組都要重打驗證碼太麻煩，所以可以直接點名字切換。
-                 只記 codeId 與組別名稱，不記明文驗證碼（見 detective-gate.js）。-->
             <div id="gateGroups" class="gate-groups" hidden>
                 <p class="gate-groups-title">這台裝置上的組別</p>
                 <div id="gateGroupList" class="gate-group-list"></div>
@@ -55,18 +46,23 @@
             </div>
 
             <input id="gateCode" type="text" autocomplete="off" spellcheck="false"
-                   autocapitalize="characters" maxlength="16" placeholder="OWL-XXXX-XX">
+                   autocapitalize="characters" maxlength="16" placeholder="AIM-XXXX-XX">
             <button type="button" id="gateBtn" class="gate-btn">開啟案件</button>
             <div id="gateErr" class="gate-err" role="alert"></div>
             <a href="../index.html" class="gate-back">← 回學習主頁</a>
         </div>
     </div>
 
-    <script>window.DETECTIVE_GAME_ID = 'owl';</script>
+    <!-- id 跟檔名一致（都是 ai-museum），所以這一案沒有黃金貓頭鷹那種
+         「檔名 golden-owl 但 id 是 owl」的落差。
+         驗證碼的長度由 prefix 決定（AIM-XXXX-XX），跟 id 多長無關。
+         ★ 這個字串一旦發過碼就凍結了 —— 它進 PBKDF2 的金鑰，改掉會讓
+         已發出的碼全部失效、各組進度再也讀不回來。 -->
+    <script>window.DETECTIVE_GAME_ID = 'ai-museum';</script>
     <!-- 案件資料要先於引擎載入（引擎讀取 window.DETECTIVE_CASE） -->
-    <script src="../assets/js/detective-case-owl.js"></script>
-    <!-- 引擎（detective.js）改由 gate 在驗證通過後才動態 import -->
-    <script type="module" src="../assets/js/detective-gate.js"></script>
+    <script src="../assets/js/detective/cases/ai-museum.js"></script>
+    <!-- 引擎（detective/engine.js）改由 gate 在驗證通過後才動態 import -->
+    <script type="module" src="../assets/js/detective/gate.js"></script>
     <script src="../assets/js/theme.js"></script>
 </body>
 </html>

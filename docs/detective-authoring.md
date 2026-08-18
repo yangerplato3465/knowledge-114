@@ -2,7 +2,7 @@
 
 這份是**設計與踩坑筆記**，不是欄位規格書。
 
-- 欄位怎麼寫（objects / hotspots / props / puzzle 的所有參數）→ 看 `assets/js/detective-case-owl.js` 開頭那段檔頭註解，寫得很完整。
+- 欄位怎麼寫（objects / hotspots / props / puzzle 的所有參數）→ 看 `assets/js/detective/cases/golden-owl.js` 開頭那段檔頭註解，寫得很完整。
 - 架構層的規則（gate、存檔、圖層）→ 看 `CLAUDE.md` 的 detective specifics。
 - **這份講的是「資料寫對了、程式也沒錯，但玩起來會壞掉」的那些事。** 全部都是黃金貓頭鷹那一案實際踩過的。
 
@@ -10,21 +10,60 @@
 
 ## 0. 檔案地圖
 
+命名規則一句話：**偵探的程式全部收在 `assets/js/detective/`；資料夾底下那層是系列共用的機器，案件資料收在 `cases/`。**
+
+```
+assets/js/detective/
+  engine.js          引擎：圖層、拖曳、場景、HUD、存檔
+  ui.js              共用元件、圖片預載（面板、按鈕、文字、drawProps）
+  puzzles.js         四種謎題（caesar / safe / lens / deduce）＋ 註冊 interrogate
+  interrogation.js   全息審訊室（證詞面板、關鍵字追問、三段防線、洗清標記）
+  gate.js            驗證碼門檻、組別切換、進度讀寫
+  code.js            碼的推導（後台與遊戲共用，改了就全部失效）
+  admin.js           後台產碼與進度查看（配 pages/detective-admin.html）
+  cases/
+    golden-owl.js    黃金貓頭鷹雕像失竊事件
+    ai-museum.js     AI 展覽館的消失記憶
+```
+
+一個案件由三樣東西組成，三個都帶案件名：
+
 | 檔案 | 放什麼 |
 |---|---|
-| `assets/js/detective-case-owl.js` | 案件資料，純資料無程式碼 |
-| `assets/js/detective.js` | 引擎：圖層、拖曳、場景、HUD、存檔 |
-| `assets/js/detective-puzzles.js` | 四種謎題（caesar / safe / lens / deduce） |
-| `assets/js/detective-ui.js` | 共用元件、圖片預載 |
-| `assets/js/detective-gate.js` | 驗證碼門檻、組別切換、進度讀寫 |
-| `assets/js/detective-code.js` | 碼的推導（後台與遊戲共用，改了就全部失效） |
+| `pages/detective-<案件名>.html` | 那一案的入口頁，設 `window.DETECTIVE_GAME_ID` |
+| `assets/js/detective/cases/<案件名>.js` | 案件資料，純資料無程式碼 |
+| `assets/images/detective/<案件名>/` | 那一案的圖 |
+
+★ `cases/*.js` 比其他檔多一層資料夾，所以它算圖片路徑時要多退兩層：
+`new URL('../../../images/detective/<案件名>/', document.currentScript.src)`。
+以後搬動這個資料夾，這一行是唯一要跟著改的地方。
+
+### ★ 檔名跟 id 是兩回事，不一致是正常的
+
+第一案的檔名是 `golden-owl`，但它的 **id 還是 `'owl'`**。看到這個不一致**不要順手改成一致**。
+
+| | 改得動嗎 | 為什麼 |
+|---|---|---|
+| 檔名 | ✅ 隨時可改 | 沒有任何程式邏輯依賴它，只要更新 `index.html` 的連結 |
+| `DETECTIVE_GAME_ID` | ❌ 發過碼就凍結 | 它進 `PBKDF2(id + ':' + 碼)` 算 Firestore 文件 ID，也決定 `detective.unlock.<id>` / `detective.groups.<id>` 這兩個 localStorage key |
+| 碼前綴（`OWL-…`） | ✅ 可改 | 前綴是碼字串本身的一部分，舊碼照樣算得出同一個雜湊，只影響之後新產生的碼 |
+
+改掉 id 的後果是：**已經發出去的碼全部失效，各組存好的進度再也讀不回來**——而且畫面上看起來只是「碼打錯了」，很難查。
+
+### ★ 圖一定要分資料夾放
+
+第一案的圖用的是 `background1.webp`、`suspect1.webp` 這種通用名。要是兩案的圖混在同一層，**下一案的背景圖會直接覆蓋掉上一案的**——不是難看，是壞掉。
+
+好消息是引擎沒有寫死任何圖片路徑，全部走案件檔自己的 `IMG` 常數與 `assistantImg`，所以整案的圖要搬只要改 `IMG` 那一行。
 
 新增一個案件的最小步驟：
 
-1. `detective-code.js` 的 `DETECTIVE_GAMES` 加一行（id / prefix / name）
-2. 複製一份 `detective-case-owl.js` 改成新案件
-3. 新的 `pages/<name>.html`，設 `window.DETECTIVE_GAME_ID`，照 detective.html 的結構抄
-4. `index.html` 加一顆 `.page-btn`
+1. `code.js` 的 `DETECTIVE_GAMES` 加一行（id / prefix / name）
+   —— **id 會進驗證碼的推導金鑰，發過碼之後就不能再改**，第一次就要定案
+2. 複製一份 `cases/golden-owl.js` 改成 `cases/<案件名>.js`，把 `IMG` 指到自己的資料夾
+3. 新的 `pages/detective-<案件名>.html`，設 `window.DETECTIVE_GAME_ID`，照 `detective-golden-owl.html` 的結構抄
+4. 開 `assets/images/detective/<案件名>/` 放圖
+5. `index.html` 加一顆 `.page-btn`
 
 後台的案件下拉選單、驗證碼前綴會自動跟著長出來。
 
@@ -61,9 +100,26 @@
 
 ## 2. 版面硬限制（超過就跑版，沒有自動處理）
 
+### ★ 場景可以互動的範圍只到 y = 446
+
+畫面是 960×600，但**下面那 154px 是引擎的 HUD 保留區**，場景元素擺進去就會被蓋住：
+
+| 元件 | 佔用範圍 |
+|---|---|
+| 對話框 | y 452–536（x 30–930） |
+| 道具欄 | y 514–600（整條，永遠都在） |
+| 💬 對話收合鈕 | 圓心 (56, 512)、半徑 22 |
+| ✕ 關閉鈕 | 圓心 (900, 470)、半徑 13 |
+
+所以**熱點與可拖移物件的底部（y + h）不能超過 446**。引擎自己也是用這條線在夾拖曳範圍：`maxY = (dlgOpen ? 446 : TRAY_TOP - 6) - o.h`。
+
+背景圖不受這條限制——整張 960×600 鋪滿就好，下緣被對話框蓋住是預期行為（黃金貓頭鷹那張背景還特地在下緣補了一條地板來配合）。
+
+**AI 展覽館第一版就踩到**：通往審訊室的光門畫在 y 448–568，結果整個掉進道具欄後面，連 💬 按鈕都壓在上面，玩家根本點不到門。這在資料裡看起來完全正常，只有跑起來才看得見。
+
 ### 對話框：70px 高
 
-`detective.js` 的 `say()` 會依 16 / 14 / 12px 三段自動縮字級，塞不下就 **直接溢出**，不會再縮。
+`engine.js` 的 `say()` 會依 16 / 14 / 12px 三段自動縮字級，塞不下就 **直接溢出**，不會再縮。
 
 - 16px ≈ 3 行、12px ≈ 4 行
 - 一行約 47 個中文字（16px）／63 個（12px）
@@ -85,7 +141,7 @@
 
 講出「你有 3 格錯」的當下，最佳解法就從推理變成暴力破解：翻一格 → 檢查 → 看數字有沒有變 → 一格一格試出來。小孩會發現這件事，而且會用。
 
-推理板現在一律只講「有地方對不上」，而且**程式裡連計數器都改成布林值**（`detective-puzzles.js` 的 `deduce`）——讓「幾格」這個資訊根本不存在，以後誰改都加不回去。
+推理板現在一律只講「有地方對不上」，而且**程式裡連計數器都改成布林值**（`puzzles.js` 的 `deduce`）——讓「幾格」這個資訊根本不存在，以後誰改都加不回去。
 
 可以講的：「還有 N 格沒填」（空格自己數得出來，不是答案）、「填得完的都對了，但還有欄位沒查出來」（不講就會卡在反覆修改正確答案）。
 
@@ -136,7 +192,7 @@
 
 ## 6. 動到引擎狀態時，記得同步存檔
 
-進度存檔在 `detective.js` 的「進度存檔」區塊。
+進度存檔在 `engine.js` 的「進度存檔」區塊。
 
 - **新增任何會影響畫面的狀態變數，就要加進 `snapshotState()`**。`state` 以外還有三個容易漏掉的：`visitedScenes`、`dropPlayed`、`objPositions`、`pickOrder`。漏了的話讀檔回來會重講開場白、重播動畫、東西跳回原位、互相埋住。
 - 存檔格式改變就把 `SAVE_VERSION` 加一，舊存檔會被判定為讀不懂而從頭開始（不會崩）。
