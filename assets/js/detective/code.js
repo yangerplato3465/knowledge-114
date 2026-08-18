@@ -21,8 +21,15 @@ const PBKDF2_ITERATIONS = 150000;
 
 // 目前有哪些偵探關卡。以後新增關卡就在這裡加一行，
 // 後台頁的下拉選單、驗證碼前綴都會自動跟著長出來。
+// 碼的長度只由 prefix 決定（PREFIX-XXXX-XX），跟 id 多長完全無關 ——
+// id 學生永遠看不到，它只進 PBKDF2 的金鑰。所以 id 可以取得清楚一點，
+// prefix 維持三個字母，碼就一樣短好抄。
+//
+// ★ 'owl' 這個 id 跟它的檔名（golden-owl）不一致，是因為檔名後來才改，
+//   而 id 發過碼之後就不能動了。新案的 id 直接跟檔名取一樣的，不要再留落差。
 export const DETECTIVE_GAMES = [
     { id: 'owl', prefix: 'OWL', name: '黃金貓頭鷹雕像失竊事件' },
+    { id: 'ai-museum', prefix: 'AIM', name: 'AI 展覽館的消失記憶' },
 ];
 
 // 把使用者輸入洗乾淨：轉大寫、丟掉空白與連字號。

@@ -18,7 +18,7 @@
 // 那是之後的第二階段。目前這層擋的是「隨手點進來玩掉」。
 // ============================================================
 
-import { DETECTIVE_GAMES, deriveCodeId, normalizeCode } from './detective-code.js';
+import { DETECTIVE_GAMES, deriveCodeId, normalizeCode } from './code.js';
 
 const GAME_ID = window.DETECTIVE_GAME_ID || 'owl';
 const GAME = DETECTIVE_GAMES.find(g => g.id === GAME_ID);
@@ -204,7 +204,7 @@ async function boot(session) {
 
     wireGroupSwitch(session);
     // 驗證通過才載入引擎——在此之前 detective.js 完全沒被下載執行
-    await import('./detective.js');
+    await import('./engine.js');
 }
 
 // ---- 頂欄的組別切換器 ----

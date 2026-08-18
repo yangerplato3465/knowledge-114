@@ -278,17 +278,38 @@
                 </div>
             </div>
 
-            <!-- 偵探事件簿（直接進入遊戲頁） -->
-            <a href="pages/detective-owl.html" class="category category-link">
-                <div class="category-head">
+            <!-- 偵探事件簿：一個系列一個分類，案件收在裡面。
+                 以後新增案件就在 sub-inner 裡多加一顆 .page-btn，首頁不會再長高。 -->
+            <div class="category">
+                <div class="category-head" onclick="toggleCategory(this)">
                     <div class="cat-icon">🔍</div>
                     <div class="cat-text">
                         <div class="cat-title">偵探事件簿</div>
                         <div class="cat-desc">點擊尋找線索 · 推理破案</div>
                     </div>
-                    <i class="fa-solid fa-chevron-right cat-chevron"></i>
+                    <i class="fa-solid fa-chevron-down cat-chevron"></i>
                 </div>
-            </a>
+                <div class="sub-list">
+                    <div class="sub-inner">
+                        <a href="pages/detective-golden-owl.html" class="page-btn">
+                            <div class="btn-icon">🦉</div>
+                            <div class="btn-text">
+                                <div class="btn-title">黃金貓頭鷹雕像失竊事件</div>
+                                <div class="btn-desc">校園失竊案 · 密碼與邏輯推理</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                        <a href="pages/detective-ai-museum.html" class="page-btn">
+                            <div class="btn-icon">🛰️</div>
+                            <div class="btn-text">
+                                <div class="btn-title">AI 展覽館的消失記憶</div>
+                                <div class="btn-desc">建置中 · 觀察比對與審訊推理</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
             <!-- 素材 -->
             <div class="category">
