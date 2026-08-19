@@ -147,6 +147,53 @@
             50% { box-shadow: 0 4px 22px rgba(198, 40, 40, 0.6); }
         }
 
+        /* 打倒敵人的瞬間：節點爆開一圈再沉澱成「已完成」
+           （寫在 .current 之後，才能蓋掉它的 nodePulse） */
+        @keyframes nodeBurst {
+            0%   { transform: scale(1.25); box-shadow: 0 0 0 0 rgba(255, 138, 101, 0.75); }
+            40%  { transform: scale(1.75); box-shadow: 0 0 0 10px rgba(255, 138, 101, 0.28); }
+            100% { transform: scale(1);    box-shadow: 0 0 0 24px rgba(255, 138, 101, 0); }
+        }
+        .map-node.defeat { animation: nodeBurst 0.6s ease-out; }
+
+        /* 連接線由左而右發光填滿，表示「前進了一格」 */
+        .map-line { position: relative; overflow: hidden; }
+        .map-line::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            width: 0;
+            background-color: var(--accent);
+            border-radius: 999px;
+        }
+        .map-line.done::after { width: 100%; }
+        .map-line.flowing::after { animation: lineFlow 0.5s ease-out 0.15s forwards; }
+        @keyframes lineFlow {
+            from { width: 0; }
+            to   { width: 100%; }
+        }
+
+        /* 抵達下一關時，節點彈一下再開始脈動 */
+        @keyframes nodeArrive {
+            0%   { transform: scale(0.8); }
+            55%  { transform: scale(1.45); }
+            100% { transform: scale(1.25); }
+        }
+        @keyframes bossArrive {
+            0%   { transform: scale(0.8); }
+            55%  { transform: scale(1.42); }
+            100% { transform: scale(1.18); }
+        }
+        .map-node.current.arrive      { animation: nodeArrive 0.5s cubic-bezier(0.2, 0.7, 0.3, 1), nodePulse 1.2s infinite 0.5s; }
+        .map-node.boss.current.arrive { animation: bossArrive 0.6s cubic-bezier(0.2, 0.7, 0.3, 1), bossPulse 1.1s infinite 0.6s; }
+
+        /* 皇冠平常就微微浮動（keyframes 要帶著 translateX(-50%)，否則會跑位） */
+        @keyframes crownFloat {
+            0%, 100% { transform: translateX(-50%) translateY(0) rotate(-5deg); }
+            50%      { transform: translateX(-50%) translateY(-4px) rotate(5deg); }
+        }
+        .map-node.boss .boss-crown { animation: crownFloat 2.2s ease-in-out infinite; }
+
         /* ---------- 攻擊時整個畫面輕微震動 ---------- */
         @keyframes screenShake {
             0%, 100% { transform: translate(0, 0); }
@@ -218,10 +265,38 @@
             box-shadow: 0 4px 12px var(--shadow);
         }
 
+        /* 三張強化卡依序滑入（popIn 定義在下方的題目區） */
+        .upgrade-card:nth-child(1) { animation: popIn 0.34s ease-out 0.10s backwards; }
+        .upgrade-card:nth-child(2) { animation: popIn 0.34s ease-out 0.18s backwards; }
+        .upgrade-card:nth-child(3) { animation: popIn 0.34s ease-out 0.26s backwards; }
+
         .upgrade-card:hover {
             border-color: var(--g1);
             transform: translateY(-4px);
             box-shadow: 0 10px 22px rgba(255, 138, 101, 0.18);
+        }
+
+        /* 選中的瞬間：被選的放大發光，另外兩張縮小淡出，玩家才感覺到「我做了選擇」
+           （要寫在 nth-child 進場動畫之後才蓋得掉） */
+        .upgrade-card.chosen {
+            border-color: var(--g1);
+            z-index: 2;
+            animation: cardChosen 0.42s ease-out forwards;
+        }
+        @keyframes cardChosen {
+            0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255, 138, 101, 0.65); }
+            40%  { transform: scale(1.12); box-shadow: 0 0 0 12px rgba(255, 138, 101, 0.2); }
+            100% { transform: scale(1.06); box-shadow: 0 0 0 28px rgba(255, 138, 101, 0); }
+        }
+
+        .upgrade-card.dimmed { animation: cardDim 0.38s ease-out forwards; }
+        @keyframes cardDim {
+            to { transform: scale(0.86); opacity: 0; filter: grayscale(0.85); }
+        }
+
+        .upgrade-panel.dismiss { animation: panelDismiss 0.26s ease-in forwards; }
+        @keyframes panelDismiss {
+            to { transform: scale(0.94); opacity: 0; }
         }
 
         .upgrade-card .up-icon { font-size: 40px; line-height: 1; }
@@ -355,21 +430,94 @@
 
         /* ---------- 戰鬥場景 ---------- */
         .battle-stage {
+            position: relative;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             gap: 24px;
-            padding: 14px 56px 12px;
+            padding: 20px 56px 16px;
+            overflow: hidden;
         }
 
-        .fighter { width: 46%; text-align: center; }
+        /* 場景背景層：現在用 CSS 漸層，日後補圖時把 --stage-img 設成 url(...) 即可，其他都不用改 */
+        .stage-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-image: var(--stage-img, none);
+            background-size: cover;
+            background-position: center bottom;
+            background-color: var(--stage-sky, #cfe8f7);
+            transition: background-color 0.6s ease;
+        }
+        .stage-bg::after { /* 地面（有背景圖時自動隱藏） */
+            content: '';
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            height: 32%;
+            background: var(--stage-ground, linear-gradient(180deg, #9ad06f, #68a349));
+            transition: background 0.6s ease;
+        }
+        .battle-stage.has-stage-img .stage-bg::after { display: none; }
 
-        .fighter .avatar {
+        /* 六關的場景配色：草原 → 森林 → 洞窟 → 沼澤 → 火山 → 魔王城 */
+        .battle-stage[data-stage="1"] { --stage-sky: #cfe8f7; --stage-ground: linear-gradient(180deg,#9ad06f,#68a349); }
+        .battle-stage[data-stage="2"] { --stage-sky: #bce0c8; --stage-ground: linear-gradient(180deg,#74b177,#3f7f4c); }
+        .battle-stage[data-stage="3"] { --stage-sky: #9095b6; --stage-ground: linear-gradient(180deg,#6c6a80,#43425a); }
+        .battle-stage[data-stage="4"] { --stage-sky: #a3b79c; --stage-ground: linear-gradient(180deg,#7b8a5e,#4e5a3a); }
+        .battle-stage[data-stage="5"] { --stage-sky: #dda078; --stage-ground: linear-gradient(180deg,#a85a3c,#6d2f22); }
+        .battle-stage[data-stage="6"] { --stage-sky: #6f5c7c; --stage-ground: linear-gradient(180deg,#4a3a5c,#281f38); }
+
+        .fighter { position: relative; z-index: 1; width: 46%; text-align: center; }
+
+        /* 角色插槽：所有特效都掛在這層，位置自動跟著角色跑 */
+        .sprite-slot {
+            position: relative;
+            height: 136px;
+            margin-bottom: 8px;
+        }
+
+        .ground-shadow {
+            position: absolute;
+            left: 50%; bottom: 2px;
+            width: 86px; height: 16px;
+            margin-left: -43px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.34), rgba(0,0,0,0) 70%);
+            pointer-events: none;
+            animation: shadowBreathe 2.6s ease-in-out infinite;
+        }
+
+        /*
+         * 兩層結構：.sprite 負責「動作」(衝刺/受擊/死亡/登場)，
+         * .sprite-body 負責「待機呼吸」。分兩層才不會互相蓋掉 transform。
+         * --dir  面向：勇者 1（朝右）、怪物 -1（朝左）。
+         * --sprite  日後補圖時設成 url(...) 並加上 .has-img，就會蓋掉 emoji。
+         */
+        .sprite {
+            position: absolute;
+            left: calc(50% - 62px);
+            bottom: 6px;
+            width: 124px; height: 124px;
+            transform-origin: 50% 100%;
+        }
+
+        .sprite-body {
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            transform-origin: 50% 100%;
+            background: var(--sprite, none) center bottom / contain no-repeat;
+            animation: breathe 2.6s ease-in-out infinite;
+        }
+
+        .sprite .glyph {
             font-size: 84px;
             line-height: 1;
-            display: inline-block;
-            transition: transform 0.15s ease;
+            user-select: none;
+            filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
         }
+        .sprite.has-img .glyph { display: none; }
 
         .fighter .name {
             font-size: 18px;
@@ -390,6 +538,7 @@
         }
 
         .hp-track {
+            position: relative;
             background-color: var(--border);
             border-radius: 999px;
             height: 16px;
@@ -397,11 +546,29 @@
             border: 2px solid var(--border);
         }
 
+        /* 殘影條：慢半拍才跟上，讓「這一下扣了多少」看得見 */
+        .hp-ghost {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            border-radius: 999px;
+            background: rgba(255, 213, 79, 0.95);
+            transition: width 0.45s ease 0.3s;
+        }
+
         .hp-fill {
+            position: relative;
             height: 100%;
             width: 100%;
             border-radius: 999px;
-            transition: width 0.5s ease, background-color 0.5s ease;
+            transition: width 0.22s cubic-bezier(0.3, 0, 0.2, 1), background-color 0.5s ease;
+        }
+
+        /* 剩餘血量過低時整條脈動 */
+        .hp-track.low { animation: hpLow 0.9s ease-in-out infinite; }
+        @keyframes hpLow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0); }
+            50%      { box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.38); }
         }
 
         .hp-fill.player { background: linear-gradient(90deg, #66bb6a, var(--good)); }
@@ -414,18 +581,155 @@
             padding-bottom: 40px;
         }
 
-        /* 受擊與攻擊動畫 */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px) rotate(-4deg); }
-            75% { transform: translateX(8px) rotate(4deg); }
+        /* ---------- 角色動作 ---------- */
+
+        /* 待機呼吸：微微上浮並擠壓，讓角色不會像貼紙 */
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0) scale(1, 1); }
+            50%      { transform: translateY(-4px) scale(0.985, 1.015); }
         }
-        @keyframes bump {
-            0%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-14px) scale(1.08); }
+        @keyframes shadowBreathe {
+            0%, 100% { transform: scale(1);    opacity: 1; }
+            50%      { transform: scale(0.92); opacity: 0.78; }
         }
-        .hit { animation: shake 0.4s ease; }
-        .attack { animation: bump 0.4s ease; }
+
+        /* 衝刺攻擊：先反向蓄力(anticipation) → 衝出 → 回位，全程擠壓拉伸 */
+        @keyframes lunge {
+            0%   { transform: translateX(0) scale(1, 1); }
+            18%  { transform: translateX(calc(-14px * var(--dir))) scale(1.10, 0.90); }
+            38%  { transform: translateX(calc(56px  * var(--dir))) scale(0.90, 1.12); }
+            52%  { transform: translateX(calc(50px  * var(--dir))) scale(1.04, 0.96); }
+            100% { transform: translateX(0) scale(1, 1); }
+        }
+        .sprite.lunge { animation: lunge 0.52s cubic-bezier(0.3, 0, 0.2, 1); }
+
+        /* 受擊：往後被打飛，再擺盪衰減回原位 */
+        @keyframes hurt {
+            0%   { transform: translateX(0) rotate(0deg); }
+            12%  { transform: translateX(calc(-22px * var(--dir))) rotate(calc(-9deg * var(--dir))); }
+            34%  { transform: translateX(calc(10px  * var(--dir))) rotate(calc(5deg  * var(--dir))); }
+            56%  { transform: translateX(calc(-6px  * var(--dir))) rotate(calc(-3deg * var(--dir))); }
+            78%  { transform: translateX(calc(3px   * var(--dir))) rotate(calc(1deg  * var(--dir))); }
+            100% { transform: translateX(0) rotate(0deg); }
+        }
+        .sprite.hurt { animation: hurt 0.55s ease-out; }
+        /* 受擊閃白：對 emoji 和之後的圖片都有效 */
+        .sprite.hurt .sprite-body { animation: breathe 2.6s ease-in-out infinite, flashWhite 0.16s steps(1) 2; }
+        @keyframes flashWhite {
+            0%, 49%   { filter: brightness(2.8) saturate(0.1) contrast(1.3); }
+            50%, 100% { filter: none; }
+        }
+
+        /* 倒下：後仰 → 旋轉倒地 → 褪色消失 */
+        @keyframes die {
+            0%   { transform: translateX(0) rotate(0deg) scale(1); opacity: 1; }
+            20%  { transform: translateX(calc(-12px * var(--dir))) rotate(calc(-14deg * var(--dir))) scale(1.05); opacity: 1; }
+            100% { transform: translateX(calc(-48px * var(--dir))) translateY(20px) rotate(calc(-84deg * var(--dir))) scale(0.86); opacity: 0; }
+        }
+        .sprite.die { animation: die 0.85s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+        .sprite.die .sprite-body { animation: none; filter: grayscale(0.75) brightness(0.85); }
+
+        /* 登場：從畫面外滑入 → 落地彈一下 */
+        @keyframes spawn {
+            0%   { transform: translateX(calc(-130px * var(--dir))) scale(0.9); opacity: 0; }
+            55%  { transform: translateX(0) scale(1.08, 0.92); opacity: 1; }
+            72%  { transform: translateX(0) translateY(-10px) scale(0.97, 1.05); }
+            100% { transform: translateX(0) translateY(0) scale(1, 1); opacity: 1; }
+        }
+        .sprite.spawn { animation: spawn 0.6s cubic-bezier(0.2, 0.7, 0.3, 1); }
+
+        /* ---------- 打擊特效（由 JS 動態插入 .sprite-slot） ---------- */
+        .fx { position: absolute; pointer-events: none; z-index: 3; }
+
+        /* 弧形斬擊 */
+        .fx-slash {
+            left: 50%; top: 50%;
+            width: 160px; height: 160px;
+            margin: -80px 0 0 -80px;
+            border-radius: 50%;
+            background: conic-gradient(from 200deg, rgba(255,255,255,0) 0deg, #ffffff 24deg, rgba(255,255,255,0) 50deg);
+            -webkit-mask: radial-gradient(circle, transparent 43%, #000 46%, #000 58%, transparent 61%);
+            mask: radial-gradient(circle, transparent 43%, #000 46%, #000 58%, transparent 61%);
+            animation: slash 0.36s ease-out forwards;
+        }
+        @keyframes slash {
+            0%   { opacity: 0; transform: rotate(-70deg) scale(0.6); }
+            25%  { opacity: 1; }
+            100% { opacity: 0; transform: rotate(65deg) scale(1.25); }
+        }
+
+        /* 衝擊環 */
+        .fx-ring {
+            left: 50%; top: 50%;
+            width: 44px; height: 44px;
+            margin: -22px 0 0 -22px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.95);
+            animation: ring 0.45s ease-out forwards;
+        }
+        @keyframes ring {
+            0%   { opacity: 0.95; transform: scale(0.3); }
+            100% { opacity: 0;    transform: scale(2.7); }
+        }
+
+        /* 迸散的碎片／星星，方向由 JS 指定 --tx / --ty */
+        .fx-spark {
+            left: 50%; top: 50%;
+            width: 9px; height: 9px;
+            margin: -4px 0 0 -4px;
+            border-radius: 50%;
+            background: var(--spark, #ffd54f);
+            animation: spark 0.62s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+        }
+        @keyframes spark {
+            0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.25); }
+        }
+
+        /* 治療：綠色光點上升 */
+        .fx-heal {
+            left: 50%; bottom: 0;
+            width: 14px; height: 14px;
+            margin-left: -7px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #e8f5e9, #66bb6a);
+            animation: healRise 1s ease-out forwards;
+        }
+        @keyframes healRise {
+            0%   { opacity: 0; transform: translate(var(--hx), 0) scale(0.5); }
+            20%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(var(--hx), -118px) scale(1.1); }
+        }
+
+        /* 全場閃光：答錯時紅色暈染、答對時白色一閃 */
+        .stage-flash {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .stage-flash.bad {
+            background: radial-gradient(ellipse at center, rgba(229,57,53,0) 42%, rgba(229,57,53,0.85) 100%);
+            animation: flashFade 0.55s ease-out;
+        }
+        .stage-flash.good {
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.65), rgba(255,255,255,0) 70%);
+            animation: flashFade 0.4s ease-out;
+        }
+        @keyframes flashFade {
+            0%   { opacity: 0; }
+            12%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 命中瞬間的鏡頭衝擊 */
+        .battle-stage.impact { animation: impact 0.22s ease-out; }
+        @keyframes impact {
+            0%   { transform: scale(1); }
+            30%  { transform: scale(1.035); }
+            100% { transform: scale(1); }
+        }
 
         .floating-dmg {
             position: absolute;
@@ -497,6 +801,11 @@
         .timer-fill.low { background: linear-gradient(90deg, #ef5350, var(--g1)); }
         .timer-text.low { color: var(--bad); animation: pulse 0.6s infinite; }
 
+        /* 剩下 5 秒：跳得更急，整條計時器一起脈動 */
+        .timer-fill.danger { background: linear-gradient(90deg, #d32f2f, #ef5350); }
+        .timer-text.danger { animation: pulse 0.34s infinite; }
+        .timer-track.danger { animation: hpLow 0.34s ease-in-out infinite; }
+
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.12); }
@@ -546,8 +855,35 @@
         }
 
         .option-btn:disabled { cursor: default; }
-        .option-btn.correct { border-color: #66bb6a; background-color: var(--good-bg); color: var(--good); }
-        .option-btn.wrong   { border-color: #ef9a9a; background-color: var(--bad-bg); color: var(--bad); }
+
+        /* 題目與選項的進場：依序彈出，換題時才有「新的一題」的感覺 */
+        @keyframes popIn {
+            0%   { opacity: 0; transform: translateY(12px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* fill-mode 用 backwards：動畫結束後回到一般樣式，:hover 的 transform 才不會被卡住 */
+        .question-box.enter { animation: popIn 0.3s ease-out backwards; }
+        .option-btn.enter   { animation: popIn 0.3s ease-out backwards; }
+        .option-btn.enter:nth-child(1) { animation-delay: 0.05s; }
+        .option-btn.enter:nth-child(2) { animation-delay: 0.11s; }
+        .option-btn.enter:nth-child(3) { animation-delay: 0.17s; }
+        .option-btn.enter:nth-child(4) { animation-delay: 0.23s; }
+
+        /* 揭曉答案時的反饋（寫在 .enter 之後，才不會被進場動畫蓋掉） */
+        .option-btn.correct { border-color: #66bb6a; background-color: var(--good-bg); color: var(--good); animation: correctPop 0.45s ease-out; }
+        .option-btn.wrong   { border-color: #ef9a9a; background-color: var(--bad-bg); color: var(--bad); animation: wrongShake 0.4s ease-out; }
+
+        @keyframes correctPop {
+            0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 187, 106, 0.6); }
+            35%  { transform: scale(1.06); }
+            100% { transform: scale(1); box-shadow: 0 0 0 14px rgba(102, 187, 106, 0); }
+        }
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            45% { transform: translateX(6px); }
+            70% { transform: translateX(-3px); }
+        }
 
         .feedback-msg {
             font-size: 20px;
@@ -582,10 +918,62 @@
         .hidden { display: none; }
 
         /* ---------- 結束畫面 ---------- */
-        .end-screen { text-align: center; padding: 56px; }
-        .end-screen .end-icon { font-size: 76px; }
+        .end-screen {
+            position: relative;   /* 彩帶以此為定位基準 */
+            overflow: hidden;
+            text-align: center;
+            padding: 56px;
+        }
+        .end-screen .end-icon { font-size: 76px; display: inline-block; }
         .end-screen h2 { font-size: 34px; font-weight: 700; color: var(--ink); margin: 16px 0 10px; }
         .end-screen p { font-size: 20px; color: var(--ink-soft); margin: 0 0 26px; }
+
+        /* 勝利：獎盃從上方落下、彈兩下才站穩 */
+        @keyframes trophyDrop {
+            0%   { opacity: 0; transform: translateY(-150px) scale(0.6) rotate(-16deg); }
+            55%  { opacity: 1; transform: translateY(10px) scale(1.16) rotate(5deg); }
+            72%  { transform: translateY(-16px) scale(0.95) rotate(-3deg); }
+            88%  { transform: translateY(5px) scale(1.04) rotate(1deg); }
+            100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+        }
+        .end-screen.win .end-icon { animation: trophyDrop 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) backwards; }
+
+        /* 失敗：整頁去飽和、從模糊中緩緩浮現，骷髏顫抖幾下 */
+        @keyframes loseFade {
+            0%   { opacity: 0; filter: grayscale(1) blur(5px); }
+            100% { opacity: 1; filter: grayscale(0.5) blur(0); }
+        }
+        .end-screen.lose { animation: loseFade 1.1s ease-out both; }
+        @keyframes skullTremble {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25%      { transform: translateX(-3px) rotate(-3deg); }
+            75%      { transform: translateX(3px) rotate(3deg); }
+        }
+        .end-screen.lose .end-icon { animation: skullTremble 0.34s ease-in-out 0.5s 5; }
+
+        /* 標題／說明／按鈕依序浮現，而不是整頁一起冒出來 */
+        .end-screen.win h2         { animation: popIn 0.45s ease-out 0.52s backwards; }
+        .end-screen.win p          { animation: popIn 0.45s ease-out 0.68s backwards; }
+        .end-screen.win .pill-btn  { animation: popIn 0.45s ease-out 0.86s backwards; }
+        .end-screen.win .back-link { animation: popIn 0.45s ease-out 1.00s backwards; }
+
+        /* 勝利彩帶 */
+        .confetti {
+            position: absolute;
+            top: -24px;
+            width: 10px;
+            height: 14px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 2;
+            animation: confettiFall var(--dur, 2s) cubic-bezier(0.35, 0.1, 0.5, 1) var(--delay, 0s) forwards;
+        }
+        @keyframes confettiFall {
+            0%   { opacity: 0; transform: translate(0, -30px) rotate(0deg); }
+            12%  { opacity: 1; }
+            85%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(var(--drift, 0), var(--fall, 400px)) rotate(var(--spin, 540deg)); }
+        }
 
         .back-link {
             display: inline-block;
@@ -606,10 +994,13 @@
             .game-header h1 { font-size: 28px; }
             .game-header p { font-size: 15px; }
 
-            .enemy-map { padding: 22px 18px 4px; gap: 4px; }
+            /* 手機版寬度不夠：6 個節點 + 5 條線在原本的間距下會擠出卡片外，
+               所以縮 padding / gap / 線的最小寬度，留出節點放大時的空間 */
+            .enemy-map { padding: 22px 12px 4px; gap: 3px; }
             .map-node { width: 34px; height: 34px; font-size: 15px; border-width: 2px; }
             .map-node.boss { width: 46px; height: 46px; font-size: 20px; border-width: 3px; }
             .map-node.boss .boss-crown { top: -16px; font-size: 14px; }
+            .map-line { min-width: 8px; }
 
             .setup-screen { padding: 30px 20px 40px; }
             .setup-title { font-size: 22px; }
@@ -620,8 +1011,12 @@
             .pool-card { gap: 12px; padding: 14px 16px; }
             .pool-card .pool-name { font-size: 16px; }
 
-            .battle-stage { padding: 12px 16px 8px; gap: 12px; }
-            .fighter .avatar { font-size: 56px; }
+            .battle-stage { padding: 14px 16px 10px; gap: 12px; }
+            .sprite-slot { height: 96px; }
+            .sprite { left: calc(50% - 44px); width: 88px; height: 88px; }
+            .sprite .glyph { font-size: 56px; }
+            .ground-shadow { width: 60px; margin-left: -30px; }
+            .fx-slash { width: 116px; height: 116px; margin: -58px 0 0 -58px; }
             .fighter .name { font-size: 15px; }
             .hp-row { font-size: 12px; }
             .vs-badge { font-size: 18px; padding-bottom: 28px; }
@@ -658,6 +1053,26 @@
             .end-screen { padding: 40px 20px; }
             .end-screen h2 { font-size: 27px; }
             .end-screen p { font-size: 17px; }
+        }
+
+        /* ---------- 減少動態效果（系統設定為「減少動畫」的使用者） ---------- */
+        @media (prefers-reduced-motion: reduce) {
+            .sprite-body, .ground-shadow, .hp-track.low,
+            .timer-text.low, .timer-text.danger, .timer-track.danger,
+            .map-node.boss .boss-crown, .end-screen.lose .end-icon {
+                animation: none !important;
+            }
+            .sprite.lunge, .sprite.hurt, .sprite.spawn,
+            .battle-stage.impact, .game-card.shake,
+            .option-btn.enter, .question-box.enter, .upgrade-card,
+            .map-node.defeat, .map-node.current.arrive, .map-line.flowing::after,
+            .end-screen.win .end-icon, .end-screen.lose,
+            .end-screen.win h2, .end-screen.win p,
+            .end-screen.win .pill-btn, .end-screen.win .back-link,
+            .upgrade-card.chosen, .upgrade-card.dimmed, .upgrade-panel.dismiss {
+                animation-duration: 0.01s !important;
+            }
+            .fx, .confetti { display: none; }
         }
     </style>
 </head>
@@ -697,21 +1112,40 @@
         <!-- 戰鬥畫面 -->
         <div id="battle-screen" class="hidden">
             <div id="enemy-map" class="enemy-map"></div>
-            <div class="battle-stage">
+            <div id="battle-stage" class="battle-stage" data-stage="1">
+                <div class="stage-bg"></div>
+                <div id="stage-flash" class="stage-flash"></div>
+
                 <div class="fighter">
-                    <span id="player-avatar" class="avatar">🧙</span>
+                    <div id="player-slot" class="sprite-slot">
+                        <div id="player-sprite" class="sprite" style="--dir: 1;">
+                            <div class="sprite-body"><span id="player-avatar" class="glyph">🧙</span></div>
+                        </div>
+                        <div class="ground-shadow"></div>
+                    </div>
                     <div class="name">勇者</div>
                     <div class="hp-row"><i class="fa-solid fa-heart" style="color:#66bb6a;"></i> <span id="player-hp-text">100 / 100</span></div>
-                    <div class="hp-track"><div id="player-hp" class="hp-fill player"></div></div>
+                    <div id="player-hp-track" class="hp-track">
+                        <div id="player-hp-ghost" class="hp-ghost"></div>
+                        <div id="player-hp" class="hp-fill player"></div>
+                    </div>
                 </div>
 
                 <div class="vs-badge">VS</div>
 
                 <div class="fighter">
-                    <span id="enemy-avatar" class="avatar">👾</span>
+                    <div id="enemy-slot" class="sprite-slot">
+                        <div id="enemy-sprite" class="sprite" style="--dir: -1;">
+                            <div class="sprite-body"><span id="enemy-avatar" class="glyph">👾</span></div>
+                        </div>
+                        <div class="ground-shadow"></div>
+                    </div>
                     <div id="enemy-name" class="name">史萊姆怪</div>
                     <div class="hp-row"><i class="fa-solid fa-heart" style="color:#ef5350;"></i> <span id="enemy-hp-text">100 / 100</span></div>
-                    <div class="hp-track"><div id="enemy-hp" class="hp-fill enemy"></div></div>
+                    <div id="enemy-hp-track" class="hp-track">
+                        <div id="enemy-hp-ghost" class="hp-ghost"></div>
+                        <div id="enemy-hp" class="hp-fill enemy"></div>
+                    </div>
                 </div>
             </div>
 
@@ -721,7 +1155,7 @@
                     <div class="timer-track"><div id="timer-fill" class="timer-fill"></div></div>
                     <div id="timer-text" class="timer-text"><i class="fa-solid fa-stopwatch"></i> <span id="timer-secs">30</span>s</div>
                 </div>
-                <div class="question-box">
+                <div id="question-box" class="question-box">
                     <p id="question-text" class="q-text"></p>
                 </div>
                 <div id="option-grid" class="option-grid"></div>
