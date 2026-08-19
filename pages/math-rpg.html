@@ -16,48 +16,114 @@
         /* 本頁主題色：縹色（深天藍，不帶紫） */
         body { --g1: #3f6fb0; --g2: #7ba6d8; }
 
+        /*
+         * ===== 縮放系統 =====
+         * 所有尺寸都寫成 calc(n * var(--u))，只要改 --u 整個介面就等比縮放。
+         * 用自訂屬性而不是 em，因為 em 會在巢狀元素上一層層疊乘。
+         * 基準：--u = 16px 時卡片寬 860px（等同改版前的桌機外觀）。
+         *
+         * --u 的算式依裝置在下方的 @media 區塊調整：
+         *   桌機／橫向    高度通常是瓶頸，取 min(vw, vh)
+         *   平板直向      高度充裕，改由寬度決定
+         *   手機          走另一套比例（見 max-width: 600px）
+         *   手機翻橫      高度極短，改成左右分欄
+         */
         body {
+            --u: clamp(10px, min(1.75vw, 1.45vh), 26px);
             background-color: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            min-height: 100dvh;   /* 手機網址列收合／展開時不會被裁掉 */
             margin: 0;
-            padding: 40px 20px;
+            padding: calc(1.5 * var(--u)) calc(1.1 * var(--u));
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
         }
 
         .game-card {
             background-color: var(--surface);
-            border: 8px solid var(--border);
-            border-radius: 32px;
+            border: calc(0.5 * var(--u)) solid var(--border);
+            border-radius: calc(2 * var(--u));
             box-shadow: 0 15px 35px var(--shadow);
-            width: 860px;
+            width: calc(53.75 * var(--u));
             max-width: 100%;
             overflow: hidden;
             position: relative;
         }
 
-        /* ---------- 頂部標題 ---------- */
+        /* 量測 --u 實際像素值用的探針。
+           自訂屬性透過 getPropertyValue 拿到的是還沒求值的 clamp(...) 字串，
+           parseFloat 會得到 NaN，所以改用一個看不見的元素讓瀏覽器幫忙算。 */
+        #u-probe {
+            position: absolute;
+            width: var(--u);
+            height: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* ---------- 保險：內容超出時可捲動，不要無聲被裁掉 ----------
+           .game-card 需要 overflow: hidden（圓角、場景背景），橫向時又加了
+           max-height。兩者相乘的後果是超出的內容直接消失、而且不會有捲軸
+           ——「繼續」按鈕就是這樣被切掉的，改版時完全看不出來。
+           讓四個畫面各自成為可捲動區域當作後路。
+           min-height: 0 是必要的：flex item 預設 min-height 是 auto，
+           不設成 0 就不會被壓縮，也就永遠不會出現捲軸。 */
+        #grade-screen, #pool-screen, #battle-screen, #end-screen {
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;   /* 只開垂直捲動，免得水平方向多出一條沒必要的捲軸 */
+        }
+
+        /* ---------- 全螢幕切換鈕 ---------- */
+        .fs-btn {
+            position: absolute;
+            top: calc(0.75 * var(--u));
+            right: calc(0.75 * var(--u));
+            z-index: 70;
+            width: calc(2.4 * var(--u));
+            height: calc(2.4 * var(--u));
+            min-width: 44px;   /* 觸控最小點擊面積 */
+            min-height: 44px;
+            border: none;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+            font-size: calc(1.05 * var(--u));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .fs-btn:hover { background-color: rgba(255, 255, 255, 0.38); transform: scale(1.08); }
+        .fs-btn:active { transform: scale(0.94); }
+
+        /* ---------- 頂部標題 ----------
+           戰鬥中不需要標題，收起來換取垂直空間（手機直向差這一段就會需要捲動） */
+        body.in-battle .game-header { display: none; }
+
         .game-header {
             background: linear-gradient(135deg, var(--g1) 0%, var(--g2) 100%);
             color: #ffffff;
             text-align: center;
-            padding: 40px 40px 34px;
+            padding: calc(2.5 * var(--u)) calc(2.5 * var(--u)) calc(2.125 * var(--u));
         }
 
-        .game-header .header-icon { font-size: 52px; margin-bottom: 10px; }
+        .game-header .header-icon { font-size: calc(3.25 * var(--u)); margin-bottom: calc(0.6 * var(--u)); }
 
         .game-header h1 {
-            font-size: 38px;
+            font-size: calc(2.375 * var(--u));
             font-weight: 700;
             margin: 0;
             text-shadow: 1px 2px 0 rgba(0, 0, 0, 0.08);
         }
 
         .game-header p {
-            font-size: 18px;
-            margin: 8px 0 0;
+            font-size: calc(1.125 * var(--u));
+            margin: calc(0.5 * var(--u)) 0 0;
             opacity: 0.95;
             font-weight: 400;
         }
@@ -67,20 +133,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            padding: 30px 56px 6px;
+            gap: calc(0.375 * var(--u));
+            padding: calc(1.875 * var(--u)) calc(3.5 * var(--u)) calc(0.375 * var(--u));
         }
 
         .map-node {
-            width: 46px;
-            height: 46px;
+            width: calc(2.875 * var(--u));
+            height: calc(2.875 * var(--u));
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: calc(1.25 * var(--u));
             flex-shrink: 0;
-            border: 3px solid var(--border);
+            border: calc(0.1875 * var(--u)) solid var(--border);
             background-color: var(--surface);
             color: var(--muted-2);
             transition: all 0.3s ease;
@@ -88,10 +154,10 @@
 
         .map-line {
             flex: 1;
-            height: 4px;
+            height: calc(0.25 * var(--u));
             border-radius: 999px;
             background-color: var(--border);
-            min-width: 16px;
+            min-width: calc(1 * var(--u));
             transition: background-color 0.3s ease;
         }
 
@@ -119,10 +185,10 @@
 
         /* 最後一關：魔王節點，更大、紅金配色、頭頂皇冠 */
         .map-node.boss {
-            width: 60px;
-            height: 60px;
-            font-size: 26px;
-            border-width: 4px;
+            width: calc(3.75 * var(--u));
+            height: calc(3.75 * var(--u));
+            font-size: calc(1.625 * var(--u));
+            border-width: calc(0.25 * var(--u));
             border-color: var(--bad);
             background-color: var(--bad-bg);
             color: var(--bad);
@@ -136,10 +202,10 @@
 
         .map-node.boss .boss-crown {
             position: absolute;
-            top: -20px;
+            top: calc(-1.25 * var(--u));
             left: 50%;
             transform: translateX(-50%);
-            font-size: 18px;
+            font-size: calc(1.125 * var(--u));
         }
 
         @keyframes bossPulse {
@@ -219,12 +285,14 @@
 
         .upgrade-panel {
             background-color: var(--surface);
-            border: 6px solid var(--border);
-            border-radius: 28px;
-            padding: 34px 32px;
+            border: calc(0.375 * var(--u)) solid var(--border);
+            border-radius: calc(1.75 * var(--u));
+            padding: calc(2.125 * var(--u)) calc(2 * var(--u));
             text-align: center;
             width: 100%;
-            max-width: 720px;
+            max-width: calc(45 * var(--u));
+            max-height: 100%;
+            overflow-y: auto;
             box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
             animation: panelPop 0.3s ease;
         }
@@ -235,34 +303,36 @@
         }
 
         .upgrade-panel h2 {
-            font-size: 28px;
+            font-size: calc(1.75 * var(--u));
             font-weight: 700;
             color: var(--ink);
-            margin: 0 0 6px;
+            margin: 0 0 calc(0.375 * var(--u));
         }
 
         .upgrade-panel .panel-sub {
-            font-size: 16px;
+            font-size: calc(1 * var(--u));
             color: var(--muted);
-            margin: 0 0 26px;
+            margin: 0 0 calc(1.625 * var(--u));
         }
 
-        .upgrade-options { display: flex; gap: 16px; }
+        .upgrade-options { display: flex; gap: calc(1 * var(--u)); }
 
         .upgrade-card {
             flex: 1;
             background-color: var(--surface);
-            border: 3px solid var(--border);
-            border-radius: 20px;
-            padding: 26px 16px;
+            border: calc(0.1875 * var(--u)) solid var(--border);
+            border-radius: calc(1.25 * var(--u));
+            padding: calc(1.625 * var(--u)) calc(1 * var(--u));
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: calc(0.625 * var(--u));
             box-shadow: 0 4px 12px var(--shadow);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         /* 三張強化卡依序滑入（popIn 定義在下方的題目區） */
@@ -299,58 +369,60 @@
             to { transform: scale(0.94); opacity: 0; }
         }
 
-        .upgrade-card .up-icon { font-size: 40px; line-height: 1; }
-        .upgrade-card .up-title { font-size: 19px; font-weight: 700; color: var(--ink); }
-        .upgrade-card .up-desc { font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
+        .upgrade-card .up-icon { font-size: calc(2.5 * var(--u)); line-height: 1; }
+        .upgrade-card .up-title { font-size: calc(1.1875 * var(--u)); font-weight: 700; color: var(--ink); }
+        .upgrade-card .up-desc { font-size: calc(0.875 * var(--u)); color: var(--ink-soft); line-height: 1.45; }
 
         .howto-text {
             text-align: left;
-            font-size: 16px;
+            font-size: calc(1 * var(--u));
             color: var(--ink-soft);
             line-height: 1.7;
-            margin: 6px auto 26px;
-            max-width: 460px;
-            padding-left: 4px;
+            margin: calc(0.375 * var(--u)) auto calc(1.625 * var(--u));
+            max-width: calc(28.75 * var(--u));
+            padding-left: calc(0.25 * var(--u));
             list-style: none;
         }
-        .howto-text li { margin-bottom: 10px; }
+        .howto-text li { margin-bottom: calc(0.625 * var(--u)); }
         .howto-text strong { color: var(--ink); }
 
         /* ---------- 開始前的選單畫面 ---------- */
         .setup-screen {
-            padding: 44px 56px 56px;
+            padding: calc(2.75 * var(--u)) calc(3.5 * var(--u)) calc(3.5 * var(--u));
             text-align: center;
         }
 
         .setup-title {
-            font-size: 28px;
+            font-size: calc(1.75 * var(--u));
             font-weight: 700;
             color: var(--ink);
-            margin: 0 0 8px;
+            margin: 0 0 calc(0.5 * var(--u));
         }
 
         .setup-sub {
-            font-size: 16px;
+            font-size: calc(1 * var(--u));
             color: var(--muted);
-            margin: 0 0 30px;
+            margin: 0 0 calc(1.875 * var(--u));
         }
 
-        .choice-grid { display: flex; gap: 20px; }
+        .choice-grid { display: flex; gap: calc(1.25 * var(--u)); }
 
         .choice-card {
             flex: 1;
             background-color: var(--surface);
-            border: 3px solid var(--border);
-            border-radius: 24px;
-            padding: 44px 20px;
+            border: calc(0.1875 * var(--u)) solid var(--border);
+            border-radius: calc(1.5 * var(--u));
+            padding: calc(2.75 * var(--u)) calc(1.25 * var(--u));
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: calc(0.75 * var(--u));
             box-shadow: 0 4px 12px var(--shadow);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .choice-card:hover {
@@ -360,36 +432,39 @@
         }
 
         .choice-card .choice-emoji {
-            font-size: 52px;
+            font-size: calc(3.25 * var(--u));
             line-height: 1;
             font-weight: 700;
             color: var(--g1);
-            width: 84px;
-            height: 84px;
+            width: calc(5.25 * var(--u));
+            height: calc(5.25 * var(--u));
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: var(--warn-bg);
-            border: 3px solid var(--warn-border);
+            border: calc(0.1875 * var(--u)) solid var(--warn-border);
             border-radius: 50%;
         }
-        .choice-card .choice-label { font-size: 24px; font-weight: 700; color: var(--ink); }
+        .choice-card .choice-label { font-size: calc(1.5 * var(--u)); font-weight: 700; color: var(--ink); }
 
-        .pool-list { display: flex; flex-direction: column; gap: 14px; }
+        .pool-list { display: flex; flex-direction: column; gap: calc(0.875 * var(--u)); }
 
         .pool-card {
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: calc(1.125 * var(--u));
             background-color: var(--surface);
-            border: 3px solid var(--border);
-            border-radius: 18px;
-            padding: 18px 24px;
+            border: calc(0.1875 * var(--u)) solid var(--border);
+            border-radius: calc(1.125 * var(--u));
+            padding: calc(1.125 * var(--u)) calc(1.5 * var(--u));
+            min-height: 48px;              /* 觸控最小點擊面積 */
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
             text-align: left;
             box-shadow: 0 4px 12px var(--shadow);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .pool-card:hover {
@@ -400,31 +475,33 @@
 
         .pool-card .pool-num {
             flex-shrink: 0;
-            width: 36px;
-            height: 36px;
+            width: calc(2.25 * var(--u));
+            height: calc(2.25 * var(--u));
             border-radius: 50%;
             background-color: var(--warn-bg);
-            border: 2px solid var(--warn-border);
+            border: calc(0.125 * var(--u)) solid var(--warn-border);
             color: var(--g1);
             font-weight: 700;
-            font-size: 17px;
+            font-size: calc(1.0625 * var(--u));
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .pool-card .pool-name { font-size: 19px; font-weight: 600; color: var(--ink); flex: 1; }
-        .pool-card .pool-arrow { color: var(--muted-2); font-size: 16px; }
+        .pool-card .pool-name { font-size: calc(1.1875 * var(--u)); font-weight: 600; color: var(--ink); flex: 1; }
+        .pool-card .pool-arrow { color: var(--muted-2); font-size: calc(1 * var(--u)); }
 
         .back-link-btn {
-            margin-top: 26px;
+            margin-top: calc(1.625 * var(--u));
             background: none;
             border: none;
             color: var(--muted);
-            font-size: 15px;
+            font-size: calc(0.9375 * var(--u));
+            min-height: 44px;
             font-weight: 500;
             cursor: pointer;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            touch-action: manipulation;
         }
         .back-link-btn:hover { color: var(--g1); }
 
@@ -434,8 +511,8 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            gap: 24px;
-            padding: 20px 56px 16px;
+            gap: calc(1.5 * var(--u));
+            padding: calc(1.25 * var(--u)) calc(3.5 * var(--u)) calc(1 * var(--u));
             overflow: hidden;
         }
 
@@ -473,15 +550,17 @@
         /* 角色插槽：所有特效都掛在這層，位置自動跟著角色跑 */
         .sprite-slot {
             position: relative;
-            height: 136px;
-            margin-bottom: 8px;
+            /* 比角色本身高一點，留給未來全身圖的空間；但不能留太多，
+               否則 emoji 上方會出現一大片空白的天空 */
+            height: calc(7.1 * var(--u));
+            margin-bottom: calc(0.5 * var(--u));
         }
 
         .ground-shadow {
             position: absolute;
-            left: 50%; bottom: 2px;
-            width: 86px; height: 16px;
-            margin-left: -43px;
+            left: 50%; bottom: calc(0.125 * var(--u));
+            width: calc(5.375 * var(--u)); height: calc(1 * var(--u));
+            margin-left: calc(-2.6875 * var(--u));
             background: radial-gradient(ellipse at center, rgba(0,0,0,0.34), rgba(0,0,0,0) 70%);
             pointer-events: none;
             animation: shadowBreathe 2.6s ease-in-out infinite;
@@ -495,9 +574,9 @@
          */
         .sprite {
             position: absolute;
-            left: calc(50% - 62px);
-            bottom: 6px;
-            width: 124px; height: 124px;
+            left: calc(50% - 3.3 * var(--u));
+            bottom: calc(0.375 * var(--u));
+            width: calc(6.6 * var(--u)); height: calc(6.6 * var(--u));
             transform-origin: 50% 100%;
         }
 
@@ -512,38 +591,42 @@
         }
 
         .sprite .glyph {
-            font-size: 84px;
+            font-size: calc(5.25 * var(--u));
             line-height: 1;
             user-select: none;
             filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
         }
         .sprite.has-img .glyph { display: none; }
 
+        /* 名字與血量數字是壓在場景地面上的，用白字＋深色描邊才讀得清楚
+           （原本的灰字在綠色地面上幾乎看不見） */
         .fighter .name {
-            font-size: 18px;
+            font-size: calc(1.125 * var(--u));
             font-weight: 700;
-            color: var(--ink);
-            margin: 8px 0 6px;
+            color: #ffffff;
+            margin: calc(0.5 * var(--u)) 0 calc(0.375 * var(--u));
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 2px rgba(0, 0, 0, 0.4);
         }
 
         .hp-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: calc(0.5 * var(--u));
             justify-content: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--muted);
-            margin-bottom: 6px;
+            font-size: calc(0.875 * var(--u));
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: calc(0.375 * var(--u));
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 2px rgba(0, 0, 0, 0.4);
         }
 
         .hp-track {
             position: relative;
-            background-color: var(--border);
+            background-color: rgba(0, 0, 0, 0.28);
             border-radius: 999px;
-            height: 16px;
+            height: calc(1 * var(--u));
             overflow: hidden;
-            border: 2px solid var(--border);
+            border: calc(0.125 * var(--u)) solid rgba(255, 255, 255, 0.55);
         }
 
         /* 殘影條：慢半拍才跟上，讓「這一下扣了多少」看得見 */
@@ -575,10 +658,11 @@
         .hp-fill.enemy  { background: linear-gradient(90deg, #ef5350, var(--bad)); }
 
         .vs-badge {
-            font-size: 26px;
+            font-size: calc(1.625 * var(--u));
             font-weight: 700;
-            color: var(--muted-2);
-            padding-bottom: 40px;
+            color: #ffffff;
+            padding-bottom: calc(2.5 * var(--u));
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         /* ---------- 角色動作 ---------- */
@@ -644,8 +728,8 @@
         /* 弧形斬擊 */
         .fx-slash {
             left: 50%; top: 50%;
-            width: 160px; height: 160px;
-            margin: -80px 0 0 -80px;
+            width: calc(10 * var(--u)); height: calc(10 * var(--u));
+            margin: calc(-5 * var(--u)) 0 0 calc(-5 * var(--u));
             border-radius: 50%;
             background: conic-gradient(from 200deg, rgba(255,255,255,0) 0deg, #ffffff 24deg, rgba(255,255,255,0) 50deg);
             -webkit-mask: radial-gradient(circle, transparent 43%, #000 46%, #000 58%, transparent 61%);
@@ -661,10 +745,10 @@
         /* 衝擊環 */
         .fx-ring {
             left: 50%; top: 50%;
-            width: 44px; height: 44px;
-            margin: -22px 0 0 -22px;
+            width: calc(2.75 * var(--u)); height: calc(2.75 * var(--u));
+            margin: calc(-1.375 * var(--u)) 0 0 calc(-1.375 * var(--u));
             border-radius: 50%;
-            border: 4px solid rgba(255, 255, 255, 0.95);
+            border: calc(0.25 * var(--u)) solid rgba(255, 255, 255, 0.95);
             animation: ring 0.45s ease-out forwards;
         }
         @keyframes ring {
@@ -675,8 +759,8 @@
         /* 迸散的碎片／星星，方向由 JS 指定 --tx / --ty */
         .fx-spark {
             left: 50%; top: 50%;
-            width: 9px; height: 9px;
-            margin: -4px 0 0 -4px;
+            width: calc(0.5625 * var(--u)); height: calc(0.5625 * var(--u));
+            margin: calc(-0.28 * var(--u)) 0 0 calc(-0.28 * var(--u));
             border-radius: 50%;
             background: var(--spark, #ffd54f);
             animation: spark 0.62s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
@@ -689,8 +773,8 @@
         /* 治療：綠色光點上升 */
         .fx-heal {
             left: 50%; bottom: 0;
-            width: 14px; height: 14px;
-            margin-left: -7px;
+            width: calc(0.875 * var(--u)); height: calc(0.875 * var(--u));
+            margin-left: calc(-0.4375 * var(--u));
             border-radius: 50%;
             background: radial-gradient(circle, #e8f5e9, #66bb6a);
             animation: healRise 1s ease-out forwards;
@@ -733,7 +817,7 @@
 
         .floating-dmg {
             position: absolute;
-            font-size: 52px;
+            font-size: calc(3.25 * var(--u));
             font-weight: 700;
             pointer-events: none;
             z-index: 60;
@@ -752,42 +836,42 @@
         }
 
         /* ---------- 題目區 ---------- */
-        .quiz-body { padding: 16px 56px 48px; }
+        .quiz-body { padding: calc(1 * var(--u)) calc(3.5 * var(--u)) calc(3 * var(--u)); }
 
         .round-label {
             text-align: center;
-            font-size: 15px;
+            font-size: calc(0.9375 * var(--u));
             font-weight: 600;
             color: var(--muted);
-            margin-bottom: 12px;
+            margin-bottom: calc(0.75 * var(--u));
         }
 
         /* ---------- 計時器 ---------- */
         .timer-wrap {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: calc(0.75 * var(--u));
+            margin-bottom: calc(1 * var(--u));
         }
 
         .timer-text {
-            font-size: 22px;
+            font-size: calc(1.375 * var(--u));
             font-weight: 700;
             color: var(--accent);
-            min-width: 54px;
+            min-width: calc(3.375 * var(--u));
             text-align: right;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: calc(0.375 * var(--u));
         }
 
         .timer-track {
             flex: 1;
             background-color: var(--border);
             border-radius: 999px;
-            height: 14px;
+            height: calc(0.875 * var(--u));
             overflow: hidden;
-            border: 2px solid var(--border);
+            border: calc(0.125 * var(--u)) solid var(--border);
         }
 
         .timer-fill {
@@ -813,15 +897,15 @@
 
         .question-box {
             background-color: var(--surface-2);
-            border: 3px dashed var(--primary);
-            border-radius: 20px;
+            border: calc(0.1875 * var(--u)) dashed var(--primary);
+            border-radius: calc(1.25 * var(--u));
             text-align: center;
-            padding: 24px;
-            margin-bottom: 24px;
+            padding: calc(1.5 * var(--u));
+            margin-bottom: calc(1.5 * var(--u));
         }
 
         .question-box .q-text {
-            font-size: 36px;
+            font-size: calc(2.25 * var(--u));
             font-weight: 700;
             color: var(--ink);
             margin: 0;
@@ -831,21 +915,24 @@
         .option-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: calc(1 * var(--u));
         }
 
         .option-btn {
             background-color: var(--surface);
-            border: 3px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            font-size: 24px;
+            border: calc(0.1875 * var(--u)) solid var(--border);
+            border-radius: calc(1.25 * var(--u));
+            padding: calc(1.25 * var(--u));
+            min-height: 48px;              /* 觸控最小點擊面積 */
+            font-size: calc(1.5 * var(--u));
             font-weight: 600;
             color: var(--ink-soft);
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
             box-shadow: 0 4px 12px var(--shadow);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;    /* 消除觸控裝置的 300ms 點擊延遲 */
         }
 
         .option-btn:hover:not(:disabled) {
@@ -886,24 +973,51 @@
         }
 
         .feedback-msg {
-            font-size: 20px;
+            font-size: calc(1.25 * var(--u));
             font-weight: 700;
             text-align: center;
-            margin: 24px 0 0;
-            min-height: 28px;
+            margin: calc(1.5 * var(--u)) 0 0;
+            min-height: calc(1.75 * var(--u));
         }
         .feedback-msg.good { color: var(--good); }
         .feedback-msg.bad { color: var(--bad); }
 
-        .footer-actions { display: flex; justify-content: center; margin-top: 20px; }
+        .footer-actions { display: flex; justify-content: center; margin-top: calc(0.9 * var(--u)); }
+
+        /* 答完題後不用按「繼續」，改成倒數自動進下一題 */
+        .next-countdown {
+            display: flex;
+            align-items: center;
+            gap: calc(0.7 * var(--u));
+            width: 100%;
+            max-width: calc(22 * var(--u));
+            color: var(--muted);
+            font-size: calc(0.95 * var(--u));
+            font-weight: 600;
+        }
+        .countdown-track {
+            flex: 1;
+            height: calc(0.45 * var(--u));
+            background-color: var(--border);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .countdown-fill {
+            height: 100%;
+            width: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--g1), var(--g2));
+        }
+        #countdown-text { white-space: nowrap; }
 
         .pill-btn {
             background: linear-gradient(135deg, var(--g1) 0%, var(--g2) 100%);
             color: #ffffff;
             border: none;
             border-radius: 999px;
-            padding: 16px 44px;
-            font-size: 20px;
+            padding: calc(1 * var(--u)) calc(2.75 * var(--u));
+            min-height: 48px;              /* 觸控最小點擊面積 */
+            font-size: calc(1.25 * var(--u));
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -911,7 +1025,10 @@
             box-shadow: 0 6px 16px rgba(255, 138, 101, 0.25);
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: calc(0.625 * var(--u));
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         .pill-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(255, 138, 101, 0.3); }
 
@@ -922,11 +1039,11 @@
             position: relative;   /* 彩帶以此為定位基準 */
             overflow: hidden;
             text-align: center;
-            padding: 56px;
+            padding: calc(3.5 * var(--u));
         }
-        .end-screen .end-icon { font-size: 76px; display: inline-block; }
-        .end-screen h2 { font-size: 34px; font-weight: 700; color: var(--ink); margin: 16px 0 10px; }
-        .end-screen p { font-size: 20px; color: var(--ink-soft); margin: 0 0 26px; }
+        .end-screen .end-icon { font-size: calc(4.75 * var(--u)); display: inline-block; }
+        .end-screen h2 { font-size: calc(2.125 * var(--u)); font-weight: 700; color: var(--ink); margin: calc(1 * var(--u)) 0 calc(0.625 * var(--u)); }
+        .end-screen p { font-size: calc(1.25 * var(--u)); color: var(--ink-soft); margin: 0 0 calc(1.625 * var(--u)); }
 
         /* 勝利：獎盃從上方落下、彈兩下才站穩 */
         @keyframes trophyDrop {
@@ -960,9 +1077,9 @@
         /* 勝利彩帶 */
         .confetti {
             position: absolute;
-            top: -24px;
-            width: 10px;
-            height: 14px;
+            top: calc(-1.5 * var(--u));
+            width: calc(0.625 * var(--u));
+            height: calc(0.875 * var(--u));
             opacity: 0;
             pointer-events: none;
             z-index: 2;
@@ -977,82 +1094,238 @@
 
         .back-link {
             display: inline-block;
-            margin-top: 22px;
-            font-size: 16px;
+            margin-top: calc(1.375 * var(--u));
+            font-size: calc(1 * var(--u));
             color: var(--muted);
             text-decoration: none;
             font-weight: 500;
         }
         .back-link:hover { color: var(--g1); }
 
-        /* ---------- 手機版 ---------- */
+        /* ================================================================
+         * 版面模式
+         * 尺寸比例都寫在上面了，這裡只調 --u 的算式和少數幾個「比例本身
+         * 要換」的地方（手機的邊距相對要小、字相對要大）。
+         * ================================================================ */
+
+        /* ---------- 手機直向 ----------
+           （橫向的手機寬度超過 600px，會落到下面的橫向規則） */
         @media (max-width: 600px) {
-            body { padding: 20px 10px; }
-            .game-card { border-width: 6px; }
-            .game-header { padding: 30px 20px 26px; }
-            .game-header .header-icon { font-size: 42px; }
-            .game-header h1 { font-size: 28px; }
-            .game-header p { font-size: 15px; }
+            body {
+                /* 手機不能沿用桌機比例（卡片寬 = 53.75u 會讓字小到看不清），
+                   改成卡片吃滿寬度、--u 主要由視窗寬度決定；
+                   1.35vh 那一項是為了在矮的手機上也不必捲動 */
+                --u: clamp(10px, min(3.4vw, 1.65vh), 17px);
+                padding: calc(1 * var(--u)) calc(0.6 * var(--u));
+            }
+            .game-card { width: 100%; border-width: calc(0.375 * var(--u)); }
 
-            /* 手機版寬度不夠：6 個節點 + 5 條線在原本的間距下會擠出卡片外，
-               所以縮 padding / gap / 線的最小寬度，留出節點放大時的空間 */
-            .enemy-map { padding: 22px 12px 4px; gap: 3px; }
-            .map-node { width: 34px; height: 34px; font-size: 15px; border-width: 2px; }
-            .map-node.boss { width: 46px; height: 46px; font-size: 20px; border-width: 3px; }
-            .map-node.boss .boss-crown { top: -16px; font-size: 14px; }
-            .map-line { min-width: 8px; }
+            /* 手機橫向空間吃緊，邊距的比例要比桌機小 */
+            .game-header { padding: calc(2 * var(--u)) calc(1.3 * var(--u)) calc(1.7 * var(--u)); }
+            .game-header .header-icon { font-size: calc(2.6 * var(--u)); }
+            .game-header h1 { font-size: calc(1.85 * var(--u)); }
+            .game-header p { font-size: calc(1 * var(--u)); }
 
-            .setup-screen { padding: 30px 20px 40px; }
-            .setup-title { font-size: 22px; }
-            .choice-grid { gap: 12px; }
-            .choice-card { padding: 26px 12px; }
-            .choice-card .choice-emoji { width: 64px; height: 64px; font-size: 38px; }
-            .choice-card .choice-label { font-size: 19px; }
-            .pool-card { gap: 12px; padding: 14px 16px; }
-            .pool-card .pool-name { font-size: 16px; }
+            /* 6 個節點 + 5 條線在原本的間距下會擠出卡片外 */
+            .enemy-map { padding: calc(1.5 * var(--u)) calc(0.8 * var(--u)) calc(0.3 * var(--u)); gap: calc(0.2 * var(--u)); }
+            .map-line { min-width: calc(0.55 * var(--u)); }
 
-            .battle-stage { padding: 14px 16px 10px; gap: 12px; }
-            .sprite-slot { height: 96px; }
-            .sprite { left: calc(50% - 44px); width: 88px; height: 88px; }
-            .sprite .glyph { font-size: 56px; }
-            .ground-shadow { width: 60px; margin-left: -30px; }
-            .fx-slash { width: 116px; height: 116px; margin: -58px 0 0 -58px; }
-            .fighter .name { font-size: 15px; }
-            .hp-row { font-size: 12px; }
-            .vs-badge { font-size: 18px; padding-bottom: 28px; }
-            .floating-dmg { font-size: 38px; }
+            .setup-screen { padding: calc(2 * var(--u)) calc(1.3 * var(--u)) calc(2.6 * var(--u)); }
+            .choice-card { padding: calc(1.9 * var(--u)) calc(0.9 * var(--u)); }
+            .pool-card { gap: calc(0.9 * var(--u)); padding: calc(1 * var(--u)) calc(1.1 * var(--u)); }
 
-            .quiz-body { padding: 12px 18px 32px; }
-            .timer-text { font-size: 18px; min-width: 44px; }
-            .question-box { padding: 16px; margin-bottom: 16px; }
-            .question-box .q-text { font-size: 26px; }
-            .option-grid { gap: 10px; }
-            .option-btn { padding: 14px; font-size: 19px; }
-            .feedback-msg { font-size: 17px; }
-            .pill-btn { padding: 14px 36px; font-size: 18px; }
+            .battle-stage { padding: calc(1 * var(--u)) calc(1.1 * var(--u)) calc(0.7 * var(--u)); gap: calc(0.8 * var(--u)); }
+            .quiz-body { padding: calc(0.8 * var(--u)) calc(1.2 * var(--u)) calc(2.1 * var(--u)); }
+            .option-grid { gap: calc(0.7 * var(--u)); }
+            .option-btn { padding: calc(0.9 * var(--u)); }
 
-            /* 強化卡片改為「圖示在左、說明在右」的橫向排列，直向堆疊 */
-            .upgrade-overlay { padding: 14px; overflow-y: auto; }
-            .upgrade-panel { padding: 22px 18px; }
-            .upgrade-panel h2 { font-size: 22px; }
-            .upgrade-panel .panel-sub { margin-bottom: 18px; }
-            .upgrade-options { flex-direction: column; gap: 10px; }
+            /* 強化卡改為「圖示在左、說明在右」的橫向排列，三張直向堆疊 */
+            .upgrade-overlay { padding: calc(0.9 * var(--u)); overflow-y: auto; }
+            .upgrade-panel { padding: calc(1.5 * var(--u)) calc(1.2 * var(--u)); }
+            .upgrade-panel .panel-sub { margin-bottom: calc(1.1 * var(--u)); }
+            .upgrade-options { flex-direction: column; gap: calc(0.65 * var(--u)); }
             .upgrade-card {
                 display: grid;
                 grid-template-columns: auto 1fr;
-                column-gap: 14px;
-                row-gap: 2px;
+                column-gap: calc(0.9 * var(--u));
+                row-gap: calc(0.15 * var(--u));
                 align-items: center;
                 text-align: left;
-                padding: 12px 14px;
+                padding: calc(0.8 * var(--u)) calc(0.9 * var(--u));
             }
-            .upgrade-card .up-icon { grid-row: 1 / 3; font-size: 30px; }
-            .upgrade-card .up-title { font-size: 16px; }
-            .upgrade-card .up-desc { font-size: 13px; }
+            .upgrade-card .up-icon { grid-row: 1 / 3; font-size: calc(2 * var(--u)); }
 
-            .end-screen { padding: 40px 20px; }
-            .end-screen h2 { font-size: 27px; }
-            .end-screen p { font-size: 17px; }
+            .end-screen { padding: calc(2.6 * var(--u)) calc(1.3 * var(--u)); }
+        }
+
+        /* ---------- 極矮的橫向（手機翻轉）：只有這裡分左右兩欄 ----------
+           高度只有 375px 左右，上下堆疊怎麼調都塞不下，
+           所以把「地圖＋戰鬥場景」放左邊、「題目＋選項」放右邊。
+           高一點的橫向螢幕（筆電／平板／觸控電視）走下面的堆疊版面。 */
+        @media (orientation: landscape) and (max-height: 520px) {
+            body {
+                --u: clamp(9px, min(1.45vw, 3.1vh), 44px);
+                padding: calc(0.5 * var(--u)) calc(0.6 * var(--u));
+            }
+            .game-card { width: 100%; max-width: calc(68 * var(--u)); border-width: calc(0.3 * var(--u)); }
+
+            /* 標題在這個高度是奢侈品 */
+            .game-header { display: none; }
+            .fs-btn { background-color: rgba(0, 0, 0, 0.3); }
+            .fs-btn:hover { background-color: rgba(0, 0, 0, 0.48); }
+
+            /* :not(.hidden) 是必要的：#battle-screen 的 ID 選擇器
+               權重比 .hidden 高，直接寫 display:grid 會讓畫面關不掉 */
+            #battle-screen:not(.hidden) {
+                display: grid;
+                grid-template-columns: 1fr 1.2fr;
+                grid-template-areas:
+                    "map   quiz"
+                    "stage quiz";
+                align-items: start;
+                column-gap: calc(0.5 * var(--u));
+            }
+            #enemy-map    { grid-area: map; padding: calc(1.4 * var(--u)) calc(0.8 * var(--u)) calc(0.3 * var(--u)); gap: calc(0.18 * var(--u)); }
+            .map-line     { min-width: calc(0.4 * var(--u)); }
+            .battle-stage { grid-area: stage; padding: calc(0.6 * var(--u)) calc(1 * var(--u)) calc(0.6 * var(--u)); gap: calc(0.6 * var(--u)); }
+            .quiz-body    { grid-area: quiz; padding: calc(1 * var(--u)) calc(1.4 * var(--u)) calc(1.2 * var(--u)); }
+
+            .sprite-slot { height: calc(6.4 * var(--u)); }
+            .sprite { left: calc(50% - 2.9 * var(--u)); width: calc(5.8 * var(--u)); height: calc(5.8 * var(--u)); }
+            .sprite .glyph { font-size: calc(3.9 * var(--u)); }
+            .ground-shadow { width: calc(4 * var(--u)); margin-left: calc(-2 * var(--u)); }
+
+            .question-box { padding: calc(1 * var(--u)); margin-bottom: calc(0.9 * var(--u)); }
+            .question-box .q-text { font-size: calc(1.85 * var(--u)); }
+            .option-grid { gap: calc(0.65 * var(--u)); }
+            .option-btn { padding: calc(0.75 * var(--u)); font-size: calc(1.3 * var(--u)); }
+            .feedback-msg { margin-top: calc(0.8 * var(--u)); font-size: calc(1.05 * var(--u)); }
+            .footer-actions { margin-top: calc(0.7 * var(--u)); }
+            .round-label { margin-bottom: calc(0.4 * var(--u)); }
+            .timer-wrap { margin-bottom: calc(0.7 * var(--u)); }
+
+            /* 強化面板在矮畫面要橫躺並且可捲動 */
+            .upgrade-overlay { padding: calc(0.7 * var(--u)); overflow-y: auto; }
+            .upgrade-panel { padding: calc(1.1 * var(--u)) calc(1.3 * var(--u)); }
+            .upgrade-panel h2 { font-size: calc(1.4 * var(--u)); }
+            .upgrade-panel .panel-sub { margin-bottom: calc(0.8 * var(--u)); }
+            .upgrade-card { padding: calc(1 * var(--u)) calc(0.7 * var(--u)); gap: calc(0.4 * var(--u)); }
+            .upgrade-card .up-icon { font-size: calc(1.9 * var(--u)); }
+
+            .setup-screen { padding: calc(1.4 * var(--u)) calc(2 * var(--u)) calc(1.6 * var(--u)); }
+            .end-screen { padding: calc(1.6 * var(--u)) calc(2 * var(--u)); }
+
+            /* 橫向時 --u 是照戰鬥畫面調的，比較大；選題庫是單欄長列表，
+               五個題庫直向排下來會超出畫面，所以改成兩欄 */
+            .pool-list { display: grid; grid-template-columns: 1fr 1fr; }
+
+            /* 卡片不超過視窗高；超出的部分由上面的可捲動規則接手 */
+            .game-card {
+                max-height: calc(100dvh - 1.2 * var(--u));
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        /* ---------- 一般橫向（筆電／平板橫放／觸控電視）：上下堆疊 ----------
+           卡片吃滿寬度，多出來的寬度拿去做兩件事：
+             1. 選項排成一排四個 → 省下一整行高度
+             2. 戰鬥場景與題目區各自置中並限制最大寬度 → 不會拉成一條線
+           省下的高度讓 --u 能長得更大，所以字反而比分欄時更大。 */
+        @media (orientation: landscape) and (min-height: 521px) {
+            body {
+                /* 堆疊起來約 48u 高，所以高度係數抓 2vh；
+                   1.35vw 那一項保證卡片至少有 74u 寬，四欄選項一定排得下 */
+                --u: clamp(11px, min(1.35vw, 2vh), 52px);
+                padding: calc(0.5 * var(--u)) calc(0.6 * var(--u));
+            }
+            .game-card {
+                width: 100%;
+                max-width: calc(110 * var(--u));   /* 超寬螢幕的上限 */
+                border-width: calc(0.3 * var(--u));
+            }
+            .game-header { display: none; }
+            .fs-btn { background-color: rgba(0, 0, 0, 0.3); }
+            .fs-btn:hover { background-color: rgba(0, 0, 0, 0.48); }
+
+            /* 四個選項排成一排，省下的那一行是 --u 能放大的關鍵 */
+            .option-grid { grid-template-columns: repeat(4, 1fr); }
+
+            /* padding 用 max()：窄的時候維持原本邊距，寬的時候自動長出留白把內容推到中間，
+               等同「內容最大寬度 + 置中」，但不需要多包一層 wrapper */
+            .battle-stage {
+                padding-left: max(calc(3.5 * var(--u)), calc((100% - 58 * var(--u)) / 2));
+                padding-right: max(calc(3.5 * var(--u)), calc((100% - 58 * var(--u)) / 2));
+            }
+            .enemy-map {
+                padding-left: max(calc(3.5 * var(--u)), calc((100% - 62 * var(--u)) / 2));
+                padding-right: max(calc(3.5 * var(--u)), calc((100% - 62 * var(--u)) / 2));
+            }
+            .quiz-body {
+                padding-left: max(calc(3.5 * var(--u)), calc((100% - 76 * var(--u)) / 2));
+                padding-right: max(calc(3.5 * var(--u)), calc((100% - 76 * var(--u)) / 2));
+            }
+
+            /* 題庫列表同樣不要拉成整排 */
+            .pool-list { display: grid; grid-template-columns: 1fr 1fr; }
+            .setup-screen {
+                padding-left: max(calc(3.5 * var(--u)), calc((100% - 62 * var(--u)) / 2));
+                padding-right: max(calc(3.5 * var(--u)), calc((100% - 62 * var(--u)) / 2));
+            }
+
+            /* 保險：真的還是比視窗高就讓內容自己捲，不要把卡片撐出畫面 */
+            .game-card {
+                max-height: calc(100dvh - 1.2 * var(--u));
+                display: flex;
+                flex-direction: column;
+            }
+            .setup-screen, .end-screen { overflow-y: auto; }
+        }
+
+        /* ---------- 全螢幕：標題讓位，把空間全給遊戲本體 ---------- */
+        /* --u 本身依方向在下面的 @media 內另外給（直向和橫向能長到的尺寸不同） */
+        body.is-fullscreen { padding: 0; }
+
+        /* 全螢幕沒有瀏覽器工具列，可用高度變多，--u 自然會跟著長大 */
+        @media (orientation: landscape) and (max-height: 520px) {
+            body.is-fullscreen { --u: clamp(9px, min(1.5vw, 3.35vh), 60px); }
+        }
+        @media (orientation: landscape) and (min-height: 521px) {
+            body.is-fullscreen { --u: clamp(11px, min(1.4vw, 2.08vh), 60px); }
+        }
+        @media (orientation: portrait) {
+            body.is-fullscreen { --u: clamp(10px, min(1.9vw, 1.5vh), 44px); }
+        }
+        body.is-fullscreen .game-card {
+            border-width: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+        body.is-fullscreen .game-header { display: none; }
+
+        /* 沒有標題列時，按鈕背後是白色的地圖區，白底白鈕會看不見 */
+        body.is-fullscreen .fs-btn,
+        body.in-battle .fs-btn {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        body.is-fullscreen .fs-btn:hover,
+        body.in-battle .fs-btn:hover { background-color: rgba(0, 0, 0, 0.48); }
+
+        /* ---------- 觸控裝置（觸控電視／平板／手機） ----------
+           滑過的效果在觸控上會「黏住」不消失，改成只在按下時回饋 */
+        @media (hover: none) {
+            .option-btn:hover:not(:disabled),
+            .choice-card:hover, .pool-card:hover,
+            .upgrade-card:hover, .pill-btn:hover, .fs-btn:hover {
+                transform: none;
+                box-shadow: 0 4px 12px var(--shadow);
+            }
+            .option-btn:active:not(:disabled),
+            .choice-card:active, .pool-card:active, .upgrade-card:active {
+                transform: scale(0.97);
+                border-color: var(--g1);
+            }
+            .pill-btn:active { transform: scale(0.96); }
         }
 
         /* ---------- 減少動態效果（系統設定為「減少動畫」的使用者） ---------- */
@@ -1078,7 +1351,14 @@
 </head>
 <body>
 
+    <div id="u-probe" aria-hidden="true"></div>
+
     <div class="game-card">
+        <button id="fs-btn" class="fs-btn" type="button" onclick="toggleFullscreen()"
+                title="全螢幕" aria-label="切換全螢幕">
+            <i class="fa-solid fa-expand"></i>
+        </button>
+
         <div class="game-header">
             <div class="header-icon">⚔️</div>
             <h1>數學勇者</h1>
@@ -1161,9 +1441,10 @@
                 <div id="option-grid" class="option-grid"></div>
                 <div id="feedback-msg" class="feedback-msg"></div>
                 <div class="footer-actions">
-                    <button id="next-btn" class="pill-btn hidden" onclick="nextRound()">
-                        繼續 <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                    <div id="next-countdown" class="next-countdown hidden">
+                        <div class="countdown-track"><div id="countdown-fill" class="countdown-fill"></div></div>
+                        <span id="countdown-text"></span>
+                    </div>
                 </div>
             </div>
         </div>

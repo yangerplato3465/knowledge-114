@@ -198,6 +198,17 @@ function spawnEnemy(index) {
 // 之後補圖只要填 ENEMY_LOOKS[].img，這裡一行都不用改。
 // ===================================================================
 
+// 目前的縮放單位（CSS 的 --u）。特效尺寸是用 JS 算的，要跟著介面一起縮放，
+// 否則在觸控電視上放到最大時，碎片和彩帶會小得像灰塵。
+// 不能用 getComputedStyle(...).getPropertyValue('--u')：自訂屬性拿回來的是
+// 還沒求值的 "clamp(...)" 字串，parseFloat 會得到 NaN。改量一個寬度設成
+// var(--u) 的隱形探針元素，讓瀏覽器把值算好。
+function unit() {
+    const probe = document.getElementById('u-probe');
+    const w = probe ? probe.getBoundingClientRect().width : 0;
+    return w > 0 ? w : 16;
+}
+
 // 重新播放一個 CSS 動畫（先移除 class 並強制 reflow，否則同一個 class 不會重播）
 function restart(el, cls) {
     el.classList.remove(cls);
@@ -241,11 +252,12 @@ function fxRing(side)  { fxSpawn(side, 'fx-ring', 600); }
 
 // 迸散的碎片：往上方扇形噴出
 function fxSparks(side, color = '#ffd54f', count = 11) {
+    const u = unit();
     for (let i = 0; i < count; i++) {
         fxSpawn(side, 'fx-spark', 850, el => {
             const angle = (-155 + Math.random() * 130) * Math.PI / 180;
-            const dist = 40 + Math.random() * 58;
-            const size = 5 + Math.random() * 7;
+            const dist = (2.5 + Math.random() * 3.6) * u;
+            const size = (0.3 + Math.random() * 0.45) * u;
             el.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
             el.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
             el.style.setProperty('--spark', color);
@@ -258,9 +270,10 @@ function fxSparks(side, color = '#ffd54f', count = 11) {
 
 // 治療：綠色光點從腳邊往上飄
 function fxHeal(side, count = 10) {
+    const u = unit();
     for (let i = 0; i < count; i++) {
         fxSpawn(side, 'fx-heal', 1700, el => {
-            el.style.setProperty('--hx', `${-36 + Math.random() * 72}px`);
+            el.style.setProperty('--hx', `${(-2.25 + Math.random() * 4.5) * u}px`);
             el.style.animationDelay = `${Math.random() * 0.5}s`;
         });
     }
@@ -274,7 +287,7 @@ function showDamage(side, amount, color = '#e53935') {
     dmg.innerText = `-${amount}`;
     const rect = target.getBoundingClientRect();
     // 加上捲動位移，頁面捲動時數字才不會跑掉
-    dmg.style.left = `${rect.left + window.scrollX + rect.width / 2 - 24}px`;
+    dmg.style.left = `${rect.left + window.scrollX + rect.width / 2 - 1.5 * unit()}px`;
     dmg.style.top = `${rect.top + window.scrollY}px`;
     document.body.appendChild(dmg);
     setTimeout(() => dmg.remove(), 1600);
@@ -386,15 +399,54 @@ function loadQuestion() {
     const feedback = document.getElementById('feedback-msg');
     feedback.innerText = '';
     feedback.className = 'feedback-msg';
-    document.getElementById('next-btn').classList.add('hidden');
+    cancelNextRound();
 
     startTimer();
 }
 
-function revealNextButton() {
-    const nextBtn = document.getElementById('next-btn');
-    nextBtn.innerHTML = '繼續 <i class="fa-solid fa-arrow-right"></i>';
-    nextBtn.classList.remove('hidden');
+// === 答完題後自動進下一題 ===
+// 答對要看的東西少，等短一點；答錯／時間到要留時間看正確答案，等久一點。
+const NEXT_DELAY_CORRECT = 1.6; // 秒
+const NEXT_DELAY_WRONG = 3.0;   // 秒
+
+let nextRoundTimer = null;
+let countdownTicker = null;
+
+function cancelNextRound() {
+    clearTimeout(nextRoundTimer);
+    clearInterval(countdownTicker);
+    nextRoundTimer = null;
+    countdownTicker = null;
+    document.getElementById('next-countdown').classList.add('hidden');
+}
+
+function scheduleNextRound(seconds) {
+    cancelNextRound();
+    const wrap = document.getElementById('next-countdown');
+    const fill = document.getElementById('countdown-fill');
+    const text = document.getElementById('countdown-text');
+
+    wrap.classList.remove('hidden');
+
+    // 進度條從滿到空。先把 transition 關掉歸位，強制 reflow 後再開，否則不會重播
+    fill.style.transition = 'none';
+    fill.style.width = '100%';
+    void fill.offsetWidth;
+    fill.style.transition = `width ${seconds}s linear`;
+    fill.style.width = '0%';
+
+    const endAt = performance.now() + seconds * 1000;
+    const render = () => {
+        const left = Math.max(0, Math.ceil((endAt - performance.now()) / 1000));
+        text.innerText = `${left} 秒後繼續`;
+    };
+    render();
+    countdownTicker = setInterval(render, 200);
+
+    nextRoundTimer = setTimeout(() => {
+        cancelNextRound();
+        nextRound();
+    }, seconds * 1000);
 }
 
 function damagePlayer(prefix, emoji) {
@@ -412,7 +464,7 @@ function damagePlayer(prefix, emoji) {
         setTimeout(() => endGame(false), IMPACT_DELAY + 1150);
         return;
     }
-    revealNextButton();
+    scheduleNextRound(NEXT_DELAY_WRONG);
 }
 
 function handleTimeout() {
@@ -460,7 +512,7 @@ function checkAnswer(index) {
         } else {
             feedback.innerText = `攻擊成功！對怪獸造成 ${HIT_TO_ENEMY} 點傷害 ⚔️`;
             feedback.className = 'feedback-msg good';
-            revealNextButton();
+            scheduleNextRound(NEXT_DELAY_CORRECT);
         }
     } else {
         btns[index].classList.add('wrong');
@@ -511,7 +563,9 @@ function fxConfetti(container, count = 70) {
 
 function endGame(win) {
     stopTimer();
+    cancelNextRound();
     document.getElementById('battle-screen').classList.add('hidden');
+    document.body.classList.remove('in-battle');
 
     const end = document.getElementById('end-screen');
     end.querySelectorAll('.confetti').forEach(c => c.remove()); // 清掉上一場殘留的
@@ -535,6 +589,7 @@ function endGame(win) {
 }
 
 function beginBattle() {
+    cancelNextRound(); // 上一場可能還有排程中的倒數
     // 重置所有可被強化的數值回到初始狀態
     PLAYER_MAX = 100;
     HIT_TO_ENEMY = 10;
@@ -548,6 +603,7 @@ function beginBattle() {
     document.getElementById('grade-screen').classList.add('hidden');
     document.getElementById('pool-screen').classList.add('hidden');
     document.getElementById('battle-screen').classList.remove('hidden');
+    document.body.classList.add('in-battle'); // 戰鬥中收起標題列，換取垂直空間
 
     // 重置勇者的外觀與動畫狀態（上一場可能停在倒下的畫面）
     const playerSprite = document.getElementById('player-sprite');
@@ -558,6 +614,7 @@ function beginBattle() {
 
     spawnEnemy(0);
     loadQuestion();
+    scheduleClipCheck();
 }
 
 function restartGame() { beginBattle(); }
@@ -600,6 +657,75 @@ function selectPool(grade, pool) {
 function startGame() {
     beginBattle();
 }
+
+// ===================================================================
+// 版面保險：內容超出可視範圍時在 console 明講。
+// CSS 那邊已經讓畫面可以捲動，不會再有東西憑空消失；這裡是為了讓
+// 「本來應該一頁看完卻變成要捲」這件事被發現，而不是默默存在。
+// ===================================================================
+function warnIfClipped() {
+    ['grade-screen', 'pool-screen', 'battle-screen', 'end-screen'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || el.classList.contains('hidden')) return;
+        if (el.scrollHeight > el.clientHeight + 2) {
+            console.warn(
+                `[數學勇者] #${id} 內容 ${el.scrollHeight}px 超過可視高度 ${el.clientHeight}px，已改為可捲動。` +
+                `若想維持一頁到底，需要調小 --u 的高度係數或減少內容高度。`
+            );
+        }
+    });
+}
+
+// 尺寸／方向改變後等版面穩定再檢查
+let clipCheckTimer = null;
+function scheduleClipCheck() {
+    clearTimeout(clipCheckTimer);
+    clipCheckTimer = setTimeout(warnIfClipped, 350);
+}
+window.addEventListener('resize', scheduleClipCheck);
+window.addEventListener('orientationchange', scheduleClipCheck);
+
+// ===================================================================
+// 全螢幕
+// 對 documentElement 全螢幕（而不是卡片本身），這樣頁面背景色會保留，
+// 卡片在寬螢幕上置中時兩側才不會變成黑的。
+// ===================================================================
+function fullscreenOn() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+function toggleFullscreen() {
+    const el = document.documentElement;
+    if (!fullscreenOn()) {
+        const req = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (req) Promise.resolve(req.call(el)).catch(() => {});
+    } else {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) Promise.resolve(exit.call(document)).catch(() => {});
+    }
+}
+
+function syncFullscreenUI() {
+    const on = fullscreenOn();
+    document.body.classList.toggle('is-fullscreen', on);
+    const btn = document.getElementById('fs-btn');
+    if (!btn) return;
+    btn.querySelector('i').className = on ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+    btn.title = on ? '離開全螢幕' : '全螢幕';
+    btn.setAttribute('aria-label', btn.title);
+}
+
+document.addEventListener('fullscreenchange', syncFullscreenUI);
+document.addEventListener('webkitfullscreenchange', syncFullscreenUI);
+
+(function initFullscreenBtn() {
+    const el = document.documentElement;
+    // iPhone 的 Safari 沒有 Fullscreen API，藏起按鈕免得按了沒反應
+    if (!(el.requestFullscreen || el.webkitRequestFullscreen)) {
+        const btn = document.getElementById('fs-btn');
+        if (btn) btn.style.display = 'none';
+    }
+})();
 
 // ===== 背景音樂：進入頁面後循環播放（瀏覽器需先有互動才允許播放） =====
 const bgMusic = document.getElementById('bg-music');
