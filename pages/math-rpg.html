@@ -540,10 +540,13 @@
         /* 六關的場景配色：草原 → 森林 → 洞窟 → 沼澤 → 火山 → 魔王城 */
         .battle-stage[data-stage="1"] { --stage-sky: #cfe8f7; --stage-ground: linear-gradient(180deg,#9ad06f,#68a349); }
         .battle-stage[data-stage="2"] { --stage-sky: #bce0c8; --stage-ground: linear-gradient(180deg,#74b177,#3f7f4c); }
-        .battle-stage[data-stage="3"] { --stage-sky: #9095b6; --stage-ground: linear-gradient(180deg,#6c6a80,#43425a); }
+        /* 3 / 5 / 6 關的配色刻意避開該關怪物的主色：紫蝙蝠→洞窟改青藍、
+           紅惡鬼→火山地面壓到近黑、紫魔王→魔王城改深藍。原本三關都跟怪物同色系，
+           角色會融進背景裡只剩黑描邊撐著。 */
+        .battle-stage[data-stage="3"] { --stage-sky: #7fa3ad; --stage-ground: linear-gradient(180deg,#4a5f68,#2b3a42); }
         .battle-stage[data-stage="4"] { --stage-sky: #a3b79c; --stage-ground: linear-gradient(180deg,#7b8a5e,#4e5a3a); }
-        .battle-stage[data-stage="5"] { --stage-sky: #dda078; --stage-ground: linear-gradient(180deg,#a85a3c,#6d2f22); }
-        .battle-stage[data-stage="6"] { --stage-sky: #6f5c7c; --stage-ground: linear-gradient(180deg,#4a3a5c,#281f38); }
+        .battle-stage[data-stage="5"] { --stage-sky: #c97f52; --stage-ground: linear-gradient(180deg,#4a2a20,#2a1512); }
+        .battle-stage[data-stage="6"] { --stage-sky: #3d4a6b; --stage-ground: linear-gradient(180deg,#232c42,#141a28); }
 
         .fighter { position: relative; z-index: 1; width: 46%; text-align: center; }
 
@@ -587,8 +590,12 @@
             justify-content: center;
             transform-origin: 50% 100%;
             background: var(--sprite, none) center bottom / contain no-repeat;
-            animation: breathe 2.6s ease-in-out infinite;
+            animation: var(--idle-anim, breathe) var(--idle-dur, 2.6s) ease-in-out infinite;
         }
+        /* 待機動作分三種，由 JS 依角色種類掛 class（見 applyLook）。
+           用變數而不是覆寫 animation，受擊時的 flashWhite 才不會把待機動作蓋掉。 */
+        .sprite.idle-float { --idle-anim: floatIdle; --idle-dur: 2.2s; }
+        .sprite.idle-heavy { --idle-anim: heavyIdle; --idle-dur: 3.4s; }
 
         .sprite .glyph {
             font-size: calc(5.25 * var(--u));
@@ -667,10 +674,22 @@
 
         /* ---------- 角色動作 ---------- */
 
-        /* 待機呼吸：微微上浮並擠壓，讓角色不會像貼紙 */
+        /* 待機呼吸：微微上浮並擠壓，讓角色不會像貼紙。
+           幅度是照「512 畫布縮到約 200px 顯示」回推的——原本的 4px 縮完剩不到 2px，
+           肉眼等於沒動，換成圖片後特別明顯，所以站立款加大到 9px。 */
         @keyframes breathe {
             0%, 100% { transform: translateY(0) scale(1, 1); }
-            50%      { transform: translateY(-4px) scale(0.985, 1.015); }
+            50%      { transform: translateY(-9px) scale(0.972, 1.028); }
+        }
+        /* 幽靈、蝙蝠：離地飄浮，上下擺幅大、帶輕微搖晃 */
+        @keyframes floatIdle {
+            0%, 100% { transform: translateY(0)     rotate(-1.4deg); }
+            50%      { transform: translateY(-18px) rotate(1.4deg); }
+        }
+        /* 惡鬼、魔王：體型大，動得慢、幅度小，才有重量感 */
+        @keyframes heavyIdle {
+            0%, 100% { transform: translateY(0)    scale(1, 1); }
+            50%      { transform: translateY(-4px) scale(1.014, 0.986); }
         }
         @keyframes shadowBreathe {
             0%, 100% { transform: scale(1);    opacity: 1; }
@@ -698,7 +717,7 @@
         }
         .sprite.hurt { animation: hurt 0.55s ease-out; }
         /* 受擊閃白：對 emoji 和之後的圖片都有效 */
-        .sprite.hurt .sprite-body { animation: breathe 2.6s ease-in-out infinite, flashWhite 0.16s steps(1) 2; }
+        .sprite.hurt .sprite-body { animation: var(--idle-anim, breathe) var(--idle-dur, 2.6s) ease-in-out infinite, flashWhite 0.16s steps(1) 2; }
         @keyframes flashWhite {
             0%, 49%   { filter: brightness(2.8) saturate(0.1) contrast(1.3); }
             50%, 100% { filter: none; }

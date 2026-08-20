@@ -10,17 +10,18 @@ const ENEMY_HP_TABLE = [20, 28, 40, 56, 76, 100];
 // 每隻敵人的外觀（數量不足時會循環使用）
 // img：日後補圖時填入圖片路徑（例如 "../assets/images/math-rpg/enemy1.webp"），
 //      填了就自動改用圖片、不再顯示 emoji，動畫完全不用改。
+// idle：待機動作。省略＝站立呼吸；"float"＝離地飄浮；"heavy"＝大型怪的緩慢重量感。
 const ENEMY_LOOKS = [
-    { emoji: "👾", name: "史萊姆怪", img: null },
-    { emoji: "👻", name: "幽靈怪",   img: null },
-    { emoji: "🦇", name: "蝙蝠怪",   img: null },
-    { emoji: "🐲", name: "小巨龍",   img: null },
-    { emoji: "👹", name: "惡鬼",     img: null },
-    { emoji: "😈", name: "魔王",     img: null }
+    { emoji: "👾", name: "史萊姆怪", img: "../assets/images/math-rpg/enemy1.webp" },
+    { emoji: "👻", name: "幽靈怪",   img: "../assets/images/math-rpg/enemy2.webp", idle: "float" },
+    { emoji: "🦇", name: "蝙蝠怪",   img: "../assets/images/math-rpg/enemy3.webp", idle: "float" },
+    { emoji: "🐲", name: "小巨龍",   img: "../assets/images/math-rpg/enemy4.webp" },
+    { emoji: "👹", name: "惡鬼",     img: "../assets/images/math-rpg/enemy5.webp", idle: "heavy" },
+    { emoji: "😈", name: "魔王",     img: "../assets/images/math-rpg/enemy6.webp", idle: "heavy" }
 ];
 
 // 勇者的外觀（同樣預留 img 插槽）
-const PLAYER_LOOK = { emoji: "🧙", name: "勇者", img: null };
+const PLAYER_LOOK = { emoji: "🧙", name: "勇者", img: "../assets/images/math-rpg/hero.webp" };
 
 // 每一關的場景背景圖，日後補圖時填入路徑；null 就用 CSS 漸層的暫時配色
 const STAGE_IMAGES = [null, null, null, null, null, null];
@@ -147,6 +148,9 @@ function mapDefeat(index) {
 function applyLook(side, look) {
     const sprite = document.getElementById(`${side}-sprite`);
     const glyph = document.getElementById(`${side}-avatar`);
+    // 待機動作：飄浮的幽靈／蝙蝠、笨重的惡鬼／魔王，其餘用預設的站立呼吸
+    sprite.classList.remove('idle-float', 'idle-heavy');
+    if (look.idle) sprite.classList.add(`idle-${look.idle}`);
     if (look.img) {
         sprite.style.setProperty('--sprite', `url("${look.img}")`);
         sprite.classList.add('has-img');
