@@ -44,7 +44,9 @@ public class Keyer {
     static bool IsStrictBg(int r, int g, int b) {
         double h, s, v;
         ToHsv(r, g, b, out h, out s, out v);
-        return (h >= 288 && h <= 330 && s >= 0.55 && v >= 0.30);
+        // sat floor is 0.75, not 0.55: the real backdrop measures 0.90, while the hero's
+        // violet hair highlights reach 0.70 and were being deleted at the looser threshold.
+        return (h >= 288 && h <= 330 && s >= 0.75 && v >= 0.30);
     }
 
     public static string Process(string inPath, string outPath, bool flip, double targetScale, int canvas) {
@@ -84,19 +86,73 @@ public class Keyer {
             }
 
             // ---- pass 1b: kill enclosed magenta pockets the flood fill could not reach ----
+            // Only whole CONNECTED BLOBS are removed. Characters contain scattered pixels that
+            // also pass the strict test -- the hero's violet hair highlights have a batch at
+            // hue 288-300 / sat>0.55 -- and deleting those punches holes straight through the
+            // hair. A real trapped pocket (the gap between an arm and the torso) is one solid
+            // region; the false positives are specks, so a minimum area separates them.
             int pockets = 0;
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
-                    int idx = y * w + x;
-                    if (isBg[idx]) continue;
-                    int o = y * stride + x * 4;
-                    if (IsStrictBg(buf[o+2], buf[o+1], buf[o])) { isBg[idx] = true; pockets++; }
+            {
+                bool[] cand = new bool[w * h];
+                for (int y = 0; y < h; y++) {
+                    for (int x = 0; x < w; x++) {
+                        int idx = y * w + x;
+                        if (isBg[idx]) continue;
+                        int o = y * stride + x * 4;
+                        if (IsStrictBg(buf[o+2], buf[o+1], buf[o])) cand[idx] = true;
+                    }
+                }
+                bool[] seen2 = new bool[w * h];
+                List<int> comp = new List<int>();
+                const int MIN_POCKET = 150;
+                for (int i = 0; i < cand.Length; i++) {
+                    if (!cand[i] || seen2[i]) continue;
+                    comp.Clear();
+                    Queue<int> cq = new Queue<int>();
+                    cq.Enqueue(i); seen2[i] = true;
+                    while (cq.Count > 0) {
+                        int idx = cq.Dequeue();
+                        comp.Add(idx);
+                        int y = idx / w, x = idx % w;
+                        if (x > 0     && cand[idx-1] && !seen2[idx-1]) { seen2[idx-1] = true; cq.Enqueue(idx-1); }
+                        if (x < w - 1 && cand[idx+1] && !seen2[idx+1]) { seen2[idx+1] = true; cq.Enqueue(idx+1); }
+                        if (y > 0     && cand[idx-w] && !seen2[idx-w]) { seen2[idx-w] = true; cq.Enqueue(idx-w); }
+                        if (y < h - 1 && cand[idx+w] && !seen2[idx+w]) { seen2[idx+w] = true; cq.Enqueue(idx+w); }
+                    }
+                    if (comp.Count >= MIN_POCKET) {
+                        for (int k = 0; k < comp.Count; k++) { isBg[comp[k]] = true; pockets++; }
+                    }
+                }
+            }
+
+            // ---- pass 1c: band of pixels within 20px of the background ----
+            // Haze is created by the generator compositing a semi-transparent glow ONTO the
+            // magenta, so it can only occur near the silhouette. Restricting the haze despill
+            // to this band stops it from nibbling low-saturation pixels deep inside a character
+            // (the bat's pale ears picked up grey speckle without this).
+            bool[] nearBg = new bool[w * h];
+            {
+                int[] dist = new int[w * h];
+                for (int i = 0; i < dist.Length; i++) dist[i] = -1;
+                Queue<int> dq = new Queue<int>();
+                for (int i = 0; i < isBg.Length; i++) if (isBg[i]) { dist[i] = 0; dq.Enqueue(i); }
+                const int MAXD = 20;
+                while (dq.Count > 0) {
+                    int idx = dq.Dequeue();
+                    int d = dist[idx];
+                    if (d >= MAXD) continue;
+                    int y = idx / w, x = idx % w;
+                    if (x > 0     && dist[idx-1] < 0) { dist[idx-1] = d+1; nearBg[idx-1] = true; dq.Enqueue(idx-1); }
+                    if (x < w - 1 && dist[idx+1] < 0) { dist[idx+1] = d+1; nearBg[idx+1] = true; dq.Enqueue(idx+1); }
+                    if (y > 0     && dist[idx-w] < 0) { dist[idx-w] = d+1; nearBg[idx-w] = true; dq.Enqueue(idx-w); }
+                    if (y < h - 1 && dist[idx+w] < 0) { dist[idx+w] = d+1; nearBg[idx+w] = true; dq.Enqueue(idx+w); }
                 }
             }
 
             // ---- pass 2: alpha + despill on the fringe ----
             byte[] outBuf = new byte[stride * h];
             int bgCount = 0;
+            int haze = 0;
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) {
                     int idx = y * w + x;
@@ -117,20 +173,52 @@ public class Keyer {
                     int alpha = 255;
                     int rr = r, gg = g, bb = b;
                     if (fringe) {
-                        double m = Spill(r, g, b);
-                        // heavy magenta on the fringe -> mostly background, fade it out
-                        alpha = (int)Math.Round(255.0 * (1.0 - Math.Min(1.0, m * 1.35)));
-                        if (alpha < 0) alpha = 0;
-                        if (alpha > 255) alpha = 255;
-                        // despill: pull R and B down toward G so edges do not glow purple
-                        if (m > 0.02) {
-                            int cap = (int)Math.Round(g + (Math.Min(r, b) - g) * 0.25);
-                            if (r > cap) rr = cap;
-                            if (b > cap) bb = cap;
-                            if (rr < 0) rr = 0;
-                            if (bb < 0) bb = 0;
+                        // Gate on HUE, not just on "R and B both exceed G" -- that test is also
+                        // true of any purple, so the hero's violet hair was being read as magenta
+                        // spill and flattened to grey (and made semi-transparent). Hair is thin,
+                        // so nearly every strand pixel sits within the fringe radius and the whole
+                        // fringe went grey. Magenta spill lands near hue 300; character purples
+                        // measure 250-285, so 288 separates them.
+                        double fh, fs, fv;
+                        ToHsv(r, g, b, out fh, out fs, out fv);
+                        if (fh >= 288 && fh <= 340) {
+                            double m = Spill(r, g, b);
+                            // heavy magenta on the fringe -> mostly background, fade it out
+                            alpha = (int)Math.Round(255.0 * (1.0 - Math.Min(1.0, m * 1.35)));
+                            if (alpha < 0) alpha = 0;
+                            if (alpha > 255) alpha = 255;
+                            // despill: pull R and B down toward G so edges do not glow purple
+                            if (m > 0.02) {
+                                int cap = (int)Math.Round(g + (Math.Min(r, b) - g) * 0.25);
+                                if (r > cap) rr = cap;
+                                if (b > cap) bb = cap;
+                                if (rr < 0) rr = 0;
+                                if (bb < 0) bb = 0;
+                            }
                         }
                     }
+                    // Haze despill. A semi-transparent glow (the hero's magic book) was
+                    // already composited onto the magenta backdrop by the generator, so those
+                    // pixels are opaque pink and no amount of keying brings the alpha back.
+                    // Measured on hero.png: haze sits at hue 280-340 with sat 0.06-0.19, while
+                    // the purple hair in the SAME hue band sits at sat 0.27+, and the blue glow
+                    // is at hue 180-229. A tight sat ceiling separates them cleanly.
+                    // Pull R and B down to G so the pink returns to neutral white/cyan and the
+                    // shape survives -- deleting these pixels would punch holes in the wisps.
+                    if (nearBg[idx]) {
+                        double hz, sz, vz;
+                        ToHsv(rr, gg, bb, out hz, out sz, out vz);
+                        if (hz >= 280 && hz <= 340 && sz < 0.22 && vz > 0.50) {
+                            int mn = Math.Min(rr, bb);
+                            int cap = gg + (int)Math.Round((mn - gg) * 0.15);
+                            if (rr > cap) rr = cap;
+                            if (bb > cap) bb = cap;
+                            if (rr < 0) rr = 0;
+                            if (bb < 0) bb = 0;
+                            haze++;
+                        }
+                    }
+
                     outBuf[o]   = (byte)bb;
                     outBuf[o+1] = (byte)gg;
                     outBuf[o+2] = (byte)rr;
@@ -185,8 +273,8 @@ public class Keyer {
                         gfx.ResetTransform();
                         dst.Save(outPath, ImageFormat.Png);
                     }
-                    return string.Format("bbox={0}x{1} at ({2},{3})  bg={4:F1}%  pockets={5}  flip={6}  outH={7}",
-                        cw, ch, minX, minY, 100.0 * bgCount / (w * h), pockets, flip, (int)Math.Round(canvas * targetScale));
+                    return string.Format("bbox={0}x{1} at ({2},{3})  bg={4:F1}%  pockets={5}  haze={6}  flip={7}  outH={8}",
+                        cw, ch, minX, minY, 100.0 * bgCount / (w * h), pockets, haze, flip, (int)Math.Round(canvas * targetScale));
                 }
             }
         }
@@ -200,9 +288,13 @@ $srcDir = 'C:\Users\nini9\Downloads'
 $tmpDir = 'C:\Users\nini9\AppData\Local\Temp\claude\C--Users-Work\a6595137-aa12-4fcc-9f74-1a12a3164bae\scratchpad\keyed'
 if (-not (Test-Path $tmpDir)) { New-Item -ItemType Directory -Path $tmpDir | Out-Null }
 
-# name, flip, height-scale (drives the size ladder: slime smallest -> demon lord biggest)
+# n    = output name
+# src  = preferred source file; falls back to n.png when absent
+#        (hero-right.png is the re-generated hero that actually faces the enemy)
+# flip = mirror horizontally (these two were generated facing the wrong way)
+# s    = height scale on a 512 canvas -> drives the size ladder, slime smallest, demon lord biggest
 $jobs = @(
-    @{ n='hero';   flip=$false; s=0.95 },
+    @{ n='hero';   src='hero-right'; flip=$false; s=0.95 },
     @{ n='enemy1'; flip=$false; s=0.50 },
     @{ n='enemy2'; flip=$true;  s=0.62 },
     @{ n='enemy3'; flip=$true;  s=0.72 },
@@ -212,8 +304,13 @@ $jobs = @(
 )
 
 foreach ($j in $jobs) {
-    $inP  = Join-Path $srcDir  ($j.n + '.png')
+    $srcName = $j.n
+    if ($j.ContainsKey('src')) {
+        $cand = Join-Path $srcDir ($j.src + '.png')
+        if (Test-Path $cand) { $srcName = $j.src }
+    }
+    $inP  = Join-Path $srcDir  ($srcName + '.png')
     $outP = Join-Path $tmpDir  ($j.n + '.png')
     $res = [Keyer]::Process($inP, $outP, $j.flip, $j.s, 512)
-    Write-Output ("{0,-7} {1}" -f $j.n, $res)
+    Write-Output ("{0,-7} <- {1,-11} {2}" -f $j.n, ($srcName + '.png'), $res)
 }

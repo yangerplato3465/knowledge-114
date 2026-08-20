@@ -101,6 +101,12 @@
         .fs-btn:hover { background-color: rgba(255, 255, 255, 0.38); transform: scale(1.08); }
         .fs-btn:active { transform: scale(0.94); }
 
+        /* 戰鬥中離開鈕：跟右上角的全螢幕鈕左右對稱。
+           只在戰鬥時出現——選單和結算畫面本來就各有返回路徑。
+           沿用 .fs-btn 的外觀，連「白底上要轉深色」那條規則一起繼承。 */
+        .quit-btn { left: calc(0.75 * var(--u)); right: auto; display: none; }
+        body.in-battle .quit-btn { display: flex; }
+
         /* ---------- 頂部標題 ----------
            戰鬥中不需要標題，收起來換取垂直空間（手機直向差這一段就會需要捲動） */
         body.in-battle .game-header { display: none; }
@@ -134,7 +140,7 @@
             align-items: center;
             justify-content: center;
             gap: calc(0.375 * var(--u));
-            padding: calc(1.875 * var(--u)) calc(3.5 * var(--u)) calc(0.375 * var(--u));
+            padding: calc(0.7 * var(--u)) calc(3.5 * var(--u)) calc(0.3 * var(--u));
         }
 
         .map-node {
@@ -512,7 +518,7 @@
             justify-content: space-between;
             align-items: flex-end;
             gap: calc(1.5 * var(--u));
-            padding: calc(1.25 * var(--u)) calc(3.5 * var(--u)) calc(1 * var(--u));
+            padding: calc(0.7 * var(--u)) calc(3.5 * var(--u)) calc(0.7 * var(--u));
             overflow: hidden;
         }
 
@@ -553,17 +559,18 @@
         /* 角色插槽：所有特效都掛在這層，位置自動跟著角色跑 */
         .sprite-slot {
             position: relative;
-            /* 比角色本身高一點，留給未來全身圖的空間；但不能留太多，
-               否則 emoji 上方會出現一大片空白的天空 */
-            height: calc(7.1 * var(--u));
+            /* 角色改用圖片後放大了一輪：原本 7.1u 是配 emoji 的尺寸，
+               圖片在那個高度下細節看不清，而且戰鬥區太扁會把背景裁到只剩地面。
+               空間是從題目區與選項區的留白挪過來的。 */
+            height: calc(13 * var(--u));
             margin-bottom: calc(0.5 * var(--u));
         }
 
         .ground-shadow {
             position: absolute;
             left: 50%; bottom: calc(0.125 * var(--u));
-            width: calc(5.375 * var(--u)); height: calc(1 * var(--u));
-            margin-left: calc(-2.6875 * var(--u));
+            width: calc(9.8 * var(--u)); height: calc(1.2 * var(--u));
+            margin-left: calc(-4.9 * var(--u));
             background: radial-gradient(ellipse at center, rgba(0,0,0,0.34), rgba(0,0,0,0) 70%);
             pointer-events: none;
             animation: shadowBreathe 2.6s ease-in-out infinite;
@@ -577,9 +584,9 @@
          */
         .sprite {
             position: absolute;
-            left: calc(50% - 3.3 * var(--u));
+            left: calc(50% - 6 * var(--u));
             bottom: calc(0.375 * var(--u));
-            width: calc(6.6 * var(--u)); height: calc(6.6 * var(--u));
+            width: calc(12 * var(--u)); height: calc(12 * var(--u));
             transform-origin: 50% 100%;
         }
 
@@ -598,7 +605,7 @@
         .sprite.idle-heavy { --idle-anim: heavyIdle; --idle-dur: 3.4s; }
 
         .sprite .glyph {
-            font-size: calc(5.25 * var(--u));
+            font-size: calc(8.5 * var(--u));
             line-height: 1;
             user-select: none;
             filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
@@ -611,7 +618,7 @@
             font-size: calc(1.125 * var(--u));
             font-weight: 700;
             color: #ffffff;
-            margin: calc(0.5 * var(--u)) 0 calc(0.375 * var(--u));
+            margin: calc(0.28 * var(--u)) 0 calc(0.2 * var(--u));
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 2px rgba(0, 0, 0, 0.4);
         }
 
@@ -855,14 +862,16 @@
         }
 
         /* ---------- 題目區 ---------- */
-        .quiz-body { padding: calc(1 * var(--u)) calc(3.5 * var(--u)) calc(3 * var(--u)); }
+        /* 下方留白原本 3u，是戰鬥區還很矮時配的。角色放大後這裡收緊，
+           省下的高度全部給了戰鬥區（背景才不會被 cover 裁到只剩地面） */
+        .quiz-body { padding: calc(0.8 * var(--u)) calc(3.5 * var(--u)) calc(1.2 * var(--u)); }
 
         .round-label {
             text-align: center;
             font-size: calc(0.9375 * var(--u));
             font-weight: 600;
             color: var(--muted);
-            margin-bottom: calc(0.75 * var(--u));
+            margin-bottom: calc(0.4 * var(--u));
         }
 
         /* ---------- 計時器 ---------- */
@@ -870,7 +879,7 @@
             display: flex;
             align-items: center;
             gap: calc(0.75 * var(--u));
-            margin-bottom: calc(1 * var(--u));
+            margin-bottom: calc(0.6 * var(--u));
         }
 
         .timer-text {
@@ -919,8 +928,8 @@
             border: calc(0.1875 * var(--u)) dashed var(--primary);
             border-radius: calc(1.25 * var(--u));
             text-align: center;
-            padding: calc(1.5 * var(--u));
-            margin-bottom: calc(1.5 * var(--u));
+            padding: calc(1 * var(--u));
+            margin-bottom: calc(0.8 * var(--u));
         }
 
         .question-box .q-text {
@@ -941,7 +950,7 @@
             background-color: var(--surface);
             border: calc(0.1875 * var(--u)) solid var(--border);
             border-radius: calc(1.25 * var(--u));
-            padding: calc(1.25 * var(--u));
+            padding: calc(1 * var(--u));
             min-height: 48px;              /* 觸控最小點擊面積 */
             font-size: calc(1.5 * var(--u));
             font-weight: 600;
@@ -995,7 +1004,7 @@
             font-size: calc(1.25 * var(--u));
             font-weight: 700;
             text-align: center;
-            margin: calc(1.5 * var(--u)) 0 0;
+            margin: calc(0.8 * var(--u)) 0 0;
             min-height: calc(1.75 * var(--u));
         }
         .feedback-msg.good { color: var(--good); }
@@ -1050,6 +1059,23 @@
             touch-action: manipulation;
         }
         .pill-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(255, 138, 101, 0.3); }
+
+        /* 次要按鈕：離開確認框裡的「繼續戰鬥」。
+           跟主按鈕同尺寸但不搶眼，避免學生順手就把戰鬥關掉 */
+        .pill-btn.ghost {
+            background: transparent;
+            color: var(--muted-2);
+            border: calc(0.18 * var(--u)) solid var(--border);
+            box-shadow: none;
+        }
+        .pill-btn.ghost:hover { box-shadow: none; background-color: rgba(0, 0, 0, 0.04); }
+
+        .quit-actions {
+            display: flex;
+            gap: calc(0.9 * var(--u));
+            justify-content: center;
+            flex-wrap: wrap;
+        }
 
         .hidden { display: none; }
 
@@ -1378,6 +1404,11 @@
             <i class="fa-solid fa-expand"></i>
         </button>
 
+        <button id="quit-btn" class="fs-btn quit-btn" type="button" onclick="askQuit()"
+                title="離開戰鬥" aria-label="離開戰鬥，重新選擇年級">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+
         <div class="game-header">
             <div class="header-icon">⚔️</div>
             <h1>數學勇者</h1>
@@ -1502,6 +1533,22 @@
                 <h2>⭐ 選擇一項強化</h2>
                 <p class="panel-sub">打倒敵人！挑選一個能力提升，再迎戰下一隻怪獸</p>
                 <div id="upgrade-options" class="upgrade-options"></div>
+            </div>
+        </div>
+
+        <!-- 戰鬥中按左上角返回鈕的確認框 -->
+        <div id="quit-overlay" class="upgrade-overlay hidden">
+            <div class="upgrade-panel">
+                <h2>要離開這場戰鬥嗎？</h2>
+                <p class="panel-sub">目前的進度不會保留，回來後要從第一隻敵人重新開始</p>
+                <div class="quit-actions">
+                    <button class="pill-btn ghost" type="button" onclick="closeQuit()">
+                        <i class="fa-solid fa-play"></i> 繼續戰鬥
+                    </button>
+                    <button class="pill-btn" type="button" onclick="confirmQuit()">
+                        <i class="fa-solid fa-chevron-left"></i> 重新選擇年級
+                    </button>
+                </div>
             </div>
         </div>
     </div>

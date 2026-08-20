@@ -23,8 +23,18 @@ const ENEMY_LOOKS = [
 // 勇者的外觀（同樣預留 img 插槽）
 const PLAYER_LOOK = { emoji: "🧙", name: "勇者", img: "../assets/images/math-rpg/hero.webp" };
 
-// 每一關的場景背景圖，日後補圖時填入路徑；null 就用 CSS 漸層的暫時配色
-const STAGE_IMAGES = [null, null, null, null, null, null];
+// 每一關的場景背景圖，null 就用 CSS 漸層的暫時配色。
+// 這些圖是寬扁的帶狀（1600x286），不是原始的 16:9——戰鬥區的容器大約 6:1，
+// 直接放 16:9 的圖只會顯示最底部那條純地面，天空與遠景全被 cover 裁掉。
+// 裁切位置是逐張抓的，讓每張圖的「地面線」對齊角色腳底。
+const STAGE_IMAGES = [
+    "../assets/images/math-rpg/stage1.webp",
+    "../assets/images/math-rpg/stage2.webp",
+    "../assets/images/math-rpg/stage3.webp",
+    "../assets/images/math-rpg/stage4.webp",
+    "../assets/images/math-rpg/stage5.webp",
+    "../assets/images/math-rpg/stage6.webp"
+];
 
 let PLAYER_MAX = 100;
 let HIT_TO_ENEMY = 10;  // 勇者每次攻擊對敵人造成的固定傷害（可被強化提升）
@@ -59,8 +69,14 @@ let timerId = null;
 let timeLeft = ROUND_TIME;
 
 function startTimer() {
-    clearInterval(timerId);
     timeLeft = ROUND_TIME;
+    resumeTimer();
+}
+
+// 從目前的 timeLeft 接著跑，不歸零。給「離開確認」用：
+// 跳出確認框時把時間凍住，選擇繼續戰鬥就從剛才那一秒接下去。
+function resumeTimer() {
+    clearInterval(timerId);
     renderTimer();
     timerId = setInterval(() => {
         timeLeft--;
@@ -649,6 +665,44 @@ function renderPoolScreen(grade) {
 function backToGrade() {
     document.getElementById('pool-screen').classList.add('hidden');
     document.getElementById('grade-screen').classList.remove('hidden');
+}
+
+// ===== 戰鬥中離開：左上角的返回鈕 =====
+// 中途離開會失去進度，所以先問一次；等待回答期間把計時凍住，
+// 否則學生看著確認框的時候答題時間還在流失。
+let quitPausedWaitingNext = false;
+
+function askQuit() {
+    stopTimer();
+    quitPausedWaitingNext = nextRoundTimer !== null; // 當下正在等下一題的倒數
+    cancelNextRound();
+    document.getElementById('quit-overlay').classList.remove('hidden');
+}
+
+function closeQuit() {
+    document.getElementById('quit-overlay').classList.add('hidden');
+    if (quitPausedWaitingNext) {
+        // 剛才是在等下一題，補一段短倒數接回去，不要卡在原地
+        scheduleNextRound(NEXT_DELAY_CORRECT);
+    } else {
+        resumeTimer();
+    }
+    quitPausedWaitingNext = false;
+}
+
+function confirmQuit() {
+    stopTimer();
+    cancelNextRound();
+    clearTimeout(clipCheckTimer);
+    quitPausedWaitingNext = false;
+    document.getElementById('quit-overlay').classList.add('hidden');
+    document.getElementById('upgrade-overlay').classList.add('hidden');
+    document.getElementById('howto-overlay').classList.add('hidden');
+    document.getElementById('end-screen').classList.add('hidden');
+    document.getElementById('battle-screen').classList.add('hidden');
+    document.getElementById('pool-screen').classList.add('hidden');
+    document.getElementById('grade-screen').classList.remove('hidden');
+    document.body.classList.remove('in-battle'); // 標題列放回來
 }
 
 function selectPool(grade, pool) {
