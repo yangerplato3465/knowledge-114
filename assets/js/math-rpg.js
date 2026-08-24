@@ -16,12 +16,17 @@ const ENEMY_LOOKS = [
     { emoji: "👻", name: "幽靈怪",   img: "../assets/images/math-rpg/enemy2.webp", idle: "float" },
     { emoji: "🦇", name: "蝙蝠怪",   img: "../assets/images/math-rpg/enemy3.webp", idle: "float" },
     { emoji: "🐲", name: "小巨龍",   img: "../assets/images/math-rpg/enemy4.webp" },
-    { emoji: "👹", name: "惡鬼",     img: "../assets/images/math-rpg/enemy5.webp", idle: "heavy" },
+    { emoji: "⚔️", name: "黑騎士",   img: "../assets/images/math-rpg/enemy5.webp", idle: "heavy" },
     { emoji: "😈", name: "魔王",     img: "../assets/images/math-rpg/enemy6.webp", idle: "heavy" }
 ];
 
 // 勇者的外觀（同樣預留 img 插槽）
-const PLAYER_LOOK = { emoji: "🧙", name: "勇者", img: "../assets/images/math-rpg/hero.webp" };
+// atk：攻擊姿勢，衝刺途中會換上（見 playAttackFrame）。沒填就維持單張表現。
+const PLAYER_LOOK = {
+    emoji: "🧙", name: "勇者",
+    img: "../assets/images/math-rpg/hero.webp",
+    atk: "../assets/images/math-rpg/hero-atk.webp"
+};
 
 // 每一關的場景背景圖，null 就用 CSS 漸層的暫時配色。
 // 這些圖是寬扁的帶狀（1600x286），不是原始的 16:9——戰鬥區的容器大約 6:1，
@@ -164,6 +169,8 @@ function mapDefeat(index) {
 function applyLook(side, look) {
     const sprite = document.getElementById(`${side}-sprite`);
     const glyph = document.getElementById(`${side}-avatar`);
+    // 換角色時取消還在排程中的攻擊換圖，否則上一隻的計時器會把新角色的圖蓋掉
+    clearAtkTimers(side);
     // 待機動作：飄浮的幽靈／蝙蝠、笨重的惡鬼／魔王，其餘用預設的站立呼吸
     sprite.classList.remove('idle-float', 'idle-heavy');
     if (look.idle) sprite.classList.add(`idle-${look.idle}`);
@@ -236,9 +243,51 @@ function restart(el, cls) {
     el.classList.add(cls);
 }
 
+// ===== 攻擊動作換圖 =====
+// 有 atk 圖的角色，衝刺途中會換成攻擊姿勢，回位前換回站姿。
+// 時間點是照 CSS 的 lunge keyframes 抓的：0~18% 反向蓄力（still 站姿才對），
+// 18~70% 衝出並停留（攻擊姿），70% 之後回位（換回站姿）。
+// 整段都用攻擊圖的話就只是「平移一張圖」，分三拍才有「準備→出手→收招」。
+const LUNGE_MS = 520;               // 對應 .sprite.lunge 的 0.52s
+const ATK_IN_MS = LUNGE_MS * 0.18;
+const ATK_OUT_MS = LUNGE_MS * 0.70;
+const atkTimers = { player: {}, enemy: {} };
+
+function currentLook(side) {
+    return side === 'player'
+        ? PLAYER_LOOK
+        : ENEMY_LOOKS[currentEnemyIndex % ENEMY_LOOKS.length];
+}
+
+function clearAtkTimers(side) {
+    clearTimeout(atkTimers[side].on);
+    clearTimeout(atkTimers[side].off);
+}
+
+function playAttackFrame(side) {
+    const look = currentLook(side);
+    if (!look.atk || !look.img) return;   // 沒有攻擊圖就維持原本的單張表現
+    const sprite = document.getElementById(`${side}-sprite`);
+    clearAtkTimers(side);
+    atkTimers[side].on = setTimeout(() => {
+        sprite.style.setProperty('--sprite', `url("${look.atk}")`);
+    }, ATK_IN_MS);
+    atkTimers[side].off = setTimeout(() => {
+        sprite.style.setProperty('--sprite', `url("${look.img}")`);
+    }, ATK_OUT_MS);
+}
+
+// 先把攻擊圖抓進快取，否則第一次出手會閃一下空白
+function preloadAttackFrames() {
+    [PLAYER_LOOK].concat(ENEMY_LOOKS).forEach(l => {
+        if (l.atk) { const im = new Image(); im.src = l.atk; }
+    });
+}
+
 // side 為 'player' 或 'enemy'
 function act(side, cls) {
     restart(document.getElementById(`${side}-sprite`), cls);
+    if (cls === 'lunge') playAttackFrame(side);
 }
 
 function impact() {
@@ -624,6 +673,8 @@ function beginBattle() {
     document.getElementById('pool-screen').classList.add('hidden');
     document.getElementById('battle-screen').classList.remove('hidden');
     document.body.classList.add('in-battle'); // 戰鬥中收起標題列，換取垂直空間
+
+    preloadAttackFrames();
 
     // 重置勇者的外觀與動畫狀態（上一場可能停在倒下的畫面）
     const playerSprite = document.getElementById('player-sprite');

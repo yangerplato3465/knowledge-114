@@ -49,7 +49,13 @@ public class Keyer {
         return (h >= 288 && h <= 330 && s >= 0.75 && v >= 0.30);
     }
 
-    public static string Process(string inPath, string outPath, bool flip, double targetScale, int canvas) {
+    // Scale factor actually used by the last Process() call. An attack pose must reuse the
+    // idle pose's factor instead of being stretched to the same target height -- their
+    // bounding boxes differ by a percent or two, and re-fitting each one makes the character
+    // visibly change size the moment the animation swaps frames.
+    public static double LastScale;
+
+    public static string Process(string inPath, string outPath, bool flip, double targetScale, int canvas, double forcedScale) {
         using (Bitmap src = new Bitmap(inPath)) {
             int w = src.Width, h = src.Height;
             Rectangle rect = new Rectangle(0, 0, w, h);
@@ -249,14 +255,29 @@ public class Keyer {
 
                 using (Bitmap cropped = keyed.Clone(new Rectangle(minX, minY, cw, ch), PixelFormat.Format32bppArgb)) {
                     // ---- pass 4: scale by HEIGHT, bottom-align, center ----
-                    int targetH = (int)Math.Round(canvas * targetScale);
-                    double k = (double)targetH / ch;
-                    int targetW = (int)Math.Round(cw * k);
-                    if (targetW > canvas) { // never let a wide cape overflow the canvas
-                        k = (double)canvas / cw;
-                        targetW = canvas;
+                    int targetH; double k; int targetW;
+                    if (forcedScale > 0) {
+                        // attack pose: inherit the idle pose's factor verbatim
+                        k = forcedScale;
                         targetH = (int)Math.Round(ch * k);
+                        targetW = (int)Math.Round(cw * k);
+                        if (targetH > canvas || targetW > canvas) {
+                            double fit = Math.Min((double)canvas / ch, (double)canvas / cw);
+                            k = fit;
+                            targetH = (int)Math.Round(ch * k);
+                            targetW = (int)Math.Round(cw * k);
+                        }
+                    } else {
+                        targetH = (int)Math.Round(canvas * targetScale);
+                        k = (double)targetH / ch;
+                        targetW = (int)Math.Round(cw * k);
+                        if (targetW > canvas) { // never let a wide cape overflow the canvas
+                            k = (double)canvas / cw;
+                            targetW = canvas;
+                            targetH = (int)Math.Round(ch * k);
+                        }
                     }
+                    LastScale = k;
                     using (Bitmap dst = new Bitmap(canvas, canvas, PixelFormat.Format32bppArgb))
                     using (Graphics gfx = Graphics.FromImage(dst)) {
                         gfx.Clear(Color.Transparent);
@@ -273,8 +294,8 @@ public class Keyer {
                         gfx.ResetTransform();
                         dst.Save(outPath, ImageFormat.Png);
                     }
-                    return string.Format("bbox={0}x{1} at ({2},{3})  bg={4:F1}%  pockets={5}  haze={6}  flip={7}  outH={8}",
-                        cw, ch, minX, minY, 100.0 * bgCount / (w * h), pockets, haze, flip, (int)Math.Round(canvas * targetScale));
+                    return string.Format("bbox={0}x{1} at ({2},{3})  bg={4:F1}%  pockets={5}  haze={6}  flip={7}  k={8:F4}  outH={9}",
+                        cw, ch, minX, minY, 100.0 * bgCount / (w * h), pockets, haze, flip, k, targetH);
                 }
             }
         }
@@ -293,24 +314,46 @@ if (-not (Test-Path $tmpDir)) { New-Item -ItemType Directory -Path $tmpDir | Out
 #        (hero-right.png is the re-generated hero that actually faces the enemy)
 # flip = mirror horizontally (these two were generated facing the wrong way)
 # s    = height scale on a 512 canvas -> drives the size ladder, slime smallest, demon lord biggest
+# flip = mirror horizontally. Now false for everyone: every character has since been
+# re-generated already facing the right way. The ghost and the bat used to need
+# mirroring (they were drawn facing right), and for the ghost that mirroring was also
+# what put its highlight on the wrong side -- both were redrawn natively facing left.
+# Leave these false unless a future image genuinely comes out facing the wrong way.
+#
+# s = height scale on a 512 canvas -> drives the size ladder, slime smallest, demon
+#     lord biggest.
 $jobs = @(
-    @{ n='hero';   src='hero-right'; flip=$false; s=0.95 },
+    @{ n='hero';   flip=$false; s=0.95 },
     @{ n='enemy1'; flip=$false; s=0.50 },
-    @{ n='enemy2'; flip=$true;  s=0.62 },
-    @{ n='enemy3'; flip=$true;  s=0.72 },
+    @{ n='enemy2'; flip=$false; s=0.62 },
+    @{ n='enemy3'; flip=$false; s=0.72 },
     @{ n='enemy4'; flip=$false; s=0.82 },
-    @{ n='enemy5'; flip=$false; s=0.90 },
+    # enemy5 is the black knight (replaced the oni, 2026-08-24). Dropped 0.90 -> 0.85:
+    # he is an upright humanoid whose bbox is nearly all body, while the dragon's 0.82
+    # bbox is mostly spread wings, so equal numbers read very unequal on screen.
+    @{ n='enemy5'; flip=$false; s=0.85 },
     @{ n='enemy6'; flip=$false; s=1.00 }
 )
 
+$scaleOf = @{}   # idle-pose scale factor, reused by that character's attack pose
+
+$flipOf = @{}    # remembered so the attack pose mirrors the same way as its idle pose
+
 foreach ($j in $jobs) {
-    $srcName = $j.n
-    if ($j.ContainsKey('src')) {
-        $cand = Join-Path $srcDir ($j.src + '.png')
-        if (Test-Path $cand) { $srcName = $j.src }
-    }
-    $inP  = Join-Path $srcDir  ($srcName + '.png')
+    $inP  = Join-Path $srcDir  ($j.n + '.png')
     $outP = Join-Path $tmpDir  ($j.n + '.png')
-    $res = [Keyer]::Process($inP, $outP, $j.flip, $j.s, 512)
-    Write-Output ("{0,-7} <- {1,-11} {2}" -f $j.n, ($srcName + '.png'), $res)
+    $res = [Keyer]::Process($inP, $outP, $j.flip, $j.s, 512, 0)
+    $scaleOf[$j.n] = [Keyer]::LastScale
+    $flipOf[$j.n] = $j.flip
+    Write-Output ("{0,-8} {1}" -f $j.n, $res)
+}
+
+# Attack poses: only processed when the file exists, and always locked to the
+# matching idle pose's scale factor so the character does not change size mid-swing.
+foreach ($j in $jobs) {
+    $atkSrc = Join-Path $srcDir ($j.n + '-atk.png')
+    if (-not (Test-Path $atkSrc)) { continue }
+    $outP = Join-Path $tmpDir ($j.n + '-atk.png')
+    $res = [Keyer]::Process($atkSrc, $outP, $flipOf[$j.n], $j.s, 512, $scaleOf[$j.n])
+    Write-Output ("{0,-7} <- {1,-15} {2}" -f ($j.n + '-atk'), ($j.n + '-atk.png'), $res)
 }
