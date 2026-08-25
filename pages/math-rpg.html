@@ -512,13 +512,21 @@
         .back-link-btn:hover { color: var(--g1); }
 
         /* ---------- 戰鬥場景 ---------- */
+        /* 2026-08-25：戰鬥區長高 30px（276 → 306），全部加在 padding-top。
+           因為 align-items:flex-end，角色錨在底部，所以加上面的 padding
+           只會多露出天空，腳底相對戰鬥區底部的位置一動也不動。
+           背景圖同步重裁成 1600x420（往上加高、下緣不動，見 math-rpg-stages.sh），
+           讓 cover 的縮放比仍由寬度決定，地面線落點因此完全不變。
+           ⚠️ 要再加高的話，背景帶也要一起加高：一旦
+           容器高 / (容器寬 x 420/1600) >= 1，縮放改由高度決定，角色就會浮空。
+           1255 寬時上限是 329px，目前用 309px，餘裕 6%。 */
         .battle-stage {
             position: relative;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             gap: calc(1.5 * var(--u));
-            padding: calc(0.7 * var(--u)) calc(3.5 * var(--u)) calc(0.7 * var(--u));
+            padding: calc(3 * var(--u)) calc(3.5 * var(--u)) calc(0.7 * var(--u));
             overflow: hidden;
         }
 
@@ -546,9 +554,9 @@
         /* 六關的場景配色：草原 → 森林 → 洞窟 → 沼澤 → 火山 → 魔王城 */
         .battle-stage[data-stage="1"] { --stage-sky: #cfe8f7; --stage-ground: linear-gradient(180deg,#9ad06f,#68a349); }
         .battle-stage[data-stage="2"] { --stage-sky: #bce0c8; --stage-ground: linear-gradient(180deg,#74b177,#3f7f4c); }
-        /* 3 / 5 / 6 關的配色刻意避開該關怪物的主色：紫蝙蝠→洞窟改青藍、
-           紅惡鬼→火山地面壓到近黑、紫魔王→魔王城改深藍。原本三關都跟怪物同色系，
-           角色會融進背景裡只剩黑描邊撐著。 */
+        /* 這些是「還沒載入背景圖」時的備援配色，六隻怪 2026-08-25 全面暗黑化後
+           反而變成主要的對比來源：亮關（1/2）配近黑怪、中明度關（3/4）配骨白怪、
+           暗關（5/6）配暖色怪。改這裡之前先看怪物的實際配色，否則角色會融進背景。 */
         .battle-stage[data-stage="3"] { --stage-sky: #7fa3ad; --stage-ground: linear-gradient(180deg,#4a5f68,#2b3a42); }
         .battle-stage[data-stage="4"] { --stage-sky: #a3b79c; --stage-ground: linear-gradient(180deg,#7b8a5e,#4e5a3a); }
         .battle-stage[data-stage="5"] { --stage-sky: #c97f52; --stage-ground: linear-gradient(180deg,#4a2a20,#2a1512); }
@@ -582,11 +590,17 @@
          * --dir  面向：勇者 1（朝右）、怪物 -1（朝左）。
          * --sprite  日後補圖時設成 url(...) 並加上 .has-img，就會蓋掉 emoji。
          */
+        /* 2026-08-25 放大一輪：12u → 14u。
+           .sprite 是絕對定位 + bottom 錨定，.sprite-body 又是 center bottom / contain，
+           所以放大只會往上長、腳底不動 —— 背景圖的地面線對齊不會壞。
+           插槽(13u)與戰鬥區的高度刻意都沒動，版面盒子零變化。
+           上限來自 .battle-stage 的 overflow:hidden：1280×720 實測角色頂端到裁切邊界
+           原本有 36px 餘裕，14u 用掉 26px，剩下的留給 spawn/lunge 動畫的位移。 */
         .sprite {
             position: absolute;
-            left: calc(50% - 6 * var(--u));
+            left: calc(50% - 7 * var(--u));
             bottom: calc(0.375 * var(--u));
-            width: calc(12 * var(--u)); height: calc(12 * var(--u));
+            width: calc(14 * var(--u)); height: calc(14 * var(--u));
             transform-origin: 50% 100%;
         }
 
@@ -693,7 +707,7 @@
             0%, 100% { transform: translateY(0)     rotate(-1.4deg); }
             50%      { transform: translateY(-18px) rotate(1.4deg); }
         }
-        /* 惡鬼、魔王：體型大，動得慢、幅度小，才有重量感 */
+        /* 黑騎士、暗黑魔王：體型大，動得慢、幅度小，才有重量感 */
         @keyframes heavyIdle {
             0%, 100% { transform: translateY(0)    scale(1, 1); }
             50%      { transform: translateY(-4px) scale(1.014, 0.986); }
@@ -1232,11 +1246,13 @@
             }
             #enemy-map    { grid-area: map; padding: calc(1.4 * var(--u)) calc(0.8 * var(--u)) calc(0.3 * var(--u)); gap: calc(0.18 * var(--u)); }
             .map-line     { min-width: calc(0.4 * var(--u)); }
-            .battle-stage { grid-area: stage; padding: calc(0.6 * var(--u)) calc(1 * var(--u)) calc(0.6 * var(--u)); gap: calc(0.6 * var(--u)); }
+            /* 手機橫放空間緊，只加 0.8u 的天空（桌機是 2.3u） */
+            .battle-stage { grid-area: stage; padding: calc(1.4 * var(--u)) calc(1 * var(--u)) calc(0.6 * var(--u)); gap: calc(0.6 * var(--u)); }
             .quiz-body    { grid-area: quiz; padding: calc(1 * var(--u)) calc(1.4 * var(--u)) calc(1.2 * var(--u)); }
 
             .sprite-slot { height: calc(6.4 * var(--u)); }
-            .sprite { left: calc(50% - 2.9 * var(--u)); width: calc(5.8 * var(--u)); height: calc(5.8 * var(--u)); }
+            /* 手機橫放空間本來就緊，只跟著放大一小步（5.8u → 6.4u），剛好填滿 6.4u 的插槽 */
+            .sprite { left: calc(50% - 3.2 * var(--u)); width: calc(6.4 * var(--u)); height: calc(6.4 * var(--u)); }
             .sprite .glyph { font-size: calc(3.9 * var(--u)); }
             .ground-shadow { width: calc(4 * var(--u)); margin-left: calc(-2 * var(--u)); }
 
@@ -1466,11 +1482,11 @@
                 <div class="fighter">
                     <div id="enemy-slot" class="sprite-slot">
                         <div id="enemy-sprite" class="sprite" style="--dir: -1;">
-                            <div class="sprite-body"><span id="enemy-avatar" class="glyph">👾</span></div>
+                            <div class="sprite-body"><span id="enemy-avatar" class="glyph">🐾</span></div>
                         </div>
                         <div class="ground-shadow"></div>
                     </div>
-                    <div id="enemy-name" class="name">史萊姆怪</div>
+                    <div id="enemy-name" class="name">暗影小獸</div>
                     <div class="hp-row"><i class="fa-solid fa-heart" style="color:#ef5350;"></i> <span id="enemy-hp-text">100 / 100</span></div>
                     <div id="enemy-hp-track" class="hp-track">
                         <div id="enemy-hp-ghost" class="hp-ghost"></div>
@@ -1521,7 +1537,7 @@
                     <li>💥 <strong>答錯或時間到</strong>：換你被攻擊，扣自己的血量。</li>
                     <li>⏱️ 每題有 <strong>30 秒</strong>作答時間，要把握喔！</li>
                     <li>⭐ 打倒怪獸後可<strong>三選一</strong>強化能力。</li>
-                    <li>👑 一路打倒所有怪獸，擊敗最後的<strong>魔王</strong>就獲勝！</li>
+                    <li>👑 一路打倒所有怪獸，擊敗最後的<strong>暗黑魔王</strong>就獲勝！</li>
                 </ul>
                 <button class="pill-btn" onclick="startGame()">開始遊戲 <i class="fa-solid fa-play"></i></button>
             </div>

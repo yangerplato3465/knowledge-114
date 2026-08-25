@@ -1,1079 +1,601 @@
-# 數學 RPG 圖片產製 prompt(給 Gemini)
+# 數學勇者 — 角色美術產圖手冊
 
-每一段都已經拼好,**整段直接複製貼上**即可,不用自己組基底。
+用 Gemini 產圖 → `.claude\math-rpg-keyer.ps1` 去背縮放 → ffmpeg 轉 WebP → 進遊戲。
 
-## 使用規則
-1. 角色圖用 **1:1**,背景圖用 **16:9**。
-2. **產每一隻怪物時,都要把已定稿的 `hero.png` 當參考圖一起上傳**,沒上傳風格會走鐘。
-3. ⚠️ **踩坑(2026-08-20)**:上傳參考圖後 Gemini 會進入「編輯這張圖」模式,如果 prompt
-   開頭寫「match the reference image」,它會直接回你一張一模一樣的勇者。所以每段 prompt
-   的第一句都必須是**否定句**:明講這是新角色、勇者不可以出現在輸出裡。
-   如果加了否定句還是給你勇者,就**改開新對話、不要上傳參考圖**,改用下面的「文字風格錨」。
-3. 角色的洋紅背景不要自己改成白色,去背會破洞。
-4. 背景圖(stage)**不用參考圖、不用洋紅底**。
-
-## 勇者已定稿(2026-08-20)
-第一張勇者已驗收,成為全套的風格基準。特徵:粗黑描邊、藍金法師袍、紫色長髮、
-金色球形法杖、寫著數學符號的魔法書、大眼 chibi 比例、正面站姿。
-朝向規則:勇者微轉向右、怪物微轉向左,形成對峙感。
+> 這份檔案在 2026-08-25 大幅精簡過。第一～十批的失敗版本、被廢棄的角色
+> （史萊姆／幽靈／蝙蝠／小巨龍／惡鬼／骷髏魔王）以及攻擊姿勢草稿都刪掉了，
+> **完整的過程紀錄在 git 歷史裡**（精簡前的最後一版）。
+> 留下來的是：現行六隻的定稿 prompt，以及所有踩過坑換來的硬規則。
 
 ---
 
-## 已驗證的標準流程(2026-08-20)
-**開新對話 → 上傳 hero.png → 貼下面完整 prompt(第一句是否定句)** ——
-史萊姆用這個流程一次就過。每一隻都開新對話,不要在同一串裡連續產,
-否則 Gemini 會被前一張帶著走。
+## 現行陣容
 
-**原圖裡角色多大不用管**。六隻怪的體型比例是在去背處理階段統一縮放控制的,
-Gemini 給的大小不影響最終結果,不用為了「史萊姆要小、魔王要大」重產。
+| 關 | 角色 | emoji | 背景 | 縮放 s | outH | idle | 主色 |
+|---|---|---|---|---|---|---|---|
+| 1 | 暗影小獸 | 🐾 | 明亮草原 | 0.68 | 348 | 呼吸 | 近黑 |
+| 2 | 骨翼渡鴉 | 🪶 | 明亮森林 | 0.76 | 389 | float | 近黑＋骨白 |
+| 3 | 提燈幽魂 | 🏮 | 青綠洞窟 | 0.83 | 425 | float | 近黑＋暖提燈 |
+| 4 | 骨龍 | 🦴 | 灰綠沼澤 | 0.89 | 456 | 呼吸 | 骨白 |
+| 5 | 黑騎士 | ⚔️ | 火山 | 0.94 | 481 | heavy | 深鋼藍灰 |
+| 6 | 暗黑魔王 | 👑 | 魔王城 | 1.00 | 512 | heavy | 近黑＋金邊＋緋紅 |
 
----
+勇者 `hero` 縮放 0.95。攻擊圖只有 `hero-atk`，六隻怪都還沒有。
 
-## 備案:文字風格錨(參考圖一直失效時改用這個)
+### 這套風格的三根支柱
 
-開新對話、**不上傳任何圖**,把下面這段取代每個怪物 prompt 開頭的三行否定句 +
-`Style:` 那一段。純文字描述勇者的風格特徵,一致性稍差但絕不會回你一張勇者。
-
-```
-Art style: cute chibi fantasy game art. Bold uniform black outlines of even
-thickness. Flat cel shading with exactly one soft shadow tone per color, plus
-a soft rim light from the upper left. Vibrant saturated palette built around
-royal blue, warm gold and purple. Large expressive eyes with white highlights.
-Chibi proportions with an oversized head. Clean vector-like finish, no texture,
-no painterly brushwork. Mobile game asset quality.
-```
+1. **遮住的臉** — 無臉／頭盔／空兜帽／骷髏。**表情是唯一反覆失敗的變數**
+   （某一隻怪骰了四輪，分別失敗在媚眼、傻笑、呆萌、太可愛），把臉遮住＝把變數移除。
+   改用遮臉之後，每一隻都一到兩輪就過。
+2. **冷光點當眼睛** ＋ 破爛布料或重甲 ＋ 低彩度。
+3. **金色的量 = 階級** — 小獸一枚鏽環 → 渡鴉腳環 → 幽魂提燈框 → 骨龍鎖鏈 →
+   騎士甲邊 → 魔王滿身金雕花。
 
 ---
-
-# 怪物 6 張(記得上傳 hero.png 當參考圖)
-
-## enemy1.webp — 史萊姆怪(最弱,HP 20)
-```
-Create a completely NEW and DIFFERENT character.
-The attached image is a STYLE REFERENCE ONLY — match its art style, outline
-weight, shading and color treatment, but do NOT copy, redraw, edit or include
-the wizard character from it. The wizard girl must not appear anywhere in the
-output. The output must contain only the single new monster described below.
-
-2D game character asset for a children's educational math RPG.
-Style: cute chibi fantasy, bold clean black outlines, flat cel shading with
-soft rim light from the upper left, vibrant saturated colors, friendly and
-non-scary, mobile game art quality.
-Use hard-edged cel shading with flat blocks of color — no smooth airbrush
-gradients anywhere on the character.
-Full body, single character, centered, standing on flat ground.
-The character's feet must touch the very bottom edge of the image.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform,
-no gradient, no floor, no props.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow
-beneath the character, no drop shadow. The magenta area must stay 100% clean
-and untouched everywhere.
-No text, no watermark, no border, no UI elements.
-Square 1:1 composition.
-
-Subject: a small cute green slime blob monster with big round eyes and a tiny
-smile, jelly-like glossy body with a soft highlight on top. Harmless and funny,
-not scary at all. This is the weakest enemy in the game.
-Small in the frame — it should occupy only the lower half of the square.
-Front-facing, three-quarter view turned slightly toward the LEFT.
-```
-
-## enemy2.webp — 幽靈怪(HP 28)
-```
-Create a completely NEW and DIFFERENT character.
-The attached image is a STYLE REFERENCE ONLY — match its art style, outline
-weight, shading and color treatment, but do NOT copy, redraw, edit or include
-the wizard character from it. The wizard girl must not appear anywhere in the
-output. The output must contain only the single new monster described below.
-
-2D game character asset for a children's educational math RPG.
-Style: cute chibi fantasy, bold clean black outlines, flat cel shading with
-soft rim light from the upper left, vibrant saturated colors, friendly and
-non-scary, mobile game art quality.
-Use hard-edged cel shading with flat blocks of color — no smooth airbrush
-gradients anywhere on the character.
-Full body, single character, centered, standing on flat ground.
-The character's feet must touch the very bottom edge of the image.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform,
-no gradient, no floor, no props.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow
-beneath the character, no drop shadow. The magenta area must stay 100% clean
-and untouched everywhere.
-No text, no watermark, no border, no UI elements.
-Square 1:1 composition.
-
-Subject: a friendly round ghost, pale lavender-white body, a translucent wispy
-tail instead of legs, big cartoon eyes, a slightly mischievous grin. Cute and
-playful, absolutely not frightening.
-The wispy tail must reach all the way down to the very bottom edge of the image.
-Small to medium size in the frame.
-Front-facing, three-quarter view turned slightly toward the LEFT.
-```
-
-## enemy3.webp — 蝙蝠怪(HP 40)
-```
-Create a completely NEW and DIFFERENT character.
-The attached image is a STYLE REFERENCE ONLY — match its art style, outline
-weight, shading and color treatment, but do NOT copy, redraw, edit or include
-the wizard character from it. The wizard girl must not appear anywhere in the
-output. The output must contain only the single new monster described below.
-
-2D game character asset for a children's educational math RPG.
-Style: cute chibi fantasy, bold clean black outlines, flat cel shading with
-soft rim light from the upper left, vibrant saturated colors, friendly and
-non-scary, mobile game art quality.
-Use hard-edged cel shading with flat blocks of color — no smooth airbrush
-gradients anywhere on the character.
-Full body, single character, centered, standing on flat ground.
-The character's feet must touch the very bottom edge of the image.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform,
-no gradient, no floor, no props.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow
-beneath the character, no drop shadow. The magenta area must stay 100% clean
-and untouched everywhere.
-No text, no watermark, no border, no UI elements.
-Square 1:1 composition.
-
-Subject: a purple cartoon bat monster with oversized spread wings, large round
-eyes, two tiny fangs, a fluffy cream-colored chest, small clawed feet planted
-on the ground. Mischievous but cute.
-Medium size in the frame.
-Front-facing, three-quarter view turned slightly toward the LEFT.
-```
-
-## enemy4.webp — 小巨龍(HP 56)
-```
-Create a completely NEW and DIFFERENT character.
-The attached image is a STYLE REFERENCE ONLY — match its art style, outline
-weight, shading and color treatment, but do NOT copy, redraw, edit or include
-the wizard character from it. The wizard girl must not appear anywhere in the
-output. The output must contain only the single new monster described below.
-
-2D game character asset for a children's educational math RPG.
-Style: cute chibi fantasy, bold clean black outlines, flat cel shading with
-soft rim light from the upper left, vibrant saturated colors, friendly and
-non-scary, mobile game art quality.
-Use hard-edged cel shading with flat blocks of color — no smooth airbrush
-gradients anywhere on the character.
-Full body, single character, centered, standing on flat ground.
-The character's feet must touch the very bottom edge of the image.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform,
-no gradient, no floor, no props.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow
-beneath the character, no drop shadow. The magenta area must stay 100% clean
-and untouched everywhere.
-No text, no watermark, no border, no UI elements.
-Square 1:1 composition.
-
-Subject: a young orange-red dragon with chunky chibi proportions, small wings,
-a cream-colored belly, a tiny flame puffing from its nose, standing upright on
-two sturdy legs. Fierce-looking but adorable.
-Clearly bigger than a slime — fills about two thirds of the frame height.
-Front-facing, three-quarter view turned slightly toward the LEFT.
-```
-
-## enemy5.webp — 惡鬼(HP 76)
-```
-Create a completely NEW and DIFFERENT character.
-The attached image is a STYLE REFERENCE ONLY — match its art style, outline
-weight, shading and color treatment, but do NOT copy, redraw, edit or include
-the wizard character from it. The wizard girl must not appear anywhere in the
-output. The output must contain only the single new monster described below.
-
-2D game character asset for a children's educational math RPG.
-Style: cute chibi fantasy, bold clean black outlines, flat cel shading with
-soft rim light from the upper left, vibrant saturated colors, friendly and
-non-scary, mobile game art quality.
-Use hard-edged cel shading with flat blocks of color — no smooth airbrush
-gradients anywhere on the character.
-Full body, single character, centered, standing on flat ground.
-The character's feet must touch the very bottom edge of the image.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform,
-no gradient, no floor, no props.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow
-beneath the character, no drop shadow. The magenta area must stay 100% clean
-and untouched everywhere.
-No text, no watermark, no border, no UI elements.
-Square 1:1 composition.
-
-Subject: a red oni ogre monster with two small ivory horns, wild dark hair,
-a tiger-skin loincloth, holding a studded wooden club resting on its shoulder,
-a big confident grin showing two tusks. Muscular but cartoonish and playful,
-appropriate for children — no blood, no wounds, nothing menacing.
-Color note: use a DEEP crimson red, clearly darker and cooler than orange.
-This character will be placed against a warm orange volcanic background, so it
-must stay clearly readable against it — avoid orange or warm-tan body tones,
-and keep the dark hair and the ivory horns as strong contrasting accents.
-Large — fills most of the frame height.
-Front-facing, three-quarter view turned slightly toward the LEFT.
-```
-
-## enemy6.webp — 魔王(最終王,HP 100)
-```
-Create a completely NEW and DIFFERENT character.
-The attached image is a STYLE REFERENCE ONLY — match its art style, outline
-weight, shading and color treatment, but do NOT copy, redraw, edit or include
-the wizard character from it. The wizard girl must not appear anywhere in the
-output. The output must contain only the single new monster described below.
-
-2D game character asset for a children's educational math RPG.
-Style: cute chibi fantasy, bold clean black outlines, flat cel shading with
-soft rim light from the upper left, vibrant saturated colors, friendly and
-non-scary, mobile game art quality.
-Use hard-edged cel shading with flat blocks of color — no smooth airbrush
-gradients anywhere on the character.
-Full body, single character, centered, standing on flat ground.
-The character's feet must touch the very bottom edge of the image.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform,
-no gradient, no floor, no props.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow
-beneath the character, no drop shadow. The magenta area must stay 100% clean
-and untouched everywhere.
-No text, no watermark, no border, no UI elements.
-Square 1:1 composition.
-
-Subject: the final boss demon lord — dark purple skin, large curved gold-tipped
-horns, a golden crown, a flowing black-and-crimson cape with gold trim, glowing
-amber eyes, arms crossed confidently over the chest. Imposing, regal and grand,
-but still stylized and cartoonish — intimidating, never gory or horrifying.
-Fills the entire frame height, clearly the biggest and most impressive of all
-the monsters.
-Front-facing, three-quarter view turned slightly toward the LEFT.
-```
-
----
-
-# 場景背景 6 張(不用參考圖、不用洋紅底、16:9)
-
-## stage1.webp — 草原(第一關)
-```
-2D game background for a children's educational math RPG, side-view battle arena.
-Style: painterly cartoon, soft shapes, gentle lighting, matching a cute chibi
-fantasy game. Slightly desaturated and low contrast so that white UI text stays
-readable on top.
-Composition: the LOWER THIRD must be flat, open, empty ground for characters to
-stand on. The middle and upper areas hold the scenery. Keep the center and the
-lower left and lower right corners visually calm and uncluttered.
-No characters, no creatures, no text, no UI, no logos.
-16:9 wide landscape.
-
-Scene: a bright sunny grassland, rolling green hills in the distance, a few
-fluffy white clouds in a light blue sky, scattered tiny flowers near the horizon.
-Cheerful and welcoming — this is the very first stage.
-Sky tone around #cfe8f7, grass around #7cb85c.
-```
-
-## stage2.webp — 森林(第二關)
-```
-2D game background for a children's educational math RPG, side-view battle arena.
-Style: painterly cartoon, soft shapes, gentle lighting, matching a cute chibi
-fantasy game. Slightly desaturated and low contrast so that white UI text stays
-readable on top.
-Composition: the LOWER THIRD must be flat, open, empty ground for characters to
-stand on. The middle and upper areas hold the scenery. Keep the center and the
-lower left and lower right corners visually calm and uncluttered.
-No characters, no creatures, no text, no UI, no logos.
-16:9 wide landscape.
-
-Scene: a peaceful forest clearing, tall trees framing the far left and far right
-edges high up, dappled sunlight filtering through the canopy, a soft green haze
-between the trunks, flat mossy ground.
-Sky tone around #bce0c8, ground around #5a9560.
-```
-
-## stage3.webp — 洞窟(第三關)
-```
-2D game background for a children's educational math RPG, side-view battle arena.
-Style: painterly cartoon, soft shapes, gentle lighting, matching a cute chibi
-fantasy game. Slightly desaturated and low contrast so that white UI text stays
-readable on top.
-Composition: the LOWER THIRD must be flat, open, empty ground for characters to
-stand on. The middle and upper areas hold the scenery. Keep the center and the
-lower left and lower right corners visually calm and uncluttered.
-No characters, no creatures, no text, no UI, no logos.
-16:9 wide landscape.
-
-Scene: an underground crystal cavern, stalactites hanging from the top edge,
-faintly glowing TEAL and cyan crystals embedded in the rock walls, cool dim
-ambient light, flat stone floor.
-Color note: the purple bat monster fights here, so the cave must be teal-blue,
-NOT purple or violet — otherwise the character disappears into the background.
-Upper tone around #7fa3ad, floor a dark slate around #2b3a42.
-```
-
-## stage4.webp — 沼澤(第四關)
-```
-2D game background for a children's educational math RPG, side-view battle arena.
-Style: painterly cartoon, soft shapes, gentle lighting, matching a cute chibi
-fantasy game. Slightly desaturated and low contrast so that white UI text stays
-readable on top.
-Composition: the LOWER THIRD must be flat, open, empty ground for characters to
-stand on. The middle and upper areas hold the scenery. Keep the center and the
-lower left and lower right corners visually calm and uncluttered.
-No characters, no creatures, no text, no UI, no logos.
-16:9 wide landscape.
-
-Scene: a murky swamp, twisted bare trees in the background, drifting low fog,
-still dark-green water pools at the far left and far right sides, a flat muddy
-bank running across the bottom. Gloomy but not horrifying.
-Overcast olive sky around #a3b79c, ground around #6a7a4c.
-```
-
-## stage5.webp — 火山(第五關)
-```
-2D game background for a children's educational math RPG, side-view battle arena.
-Style: painterly cartoon, soft shapes, gentle lighting, matching a cute chibi
-fantasy game. Slightly desaturated and low contrast so that white UI text stays
-readable on top.
-Composition: the LOWER THIRD must be flat, open, empty ground for characters to
-stand on. The middle and upper areas hold the scenery. Keep the center and the
-lower left and lower right corners visually calm and uncluttered.
-No characters, no creatures, no text, no UI, no logos.
-16:9 wide landscape.
-
-Scene: a volcanic wasteland, a smoking volcano on the distant horizon, orange
-embers floating in the air, cracked dark basalt ground with faint glowing lava
-seams running through it. Hot and hazy.
-Color note: a deep red oni fights here. Keep the sky a smoky, muted burnt orange
-(around #c97f52) rather than a bright glowing orange, and make the ground a DARK,
-nearly black basalt (around #2a1512). Both must be far enough from the oni's red
-that he reads clearly. Do not make the ground orange or warm brown.
-```
-
-## stage6.webp — 魔王城(最終關)
-```
-2D game background for a children's educational math RPG, side-view battle arena.
-Style: painterly cartoon, soft shapes, gentle lighting, matching a cute chibi
-fantasy game. Slightly desaturated and low contrast so that white UI text stays
-readable on top.
-Composition: the LOWER THIRD must be flat, open, empty ground for characters to
-stand on. The middle and upper areas hold the scenery. Keep the center and the
-lower left and lower right corners visually calm and uncluttered.
-No characters, no creatures, no text, no UI, no logos.
-16:9 wide landscape.
-
-Scene: the interior of a demon lord's throne hall, tall gothic pillars on both
-sides, a huge stained-glass rose window in the background, COLD BLUE flame
-braziers flanking the room, a dark polished stone floor. Ominous and grand,
-but not gory.
-Color note: the demon lord himself is purple with a crimson-and-gold cape, so
-this hall must be a deep midnight BLUE, NOT purple and not warm red — the boss
-has to stand out against it.
-Upper tone around #3d4a6b, floor around #141a28.
-```
-
----
-
-
-# 第五批:蝙蝠／小巨龍／惡鬼「霸氣化」(2026-08-20)
-
-魔王重畫後的霸氣感來自四件可移植的事,不是畫功:**動態架勢**(不是中立站姿)、
-**身後有東西飄**(額外的面積與動勢)、**深色高對比＋金屬色點綴**、**身上帶特效**。
-下面三段就是把這四點套到各自的角色上。
-
-**史萊姆刻意不改**——它的定位是「最弱的那隻」,六隻都拉滿會失去「越後面越危險」
-的視覺敘事,學生一看就知道走到哪一關的資訊會不見。
-
-⚠️ **存檔位置**:直接覆蓋 `enemy3.png` / `enemy4.png` / `enemy5.png`。
-參考圖也用同一個檔(即目前遊戲裡在用的那版)。
-
-> `-side` 那套檔名已在 2026-08-20 廢除:側身版已取代原圖,腳本改回單純吃
-> `enemyN.png`,而且**所有角色的 flip 都是 false**(每隻都已重產成原生朝左)。
-> 之後若某張圖真的產出朝右,才需要把該隻的 flip 改回 true。
-
-## enemy3-side.png — 蝙蝠霸氣化
-```
-Keep this EXACT character — the same purple bat with the cream chest fluff, same
-art style, same bold black outline weight, same flat cel shading. It must stay
-recognisably the same creature. ONLY the pose, colors and intensity change.
-
-Make this character look powerful and imposing, in the same way a final boss does:
-- A dynamic ACTION stance, not a neutral standing pose — weight shifted, limbs
-  extended, caught mid-motion.
-- Something with mass flowing behind it to add movement.
-- DEEPER, richer colors with strong dark-to-light contrast, plus a few bone-white
-  accents on details like claws and fangs.
-- A wisp of dark energy close to the body.
-- Sharper, more confident eyes — narrowed and focused, not round and cute.
-
-Specifically: it lunges forward in a diving attack, both wings swept forward and
-down, claws spread and reaching, mouth open in a screech showing long bone-white
-fangs. The ear tufts and chest fluff blow backward from the rush. Deepen the body
-to a darker violet with near-black shading on the wing membranes, and add thin
-trailing wisps of shadow behind it.
-
-It still faces LEFT, screeching at an opponent standing off-frame to the left.
-Keep the SAME overall size and SAME height as the reference image, with its lowest
-point still touching the very bottom edge. Do not zoom in or crop closer.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. Keep the wings and the shadow wisps INSIDE the frame — they must not
-stretch to the canvas edges. No text, no watermark, no border.
-```
-
-## enemy4.png — 小巨龍霸氣化
-```
-Keep this EXACT character — the same young orange-red dragon with the cream belly,
-same art style, same bold black outline weight, same flat cel shading. It must stay
-recognisably the same creature. ONLY the pose, colors and intensity change.
-
-Make this character look powerful and imposing, in the same way a final boss does:
-- A dynamic ACTION stance, not a neutral standing pose — weight shifted onto one
-  leg, limbs raised, caught mid-motion.
-- Something with mass flowing behind it to add movement.
-- DEEPER, richer colors with strong dark-to-light contrast, plus bone-white accents
-  on the horns and claws.
-- A wisp of fire close to the body.
-- Sharper, more confident eyes — narrowed and focused, not round and cute.
-
-Specifically: wings spread wide and raised high, neck arched back mid-roar, front
-claws raised and spread, tail lashing behind it. A burst of orange flame escapes
-between its teeth. Deepen the body to a richer red-orange with much darker shading
-in the crevices, and give the horns and claws a hard bone-white sheen.
-
-It still faces LEFT, roaring at an opponent standing off-frame to the left.
-Keep the SAME overall size and SAME standing height as the reference image, feet
-still touching the very bottom edge. Do not zoom in or crop closer.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. Keep the wings, tail and flame INSIDE the frame — they must not
-stretch to the canvas edges. No text, no watermark, no border.
-```
-
-## enemy5-side.png — 惡鬼霸氣化
-```
-Keep this EXACT character — the same red oni with the tiger-skin loincloth, the
-wooden club, the ivory horns and the wild dark hair. Same art style, same bold
-black outline weight, same flat cel shading. It must stay recognisably the same
-creature. ONLY the pose, colors and intensity change.
-
-Make this character look powerful and imposing, in the same way a final boss does:
-- A dynamic ACTION stance, not a neutral standing pose — weight shifted onto one
-  leg, arms raised, caught mid-motion.
-- Hair and cloth flowing to add movement.
-- DEEPER, richer colors with strong dark-to-light contrast, plus bone-white accents
-  on the horns and tusks.
-- A wisp of heat and embers close to the body.
-- Sharper, more confident eyes — narrowed and focused, not round and cute.
-
-Specifically: he swings the club up over his head with both hands, body twisted
-into the wind-up, one foot forward, roaring with his mouth wide open showing both
-tusks. His dark hair whips upward. Deepen the skin to a darker crimson with strong
-shadow on the muscles, and add faint embers and heat haze rising close around him.
-
-It still faces LEFT, roaring at an opponent standing off-frame to the left.
-Keep the SAME overall size and SAME standing height as the reference image, feet
-still touching the very bottom edge. Do not zoom in or crop closer.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. Keep the club and the embers INSIDE the frame — they must not stretch
-to the canvas edges. No text, no watermark, no border.
-```
-
----
-
-# 第四批:幽靈與魔王重畫(2026-08-20)
-
-這兩隻不是調朝向而已,是**保留畫風但改掉造型/表情/配色**。所以參考圖的定位要講清楚:
-**只當風格範本,不是要保留這個角色的長相**——並且把「要改什麼」逐條列出來,
-否則 Gemini 會傾向整張原封不動還你。
-
-存成 `enemy2-side.png` / `enemy6-side.png`。**幽靈重畫後是原生朝左,腳本不會再翻轉它**
-(舊版是靠翻轉才朝左的,那也是光源跑到右上的原因)。
-
-## enemy2-side.png — 幽靈重畫
-要修的:光源方向反了、造型太單調、表情不對。
-```
-Use the attached image as a STYLE reference ONLY — same art style, same bold black
-outline weight, same flat cel shading, same chibi proportions, same mobile-game
-finish. Do NOT simply reproduce the character; redraw it with the changes below.
-
-Changes:
-- LIGHTING: light comes from the UPPER LEFT. The highlight sits on the upper-left
-  of the body. (The reference is lit from the right — that is the mistake to fix.)
-- FACING: the ghost faces LEFT. Head and body turned toward the left edge, looking
-  at an opponent standing off-frame to the LEFT. Draw it facing left natively —
-  do not mirror the reference.
-- SILHOUETTE: give it a much more interesting shape. The lower body ends in a
-  tattered, ragged cloth hem with three or four uneven trailing wisps instead of one
-  smooth teardrop, and both little arms are clearly visible reaching forward.
-- EXPRESSION: playful and cheeky rather than sinister — a wide toothy grin, one eye
-  squinted, tongue poking out, as if taunting the hero. Mischievous, never scary.
-- COLOR: pale lavender-blue body, NOT pure white, so it reads clearly against a
-  light green forest background. Keep the heavy black outline.
-
-Full body, single character, centered. The lowest wisp of its tail must touch the
-very bottom edge of the image.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow.
-No text, no watermark, no border. Square 1:1 composition.
-```
-
-### 幽靈第二輪:只改表情
-第一輪把造型/配色/光源/朝向都修好了,但表情寫過頭——`playful and cheeky` +
-`tongue poking out` + `taunting` 直接被照做,變成搗蛋鬼而不是敵人。
-**參考圖要用第一輪產出的那張**(不是最早的白幽靈),只換表情:
-```
-Keep this EXACT character — same body shape, same tattered trailing wisps, same
-pale lavender-blue color, same lighting from the upper left, same facing direction,
-same art style and outline weight. ONLY the facial expression changes.
-
-Remove the winking eye and the sticking-out tongue completely.
-
-New expression: both eyes open and narrowed into a menacing stare, brows angled
-down into a sharp V, and a sly closed-mouth smirk with one small fang showing at
-the corner. It is sizing up an opponent — confident and a little sinister, but
-still cartoonish and never frightening for children.
-
-Same square 1:1 canvas, the lowest wisp still touching the very bottom edge.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background. No text, no watermark, no border.
-```
-想更兇:把 smirk 換成 `mouth open in a silent howl, showing two small fangs`。
-想更冷淡:換成 `an expressionless, hollow stare with no mouth visible`(這版最陰森,
-但對低年級可能偏可怕)。
-
-## enemy6-side.png — 魔王重畫
-要修的:身體要側身、壓迫感不夠、配色跟藍色魔王城太近。
-```
-Use the attached image as a STYLE reference ONLY — same art style, same bold black
-outline weight, same flat cel shading, same mobile-game finish. Do NOT simply
-reproduce the character; redraw it with the changes below.
-
-Changes:
-- POSE: he is STRIDING toward the LEFT, caught mid-step — chest and hips turned
-  toward the left edge, one leg forward and one trailing behind, seen from the side.
-  He is NOT facing the viewer. He is bearing down on an opponent off-frame to the LEFT.
-- ONE ARM RAISED, the open hand wreathed in crackling dark magical energy, instead
-  of arms crossed. Keep the glow close to the hand.
-- IMPOSING: broader shoulders, taller and heavier build, the cape flaring outward
-  and upward behind him as if caught in wind. He must read as the final boss.
-- COLOR: much DEEPER, almost black-violet skin, and a richer deep-crimson cape with
-  more gold trim. He will stand in a midnight-BLUE castle hall, so he must not be a
-  mid-tone purple or he disappears into it.
-- LIGHTING: light from the UPPER LEFT.
-
-Full body, single character, centered, feet touching the very bottom edge.
-He fills the frame — the largest and most impressive of all the monsters.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow.
-Keep the cape inside the frame. No text, no watermark, no border. Square 1:1.
-```
-
-⚠️ 依前兩次經驗,**「側身」多半只會轉到頭**。魔王這段改用「大步走過去(striding, mid-step)」
-的**動作**來暗示側身,而不是描述姿勢——走路的姿態本身就會逼出身體轉向。
-
----
-
-# 第三批:讓怪物真的側身面對勇者(2026-08-20)
-
-初版寫 `three-quarter view turned slightly toward the LEFT` **太軟了**,Gemini 只把眼珠
-轉過去,身體仍然正對觀眾。站姿是每一題都看得到的畫面,這個突兀感比攻擊動畫還明顯。
-
-要改的只有三隻:**蝙蝠、惡鬼、魔王**(都是正面站姿)。
-史萊姆是球體沒有正面可言、幽靈和小巨龍已經朝左,都不用動。
-
-流程同前:開新對話 → 上傳**該怪物自己的原圖** → 整段貼下面。
-存成 `enemy3-side.png` / `enemy5-side.png` / `enemy6-side.png`(**不要覆蓋原圖**,
-萬一側身版更差還能退回)。去背腳本會自動優先使用 `-side` 檔。
-
-## 共用段落(每段都已含在下面,這裡只是說明)
-關鍵是**列出所有身體部位**——肩、軀幹、腰、腳——並明講「不是面向觀眾」。
-只寫 "turn to the left" 它會理解成轉個頭而已。
-
-## enemy3-side.png — 蝙蝠側身
-```
-Keep this EXACT character — same face, same colors, same proportions, same art
-style, same black outline weight. Do not redesign anything, do not change the
-character's identity or palette. ONLY the body orientation changes.
-
-Keep the character at the SAME overall size and SAME height as in the reference
-image, still touching the very bottom edge. Do not zoom in or crop closer.
-
-Turn the character's WHOLE BODY to face LEFT: head, shoulders, torso and feet all
-rotated toward the left side of the image, seen in a three-quarter side view.
-It is NOT facing the viewer — it is looking at an opponent standing off-frame to
-the LEFT. One wing is nearer the viewer and one is partly behind the body.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. No text, no watermark, no border.
-```
-
-## enemy5-side.png — 惡鬼側身
-```
-Keep this EXACT character — same face, same colors, same proportions, same art
-style, same black outline weight. Do not redesign anything, do not change the
-character's identity or palette. ONLY the body orientation changes.
-
-Keep the character at the SAME overall size and SAME standing height as in the
-reference image, feet still touching the very bottom edge. Do not zoom in.
-
-Turn the character's WHOLE BODY to face LEFT: head, shoulders, chest, hips and
-both feet all rotated toward the left side of the image, seen in a three-quarter
-side view. It is NOT facing the viewer — it is glaring at an opponent standing
-off-frame to the LEFT. The club still rests on the shoulder nearer the viewer.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. No text, no watermark, no border.
-```
-
-## enemy6-side.png — 魔王側身
-```
-Keep this EXACT character — same face, same outfit, same colors, same proportions,
-same art style, same black outline weight. Do not redesign anything, do not change
-the character's identity or palette. ONLY the body orientation changes.
-
-Keep the character at the SAME overall size and SAME standing height as in the
-reference image, feet still touching the very bottom edge. Do not zoom in.
-
-Turn the character's WHOLE BODY to face LEFT: head, horns, shoulders, chest, hips
-and both feet all rotated toward the left side of the image, seen in a three-quarter
-side view. It is NOT facing the viewer — it is staring down an opponent standing
-off-frame to the LEFT. Arms stay crossed, and the cape falls behind the body.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. Keep the cape close to the body, not spilling to the canvas edges.
-No text, no watermark, no border.
-```
-
-⚠️ **這三隻若改成側身,對應的攻擊圖要用側身版當參考圖重產**,否則攻擊瞬間會轉回正面。
-所以順序是:先確認側身站姿 OK,再產攻擊姿。
-
----
-
-# 第二批:攻擊姿勢 7 張(2026-08-20)
-
-**寫法跟產角色時完全相反。** 當初害我們拿到一張一模一樣勇者的那個特性
-(上傳參考圖後 Gemini 傾向保留主體),在這裡剛好是優勢——這次就是要它保留角色、只改姿勢。
-所以**不要否定句**,反過來明講「保持同一角色」。勇者轉向那次已經驗證這招可行。
-
-**流程**:每一隻都開新對話 → 上傳**該角色自己的原圖**(Downloads 裡那張,不是去背後的)
-→ 整段貼下面的 prompt。勇者要用**朝右版**的 `hero.png`。
-
-⚠️ **一定要保留「維持相同高度」那兩句**。攻擊姿勢常會前傾、壓低身體,整體高度一變,
-去背腳本按高度對齊縮放時就會把它放大,切換動作時角色會忽大忽小。
-
-⚠️ **特效要靠近身體**。火焰、魔法光如果噴到接近畫布邊緣,會把去背後的外框撐大,
-角色本體反而被縮小。
-
-## hero-atk.png — 勇者攻擊
-```
-Keep this EXACT character — same face, same outfit, same colors, same proportions,
-same art style, same black outline weight. Do not redesign anything, do not change
-the character's identity or palette. ONLY the pose changes.
-
-Keep the character at the SAME overall size and SAME standing height as in the
-reference image: the head stays at roughly the same height in the frame and the
-feet still touch the very bottom edge. Do not zoom in or crop closer.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. Keep any glow close to the body, never spilling to the canvas edges.
-No text, no watermark, no border.
-
-New pose: mid-attack — the hero thrusts the glowing staff forward to the RIGHT,
-body leaning into the strike, front foot stepping forward, long hair swept back by
-the motion, mouth open in a determined shout. The staff orb and the magic book
-glow brighter with magical energy.
-```
-
-## enemy1-atk.png — 史萊姆攻擊
-```
-Keep this EXACT character — same face, same colors, same proportions, same art
-style, same black outline weight. Do not redesign anything, do not change the
-character's identity or palette. ONLY the pose changes.
-
-Keep the character at the SAME overall size as in the reference image, and it must
-still touch the very bottom edge of the canvas. Do not zoom in or crop closer.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. No text, no watermark, no border.
-
-New pose: mid-attack — the slime squashes down and springs forward to the LEFT,
-its body stretched into a leaning teardrop, eyes narrowed, mouth open wide.
-The bottom of its body still touches the bottom edge of the canvas.
-```
-
-## enemy2-atk.png — 幽靈攻擊
-```
-Keep this EXACT character — same face, same colors, same proportions, same art
-style, same black outline weight. Do not redesign anything, do not change the
-character's identity or palette. ONLY the pose changes.
-
-Keep the character at the SAME overall size as in the reference image, and its
-wispy tail must still reach the very bottom edge of the canvas. Do not zoom in.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. No text, no watermark, no border.
-
-New pose: mid-attack — the ghost rushes forward to the LEFT with both wispy arms
-thrown out ahead of it, tail streaming behind, face fierce with a wide open mouth.
-```
-
-## enemy3-atk.png — 蝙蝠攻擊
-```
-Keep this EXACT character — same face, same colors, same proportions, same art
-style, same black outline weight. Do not redesign anything, do not change the
-character's identity or palette. ONLY the pose changes.
-
-Keep the character at the SAME overall size and SAME height as in the reference
-image, still touching the very bottom edge. Do not zoom in or crop closer.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. No text, no watermark, no border.
-
-New pose: mid-attack — the bat lunges forward to the LEFT with both wings swept
-forward and down, small claws extended, mouth open showing its fangs.
-Keep the wingspan no wider than in the reference image.
-```
-
-## enemy4-atk.png — 小巨龍攻擊
-```
-Keep this EXACT character — same face, same colors, same proportions, same art
-style, same black outline weight. Do not redesign anything, do not change the
-character's identity or palette. ONLY the pose changes.
-
-Keep the character at the SAME overall size and SAME standing height as in the
-reference image, feet still touching the very bottom edge. Do not zoom in.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. No text, no watermark, no border.
-
-New pose: mid-attack — the dragon thrusts its head forward to the LEFT and breathes
-a burst of orange flame, wings flared, front claws raised. Keep the flame COMPACT
-and close to the snout — it must not stretch toward the canvas edge.
-```
-
-## enemy5-atk.png — 惡鬼攻擊
-```
-Keep this EXACT character — same face, same colors, same proportions, same art
-style, same black outline weight. Do not redesign anything, do not change the
-character's identity or palette. ONLY the pose changes.
-
-Keep the character at the SAME overall size and SAME standing height as in the
-reference image, feet still touching the very bottom edge. Do not zoom in.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. No text, no watermark, no border.
-
-New pose: mid-attack — the oni swings its wooden club forward and down toward the
-LEFT with both hands, body twisted into the swing, mouth wide open shouting.
-Keep the club inside the frame.
-```
-
-## enemy6-atk.png — 魔王攻擊
-```
-Keep this EXACT character — same face, same outfit, same colors, same proportions,
-same art style, same black outline weight. Do not redesign anything, do not change
-the character's identity or palette. ONLY the pose changes.
-
-Keep the character at the SAME overall size and SAME standing height as in the
-reference image, feet still touching the very bottom edge. Do not zoom in.
-
-Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. Keep the magical glow close to the hand, never spilling to the
-canvas edges. No text, no watermark, no border.
-
-New pose: mid-attack — the demon lord thrusts one arm forward to the LEFT, casting
-dark magic with glowing energy gathered around the open hand, cape flaring outward,
-eyes blazing.
-```
-
-## 收圖檢查(攻擊圖專用)
-- [ ] 是同一個角色嗎?臉、配色、描邊有沒有被重新設計?
-- [ ] **整體高度跟站姿差不多嗎?**(差太多的話切換動作時角色會忽大忽小)
-- [ ] 腳底/尾巴尖有沒有碰到畫布底邊?
-- [ ] 特效有沒有噴到接近畫布邊緣?
-- [ ] 腳下有沒有又被畫上橢圓陰影?
-
----
-
-## 角色 7 張已處理完成(2026-08-20)
-
-去背/裁切/縮放腳本:`.claude\math-rpg-keyer.ps1`(重產某張圖後可直接重跑)。
-轉檔:`ffmpeg -c:v libwebp -lossless 0 -quality 88 -preset drawing -pix_fmt yuva420p`。
-
-**實測到的關鍵數字**(重跑或處理背景圖時會用到):
-- Gemini 給的洋紅底**不是** `#FF00FF`,實測是 `#FC1AF7` / `#FB25F3` 這類,綠通道有 20~37 殘值,
-  每張每角落都不同 → 不能用相等比對,要用色相區間(背景實測 hue≈301、sat≈0.90)。
-- 角色身上的紫在 hue 250~285、sat≈0.28;魔王披風的紅在 hue≈345 → 跟背景色相有安全緩衝。
-- 去背分兩段:①從畫布邊緣 flood fill(寬鬆門檻 hue 286-340 / sat≥0.30)清主背景,
-  角色內部絕不會被挖穿;②嚴格門檻(hue 288-330 / sat≥0.55)補清「封閉孔洞」——
-  手臂與身體之間那種被抗鋸齒堵住、flood fill 流不進去的縫隙。**惡鬼少了第②段會殘留洋紅斑點**。
-- 體型階梯由縮放控制,不是原圖大小:hero 0.95 / 史萊姆 0.50 / 幽靈 0.62 / 蝙蝠 0.72 /
-  龍 0.82 / 惡鬼 0.90 / 魔王 1.00(畫布 512×512,底部對齊)。
-- 有損 WebP q88 與無損在 4 倍放大下看不出差異,但檔案小 4 倍(220KB vs 867KB)。
-- **半透明光暈會變粉紫**(2026-08-20 勇者朝右版踩到):發光效果在生成時就被合成到洋紅底上,
-  存成不透明的淡粉像素,去背救不回 alpha。解法是**去溢色不是刪除**——刪掉會在光暈上打洞。
-  實測分界:粉紫髒污 hue 280-340 / **sat 0.06-0.19**;同色相的紫頭髮 sat 0.27+;藍光暈 hue 180-229。
-  取 sat < 0.22 當上限,再**限制在背景外擴 20px 的帶狀範圍內**——不限範圍的話會誤啃蝙蝠
-  耳朵那種低飽和淺紫,產生灰色雜點。
-- 之後產「帶發光效果」的圖(攻擊姿勢很可能會有)都會遇到同一件事,腳本已內建處理。
-- **紫色角色最容易被去背誤傷**(2026-08-20 勇者頭髮被戳出洞才發現):
-  - 「封閉孔洞」清除原本用 sat ≥ 0.55,但**紫髮高光的飽和度可達 0.70**,整批被當成背景刪掉,
-    在頭髮上打出透明的洞。實測真正的背景是 **sat 0.90**,所以門檻拉到 **0.75** 才安全。
-  - 同一道清除還加了**連通面積下限 150px**:真孔洞(手臂與身體之間)是一整片,
-    角色身上的誤判是散點,用面積就分得開。
-  - 邊緣去溢色原本只看「R 和 B 都比 G 高」——**任何紫色都符合這條**,所以髮絲被拉成灰色
-    還被降透明度。改成**同時檢查色相**(溢色在 300 附近、角色紫色在 250-285,以 288 分界)。
-  - 診斷訣竅:**把去背後的圖疊在紅色底上**。灰斑若變紅就是「被打成透明」,
-    仍是灰就是「顏色被改」——兩者成因完全不同,疊在灰底上看不出差別。
-
----
-
-## 收圖進度與處理備註
-
-| 圖 | 狀態 | 處理階段要做的事 |
-|---|---|---|
-| hero | ✅ **已換成朝右版**(2026-08-20) | 裁切對齊。新版魔法書會發光,光暈被生成器混到洋紅底上變成不透明的粉紫,需要 haze despill(見下) |
-| enemy1 史萊姆 | ✅ 通過 | 裁掉底部約 20% 空白、對齊底邊 |
-| enemy2 幽靈 | ✅ 通過 | **水平翻轉**(產出來朝右)、裁切對齊;若在淺色關卡對比不足再壓紫調 |
-| enemy3 蝙蝠 | ✅ 通過(風格最貼近勇者) | **水平翻轉**(瞳孔朝右)、**清掉腳下的橢圓地面陰影**(暗洋紅、高飽和,可用色相+飽和度判定)、裁切對齊 |
-| enemy4 小巨龍 | ✅ 通過(目前最乾淨的一張) | 只需裁切對齊。朝向正確、無地面陰影、火焰未撐大佔位 |
-| enemy5 惡鬼 | ✅ 通過(平塗最徹底) | 只需裁切對齊。Color note 生效=深紅不是橘紅;stage5 地面已改為近黑玄武岩以拉開對比 |
-| enemy6 魔王 | ✅ 通過(氣勢足、體型最大) | **清掉腳下橢圓地面陰影**(本體是低飽和灰紫、陰影是高飽和洋紅,用飽和度門檻分離)、裁切對齊。**縮放要用身體而非含披風的外框**,否則最終王會被縮得比惡鬼小 |
-| stage1~6 | ✅ 已完成(2026-08-20) | 裁成寬扁帶狀 1600×286、逐張對齊地面線;stage3 轉青綠、stage6 轉深藍(見下) |
-
-## 背景圖:16:9 是錯的規格(2026-08-20 才發現)
-
-`.battle-stage` 實測是 **1255×206,約 6:1 的極扁容器**(1280×720 視窗)。
-CSS 是 `background-size: cover` + `center bottom`,所以 16:9 的圖**只會顯示最底部 29%**——
-天空、遠山、水晶、彩繪窗全部被裁掉,六關都會變成一整片純地面。
-
-處理方式(腳本:`.claude\math-rpg-stages.sh`):
-- 從原圖裁一條帶狀放大,**裁切起點逐張抓**,目的是讓該圖的「地面線」對齊角色腳底。
-  草原的地平線特別高,要抓得比其他張深很多。這一步沒對準的症狀就是**角色浮在半空中**,
-  stage1 調了兩次才對。
-- **之後若重產背景,可以直接要求寬扁構圖**(例如 3:1),就不必丟掉大半畫面。
-
-### 二版:放大角色後重裁(2026-08-20 稍晚)
-覺得背景被裁掉太可惜,所以把角色放大、戰鬥區加高,空間從題目區與選項區的留白挪過來:
-
-| | 一版 | 二版 |
-|---|---|---|
-| 角色 `.sprite` | 6.6u(95px) | **12u(156px)** |
-| `.sprite-slot` | 7.1u | 13u |
-| 戰鬥區高度 | 206px | **276px** |
-| 容器長寬比 | 6.09:1 | **4.54:1** |
-| 背景裁切帶 | 183px → 1600×286 | **238px → 1600×372** |
-| 角色腳底位置 | 容器 56% | 容器 71% |
-| 卡片總高(1280×720) | 669px | 639px |
-
-省空間的來源:題目區下方留白 3u→1.2u、題目框 padding 1.5u→1u、關卡地圖上方 1.875u→0.7u、
-選項按鈕 padding 1.25u→1u,以及數個 margin。**總高反而比一版還矮 30px**,沒有犧牲可讀性。
-
-已驗證 1920×1080 / 1280×720 / 768×1024 / 390×844 / 844×390 都不溢出、無 clip 警告。
-手機橫放(`max-height: 520px` 分支)有自己的 sprite 覆寫,刻意沒跟著放大——那個尺寸空間本來就緊。
-
-## stage3 / stage6 是用舊 prompt 產的
-產出來的洞窟仍是藍紫、魔王城仍是紫,跟紫蝙蝠和紫魔王同色系。已用 ffmpeg 色相旋轉補救
-(`hue=h=-52` 轉青綠 / `hue=h=-48` 轉深藍),效果不錯。若日後要重產,用檔案裡改過的
-prompt 版本就不需要這道補救。
-
----
-
-## 收圖檢查清單
-- [ ] 角色:腳底(幽靈是尾巴尖)有沒有碰到畫布底邊?
-- [ ] 角色:六隻怪的體型有沒有由小到大?史萊姆最小、魔王最大
-- [ ] 角色:背景是不是乾淨的純洋紅?有漸層或投影的話去背會有殘邊
-- [ ] 角色:描邊粗細跟勇者一致嗎?(最容易走鐘的地方)
-- [ ] 背景:下方 1/3 是不是平坦空地?
-- [ ] 背景:中央和左右下角有沒有塞太多細節?(會被 VS 徽章和血條蓋住)
-- [ ] 全部:13 張看起來像同一套美術嗎?
-
----
-
-# 第六批:蝙蝠／小巨龍／惡鬼「魔王級精緻化」(2026-08-24)
-
-**第五批從來沒產出來過** —— `Downloads\enemy3.png` / `enemy5.png` 的時間戳跟遊戲裡的 webp
-同一批,三隻至今仍是初版可愛中立站姿。這一批取代第五批,不要再用第五批那三段。
-
-## 第五批漏掉的東西:裝備
-
-魔王看起來「霸氣中二又精緻」,拆開來是六件事,第五批只寫到後兩件:
-
-1. **金色描邊的華麗裝備** ← 最關鍵,也是第五批完全沒寫的。魔王身上有角冠、金邊肩甲、
-   腰帶紅寶石、層疊甲片、金邊披風。**精緻感幾乎全部來自這裡**,不是來自畫功。
-2. **身後有大面積布料飄動** —— 披風。增加剪影面積與動勢。
-3. **深色高對比配色** —— 近黑紫 + 深緋紅 + 金,三色而已,不雜。
-4. **身上帶特效** —— 手中的暗黑魔力。
-5. 動態架勢,不是中立站姿。
-6. 銳利表情,眼神瞇起。
-
-## 體型／華麗度階梯(魔王必須留在頂端)
-
-三隻都給裝備的話會蓋過魔王,所以**裝備量分級**:
-
-| | 裝備量 | 身後飄的東西 |
-|---|---|---|
-| 蝙蝠(關 3) | 少:金耳環、金邊頸甲、一顆小寶石 | 細長的影子尾跡 |
-| 小巨龍(關 4) | 中:金環角、金邊胸甲、金爪套 | 火焰與餘燼 |
-| 惡鬼(關 5) | 多:金鉚肩甲、金環角、金箍狼牙棒 | 破爛的深紅獸皮披肩 |
-| **魔王(關 6)** | **全套:頭到腳的華麗甲冑 + 冠冕** | **全長披風** |
-
-魔王的定位是**華麗精緻**,惡鬼是**粗暴野蠻** —— 同樣霸氣但質感不同,
-所以惡鬼再兇也不會搶魔王的位置。
-
-## ⚠️ 兩條給去背腳本的新規則(prompt 裡已含,不要拿掉)
-
-- **特效要畫成硬邊的 cel shading,不可以是半透明柔光暈**。半透明光暈在生成時就被合成
-  到洋紅底上,存成不透明的粉紫像素,去背救不回 alpha(勇者魔法書踩過)。
-- **金色要維持暖黃(hue≈45),絕對不能偏粉或偏洋紅**,否則會被去背當成背景挖掉。
 
 ## 流程
 
-每隻**開新對話**,上傳**該怪物自己現在這張圖**(`Downloads\enemyN.png`)當參考圖,
-整段貼下面。不要上傳魔王當參考圖 —— 會直接回你一張魔王(勇者踩過同樣的坑)。
-魔王的風格已經用文字寫在 prompt 裡了。
+1. **Gemini 開新對話**，上傳一張**風格參考圖**（現在用 `Downloads\enemy2.png` 渡鴉
+   或 `enemy5.png` 黑騎士），貼下面對應的 prompt。
+2. 產出存成 `C:\Users\nini9\Downloads\enemyN.png`（**N = 關卡編號**）。
+3. 要修就**在同一個對話裡續問**，一次只改一件事，並在結尾寫
+   `Everything else stays untouched.`
+4. 跑 `powershell -NoProfile -File "C:\Users\nini9\Work\knowledge-114\.claude\math-rpg-keyer.ps1"`
+5. 轉檔：
+   `ffmpeg -y -i keyed\enemyN.png -c:v libwebp -lossless 0 -quality 88 -preset drawing -pix_fmt yuva420p enemyN.webp`
+   （有損 q88 與無損在 4 倍放大下看不出差異，檔案小 4 倍）
+6. 放進 `assets/images/math-rpg/`，必要時改 `assets/js/math-rpg.js` 的 `ENEMY_LOOKS`。
 
-存回 `C:\Users\nini9\Downloads\enemy3.png` / `enemy4.png` / `enemy5.png`(直接覆蓋),
-然後重跑 `.claude\math-rpg-keyer.ps1`。
-
----
-
-## enemy3.png — 蝙蝠精緻化
-
-```
-Keep this EXACT character — the same purple bat with the big ears, the cream chest
-fluff and the same face. Same art style, same bold black outline weight, same flat
-cel shading, same mobile-game finish. It must stay recognisably the same creature.
-Only its gear, pose, palette and intensity change.
-
-Give it the look of an elite boss monster in a fantasy game — ornate, dark and
-dramatic:
-- ORNATE GEAR with GOLD trim. Add a gold-trimmed dark metal gorget around its neck
-  with one small crimson gem set in the centre, and a gold cuff ring on each ear.
-  Keep the gear light — it is a mid-tier monster, not the final boss, so do not
-  armour the whole body.
-- POSE: a dynamic diving attack, caught mid-motion — both wings swept forward and
-  down, claws spread and reaching, mouth open in a screech showing long bone-white
-  fangs. Not a neutral standing pose.
-- PALETTE: deepen it to a dark violet body with near-black wing membranes, strong
-  dark-to-light contrast, bone-white claws and fangs, and warm gold on the gear.
-  Three colours only — dark violet, near-black, gold.
-- EYES: narrowed, sharp and focused, glowing faintly. Not round and cute.
-- EFFECT: thin trailing wisps of dark shadow streaming behind it.
-
-The character faces LEFT, screeching at an opponent standing off-frame to the left.
-
-IMPORTANT rendering rules:
-- Draw every effect — the shadow wisps, the eye glow — as HARD-EDGED cel-shaded
-  shapes with clean black outlines. Do NOT use soft transparent glows, blur, haze
-  or airbrushed gradients anywhere.
-- The gold must be a warm yellow-gold. It must never look pink, magenta or violet.
-
-Keep the SAME overall size and SAME height as the reference image, with its lowest
-point still touching the very bottom edge. Do not zoom in or crop closer.
-Full body, single character, centered. Same square 1:1 canvas.
-Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
-Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. Keep the wings and the shadow wisps INSIDE the frame — they must not
-touch or stretch to the canvas edges. No text, no watermark, no border.
-```
+**續問 > 重產。** 每輪都開新對話重傳參考圖＝每次都在重骰造型，好不容易對的東西會被洗掉。
+開新對話只用在第一次生成。
 
 ---
 
-## enemy4.png — 小巨龍精緻化
+# 硬規則：寫 prompt
+
+以下每一條都是實際踩過才寫下來的，不要拿掉。
+
+## 1. 朝向：用「幾何描述」，不要用「轉身動詞」
+
+**失敗五次的寫法**：`turn the whole body to face left`、
+`three-quarter view turned toward the LEFT`、`striding toward the LEFT, mid-step`、
+逐一列出「頭、肩、胸、腰、腳都要轉」——**Gemini 一律只轉頭和眼珠就交差**。
+
+**成功的寫法：一個「轉」字都不提，只描述轉過去之後畫面上該長什麼樣。**
 
 ```
-Keep this EXACT character — the same young orange-red dragon with the cream belly
-scales, the small wings and the same face. Same art style, same bold black outline
-weight, same flat cel shading, same mobile-game finish. It must stay recognisably
-the same creature. Only its gear, pose, palette and intensity change.
+Right now the picture is perfectly symmetrical: both pauldrons are the same size,
+the chest emblem points straight at us, and both boots point at the viewer. That
+must change. ...
+- His LEFT pauldron is CLOSER to us. Draw it noticeably LARGER, and let it overlap
+  and partly cover the left edge of his breastplate.
+- His RIGHT pauldron is FURTHER AWAY. Draw it noticeably SMALLER and let his torso
+  partly hide it.
+- The vertical centre line of his breastplate and belt is NOT down the middle of his
+  silhouette any more — it sits clearly to the LEFT of centre.
+- BOTH BOOTS point toward the LEFT edge, one foot ahead of the other, not side by
+  side. We see the sides of his boots, not the fronts.
+- One horn is nearer and drawn larger; the far horn is partly hidden behind the helm.
+- The bulk of the cape falls behind him on the RIGHT side of the picture.
+```
 
-Give it the look of an elite boss monster in a fantasy game — ornate, fierce and
-dramatic:
-- ORNATE GEAR with GOLD trim. Add gold bands wrapped around the base of both horns,
-  a gold-edged dark crimson chest plate strapped over the breast scales, gold caps
-  on its front claws, and a gold-buckled dark leather harness across the shoulders.
-  A solid amount of gear, clearly more than a lesser monster would wear — but leave
-  the legs and tail bare, it is not the final boss.
-- POSE: a dynamic roaring attack, caught mid-motion — wings spread wide and raised
-  high, neck arched back, front claws raised and spread, tail lashing behind it,
-  weight shifted onto one leg. Not a neutral standing pose.
-- PALETTE: deepen it to a rich dark red-orange with much darker shading in the
-  crevices between scales, bone-white horn tips and claws, and warm gold on the
-  gear. Strong dark-to-light contrast.
-- EYES: narrowed, furious and focused, with a strong molten-gold glow. Not round
-  and cute.
-- EFFECT: a SHORT, compact burst of orange flame bursting from between its teeth.
-  It must stay close to the muzzle and be no longer than the dragon's own head.
-  A few small embers may float near the body. Nothing else.
+四個要素：①先明講「現在是對稱的」當成要修的問題 ②近的畫大、遠的畫小
+③明講誰**擋住**誰 ④**腳尖朝向**和**中線偏移**（這兩個最有效，人腦靠它們判讀角度）。
 
-FACING: the dragon faces the VIEWER in a three-quarter front view — chest, head and
-raised claws turned toward the camera, roaring straight out of the frame. Do NOT
-draw it in profile or from the side.
+**左右可能會反，但不用重骰** —— 用 keyer 的 `flip=$true` 水平翻轉即可（暗黑魔王就是）。
+只有在角色打光接近對稱時才適用；有明顯單側鑲光、文字或不對稱紋章的角色不能翻。
 
-CRITICAL — FRAMING (this is the most important rule in this prompt):
-- The DRAGON'S BODY must be the tallest and widest thing in the picture. The flame
-  and the embers must NEVER be taller, wider, or further out than the dragon itself.
-- Do NOT draw a long jet or stream of fire. Do NOT let fire run off the edge of the
-  picture. Do NOT draw large flames in the empty background beside the dragon.
-- Every flame and ember must be visibly ATTACHED to the dragon or to the burst at
-  its mouth. No detached, free-floating flames anywhere in the background.
-- Leave a clear empty magenta margin around everything — no part of the dragon, its
-  wings, its tail, the flame or the embers may touch or come near any edge of the
-  picture.
+## 2. 視線與拖尾方向
+
+- **只轉頭這件事 Gemini 做得很好** —— 所以「頭轉向左邊、眼睛看畫面外的左方」
+  一定要寫，而且放在 prompt 最前面自成一段（`GAZE — READ THIS FIRST`）。
+- **拖尾方向 = 觀眾讀到的移動方向。** 尾巴往左飄 = 在往右移動 = 看起來像在逃走。
+  要讓怪面向左邊的勇者，就寫「所有飄動的東西往**右後方**拖，像從左邊吹來的風」。
+
+## 3. 特效佔位會害角色被縮小
+
+keyer 抓的是**全圖所有不透明像素的外框**，再按外框高度正規化。
+**火焰、能量、披風全部算進外框**，特效畫得越誇張，角色本體被縮得越小。
+
+實測：某版小巨龍的火焰從畫布頂端燒到底，外框高 910px 但龍身只佔 700px
+→ 龍身只縮到 0.63，**比前一關的怪還小**，難度的視覺敘事直接倒過來。
+
+**所以每段 prompt 都要有 `CRITICAL — FRAMING` 區塊，三條缺一不可**：
+
+```
+CRITICAL — FRAMING:
+- The X'S BODY must be the tallest thing in the picture. The A, the B and the C must
+  NEVER reach higher or further out than he does.
+- Nothing may float loose in the empty background, detached from him.
+- Leave a clear empty magenta margin on all four sides — nothing may touch or come
+  near any edge of the picture.
+```
+
+寫 `Keep the flame INSIDE the frame` 這種軟性說法**沒有用**，照樣燒出畫布。
+
+## 4. 用詞地雷
+
+| ❌ 不要寫 | 為什麼 | ✅ 改寫成 |
+|---|---|---|
+| `no longer than its own head` | 否定式上限被理解成「那就不要畫」，特效整個消失 | `roughly as long as its own head`（正面參照） |
+| `loose` / `trailing off` / `drifting` / `floating` | 這些詞本身就在要求「脫離的東西」，跟 FRAMING 的禁令打架，而**前面的描述會贏** | `still attached at the wingtips, touching the wing` |
+| `half-lowered eyelids` / `heavy-lidded` / `sleepy` | 本意是「自信瞇眼」，畫出來是**媚眼** | 銳利＝`narrowed into a hard glare`；頑皮＝`WIDE OPEN and round, with one eyebrow cocked` |
+| `wispy tail`（單獨寫） | 畫成又長又柔順的優雅捲曲，**看起來像飄逸長髮** | `SHORT, choppy, torn strands with jagged uneven ends and sharp angular tips` ＋ 明確否定 `no long elegant curls, no hair-like strands` |
+| 閉嘴的小微笑 | 讀起來是嬌羞 | `OPEN, wide, lopsided CHEEKY GRIN` |
+
+## 5. 特效的畫法：硬邊 ＋ 同色系深色描邊
+
+```
+IMPORTANT rendering rules:
+- Draw every effect as HARD-EDGED cel-shaded shapes with flat colour bands and a
+  CRISP, SHARP boundary. Do NOT use soft transparent glows, blur, haze or airbrushed
+  gradients anywhere, and do NOT add a glow halo around anything. A semi-transparent
+  glow cannot survive the background removal step and comes out as opaque pink.
+- Do NOT outline the glowing effects in BLACK. Outline them in a deep <same hue> — a
+  darker shade of the effect's own colour — so they read as glowing light rather than
+  as solid outlined objects. The BODY keeps its bold black outline.
+- Do NOT add four-pointed star sparkles or any sticker-style decoration.
+- The gold must be a warm yellow-gold. It must never look pink or magenta.
+```
+
+三條的理由：
+- **半透明柔光在生成時就被合成到洋紅底上**，存成不透明的粉紫像素，去背救不回 alpha。
+- **黑描邊讓發光物看起來像貼紙**；但完全不描邊會讓高飽和的橘/藍直接跟洋紅抗鋸齒，
+  在邊緣留一圈**粉紅描邊**（飽和度太高，躲得過腳本的低飽和霧處理）。同色系深色是唯一解。
+- 四角星閃亮是**貼紙的語言**，不是遊戲素材的語言。
+
+## 6. 配色由背景反推
+
+角色融進背景踩過兩次，規則是：
+
+| 背景明度 | 角色配色 | 例子 |
+|---|---|---|
+| **亮**（草原、森林） | **近黑**，對比最強 | 暗影小獸、骨翼渡鴉 |
+| **中明度**（洞窟、沼澤） | **骨白提亮**，純黑會悶進去 | 骨龍、渡鴉的翼骨 |
+| **暗**（火山、魔王城） | **暖色 ＋ 亮邊**，靠色相不靠明度 | 黑騎士的鋼藍高光、魔王的金邊緋紅 |
+
+而且要**在 prompt 裡把理由直接寫給 Gemini 聽**，這招很有效：
+
+```
+It must NOT be green and must NOT be brown — he will stand in a bright light-green
+forest with brown tree trunks, and either colour would make him vanish into the
+background.
+```
+
+## 7. 「精緻」= 輪廓乾淨 ＋ 內部細節多
+
+不是「東西多」。某一版惡鬼加了巨大肩甲、長棒、碎裂披風、滿天火星，結果剪影破碎、
+塊體互相打架，反而變醜。魔王的輪廓其實很單純（一個人 ＋ 一件披風），
+華麗感全部來自**輪廓內部**的金線、甲片分層、寶石。
+
+同理，身體不能是一整片沒有資訊的色塊。每段 prompt 都要有 `DETAIL AND GRIT` 區塊：
+**至少三階明暗**、摺線／磨損／裂痕、上左打光的鑲邊光。
+
+**相鄰的大塊面要用明度分開** —— 某一版惡鬼的暗紅頭髮貼著暗紅披風，頭部剪影整個消失。
+
+## 8. 「帥」來自姿勢類型，不是兇度
+
+正面直立、左右展開、抬頭俯視的**紋章式站姿**，比「動態架勢」可靠得多。
+Gemini 畫扭轉透視的能力明顯不如畫正面對稱構圖，越要求動感越容易崩。
+
+沒有翅膀的角色就用**披風／布料往兩側對稱展開**當作它的翅膀。
+另外要明講「**要有可見的脖子**」「**頭不要過大**」「**腿要長**」，
+不寫的話 chibi 慣性會把角色壓成矮胖的小妖精。
+
+---
+
+# 硬規則：去背腳本
+
+`.claude\math-rpg-keyer.ps1`。原始圖放 `C:\Users\nini9\Downloads\`，輸出到 scratchpad。
+
+## 實測到的關鍵數字
+
+- **Gemini 給的洋紅底不是 `#FF00FF`**，實測是 `#FC1AF7` / `#FB25F3` 這類，
+  綠通道有 20~37 殘值，每張每角落都不同 → 不能用相等比對，要用**色相區間**
+  （背景實測 hue≈301、sat≈0.90）。
+- 去背分兩段：①從畫布邊緣 flood fill（寬鬆門檻 hue 286-340 / sat≥0.30）清主背景；
+  ②嚴格門檻（hue 288-330 / sat≥0.75）補清**封閉孔洞** —— 手臂與身體之間那種
+  被抗鋸齒堵住、flood fill 流不進去的縫隙。
+- **`mp`（連通面積下限）要看角色配色調**：
+  - 角色身上**有**洋紅系（紫/粉）自有顏色 → 維持 **150**，否則會在紫髮上戳出洞
+  - 角色身上**沒有**（骨白＋暗灰的骨龍）→ 可以低到 **3**。骨龍的肋骨縫是細長窄縫、
+    翼膜破洞是小圓點，用 150 的話整隻有 **4.8% 是亮洋紅**。
+- **殘留量要看 alpha 分布，不能只看總數**：骨龍清完仍測到 4.29% 洋紅，
+  但其中 2741/3947 是**半透明**（alpha 40-229）—— 那是每個破洞的抗鋸齒邊環，肉眼看不到。
+  真正不透明的只有 1206px（1.3%），散成零星小點。
+- **紫色角色最容易被去背誤傷**：邊緣去溢色若只看「R 和 B 都比 G 高」，
+  **任何紫色都符合**，髮絲會被拉成灰色。要**同時檢查色相**（溢色在 300 附近、
+  角色紫色在 250-285，以 288 分界）。
+- **半透明光暈會變粉紫**：解法是**去溢色不是刪除**——刪掉會在光暈上打洞。
+  實測分界：粉紫髒污 hue 280-340 / **sat 0.06-0.19**；同色相的紫頭髮 sat 0.27+。
+  取 sat < 0.22 當上限，再**限制在背景外擴 20px 的帶狀範圍內**。
+
+## 診斷訣竅
+
+**把去背後的圖疊在紅色底、再疊在灰色底上比對。**
+- 斑點在紅底變紅 = **被打成透明**（挖穿了）
+- 斑點在兩種底色上都還是粉 = **顏色沒清乾淨**（殘留背景）
+
+兩者成因完全不同，只疊在白底上看不出差別。
+
+## 體型階梯
+
+由 `$jobs` 的 `s` 控制，**不是原圖大小**。2026-08-25 從 0.50→1.00 壓縮成
+**0.68→1.00** —— 舊的 2 倍落差讓最弱的怪只有魔王一半大，畫面上小到看不清細節。
+
+**人形角色的 s 要比獸形低一階才會視覺等重** —— 人形的外框幾乎全是身體，
+獸形的外框有一大截是展開的翅膀。
+
+---
+
+# 收圖檢查清單
+
+- [ ] 頭有沒有轉向左邊？眼睛有沒有看畫面外的左方？（不可以看鏡頭）
+- [ ] 飄動的東西有沒有全部往**右後方**拖？
+- [ ] 有沒有畫出**臉／表情**？（遮臉角色一律不該有）
+- [ ] **角色本體是不是全圖最高的東西**？特效有沒有超過它？
+- [ ] 有沒有**脫離身體的浮空特效**？四周有沒有留白邊？
+- [ ] 特效**有沒有被畫掉**？（寫「不超過某某」就會發生）
+- [ ] 特效是硬邊、**同色系深色描邊**、沒有四角星閃亮嗎？
+- [ ] 每隻有沒有**三階以上明暗**？相鄰大塊面有沒有用明度分開？
+- [ ] 有沒有出現**該關背景的顏色**？
+- [ ] 金色量有沒有守住階梯？（1 < 2 < 3 < 4 < 5 < 6）
+- [ ] 描邊粗細跟其他隻一致嗎？（最容易走鐘的地方）
+- [ ] 最低點有碰到畫布底邊嗎？洋紅底乾淨、沒有地面橢圓陰影嗎？
+- [ ] 收圖後跑一張**全隊對照圖**，確認體型與兇度階梯都還是由弱到強
+
+---
+
+# 六隻的定稿 prompt
+
+每段都**開新對話**，上傳 `Downloads\enemy2.png`（渡鴉）或 `enemy5.png`（黑騎士）
+當風格參考圖。
+
+## enemy1.png — 暗影小獸（第 1 關）
+
+```
+Create a completely NEW and DIFFERENT character.
+The attached image is a STYLE REFERENCE ONLY — match its art style, its bold black
+outline weight, its flat cel shading, its level of interior DETAIL and its gritty
+game-asset finish, but do NOT copy, redraw, edit or include the hooded wraith from
+it. The wraith must not appear anywhere in the output. The output must contain only
+the single new character described below.
+
+2D game character asset for a children's educational math RPG: a SHADOW CRAWLER —
+a small four-legged creature made of living shadow, the very first and WEAKEST
+monster the player meets. It should feel EERIE and creepy, but it is small, scrappy
+and clearly no real threat.
+
+GAZE — READ THIS FIRST:
+Its head is turned toward the LEFT edge of the picture, and its glowing eyes stare
+off-frame to the LEFT at something the viewer cannot see. It is NOT looking at the
+viewer and NOT facing the camera. Turn the whole head, not just the eyes.
+
+MOVEMENT AND DIRECTION:
+It is prowling toward the LEFT, body low and creeping. Because it moves left, every
+wisp of shadow smoke coming off its back and tail must sweep BACKWARD toward the
+RIGHT edge, as if a wind were blowing from the left.
+
+THE CHARACTER:
+- A small, low, four-legged beast the size of a cat, made of solid living shadow.
+  Rounded compact body, short stubby legs, small paws with tiny pale claws.
+- NO visible face, NO mouth, NO nose — its head is a smooth featureless dark shape
+  with only TWO small points of pale cold light where eyes would be.
+- Its edges do not end cleanly: its back, tail and haunches fray away into curling
+  wisps of shadow smoke.
+- ONE piece of gold: a single tarnished, dented gold ring stuck around its tail or
+  one front leg — obviously scavenged junk it picked up, not gear it owns. This is
+  the weakest monster, so it must wear the LEAST gold of any monster in the game.
+
+DETAIL AND GRIT — it must NOT be one flat empty black blob:
+- Use at least THREE distinct tones — a near-black core, a mid charcoal, and a
+  lighter cool grey where the light catches — banded as hard cel shading so its
+  volume and its haunches read clearly.
+- A crisp rim light along its back, lit from the upper left.
+- Draw a few sharp angular shadow spikes along its spine for texture.
+
+PALETTE — this matters, read it carefully:
+- NEAR-BLACK with a cold dark indigo tint, plus charcoal and cool grey shading.
+- PALE COLD WHITE for the eyes and the tiny claws.
+- TARNISHED WARM GOLD on the single ring only.
+- It must NOT be green and must NOT be blue — it will prowl on bright green grass
+  under a light blue sky, and either colour would make it vanish into the background.
+  Strong dark-to-light contrast is what makes it read.
+
+EFFECT: a few small wisps of shadow smoke curling off its back and tail. Size the
+whole effect no bigger than its own head.
 
 IMPORTANT rendering rules:
-- Draw every effect — the flame, the embers, the eye glow — as HARD-EDGED cel-shaded
-  shapes with clean black outlines and flat colour bands. Do NOT use soft transparent
-  glows, blur, haze or airbrushed gradients anywhere.
+- Draw every effect — the shadow wisps, the eye lights — as HARD-EDGED cel-shaded
+  shapes with flat colour bands and a CRISP, SHARP boundary. Do NOT use soft
+  transparent glows, blur, haze or airbrushed gradients anywhere, and do NOT add a
+  glow halo around anything. A semi-transparent glow cannot survive the background
+  removal step and comes out as opaque pink.
+- Do NOT outline the wisps or the eye lights in BLACK. Outline them in a cool dark
+  grey — a darker shade of their own colour. The BODY keeps its bold black outline.
+- Do NOT add four-pointed star sparkles or any sticker-style decoration.
 - The gold must be a warm yellow-gold. It must never look pink or magenta.
 
-Keep the SAME overall size and SAME standing height as the reference image, feet
-still touching the very bottom edge. Do not zoom in or crop closer.
-Full body, single character, centered. Same square 1:1 canvas.
+CRITICAL — FRAMING:
+- The CREATURE'S BODY must be the largest thing in the picture. The wisps must never
+  be bigger or reach further out than the body.
+- Nothing may float loose in the empty background, detached from it.
+- Leave a clear empty magenta margin on all four sides — nothing may touch or come
+  near any edge of the picture.
+
+Full body, single character, centered, its paws touching the very bottom edge.
+Square 1:1 canvas.
 Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
 Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
-the character. Keep the wings, tail and flame INSIDE the frame — they must not touch
-or stretch to the canvas edges. No text, no watermark, no border.
+the character. No text, no watermark, no border.
 ```
 
 ---
 
-## enemy5.png — 黑騎士(取代惡鬼,2026-08-24)
+## enemy2.png — 骨翼渡鴉（第 2 關）
 
-> **惡鬼整隻廢棄了。** 骰了兩輪都醜,原因見下面「惡鬼 v1 為什麼醜」。
-> 第五關改成全新角色**黑騎士**,理由有三:
-> 1. **頭盔遮臉,直接繞過表情地雷** —— 惡鬼兩輪都是敗在嘴巴和表情上,
->    黑騎士只留頭盔縫裡的發光眼,沒有表情可以畫壞,而且更中二。
-> 2. **冷色調** —— 現有六隻全是暖色(綠／淡紫／紫／橘紅／緋紅金),
->    插一隻冷鋼藍進去,關卡節奏更好,緊接著出場的魔王暖緋紅也更有衝擊力。
-> 3. **大劍拄地的紋章式站姿天生對稱又垂直**,佔位問題自動解決。
->
-> ⚠️ **盔甲不可以是純黑**:第五關背景 `stage5.webp` 是火山,地面是**近黑玄武岩**
-> (當初為了跟紅色惡鬼拉開對比才特地壓暗的)。純黑盔甲站上去,膝蓋以下的剪影會消失。
-> 所以指定**深鋼藍灰**+冷藍發光,黑騎士的「黑」由造型負責,不是由色值負責。
->
-> **開新對話,上傳新版的 `enemy4.png`(定稿的小巨龍)當風格參考圖** ——
-> 它是目前最新的房規基準。第一句是否定句,擋掉「回你一張龍」。
-> 若還是回你一張龍,改用檔案開頭的「文字風格錨」、不上傳任何圖。
+```
+Create a completely NEW and DIFFERENT character.
+The attached image is a STYLE REFERENCE ONLY — match its art style, its bold black
+outline weight, its flat cel shading, its level of interior DETAIL and its gritty
+game-asset finish, but do NOT copy, redraw, edit or include the hooded wraith from
+it. The wraith must not appear anywhere in the output. The output must contain only
+the single new character described below.
+
+2D game character asset for a children's educational math RPG: a BONE-WINGED RAVEN —
+an undead carrion bird haunting a crystal cavern. It should feel EERIE and sinister.
+It is a mid-low tier monster: no armour, but clearly nastier than the small creatures
+before it.
+
+GAZE — READ THIS FIRST:
+Its head is turned toward the LEFT edge of the picture, its beak and its glowing eye
+pointed off-frame to the LEFT at something the viewer cannot see. It is NOT looking
+at the viewer and NOT facing the camera. Turn the whole head, not just the eye.
+
+MOVEMENT AND DIRECTION:
+It is lunging toward the LEFT with wings spread. Because it moves left, its tail
+feathers and every loose feather and wisp must sweep BACKWARD toward the RIGHT edge,
+as if a wind were blowing from the left.
+
+THE CHARACTER:
+- A large ragged raven with a heavy hooked beak, perched forward and hunched, wings
+  SPREAD WIDE to both sides.
+- Its wings are half rotted away: near-black feathers along the top, but the outer
+  wing is bare BONE-WHITE skeletal struts with only tattered scraps of membrane
+  hanging between them.
+- NO fleshy face — its eye sockets are dark hollows with a single point of PALE COLD
+  LIGHT burning in each.
+- Bone-white skeletal talons.
+- ONE piece of gold: a tarnished, dented gold band clamped around one leg, like a
+  stolen leg-ring. Keep it small — it must wear less gold than the armoured monsters
+  later in the game.
+
+DETAIL AND GRIT — it must NOT be one flat black shape:
+- Use at least THREE distinct tones on the feathers — a near-black core, a mid
+  charcoal, and a lighter cool grey where the light catches — banded as hard cel
+  shading so the individual feather groups read clearly.
+- Draw ragged, broken feather edges, gaps where feathers are missing, and visible
+  bone joints in the exposed wing struts.
+- A crisp rim light down one side, lit from the upper left.
+
+PALETTE — this matters, read it carefully:
+- NEAR-BLACK feathers with a cold dark indigo tint, charcoal and cool grey shading.
+- BONE-WHITE for the exposed wing struts, the talons and the beak tip. The bone must
+  be BRIGHT — it will stand in a mid-toned TEAL-GREEN crystal cavern, and a pure
+  all-black bird would sink into it. The bone-white is what makes it pop.
+- TARNISHED WARM GOLD on the leg band only.
+- It must NOT be teal, green or cyan — those are the cavern's own colours and it
+  would vanish into the background.
+
+EFFECT: a few loose black feathers and thin wisps of dark smoke trailing off its
+wingtips. Size the whole effect no bigger than its own head.
+
+IMPORTANT rendering rules:
+- Draw every effect — the wisps, the eye lights — as HARD-EDGED cel-shaded shapes
+  with flat colour bands and a CRISP, SHARP boundary. Do NOT use soft transparent
+  glows, blur, haze or airbrushed gradients anywhere, and do NOT add a glow halo
+  around anything. A semi-transparent glow cannot survive the background removal step
+  and comes out as opaque pink.
+- Do NOT outline the wisps or the eye lights in BLACK. Outline them in a cool dark
+  grey — a darker shade of their own colour. The BODY keeps its bold black outline.
+- Do NOT add four-pointed star sparkles or any sticker-style decoration.
+- The gold must be a warm yellow-gold. It must never look pink or magenta.
+
+CRITICAL — FRAMING:
+- The RAVEN'S BODY AND WINGS must be the largest thing in the picture. The loose
+  feathers and wisps must never reach further out than the wings.
+- Nothing may float loose in the empty background, detached from it.
+- Leave a clear empty magenta margin on all four sides — nothing may touch or come
+  near any edge of the picture.
+
+Full body, single character, centered, its lowest point touching the very bottom
+edge. Square 1:1 canvas.
+Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
+Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
+the character. No text, no watermark, no border.
+```
+
+---
+
+## enemy3.png — 提燈幽魂（第 3 關）
+
+```
+Create a completely NEW and DIFFERENT character.
+The attached image is a STYLE REFERENCE ONLY — match its art style, its bold black
+outline weight, its flat cel shading, its level of interior DETAIL and its gritty
+game-asset finish, but do NOT copy, redraw, edit or include the bat from it. The bat
+must not appear anywhere in the output. The output must contain only the single new
+character described below.
+
+2D game character asset for a children's educational math RPG: a small LANTERN
+WRAITH — an empty hooded cloak drifting through a forest, carrying an old lantern.
+It should feel EERIE and UNSETTLING. This is a low-tier monster, so keep it SMALL
+and RAGGED with no armour, but it does not need to look friendly or harmless.
+
+GAZE — READ THIS FIRST:
+His hood is turned toward the LEFT edge of the picture, and the two points of light
+inside the hood stare off-frame to the LEFT at something the viewer cannot see. He
+is NOT looking at the viewer and NOT facing the camera. Turn the whole hood, not
+just the lights.
+
+MOVEMENT AND DIRECTION:
+He is drifting toward the LEFT side of the picture. Because he moves left, EVERY
+tattered strand and every trailing rag must sweep BACKWARD toward the RIGHT edge, as
+if a wind were blowing from the left. Nothing may trail to the left or hang straight
+down.
+
+THE CHARACTER:
+- A hooded cloak with NOTHING inside it — no face, no skin, no skull, no jaw. Just
+  deep darkness under the hood with TWO small points of pale cold light floating in
+  it where eyes would be.
+- The cloak is old and shredded: the hem tears into several separate layered strips
+  of different lengths, with jagged uneven ends.
+- ONE skeletal BONE-WHITE hand emerges from a ragged sleeve, holding an old iron
+  LANTERN by its ring. The lantern is dented, rusted and battle-worn, with a
+  TARNISHED GOLD frame and a cracked glass pane.
+- Inside the lantern burns a small PALE BONE-WHITE ghost flame.
+- He has no legs — the cloak simply frays away into trailing wisps below.
+
+DETAIL AND GRIT — his cloak must NOT be one flat empty black shape:
+- Use at least THREE distinct tones on the cloak — a near-black core, a mid charcoal
+  grey, and a lighter cool grey where the light catches — banded as hard cel shading
+  so the folds and volume read clearly.
+- Draw visible FOLD LINES and creases running down the cloth, plus frayed threads,
+  torn nicks and small holes along every edge.
+- A crisp rim light down one side, lit from the upper left.
+- Add a heavy iron chain or a knotted cord at the neck of the cloak for extra detail.
+
+PALETTE — this matters, read it carefully:
+- The cloak is NEAR-BLACK with a cold DARK INDIGO tint, plus charcoal and cool grey
+  shadow bands. It must NOT be green and must NOT be brown — he will stand in a
+  bright light-green forest with brown tree trunks, and either colour would make him
+  vanish into the background.
+- BONE-WHITE for the skeletal hand and the ghost flame.
+- TARNISHED WARM GOLD on the lantern frame only. One gold item, nothing more — he is
+  a low-tier monster and must not out-dress the stronger monsters.
+- Strong dark-to-light contrast throughout.
+
+EFFECT: a few small pale wisps of spirit smoke curling off his shredded hem and off
+the lantern flame. Size the whole effect no bigger than the lantern itself.
+
+IMPORTANT rendering rules:
+- Draw every effect — the ghost flame, the wisps, the eye lights — as HARD-EDGED
+  cel-shaded shapes with flat colour bands and a CRISP, SHARP boundary. Do NOT use
+  soft transparent glows, blur, haze or airbrushed gradients anywhere, and do NOT add
+  a glow halo around anything. A semi-transparent glow cannot survive the background
+  removal step and comes out as opaque pink.
+- Do NOT outline the flame, the wisps or the eye lights in BLACK. Outline them in a
+  cool pale grey — a darker shade of their own colour — so they read as glowing light
+  rather than as solid outlined objects. The CLOAK keeps its bold black outline.
+- Do NOT add four-pointed star sparkles or any sticker-style decoration. This is a
+  game sprite, not a sticker.
+- The gold must be a warm yellow-gold. It must never look pink or magenta.
+
+CRITICAL — FRAMING:
+- The WRAITH'S BODY must be the tallest thing in the picture. The lantern, the
+  trailing rags and the wisps must never reach higher or further out than he does.
+- Nothing may float loose in the empty background, detached from him.
+- Leave a clear empty magenta margin on all four sides — nothing may touch or come
+  near any edge of the picture.
+
+Full body, single character, centered, his lowest point — the tips of his trailing
+rags — touching the very bottom edge. Square 1:1 canvas.
+Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
+Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
+the character. No text, no watermark, no border.
+```
+
+---
+
+## enemy4.png — 骨龍（第 4 關）
+
+```
+Create a completely NEW and DIFFERENT character.
+The attached image is a STYLE REFERENCE ONLY — match its art style, its bold black
+outline weight, its flat cel shading, its level of interior DETAIL and its gritty
+game-asset finish, but do NOT copy, redraw, edit or include the hooded wraith from
+it. The wraith must not appear anywhere in the output. The output must contain only
+the single new character described below.
+
+2D game character asset for a children's educational math RPG: a BONE DRAGON — the
+skeletal remains of a dragon risen again, stalking a foggy swamp. It should feel
+MENACING and imposing. It is a high-tier monster, second only to the final bosses.
+
+GAZE — READ THIS FIRST:
+Its skull is turned toward the LEFT edge of the picture, its jaws and the lights in
+its eye sockets pointed off-frame to the LEFT at something the viewer cannot see. It
+is NOT looking at the viewer and NOT facing the camera. Turn the whole skull, not
+just the lights.
+
+MOVEMENT AND DIRECTION:
+It is advancing toward the LEFT, head lowered and jaws parted. Because it moves left,
+its tattered wing membranes, its hanging chains and every wisp of soul fire must
+sweep BACKWARD toward the RIGHT edge, as if a wind were blowing from the left.
+
+THE CHARACTER:
+- A four-legged dragon skeleton: a long horned SKULL with bared teeth, an exposed
+  RIBCAGE, a spined spine and a long bony tail. Powerful and heavy, not fragile.
+- Its wings are bare bone struts with only TATTERED, ROTTEN dark membrane scraps
+  still clinging between them, torn and full of holes.
+- NO flesh, NO eyes — just dark hollow sockets with a point of PALE COLD SOUL FIRE
+  burning in each, and the same pale fire flickering between its ribs.
+- GOLD: several tarnished, dented gold chains and a heavy gold collar hanging loose
+  around its neck and draped over the ribcage — the remains of the treasure it died
+  guarding. More gold than the smaller monsters, but still crude and corroded, NOT
+  the polished ornate regalia of a demon king.
+
+DETAIL AND GRIT — it must NOT be one flat shape:
+- Use at least THREE distinct tones on the bone — a bright bone-white where the light
+  hits, a mid warm grey, and a deep grey in the recesses — banded as hard cel shading
+  so every rib and joint reads separately.
+- Draw cracks, chips and old scars across the skull and the larger bones.
+- A crisp rim light down one side, lit from the upper left.
+- The membrane scraps are much DARKER than the bone, so the two never blend together.
+
+PALETTE — this matters, read it carefully:
+- BONE-WHITE and warm grey for the skeleton — this is the dominant colour. The bone
+  must be BRIGHT: it will stand in a mid-toned GREY-OLIVE foggy swamp, and a dark
+  creature would sink into it. The pale bone is what makes it pop.
+- NEAR-BLACK with a cold indigo tint for the tattered wing membranes.
+- PALE COLD WHITE for the soul fire in its sockets and ribs.
+- TARNISHED WARM GOLD on the chains and collar.
+- It must NOT be green, olive or brown — those are the swamp's own colours.
+
+EFFECT: pale soul fire burning in its eye sockets and flickering up between its ribs.
+Every flame must be physically ATTACHED to the skeleton, touching bone. Do NOT draw
+any loose, drifting or floating wisps in the background away from the body. Size the
+whole effect no bigger than its own skull.
+
+IMPORTANT rendering rules:
+- Draw every effect — the soul fire, the wisps — as HARD-EDGED cel-shaded shapes with
+  flat colour bands and a CRISP, SHARP boundary. Do NOT use soft transparent glows,
+  blur, haze or airbrushed gradients anywhere, and do NOT add a glow halo around
+  anything. A semi-transparent glow cannot survive the background removal step and
+  comes out as opaque pink.
+- Do NOT outline the soul fire or the wisps in BLACK. Outline them in a cool pale
+  grey — a darker shade of their own colour. The SKELETON keeps its bold black
+  outline.
+- Do NOT add four-pointed star sparkles or any sticker-style decoration.
+- The gold must be a warm yellow-gold. It must never look pink or magenta.
+
+CRITICAL — FRAMING:
+- The DRAGON'S BODY must be the tallest and widest thing in the picture. The wings,
+  the tail, the chains and the soul fire must NEVER reach higher or further out than
+  its body.
+- Nothing may float loose in the empty background, detached from it.
+- Leave a clear empty magenta margin on all four sides — nothing may touch or come
+  near any edge of the picture.
+
+Full body, single character, centered, its feet touching the very bottom edge.
+Square 1:1 canvas.
+Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
+Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
+the character. No text, no watermark, no border.
+```
+
+---
+
+## enemy5.png — 黑騎士（第 5 關）
 
 ```
 Create a completely NEW and DIFFERENT character.
@@ -1159,152 +681,110 @@ Do NOT draw any shadow onto the background — no ellipse or contact shadow bene
 the character. No text, no watermark, no border.
 ```
 
-### 黑騎士在階梯上的位置
+---
 
-比小巨龍強:**全身重甲**(龍只有胸甲)、**有披風**(龍沒有)、**有武器**(龍沒有)。
-比魔王弱:魔王是**華麗**(全套金雕花、冠冕、法術),黑騎士是**肅殺**(暗鋼、極少金)。
-兩者壓迫感相當但質感不同,魔王仍然是最華麗的那一隻。
+## enemy6.png — 暗黑魔王（第 6 關）
 
-### 收圖結果(2026-08-24):一次過,已進遊戲
+```
+Create a completely NEW and DIFFERENT character.
+The attached image is a STYLE REFERENCE ONLY — match its art style, its bold black
+outline weight, its flat cel shading, its DARK armour treatment and its gritty
+game-asset finish, but do NOT copy, redraw, edit or include the black knight from
+it. The knight must not appear anywhere in the output. The output must contain only
+the single new character described below. This new character is the knight's MASTER:
+far bigger, far broader and far more ornate, with huge horns and a vast cape.
 
-`ENEMY_LOOKS[4]` 已改成 `{ emoji: "⚔️", name: "黑騎士", ... }`,
-`idle: "heavy"` 保留(重甲角色本來就該是緩慢的重量感)。
+2D game character asset for a children's educational math RPG: the DARK LORD — a
+towering horned demon king in black-and-gold armour, the FINAL BOSS of the game,
+waiting in his throne hall. He must look DARK, HEAVY and OVERWHELMING.
 
-**縮放從 0.90 降到 0.85**(`math-rpg-keyer.ps1` 的 `$jobs`)。原因:黑騎士是**直立人形**,
-外框幾乎全是身體;小巨龍 0.82 的外框卻有一大截是張開的翅膀。
-**同樣的數字,人形看起來會大很多**,所以人形角色的 s 值要比獸形低一階才會視覺等重。
-實測 outH:小巨龍 420 < 黑騎士 435 < 勇者 486 < 魔王 506。
+GAZE — READ THIS FIRST:
+His head is turned toward the LEFT edge of the picture, and the burning points of
+light under his helm are directed off-frame to the LEFT at something the viewer
+cannot see. He is NOT looking at the viewer and NOT facing the camera. Turn the whole
+head, not just the lights.
 
-**近黑地面的疑慮已驗證解除**:把去背後的騎士合成到 `stage5.webp` 上實測,
-深鋼藍灰盔甲在近黑玄武岩前**剪影守得住**,劍上的冷藍火焰又特別跳。
-若當初真的畫成純黑,膝蓋以下就會消失 —— 那個判斷是對的。
+MOVEMENT AND DIRECTION:
+He stands still and unmoving, but the air moves around him: his huge cape and every
+tattered strip of its hem must sweep BACKWARD toward the RIGHT edge, as if a wind
+were blowing from the left.
 
-### ⚠️ 朝向:第四次失敗,正式停止嘗試
+BUILD — he must read as MASSIVE:
+- Far BROADER and TALLER than an ordinary knight — huge shoulders, a deep chest,
+  thick armoured limbs. He should look like a wall of armour, not an athlete.
+- Standing TALL and UPRIGHT, feet planted wide, chest out, chin up, looking down at
+  the viewer with contempt. Still and confident, NOT crouching, NOT lunging.
 
-黑騎士也試了轉向左邊(明確列出頭盔、肩、胸、腰、雙腳全部要轉),**結果幾乎沒有變化**,
-身體、披風、雙腳、劍全部仍然完全對稱正面。加上第三批、第四批魔王、第六批蝙蝠,
-**這是第四次失敗**。
+HEAD — no face, no flesh, no bone:
+- A great helm fused with a spiked GOLD CROWN, and a pair of HUGE curved horns
+  sweeping up and back from the sides of the helm. The horns are his signature.
+- Under the helm there is only DARKNESS, with TWO burning points of CRIMSON light
+  where eyes would be.
+- Do NOT draw a skull, a face, teeth, a jaw, skin or any exposed bone anywhere on
+  this character. He is fully armoured from head to foot.
 
-**決定:不要再為了朝向重骰任何角色。** 而且黑騎士正面反而是對的 ——
-這個姿勢的力量來源就是對稱(大劍居中拄地、雙手扶柄、披風左右均分),
-轉成四分之三會把結構打散,很可能重演惡鬼越改越糟的下場。
-對峙感由「勇者在左、怪在右」的位置關係和衝刺攻擊動畫負責,不靠角色轉向。
+HANDS — he carries NO WEAPON:
+Both gauntlets are held open and slightly out from his body, wreathed in crimson and
+black flame gathering around them. A true king needs no sword.
+
+CAPE:
+A vast, heavy cape spreading WIDE to both sides behind him, deep crimson on the
+outside and lined with gold, its lower hem torn into ragged banner-strips. It must be
+ONE single connected piece.
+
+PALETTE — READ THIS CAREFULLY, IT IS THE MOST IMPORTANT PART:
+- His armour is NEAR-BLACK with a warm dark crimson-brown undertone. Near-black is
+  the DOMINANT colour of this character and covers most of his surface.
+- GOLD IS TRIM ONLY. Use gold for engraved filigree scrollwork along the EDGES and
+  BORDERS of the plates, for the crown, and for the cape lining — never as the base
+  material of the armour itself. At most about one fifth of his surface may be gold.
+  He must NOT look like a golden statue.
+- DEEP CRIMSON for the cape and for gems set in the belt and chest.
+- CRIMSON-ORANGE for the flames and the eye lights.
+- He must NOT be blue, NOT be purple and NOT be grey — his throne hall is a dark
+  blue-grey stone chamber with purple banners and blue flames, and those colours
+  would make him vanish. His dark WARM armour, the bright gold edging that outlines
+  every plate, and the crimson cape are what separate him from that cold hall.
+- Very strong dark-to-light contrast: near-black plates, bright gold edges.
+
+DETAIL AND GRIT — nothing may be a flat empty shape:
+- Use at least THREE distinct tones on every material — bright, mid and deep — banded
+  as hard cel shading, so each armour plate and each cape fold reads separately.
+- Draw engraved patterns in the gold edging, fold lines in the cape, and fine scars
+  and nicks across the larger plates.
+- A crisp rim light down one side, lit from the upper left.
+
+EFFECT: crimson and black flame wreathing both gauntlets, and burning crimson light
+in the eye slits. Every flame must be physically ATTACHED to him — to a gauntlet or
+to the helm. Do NOT draw any loose, drifting or floating embers in the background
+away from him. Size each separate flame roughly as large as his own head.
+
+IMPORTANT rendering rules:
+- Draw every effect — the flames, the eye lights — as HARD-EDGED cel-shaded shapes
+  with flat colour bands and a CRISP, SHARP boundary. Do NOT use soft transparent
+  glows, blur, haze or airbrushed gradients anywhere, and do NOT add a glow halo
+  around anything. A semi-transparent glow cannot survive the background removal step
+  and comes out as opaque pink.
+- Do NOT outline the flames or the eye lights in BLACK. Outline them in a deep
+  crimson — a darker shade of their own colour — so they read as glowing light rather
+  than as solid outlined objects. His ARMOUR and CAPE keep their bold black outlines.
+- Do NOT add four-pointed star sparkles or any sticker-style decoration.
+- The gold must be a warm yellow-gold. It must never look pink or magenta.
+
+CRITICAL — FRAMING:
+- His BODY, from the top of his horns to his feet, must be the TALLEST thing in the
+  picture. The cape and the flames must NEVER reach higher or further out than he
+  does.
+- Nothing may float loose in the empty background, detached from him.
+- Leave a clear empty magenta margin on all four sides — nothing may touch or come
+  near any edge of the picture.
+
+Full body, single character, centered, his feet touching the very bottom edge.
+Square 1:1 canvas.
+Background: flat solid magenta #FF00FF, completely empty and perfectly uniform.
+Do NOT draw any shadow onto the background — no ellipse or contact shadow beneath
+the character. No text, no watermark, no border.
+```
 
 ---
 
-## ⚠️ 朝向規則已廢除(2026-08-24,蝙蝠收圖後決定)
-
-**不要再要求「側身朝左」了,這場仗打了三批都沒贏。** 第三批寫「列出所有身體部位」沒用、
-第四批魔王改用「大步走過去」的動作暗示也沒用、第六批蝙蝠再試一次仍然是正面。
-
-去比對全套之後發現:**六隻裡只有小巨龍是側身的**,魔王、幽靈、蝙蝠都是正面,
-史萊姆是球體沒有正面可言。所以**正面才是這套的實際房規**,該對齊的是小巨龍,不是其他隻。
-
-第六批的小巨龍與惡鬼 prompt 已改成明確要求 **three-quarter front view**(正面四分之三),
-比要求側身容易命中得多。勇者在左、怪在右的對峙感改由**姿勢的動勢**負責,不靠身體轉向。
-
-## 蝙蝠收圖結果(2026-08-24):通過,但兇度超標
-
-金耳環、金邊頸甲配紅寶石、發光黃眼、硬邊暗影絲全部到位,裝備策略證明有效。
-
-但**發光眼＋大量暗影特效原本規劃在中段,蝙蝠一次全給滿**,導致階梯上半段被壓縮。
-小巨龍與惡鬼的 prompt 已據此加碼(龍加肩帶＋熔金發光眼＋更大火焰;惡鬼加血紅發光眼＋
-暗黑能量碎片),**若日後重產這批,記得後面的怪一定要壓過蝙蝠**,否則關卡難度的視覺敘事會斷。
-
-## ⚠️ 特效佔位會害角色被縮小(2026-08-24,小巨龍第一版踩到)
-
-**這是魔王披風那個坑的第二次發作,而且更嚴重。**
-
-`math-rpg-keyer.ps1` 的 pass 3 抓的是**整張圖所有不透明像素的外框**,pass 4 再用
-`k = targetH / ch`(ch = 外框高度)縮放。**火焰、能量、披風全部都算進外框**,
-所以特效畫得越誇張,角色本體就被縮得越小。
-
-小巨龍第一版實測:火焰從畫布頂端燒到底,外框高 ≈910px,但龍身只佔約 700px
-→ 龍身實際只會縮到 **0.63**,而蝙蝠是 **0.72**。**第四關的龍會比第三關的蝙蝠還小**,
-關卡難度的視覺敘事直接倒過來。
-
-**所以每一段 prompt 都必須有 CRITICAL — FRAMING 那一段**,三條缺一不可:
-1. **角色本體必須是全圖最高最寬的東西**,特效不可以超過它
-2. **不可以有脫離身體的浮空特效** —— 去背後會變成飄在旁邊的孤島雜訊
-3. **四周要留空白邊** —— 碰到畫布邊緣的特效會被切成平整的切口,看起來像破圖
-
-寫「Keep the flame INSIDE the frame」這種軟性說法**沒有用**(第六批第一版就是這樣寫的,
-照樣燒出畫布)。要明講「本體必須是最高的」「不准有浮空的」「四周留白邊」才擋得住。
-
-## 小巨龍收圖過程學到的三件事(2026-08-24,共骰四輪才定稿)
-
-四輪分別是:①有裝備但火焰爆框 → ②火焰整個消失 → ③火焰回來但有黑邊 → ④定稿。
-每一輪的教訓都可以直接套到後面的怪身上。
-
-### ① 尺寸限制要用「正面參照」,不能用「否定上限」
-
-第二輪寫 `no longer than the dragon's own head`(不超過龍頭那麼長),
-**Gemini 直接理解成「那就不要畫」**,火焰整個消失,只留一縷灰煙。
-
-第三輪改成 `roughly as long as the dragon's own head`(大約跟龍頭一樣長)就一次命中。
-
-**規則:給特效大小時一律寫「大約跟某個身體部位一樣大」,不要寫「不超過某某」。**
-「不超過」只能放在 CRITICAL — FRAMING 那段講整體佔位,不要拿來描述特效本身。
-
-### ② 發光特效不要用黑描邊,要用「同色系深色描邊」
-
-第三輪的火焰有黑描邊,看起來像貼上去的貼紙、不像在發光。
-
-但**完全不要描邊也不行** —— 黑描邊其實是特效邊緣在洋紅底上的保護層。沒有描邊的話,
-橘色會直接跟洋紅抗鋸齒,產生一圈橘紅↔洋紅的混色像素;這些像素**飽和度很高**,
-躲得過腳本針對「低飽和粉紫霧」那道處理(hue 280-340 / sat < 0.22),
-會在火焰周圍留一圈**粉紅描邊**——等於把黑邊換成粉邊。
-
-**解法:描邊換成該特效自己顏色的深色版**(火焰用深紅橘、暗黑能量用深紫)。
-視覺上是在發光,邊緣仍然乾淨,去背安全。**角色本體的黑描邊要保留,只有特效改。**
-
-### ③ 用「續問」不要「重產」
-
-四輪全部在**同一個對話**裡續問,每次都寫 `keep everything exactly as it is` +
-只列要改的那一兩件事 + `Everything else stays untouched`。
-金環角、金邊胸甲、熔金眼、皮革肩帶**從第一輪一路保留到第四輪都沒跑掉**。
-
-如果每輪都開新對話重傳參考圖,等於每次都在重骰裝備,好不容易對的東西會被洗掉。
-**開新對話只用在第一次生成,之後一律續問,而且一次只改一件事。**
-
-## ⚠️ 惡鬼 v1 為什麼醜:「帥」來自姿勢類型,不是來自兇度(2026-08-24)
-
-蝙蝠與小巨龍一次就帥,惡鬼 v1 骰了兩輪都醜。差別**不在兇不兇,在姿勢的類型**。
-
-| | 蝙蝠 / 小巨龍(成功) | 惡鬼 v1(失敗) |
-|---|---|---|
-| 姿勢 | 正面直立、雙翼左右展開、抬頭 | 扭身、彎腰、蹲低 |
-| 剪影 | 對稱、開展,像紋章／海報 | 破碎、不對稱,塊體互相打架 |
-| 頭部 | 有脖子,頭部剪影清楚 | 頭埋進肩膀,沒有脖子 |
-| 頭髮 | — | 暗紅棕大團,**跟同色的披風糊成一片**,剪影消失 |
-| 嘴 | 咆哮但下顎線條乾淨 | 張大嘴露牙齦,讀起來滑稽不是壓迫 |
-| 比例 | 修長 | 大頭短腿,像小妖精不像武將 |
-
-**結論:動態架勢 ≠ 帥。** 前五批一直在追「dynamic action stance, caught mid-motion」,
-但真正讓蝙蝠和龍成立的是**紋章式站姿** —— 正面、直立、左右展開、抬頭俯視。
-Gemini 畫扭轉透視的能力明顯不如畫正面對稱構圖,越要求動感越容易崩。
-
-**可移植的四條**(v2 已全部寫進 prompt):
-1. **正面直立、雙腳站定、抬頭俯視觀眾**,不要 mid-swing / lunging / twisting
-2. **給角色一個「翅膀」** —— 沒有翅膀的角色就用披風／布料**往兩側對稱展開**代替
-3. **明講「要有脖子」「頭不要過大」「腿要長」** —— 不寫的話 chibi 慣性會把它壓成矮胖
-4. **相鄰的大塊面要用明度分開** —— 惡鬼的近黑頭髮 vs 暗紅披風。同色系相鄰=剪影消失
-
-另外**表情要「收」不要「放」**:閉嘴冷笑露獠牙 > 張大嘴吼叫。
-張嘴在龍身上成立是因為有明確的下顎線,人形角色張大嘴會直接變搞笑。
-
-## 第六批收圖檢查
-
-- [ ] 三隻身上都看得到**金色裝備**嗎?(沒有的話這批就白做了,重產)
-- [ ] 三隻都是**動態架勢**嗎?(朝向不用管,正面就是對的)
-- [ ] 兇度有沒有**一隻比一隻高**?蝙蝠 < 小巨龍 < 惡鬼 < 魔王
-- [ ] **角色本體是不是全圖最高的東西**?特效有沒有超過它?(超過就會被縮小,見上)
-- [ ] 有沒有**脫離身體的浮空特效**?
-- [ ] 四周有沒有**留白邊**?有東西碰到畫布邊緣嗎?
-- [ ] 特效**有沒有被畫掉**?(寫「不超過某某」就會發生,見上)
-- [ ] 發光特效是**同色系深色描邊**、不是黑描邊嗎?角色本體的黑描邊有保留嗎?
-- [ ] 特效是**硬邊**的嗎?有柔光暈的話去背會留粉紫殘影
-- [ ] 金色是暖黃不是粉的嗎?
-- [ ] 擺在魔王旁邊看,**魔王還是最華麗的那一隻**嗎?(惡鬼最容易超車)
-- [ ] 腳底/最低點有碰到畫布底邊嗎?
-- [ ] 洋紅底乾淨、沒有地面橢圓陰影嗎?

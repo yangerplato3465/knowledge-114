@@ -12,12 +12,12 @@ const ENEMY_HP_TABLE = [20, 28, 40, 56, 76, 100];
 //      填了就自動改用圖片、不再顯示 emoji，動畫完全不用改。
 // idle：待機動作。省略＝站立呼吸；"float"＝離地飄浮；"heavy"＝大型怪的緩慢重量感。
 const ENEMY_LOOKS = [
-    { emoji: "👾", name: "史萊姆怪", img: "../assets/images/math-rpg/enemy1.webp" },
-    { emoji: "👻", name: "幽靈怪",   img: "../assets/images/math-rpg/enemy2.webp", idle: "float" },
-    { emoji: "🦇", name: "蝙蝠怪",   img: "../assets/images/math-rpg/enemy3.webp", idle: "float" },
-    { emoji: "🐲", name: "小巨龍",   img: "../assets/images/math-rpg/enemy4.webp" },
+    { emoji: "🐾", name: "暗影小獸", img: "../assets/images/math-rpg/enemy1.webp" },
+    { emoji: "🪶", name: "骨翼渡鴉", img: "../assets/images/math-rpg/enemy2.webp", idle: "float" },
+    { emoji: "🏮", name: "提燈幽魂", img: "../assets/images/math-rpg/enemy3.webp", idle: "float" },
+    { emoji: "🦴", name: "骨龍",     img: "../assets/images/math-rpg/enemy4.webp" },
     { emoji: "⚔️", name: "黑騎士",   img: "../assets/images/math-rpg/enemy5.webp", idle: "heavy" },
-    { emoji: "😈", name: "魔王",     img: "../assets/images/math-rpg/enemy6.webp", idle: "heavy" }
+    { emoji: "👑", name: "暗黑魔王", img: "../assets/images/math-rpg/enemy6.webp", idle: "heavy" }
 ];
 
 // 勇者的外觀（同樣預留 img 插槽）
@@ -171,7 +171,7 @@ function applyLook(side, look) {
     const glyph = document.getElementById(`${side}-avatar`);
     // 換角色時取消還在排程中的攻擊換圖，否則上一隻的計時器會把新角色的圖蓋掉
     clearAtkTimers(side);
-    // 待機動作：飄浮的幽靈／蝙蝠、笨重的惡鬼／魔王，其餘用預設的站立呼吸
+    // 待機動作：飄浮的渡鴉／幽魂、笨重的黑騎士／暗黑魔王，其餘用預設的站立呼吸
     sprite.classList.remove('idle-float', 'idle-heavy');
     if (look.idle) sprite.classList.add(`idle-${look.idle}`);
     if (look.img) {

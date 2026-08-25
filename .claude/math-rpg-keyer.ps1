@@ -55,7 +55,7 @@ public class Keyer {
     // visibly change size the moment the animation swaps frames.
     public static double LastScale;
 
-    public static string Process(string inPath, string outPath, bool flip, double targetScale, int canvas, double forcedScale) {
+    public static string Process(string inPath, string outPath, bool flip, double targetScale, int canvas, double forcedScale, int minPocket) {
         using (Bitmap src = new Bitmap(inPath)) {
             int w = src.Width, h = src.Height;
             Rectangle rect = new Rectangle(0, 0, w, h);
@@ -110,7 +110,11 @@ public class Keyer {
                 }
                 bool[] seen2 = new bool[w * h];
                 List<int> comp = new List<int>();
-                const int MIN_POCKET = 150;
+                // Caller-supplied. 150 is the safe default for characters that contain
+                // violet/magenta-adjacent colours of their own (the hero's hair). Skeletons
+                // and other characters with NO magenta-family colour can go far lower, which
+                // is the only way to clear narrow slivers such as the gaps between ribs.
+                int MIN_POCKET = minPocket;
                 for (int i = 0; i < cand.Length; i++) {
                     if (!cand[i] || seen2[i]) continue;
                     comp.Clear();
@@ -322,17 +326,34 @@ if (-not (Test-Path $tmpDir)) { New-Item -ItemType Directory -Path $tmpDir | Out
 #
 # s = height scale on a 512 canvas -> drives the size ladder, slime smallest, demon
 #     lord biggest.
+#
+# mp = minimum connected area (px) for the enclosed-magenta-pocket pass. 150 is the safe
+#      default: characters that own violet/magenta-adjacent colours (the hero's hair) throw
+#      scattered false positives, and deleting those punches holes through them. A character
+#      with NO magenta-family colour of its own can go far lower -- which is the only way to
+#      clear narrow slivers like the gaps between a skeleton's ribs.
 $jobs = @(
-    @{ n='hero';   flip=$false; s=0.95 },
-    @{ n='enemy1'; flip=$false; s=0.50 },
-    @{ n='enemy2'; flip=$false; s=0.62 },
-    @{ n='enemy3'; flip=$false; s=0.72 },
-    @{ n='enemy4'; flip=$false; s=0.82 },
+    # 2026-08-25 階梯壓縮:舊的 0.50→1.00 是 2 倍落差,最弱的怪只有魔王一半大,
+    # 在畫面上小到看不清細節。改成 0.68→1.00,弱怪明顯放大,強弱順序仍然讀得出來。
+    @{ n='hero';   flip=$false; s=0.95; mp=150 },
+    @{ n='enemy1'; flip=$false; s=0.68; mp=150 },
+    @{ n='enemy2'; flip=$false; s=0.76; mp=150 },
+    @{ n='enemy3'; flip=$false; s=0.83; mp=150 },
+    # enemy4 is the bone dragon (2026-08-25). mp=3, far below the default 150. At 150 the
+    # narrow magenta slivers between its ribs and every hole in its wing membrane survived,
+    # leaving 4.8% of the sprite bright magenta; 12 cleared the ribs but left ~400 pinprick
+    # holes in the membrane. It is bone-white and dark grey with no magenta-family colour of
+    # its own, so there are no false positives to protect and the threshold can go this low.
+    @{ n='enemy4'; flip=$false; s=0.89; mp=3 },
     # enemy5 is the black knight (replaced the oni, 2026-08-24). Dropped 0.90 -> 0.85:
     # he is an upright humanoid whose bbox is nearly all body, while the dragon's 0.82
     # bbox is mostly spread wings, so equal numbers read very unequal on screen.
-    @{ n='enemy5'; flip=$false; s=0.85 },
-    @{ n='enemy6'; flip=$false; s=1.00 }
+    @{ n='enemy5'; flip=$false; s=0.94; mp=150 },
+    # enemy6 is the dark lord (2026-08-25). flip=$true: the "geometric description"
+    # prompt finally got his body to turn, but it turned to the RIGHT. Mirroring is
+    # free and his armour is lit near-symmetrically, so nothing is lost -- see the
+    # PROMPTS.md note on the geometric-description method.
+    @{ n='enemy6'; flip=$true;  s=1.00; mp=150 }
 )
 
 $scaleOf = @{}   # idle-pose scale factor, reused by that character's attack pose
@@ -342,7 +363,7 @@ $flipOf = @{}    # remembered so the attack pose mirrors the same way as its idl
 foreach ($j in $jobs) {
     $inP  = Join-Path $srcDir  ($j.n + '.png')
     $outP = Join-Path $tmpDir  ($j.n + '.png')
-    $res = [Keyer]::Process($inP, $outP, $j.flip, $j.s, 512, 0)
+    $res = [Keyer]::Process($inP, $outP, $j.flip, $j.s, 512, 0, $j.mp)
     $scaleOf[$j.n] = [Keyer]::LastScale
     $flipOf[$j.n] = $j.flip
     Write-Output ("{0,-8} {1}" -f $j.n, $res)
@@ -354,6 +375,6 @@ foreach ($j in $jobs) {
     $atkSrc = Join-Path $srcDir ($j.n + '-atk.png')
     if (-not (Test-Path $atkSrc)) { continue }
     $outP = Join-Path $tmpDir ($j.n + '-atk.png')
-    $res = [Keyer]::Process($atkSrc, $outP, $flipOf[$j.n], $j.s, 512, $scaleOf[$j.n])
+    $res = [Keyer]::Process($atkSrc, $outP, $flipOf[$j.n], $j.s, 512, $scaleOf[$j.n], $j.mp)
     Write-Output ("{0,-7} <- {1,-15} {2}" -f ($j.n + '-atk'), ($j.n + '-atk.png'), $res)
 }
