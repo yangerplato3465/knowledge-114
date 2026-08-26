@@ -101,6 +101,12 @@
         .fs-btn:hover { background-color: rgba(255, 255, 255, 0.38); transform: scale(1.08); }
         .fs-btn:active { transform: scale(0.94); }
 
+        /* 戰鬥中離開鈕：跟右上角的全螢幕鈕左右對稱。
+           只在戰鬥時出現——選單和結算畫面本來就各有返回路徑。
+           沿用 .fs-btn 的外觀，連「白底上要轉深色」那條規則一起繼承。 */
+        .quit-btn { left: calc(0.75 * var(--u)); right: auto; display: none; }
+        body.in-battle .quit-btn { display: flex; }
+
         /* ---------- 頂部標題 ----------
            戰鬥中不需要標題，收起來換取垂直空間（手機直向差這一段就會需要捲動） */
         body.in-battle .game-header { display: none; }
@@ -134,7 +140,7 @@
             align-items: center;
             justify-content: center;
             gap: calc(0.375 * var(--u));
-            padding: calc(1.875 * var(--u)) calc(3.5 * var(--u)) calc(0.375 * var(--u));
+            padding: calc(0.7 * var(--u)) calc(3.5 * var(--u)) calc(0.3 * var(--u));
         }
 
         .map-node {
@@ -506,13 +512,21 @@
         .back-link-btn:hover { color: var(--g1); }
 
         /* ---------- 戰鬥場景 ---------- */
+        /* 2026-08-25：戰鬥區長高 30px（276 → 306），全部加在 padding-top。
+           因為 align-items:flex-end，角色錨在底部，所以加上面的 padding
+           只會多露出天空，腳底相對戰鬥區底部的位置一動也不動。
+           背景圖同步重裁成 1600x420（往上加高、下緣不動，見 math-rpg-stages.sh），
+           讓 cover 的縮放比仍由寬度決定，地面線落點因此完全不變。
+           ⚠️ 要再加高的話，背景帶也要一起加高：一旦
+           容器高 / (容器寬 x 420/1600) >= 1，縮放改由高度決定，角色就會浮空。
+           1255 寬時上限是 329px，目前用 309px，餘裕 6%。 */
         .battle-stage {
             position: relative;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             gap: calc(1.5 * var(--u));
-            padding: calc(1.25 * var(--u)) calc(3.5 * var(--u)) calc(1 * var(--u));
+            padding: calc(3 * var(--u)) calc(3.5 * var(--u)) calc(0.7 * var(--u));
             overflow: hidden;
         }
 
@@ -540,27 +554,93 @@
         /* 六關的場景配色：草原 → 森林 → 洞窟 → 沼澤 → 火山 → 魔王城 */
         .battle-stage[data-stage="1"] { --stage-sky: #cfe8f7; --stage-ground: linear-gradient(180deg,#9ad06f,#68a349); }
         .battle-stage[data-stage="2"] { --stage-sky: #bce0c8; --stage-ground: linear-gradient(180deg,#74b177,#3f7f4c); }
-        .battle-stage[data-stage="3"] { --stage-sky: #9095b6; --stage-ground: linear-gradient(180deg,#6c6a80,#43425a); }
+        /* 這些是「還沒載入背景圖」時的備援配色，六隻怪 2026-08-25 全面暗黑化後
+           反而變成主要的對比來源：亮關（1/2）配近黑怪、中明度關（3/4）配骨白怪、
+           暗關（5/6）配暖色怪。改這裡之前先看怪物的實際配色，否則角色會融進背景。 */
+        .battle-stage[data-stage="3"] { --stage-sky: #7fa3ad; --stage-ground: linear-gradient(180deg,#4a5f68,#2b3a42); }
         .battle-stage[data-stage="4"] { --stage-sky: #a3b79c; --stage-ground: linear-gradient(180deg,#7b8a5e,#4e5a3a); }
-        .battle-stage[data-stage="5"] { --stage-sky: #dda078; --stage-ground: linear-gradient(180deg,#a85a3c,#6d2f22); }
-        .battle-stage[data-stage="6"] { --stage-sky: #6f5c7c; --stage-ground: linear-gradient(180deg,#4a3a5c,#281f38); }
+        .battle-stage[data-stage="5"] { --stage-sky: #c97f52; --stage-ground: linear-gradient(180deg,#4a2a20,#2a1512); }
+        .battle-stage[data-stage="6"] { --stage-sky: #3d4a6b; --stage-ground: linear-gradient(180deg,#232c42,#141a28); }
 
         .fighter { position: relative; z-index: 1; width: 46%; text-align: center; }
 
         /* 角色插槽：所有特效都掛在這層，位置自動跟著角色跑 */
         .sprite-slot {
             position: relative;
-            /* 比角色本身高一點，留給未來全身圖的空間；但不能留太多，
-               否則 emoji 上方會出現一大片空白的天空 */
-            height: calc(7.1 * var(--u));
+            /* 角色改用圖片後放大了一輪：原本 7.1u 是配 emoji 的尺寸，
+               圖片在那個高度下細節看不清，而且戰鬥區太扁會把背景裁到只剩地面。
+               空間是從題目區與選項區的留白挪過來的。 */
+            height: calc(13 * var(--u));
             margin-bottom: calc(0.5 * var(--u));
+        }
+
+        /*
+         * 劍氣：橫跨整個舞台的獨立一層，**不屬於任何一方的格子**。
+         * 平常 opacity:0 不佔視覺；加上 .slashing 才跑一次動畫，結束後自動歸零。
+         *
+         * ── 軌跡 ──
+         * --from / --to / --over 三個座標都由 JS 在每次出手時量出來（見 playSlash），
+         * 單位是「相對於 battle-stage 左緣的 px」。寫死百分比會在不同視窗寬度下跑掉，
+         * 因為版面的 padding 和 gap 是 u 為單位、而 .fighter 的寬度是百分比，
+         * 兩者的比例會隨視窗改變。直接量當下的角色座標最準，也自動支援怪物反打。
+         * margin-left 抵掉半個框寬，讓 --from/--to 指的是「框的中心」而不是左緣。
+         *
+         * --dir：攻擊方向。勇者 1（往右），怪物 -1（往左，整張圖鏡射）。
+         * 所有素材都以「朝右」為基準製作，見 .claude/math-rpg-fx.sh。
+         *
+         * ── 尺寸 16u x 12u，不是正方形 ──
+         * 舊的 10u 正方框是配合舊那張劍氣訂的，換成這批圖之後明顯太小：
+         * 勇者本身就有 12.6u 高，10u 的劍氣縮在他胸口像個小亮點，沒有斬擊的份量。
+         * 而且新圖有三張是 1.83:1 的寬幅，contain 在正方框裡只能撐到 5.5u 高，等於再打對折。
+         *
+         * ── mix-blend-mode: screen ──
+         * 圖檔本身已經把亮度烘進 alpha 了（見 fx.sh），所以**不依賴**這行也能正常顯示。
+         * 留著是因為混合成功時會多一層加亮的漂亮：發光體本來就該打亮它掃過的角色。
+         * 萬一之後版面調整讓混合失效，最壞情況只是少一點光暈，不會再冒出黑框。
+         */
+        .slash {
+            position: absolute;
+            left: var(--from, 50%);
+            margin-left: calc(-8 * var(--u));
+            bottom: calc(6 * var(--u));
+            width: calc(16 * var(--u)); height: calc(12 * var(--u));
+            background: var(--slash, none) center center / contain no-repeat;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
+            transform-origin: 50% 50%;
+            mix-blend-mode: screen;
+        }
+        /*
+         * 0.5s 搭配 math-rpg.js 的 slash.at = 0.26 與 SLASH_IMPACT_DELAY = 400：
+         *   出手後 135ms 發射 → 53% 處（再 265ms）抵達怪物 = 400ms = 命中判定。
+         * 這三個數字是綁在一起的，改一個就要重算另外兩個。
+         *
+         * 為什麼是 265ms 的飛行：初版只有 90ms，快到「不認真看只看到怪物身上閃一下」。
+         * 265ms 才讀得出「揮劍 → 劍氣飛出去 → 打中怪物」三拍。
+         *
+         * 53%~72% 之間刻意讓它**停在怪物身上不動**（left 兩格都是 --to）：
+         * 命中的瞬間如果繼續往前衝，眼睛還來不及對焦它就過去了。
+         * 停這 95ms 是給視線一個著陸點，打擊感也更實。之後才往前竄出去消散。
+         *
+         * easing 用接近線性的曲線：劍氣是等速拋射物，
+         * ease-out 會讓它在半路慢下來，反而像沒力氣。
+         */
+        .slash.slashing { animation: slashFly 0.5s cubic-bezier(0.3, 0.62, 0.5, 1) 1; }
+
+        @keyframes slashFly {
+            0%   { left: var(--from); opacity: 0; transform: scaleX(calc(var(--dir) * 0.5))  scaleY(0.70); }
+            8%   {                    opacity: 1; transform: scaleX(calc(var(--dir) * 1.06)) scaleY(1.08); }
+            53%  { left: var(--to);   opacity: 1; transform: scaleX(calc(var(--dir) * 1.14)) scaleY(1.02); }
+            72%  { left: var(--to);   opacity: 1; transform: scaleX(calc(var(--dir) * 1.18)) scaleY(0.98); }
+            100% { left: var(--over); opacity: 0; transform: scaleX(calc(var(--dir) * 1.30)) scaleY(0.86); }
         }
 
         .ground-shadow {
             position: absolute;
             left: 50%; bottom: calc(0.125 * var(--u));
-            width: calc(5.375 * var(--u)); height: calc(1 * var(--u));
-            margin-left: calc(-2.6875 * var(--u));
+            width: calc(9.8 * var(--u)); height: calc(1.2 * var(--u));
+            margin-left: calc(-4.9 * var(--u));
             background: radial-gradient(ellipse at center, rgba(0,0,0,0.34), rgba(0,0,0,0) 70%);
             pointer-events: none;
             animation: shadowBreathe 2.6s ease-in-out infinite;
@@ -572,11 +652,17 @@
          * --dir  面向：勇者 1（朝右）、怪物 -1（朝左）。
          * --sprite  日後補圖時設成 url(...) 並加上 .has-img，就會蓋掉 emoji。
          */
+        /* 2026-08-25 放大一輪：12u → 14u。
+           .sprite 是絕對定位 + bottom 錨定，.sprite-body 又是 center bottom / contain，
+           所以放大只會往上長、腳底不動 —— 背景圖的地面線對齊不會壞。
+           插槽(13u)與戰鬥區的高度刻意都沒動，版面盒子零變化。
+           上限來自 .battle-stage 的 overflow:hidden：1280×720 實測角色頂端到裁切邊界
+           原本有 36px 餘裕，14u 用掉 26px，剩下的留給 spawn/lunge 動畫的位移。 */
         .sprite {
             position: absolute;
-            left: calc(50% - 3.3 * var(--u));
+            left: calc(50% - 7 * var(--u));
             bottom: calc(0.375 * var(--u));
-            width: calc(6.6 * var(--u)); height: calc(6.6 * var(--u));
+            width: calc(14 * var(--u)); height: calc(14 * var(--u));
             transform-origin: 50% 100%;
         }
 
@@ -587,11 +673,15 @@
             justify-content: center;
             transform-origin: 50% 100%;
             background: var(--sprite, none) center bottom / contain no-repeat;
-            animation: breathe 2.6s ease-in-out infinite;
+            animation: var(--idle-anim, breathe) var(--idle-dur, 2.6s) ease-in-out infinite;
         }
+        /* 待機動作分三種，由 JS 依角色種類掛 class（見 applyLook）。
+           用變數而不是覆寫 animation，受擊時的 flashWhite 才不會把待機動作蓋掉。 */
+        .sprite.idle-float { --idle-anim: floatIdle; --idle-dur: 2.2s; }
+        .sprite.idle-heavy { --idle-anim: heavyIdle; --idle-dur: 3.4s; }
 
         .sprite .glyph {
-            font-size: calc(5.25 * var(--u));
+            font-size: calc(8.5 * var(--u));
             line-height: 1;
             user-select: none;
             filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
@@ -604,7 +694,7 @@
             font-size: calc(1.125 * var(--u));
             font-weight: 700;
             color: #ffffff;
-            margin: calc(0.5 * var(--u)) 0 calc(0.375 * var(--u));
+            margin: calc(0.28 * var(--u)) 0 calc(0.2 * var(--u));
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 2px rgba(0, 0, 0, 0.4);
         }
 
@@ -667,10 +757,22 @@
 
         /* ---------- 角色動作 ---------- */
 
-        /* 待機呼吸：微微上浮並擠壓，讓角色不會像貼紙 */
+        /* 待機呼吸：微微上浮並擠壓，讓角色不會像貼紙。
+           幅度是照「512 畫布縮到約 200px 顯示」回推的——原本的 4px 縮完剩不到 2px，
+           肉眼等於沒動，換成圖片後特別明顯，所以站立款加大到 9px。 */
         @keyframes breathe {
             0%, 100% { transform: translateY(0) scale(1, 1); }
-            50%      { transform: translateY(-4px) scale(0.985, 1.015); }
+            50%      { transform: translateY(-9px) scale(0.972, 1.028); }
+        }
+        /* 幽靈、蝙蝠：離地飄浮，上下擺幅大、帶輕微搖晃 */
+        @keyframes floatIdle {
+            0%, 100% { transform: translateY(0)     rotate(-1.4deg); }
+            50%      { transform: translateY(-18px) rotate(1.4deg); }
+        }
+        /* 黑騎士、暗黑魔王：體型大，動得慢、幅度小，才有重量感 */
+        @keyframes heavyIdle {
+            0%, 100% { transform: translateY(0)    scale(1, 1); }
+            50%      { transform: translateY(-4px) scale(1.014, 0.986); }
         }
         @keyframes shadowBreathe {
             0%, 100% { transform: scale(1);    opacity: 1; }
@@ -698,7 +800,7 @@
         }
         .sprite.hurt { animation: hurt 0.55s ease-out; }
         /* 受擊閃白：對 emoji 和之後的圖片都有效 */
-        .sprite.hurt .sprite-body { animation: breathe 2.6s ease-in-out infinite, flashWhite 0.16s steps(1) 2; }
+        .sprite.hurt .sprite-body { animation: var(--idle-anim, breathe) var(--idle-dur, 2.6s) ease-in-out infinite, flashWhite 0.16s steps(1) 2; }
         @keyframes flashWhite {
             0%, 49%   { filter: brightness(2.8) saturate(0.1) contrast(1.3); }
             50%, 100% { filter: none; }
@@ -835,15 +937,40 @@
             100% { opacity: 0; transform: translateY(-90px) scale(0.95); }
         }
 
+        /*
+         * 爆擊的傷害數字：更大、外框改成暖橘、彈跳幅度更誇張。
+         * 用獨立的 keyframes 而不是只放大 font-size —— 尺寸一樣要「彈」得比較久
+         * 才讀得出份量，只是字大而動作相同的話，感覺只是字級跑掉了。
+         */
+        .floating-dmg.crit {
+            font-size: calc(4.6 * var(--u));
+            text-shadow:
+                -2px -2px 0 #fff3e0, 2px -2px 0 #fff3e0,
+                -2px  2px 0 #fff3e0, 2px  2px 0 #fff3e0,
+                0 0 calc(1.2 * var(--u)) rgba(255, 193, 7, 0.9),
+                0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: floatUpCrit 1.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes floatUpCrit {
+            0%   { opacity: 0; transform: translateY(0) scale(0.3) rotate(-8deg); }
+            14%  { opacity: 1; transform: translateY(-22px) scale(1.7) rotate(4deg); }
+            28%  { transform: translateY(-30px) scale(1.15) rotate(-2deg); }
+            40%  { transform: translateY(-34px) scale(1.28) rotate(0deg); }
+            70%  { opacity: 1; transform: translateY(-52px) scale(1.15); }
+            100% { opacity: 0; transform: translateY(-104px) scale(1.05); }
+        }
+
         /* ---------- 題目區 ---------- */
-        .quiz-body { padding: calc(1 * var(--u)) calc(3.5 * var(--u)) calc(3 * var(--u)); }
+        /* 下方留白原本 3u，是戰鬥區還很矮時配的。角色放大後這裡收緊，
+           省下的高度全部給了戰鬥區（背景才不會被 cover 裁到只剩地面） */
+        .quiz-body { padding: calc(0.8 * var(--u)) calc(3.5 * var(--u)) calc(1.2 * var(--u)); }
 
         .round-label {
             text-align: center;
             font-size: calc(0.9375 * var(--u));
             font-weight: 600;
             color: var(--muted);
-            margin-bottom: calc(0.75 * var(--u));
+            margin-bottom: calc(0.4 * var(--u));
         }
 
         /* ---------- 計時器 ---------- */
@@ -851,7 +978,7 @@
             display: flex;
             align-items: center;
             gap: calc(0.75 * var(--u));
-            margin-bottom: calc(1 * var(--u));
+            margin-bottom: calc(0.6 * var(--u));
         }
 
         .timer-text {
@@ -900,8 +1027,8 @@
             border: calc(0.1875 * var(--u)) dashed var(--primary);
             border-radius: calc(1.25 * var(--u));
             text-align: center;
-            padding: calc(1.5 * var(--u));
-            margin-bottom: calc(1.5 * var(--u));
+            padding: calc(1 * var(--u));
+            margin-bottom: calc(0.8 * var(--u));
         }
 
         .question-box .q-text {
@@ -922,7 +1049,7 @@
             background-color: var(--surface);
             border: calc(0.1875 * var(--u)) solid var(--border);
             border-radius: calc(1.25 * var(--u));
-            padding: calc(1.25 * var(--u));
+            padding: calc(1 * var(--u));
             min-height: 48px;              /* 觸控最小點擊面積 */
             font-size: calc(1.5 * var(--u));
             font-weight: 600;
@@ -976,11 +1103,21 @@
             font-size: calc(1.25 * var(--u));
             font-weight: 700;
             text-align: center;
-            margin: calc(1.5 * var(--u)) 0 0;
+            margin: calc(0.8 * var(--u)) 0 0;
             min-height: calc(1.75 * var(--u));
         }
         .feedback-msg.good { color: var(--good); }
         .feedback-msg.bad { color: var(--bad); }
+        /* 爆擊：文字本身也彈一下，跟畫面上的加碼反饋同一拍 */
+        .feedback-msg.crit {
+            color: #f57c00;
+            animation: critPop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4) 1;
+        }
+        @keyframes critPop {
+            0%   { transform: scale(0.85); }
+            45%  { transform: scale(1.16); }
+            100% { transform: scale(1); }
+        }
 
         .footer-actions { display: flex; justify-content: center; margin-top: calc(0.9 * var(--u)); }
 
@@ -1031,6 +1168,23 @@
             touch-action: manipulation;
         }
         .pill-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(255, 138, 101, 0.3); }
+
+        /* 次要按鈕：離開確認框裡的「繼續戰鬥」。
+           跟主按鈕同尺寸但不搶眼，避免學生順手就把戰鬥關掉 */
+        .pill-btn.ghost {
+            background: transparent;
+            color: var(--muted-2);
+            border: calc(0.18 * var(--u)) solid var(--border);
+            box-shadow: none;
+        }
+        .pill-btn.ghost:hover { box-shadow: none; background-color: rgba(0, 0, 0, 0.04); }
+
+        .quit-actions {
+            display: flex;
+            gap: calc(0.9 * var(--u));
+            justify-content: center;
+            flex-wrap: wrap;
+        }
 
         .hidden { display: none; }
 
@@ -1187,11 +1341,13 @@
             }
             #enemy-map    { grid-area: map; padding: calc(1.4 * var(--u)) calc(0.8 * var(--u)) calc(0.3 * var(--u)); gap: calc(0.18 * var(--u)); }
             .map-line     { min-width: calc(0.4 * var(--u)); }
-            .battle-stage { grid-area: stage; padding: calc(0.6 * var(--u)) calc(1 * var(--u)) calc(0.6 * var(--u)); gap: calc(0.6 * var(--u)); }
+            /* 手機橫放空間緊，只加 0.8u 的天空（桌機是 2.3u） */
+            .battle-stage { grid-area: stage; padding: calc(1.4 * var(--u)) calc(1 * var(--u)) calc(0.6 * var(--u)); gap: calc(0.6 * var(--u)); }
             .quiz-body    { grid-area: quiz; padding: calc(1 * var(--u)) calc(1.4 * var(--u)) calc(1.2 * var(--u)); }
 
             .sprite-slot { height: calc(6.4 * var(--u)); }
-            .sprite { left: calc(50% - 2.9 * var(--u)); width: calc(5.8 * var(--u)); height: calc(5.8 * var(--u)); }
+            /* 手機橫放空間本來就緊，只跟著放大一小步（5.8u → 6.4u），剛好填滿 6.4u 的插槽 */
+            .sprite { left: calc(50% - 3.2 * var(--u)); width: calc(6.4 * var(--u)); height: calc(6.4 * var(--u)); }
             .sprite .glyph { font-size: calc(3.9 * var(--u)); }
             .ground-shadow { width: calc(4 * var(--u)); margin-left: calc(-2 * var(--u)); }
 
@@ -1359,6 +1515,11 @@
             <i class="fa-solid fa-expand"></i>
         </button>
 
+        <button id="quit-btn" class="fs-btn quit-btn" type="button" onclick="askQuit()"
+                title="離開戰鬥" aria-label="離開戰鬥，重新選擇年級">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+
         <div class="game-header">
             <div class="header-icon">⚔️</div>
             <h1>數學勇者</h1>
@@ -1416,17 +1577,29 @@
                 <div class="fighter">
                     <div id="enemy-slot" class="sprite-slot">
                         <div id="enemy-sprite" class="sprite" style="--dir: -1;">
-                            <div class="sprite-body"><span id="enemy-avatar" class="glyph">👾</span></div>
+                            <div class="sprite-body"><span id="enemy-avatar" class="glyph">🐾</span></div>
                         </div>
                         <div class="ground-shadow"></div>
                     </div>
-                    <div id="enemy-name" class="name">史萊姆怪</div>
+                    <div id="enemy-name" class="name">暗影小獸</div>
                     <div class="hp-row"><i class="fa-solid fa-heart" style="color:#ef5350;"></i> <span id="enemy-hp-text">100 / 100</span></div>
                     <div id="enemy-hp-track" class="hp-track">
                         <div id="enemy-hp-ghost" class="hp-ghost"></div>
                         <div id="enemy-hp" class="hp-fill enemy"></div>
                     </div>
                 </div>
+
+                <!--
+                  劍氣層：**必須是 battle-stage 的直接子元素**，不能放回 .fighter 裡面。
+                  兩個理由，都是 2026-08-26 實測踩到的：
+                  1) .fighter 有 z-index:1 會建立堆疊環境，劍氣被關在裡面就飛不出那半邊格子，
+                     到不了怪物身上；而且兩個 .fighter 同層時，後面的怪物會蓋在劍氣上面。
+                  2) mix-blend-mode 只跟同一個堆疊環境內的內容混合，關在全透明的 .fighter 裡
+                     等於沒混到（詳見 .claude/math-rpg-fx.sh 的說明）。
+                  放在兩個 fighter 之後，它會蓋在雙方角色之上，飛行軌跡也橫跨整個舞台。
+                  只有一層、由攻擊方共用：同一時間只會有一方出手。
+                -->
+                <div id="stage-slash" class="slash" style="--dir: 1;"></div>
             </div>
 
             <div class="quiz-body">
@@ -1471,7 +1644,7 @@
                     <li>💥 <strong>答錯或時間到</strong>：換你被攻擊，扣自己的血量。</li>
                     <li>⏱️ 每題有 <strong>30 秒</strong>作答時間，要把握喔！</li>
                     <li>⭐ 打倒怪獸後可<strong>三選一</strong>強化能力。</li>
-                    <li>👑 一路打倒所有怪獸，擊敗最後的<strong>魔王</strong>就獲勝！</li>
+                    <li>👑 一路打倒所有怪獸，擊敗最後的<strong>暗黑魔王</strong>就獲勝！</li>
                 </ul>
                 <button class="pill-btn" onclick="startGame()">開始遊戲 <i class="fa-solid fa-play"></i></button>
             </div>
@@ -1483,6 +1656,22 @@
                 <h2>⭐ 選擇一項強化</h2>
                 <p class="panel-sub">打倒敵人！挑選一個能力提升，再迎戰下一隻怪獸</p>
                 <div id="upgrade-options" class="upgrade-options"></div>
+            </div>
+        </div>
+
+        <!-- 戰鬥中按左上角返回鈕的確認框 -->
+        <div id="quit-overlay" class="upgrade-overlay hidden">
+            <div class="upgrade-panel">
+                <h2>要離開這場戰鬥嗎？</h2>
+                <p class="panel-sub">目前的進度不會保留，回來後要從第一隻敵人重新開始</p>
+                <div class="quit-actions">
+                    <button class="pill-btn ghost" type="button" onclick="closeQuit()">
+                        <i class="fa-solid fa-play"></i> 繼續戰鬥
+                    </button>
+                    <button class="pill-btn" type="button" onclick="confirmQuit()">
+                        <i class="fa-solid fa-chevron-left"></i> 重新選擇年級
+                    </button>
+                </div>
             </div>
         </div>
     </div>
