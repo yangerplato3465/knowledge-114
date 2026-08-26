@@ -65,6 +65,22 @@ $handler = {
     $ext = [System.IO.Path]::GetExtension($fileFull).ToLower()
     if ($mime.ContainsKey($ext)) { $res.ContentType = $mime[$ext] }
 
+    # Conditional requests. "no-cache" means "revalidate before reusing", not
+    # "don't cache" -- but with no validator there was nothing to revalidate
+    # against, so every hit re-sent the entire body. math-rpg was re-downloading
+    # its stage and enemy art on every level change (74KB for enemy4 alone).
+    # An ETag lets an unchanged file answer 304 with no body, while an edited
+    # file is still picked up instantly because its mtime/size change the tag.
+    $fi = Get-Item $fileFull
+    $etag = '"{0:x}-{1:x}"' -f $fi.LastWriteTimeUtc.Ticks, $fi.Length
+    $res.Headers.Add("ETag", $etag)
+    $res.Headers.Add("Last-Modified", $fi.LastWriteTimeUtc.ToString("R"))
+    if ($req.Headers["If-None-Match"] -eq $etag) {
+      $res.StatusCode = 304
+      $res.Close()
+      return
+    }
+
     $fs = [System.IO.File]::OpenRead($fileFull)
     try {
       $total = $fs.Length
