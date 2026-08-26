@@ -53,16 +53,10 @@ const PLAYER_LOOK = {
 };
 
 // === 劍氣圖庫 ===
-// normal 每次普攻隨機挑一張。這是**純視覺**的變化，傷害計算完全不受影響——
-// 玩家看到的攻擊不再是重複播同一個動畫，但數值平衡一個字都不用動。
-// crit 則是固定的：爆擊必定播十字斬，讓「這一下不一樣」一眼就讀得出來。
+// normal 每次普攻隨機挑一張——**純視覺**變化，傷害計算完全不受影響。
+// crit 固定播十字斬，讓「這一下不一樣」一眼就讀得出來。
 //
-// 這批圖跟角色圖走不同的處理流程（見 .claude/math-rpg-fx.sh）：
-// 它們**保留純黑底、沒有去背**，靠 CSS 的 mix-blend-mode:screen 讓黑色變透明。
-// 所以不要拿 math-rpg-keyer.ps1 去處理它們，那支是洋紅去背用的。
-//
-// 舊的 slash.webp 是洋紅去背產出的透明圖，混合方式跟這批不同，已退出圖庫；
-// 檔案還留著，要回頭比對時可以直接改路徑試。
+// 這批圖由 .claude/math-rpg-fx.sh 處理（亮度轉 alpha），不是 keyer.ps1（洋紅去背）。
 const SLASH_FX = {
     normal: [
         "../assets/images/math-rpg/slash-wide.webp",    // 寬橫斬：弧度最飽滿，主力
@@ -415,16 +409,35 @@ function playSlash(side, slash) {
     }, LUNGE_MS * slash.at));
 }
 
-// 先把攻擊圖抓進快取，否則第一次出手會閃一下空白。
-// 劍氣整組都要預載：隨機挑到還沒下載的那張會閃一格空白，而且只會發生在
-// 「第一次抽到它」的那一擊，很難重現也很難查。
-function preloadAttackFrames() {
+// 一次把整場戰鬥會用到的圖全部抓進快取（共 20 張，約 690KB）。
+//
+// 舊版只預載「攻擊分鏡」和「劍氣」，漏掉**怪物待機圖**和**場景背景**——
+// 那正是打倒一隻怪、切下一關時會卡一下的原因：那兩張是換關當下才第一次去抓的。
+// 六關的圖全部先抓不會太重，而且是在玩家還在選年級／題庫時就跑完了。
+//
+// decode() 是關鍵的第二步：只設 src 只保證「下載完」，圖第一次真正貼上畫面時
+// 還要解碼，換關照樣會頓一下。先解碼好就沒有這一拍。不支援或失敗都無所謂，
+// 那只是回到「有下載、沒預解碼」的狀態，catch 掉即可。
+let assetsPreloaded = false;
+function preloadBattleAssets() {
+    if (assetsPreloaded) return;
+    assetsPreloaded = true;
+
+    const urls = [];
     [PLAYER_LOOK].concat(ENEMY_LOOKS).forEach(l => {
-        framesOf(l).forEach(f => { const im = new Image(); im.src = f.img; });
-        if (l.slash && l.slash.img) { const im = new Image(); im.src = l.slash.img; }
+        if (l.img) urls.push(l.img);                       // 待機圖：舊版漏掉的第一項
+        framesOf(l).forEach(f => urls.push(f.img));
+        if (l.slash && l.slash.img) urls.push(l.slash.img);
     });
-    SLASH_FX.normal.concat(SLASH_FX.crit).forEach(src => {
-        const im = new Image(); im.src = src;
+    // 劍氣整組都要：隨機挑到還沒下載的那張會閃一格空白，而且只會發生在
+    // 「第一次抽到它」的那一擊，很難重現也很難查。
+    urls.push(...SLASH_FX.normal, SLASH_FX.crit);
+    urls.push(...STAGE_IMAGES.filter(Boolean));            // 場景背景：舊版漏掉的第二項
+
+    urls.forEach(src => {
+        const im = new Image();
+        im.src = src;
+        if (im.decode) im.decode().catch(() => {});
     });
 }
 
@@ -516,22 +529,16 @@ function showDamage(side, amount, color = '#e53935', crit = false) {
     setTimeout(() => dmg.remove(), 1600);
 }
 
-// 「打到」對方的時間點。所有命中反饋（扣血、碎片、震動、傷害數字）都對齊這一刻。
-//
-// 兩種攻擊的節奏本來就不同，所以分成兩個值：
-//   MELEE  怪物撲上來咬 —— 近身，衝刺到位就是命中，190ms。
-//   SLASH  勇者放劍氣 —— 劍氣要飛越大半個舞台才打得到，命中必然比較晚。
-//
-// 400ms 是為了「看得清楚」訂的。原本兩者共用 190ms，劍氣只有 90ms 的飛行時間，
-// 快到只看得見怪物身上閃一下。改成 400ms 後飛行有 265ms，
-// 讀起來才是「揮劍 → 劍氣飛出去 → 打中怪物」三拍，而不是一團模糊。
-// 勇者的衝刺動作 520ms 在此期間已經開始回位 —— 這是對的：
-// 劍氣是拋射物，本來就該在揮劍收招之後才飛到對面。
+// 「打到」對方的時間點，所有命中反饋（扣血、碎片、震動、傷害數字）都對齊這一刻。
+// 分成兩個值是因為兩種攻擊的節奏不同：
+//   190  怪物撲上來咬，近身，衝刺到位就是命中。
+//   400  勇者放劍氣，要飛越大半個舞台。兩者原本共用 190ms，飛行只剩 90ms，
+//        快到只看得見怪物身上閃一下；400ms 才讀得出「揮劍→飛出去→打中」三拍。
+//        此時勇者的衝刺(520ms)已在回位，這是對的：拋射物本來就該在收招後才飛到對面。
 const IMPACT_DELAY = 190;
 const SLASH_IMPACT_DELAY = 400;
 
-// 只有勇者會放劍氣（ENEMY_LOOKS 目前都沒有 slash），所以用攻擊方判斷就夠。
-// 之後若幫怪物補上 slash，改成看 currentLook(attacker).slash 即可。
+// 只有勇者有 slash，所以看攻擊方就夠。日後若幫怪物補上 slash 也自動成立。
 function impactDelayFor(attacker) {
     return currentLook(attacker).slash ? SLASH_IMPACT_DELAY : IMPACT_DELAY;
 }
@@ -866,7 +873,7 @@ function beginBattle() {
     document.getElementById('battle-screen').classList.remove('hidden');
     document.body.classList.add('in-battle'); // 戰鬥中收起標題列，換取垂直空間
 
-    preloadAttackFrames();
+    preloadBattleAssets();   // 已在載入頁面時跑過，這裡是保險（內部有 guard，重複呼叫免費）
 
     // 重置勇者的外觀與動畫狀態（上一場可能停在倒下的畫面）
     const playerSprite = document.getElementById('player-sprite');
@@ -1036,6 +1043,13 @@ function startMusic() {
     bgMusic.volume = 0.4;
     bgMusic.play().catch(() => {}); // 被自動播放政策擋下時忽略，等下一次互動再試
 }
+
+// 一進頁面就開始抓圖，不等到按下「開始戰鬥」。
+// 玩家選年級、選題庫、讀說明的那十幾秒，足夠把 690KB 全部抓完並解碼好，
+// 等真的開打時六關的怪物與場景都已經在記憶體裡了。
+(function initPreload() {
+    preloadBattleAssets();
+})();
 
 (function initMusic() {
     startMusic(); // 先嘗試自動播放
