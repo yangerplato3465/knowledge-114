@@ -574,6 +574,68 @@
             margin-bottom: calc(0.5 * var(--u));
         }
 
+        /*
+         * 劍氣：橫跨整個舞台的獨立一層，**不屬於任何一方的格子**。
+         * 平常 opacity:0 不佔視覺；加上 .slashing 才跑一次動畫，結束後自動歸零。
+         *
+         * ── 軌跡 ──
+         * --from / --to / --over 三個座標都由 JS 在每次出手時量出來（見 playSlash），
+         * 單位是「相對於 battle-stage 左緣的 px」。寫死百分比會在不同視窗寬度下跑掉，
+         * 因為版面的 padding 和 gap 是 u 為單位、而 .fighter 的寬度是百分比，
+         * 兩者的比例會隨視窗改變。直接量當下的角色座標最準，也自動支援怪物反打。
+         * margin-left 抵掉半個框寬，讓 --from/--to 指的是「框的中心」而不是左緣。
+         *
+         * --dir：攻擊方向。勇者 1（往右），怪物 -1（往左，整張圖鏡射）。
+         * 所有素材都以「朝右」為基準製作，見 .claude/math-rpg-fx.sh。
+         *
+         * ── 尺寸 16u x 12u，不是正方形 ──
+         * 舊的 10u 正方框是配合舊那張劍氣訂的，換成這批圖之後明顯太小：
+         * 勇者本身就有 12.6u 高，10u 的劍氣縮在他胸口像個小亮點，沒有斬擊的份量。
+         * 而且新圖有三張是 1.83:1 的寬幅，contain 在正方框裡只能撐到 5.5u 高，等於再打對折。
+         *
+         * ── mix-blend-mode: screen ──
+         * 圖檔本身已經把亮度烘進 alpha 了（見 fx.sh），所以**不依賴**這行也能正常顯示。
+         * 留著是因為混合成功時會多一層加亮的漂亮：發光體本來就該打亮它掃過的角色。
+         * 萬一之後版面調整讓混合失效，最壞情況只是少一點光暈，不會再冒出黑框。
+         */
+        .slash {
+            position: absolute;
+            left: var(--from, 50%);
+            margin-left: calc(-8 * var(--u));
+            bottom: calc(6 * var(--u));
+            width: calc(16 * var(--u)); height: calc(12 * var(--u));
+            background: var(--slash, none) center center / contain no-repeat;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
+            transform-origin: 50% 50%;
+            mix-blend-mode: screen;
+        }
+        /*
+         * 0.5s 搭配 math-rpg.js 的 slash.at = 0.26 與 SLASH_IMPACT_DELAY = 400：
+         *   出手後 135ms 發射 → 53% 處（再 265ms）抵達怪物 = 400ms = 命中判定。
+         * 這三個數字是綁在一起的，改一個就要重算另外兩個。
+         *
+         * 為什麼是 265ms 的飛行：初版只有 90ms，快到「不認真看只看到怪物身上閃一下」。
+         * 265ms 才讀得出「揮劍 → 劍氣飛出去 → 打中怪物」三拍。
+         *
+         * 53%~72% 之間刻意讓它**停在怪物身上不動**（left 兩格都是 --to）：
+         * 命中的瞬間如果繼續往前衝，眼睛還來不及對焦它就過去了。
+         * 停這 95ms 是給視線一個著陸點，打擊感也更實。之後才往前竄出去消散。
+         *
+         * easing 用接近線性的曲線：劍氣是等速拋射物，
+         * ease-out 會讓它在半路慢下來，反而像沒力氣。
+         */
+        .slash.slashing { animation: slashFly 0.5s cubic-bezier(0.3, 0.62, 0.5, 1) 1; }
+
+        @keyframes slashFly {
+            0%   { left: var(--from); opacity: 0; transform: scaleX(calc(var(--dir) * 0.5))  scaleY(0.70); }
+            8%   {                    opacity: 1; transform: scaleX(calc(var(--dir) * 1.06)) scaleY(1.08); }
+            53%  { left: var(--to);   opacity: 1; transform: scaleX(calc(var(--dir) * 1.14)) scaleY(1.02); }
+            72%  { left: var(--to);   opacity: 1; transform: scaleX(calc(var(--dir) * 1.18)) scaleY(0.98); }
+            100% { left: var(--over); opacity: 0; transform: scaleX(calc(var(--dir) * 1.30)) scaleY(0.86); }
+        }
+
         .ground-shadow {
             position: absolute;
             left: 50%; bottom: calc(0.125 * var(--u));
@@ -875,6 +937,29 @@
             100% { opacity: 0; transform: translateY(-90px) scale(0.95); }
         }
 
+        /*
+         * 爆擊的傷害數字：更大、外框改成暖橘、彈跳幅度更誇張。
+         * 用獨立的 keyframes 而不是只放大 font-size —— 尺寸一樣要「彈」得比較久
+         * 才讀得出份量，只是字大而動作相同的話，感覺只是字級跑掉了。
+         */
+        .floating-dmg.crit {
+            font-size: calc(4.6 * var(--u));
+            text-shadow:
+                -2px -2px 0 #fff3e0, 2px -2px 0 #fff3e0,
+                -2px  2px 0 #fff3e0, 2px  2px 0 #fff3e0,
+                0 0 calc(1.2 * var(--u)) rgba(255, 193, 7, 0.9),
+                0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: floatUpCrit 1.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+        }
+        @keyframes floatUpCrit {
+            0%   { opacity: 0; transform: translateY(0) scale(0.3) rotate(-8deg); }
+            14%  { opacity: 1; transform: translateY(-22px) scale(1.7) rotate(4deg); }
+            28%  { transform: translateY(-30px) scale(1.15) rotate(-2deg); }
+            40%  { transform: translateY(-34px) scale(1.28) rotate(0deg); }
+            70%  { opacity: 1; transform: translateY(-52px) scale(1.15); }
+            100% { opacity: 0; transform: translateY(-104px) scale(1.05); }
+        }
+
         /* ---------- 題目區 ---------- */
         /* 下方留白原本 3u，是戰鬥區還很矮時配的。角色放大後這裡收緊，
            省下的高度全部給了戰鬥區（背景才不會被 cover 裁到只剩地面） */
@@ -1023,6 +1108,16 @@
         }
         .feedback-msg.good { color: var(--good); }
         .feedback-msg.bad { color: var(--bad); }
+        /* 爆擊：文字本身也彈一下，跟畫面上的加碼反饋同一拍 */
+        .feedback-msg.crit {
+            color: #f57c00;
+            animation: critPop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4) 1;
+        }
+        @keyframes critPop {
+            0%   { transform: scale(0.85); }
+            45%  { transform: scale(1.16); }
+            100% { transform: scale(1); }
+        }
 
         .footer-actions { display: flex; justify-content: center; margin-top: calc(0.9 * var(--u)); }
 
@@ -1493,6 +1588,18 @@
                         <div id="enemy-hp" class="hp-fill enemy"></div>
                     </div>
                 </div>
+
+                <!--
+                  劍氣層：**必須是 battle-stage 的直接子元素**，不能放回 .fighter 裡面。
+                  兩個理由，都是 2026-08-26 實測踩到的：
+                  1) .fighter 有 z-index:1 會建立堆疊環境，劍氣被關在裡面就飛不出那半邊格子，
+                     到不了怪物身上；而且兩個 .fighter 同層時，後面的怪物會蓋在劍氣上面。
+                  2) mix-blend-mode 只跟同一個堆疊環境內的內容混合，關在全透明的 .fighter 裡
+                     等於沒混到（詳見 .claude/math-rpg-fx.sh 的說明）。
+                  放在兩個 fighter 之後，它會蓋在雙方角色之上，飛行軌跡也橫跨整個舞台。
+                  只有一層、由攻擊方共用：同一時間只會有一方出手。
+                -->
+                <div id="stage-slash" class="slash" style="--dir: 1;"></div>
             </div>
 
             <div class="quiz-body">

@@ -333,8 +333,14 @@ if (-not (Test-Path $tmpDir)) { New-Item -ItemType Directory -Path $tmpDir | Out
 #      with NO magenta-family colour of its own can go far lower -- which is the only way to
 #      clear narrow slivers like the gaps between a skeleton's ribs.
 $jobs = @(
-    # 2026-08-25 階梯壓縮:舊的 0.50→1.00 是 2 倍落差,最弱的怪只有魔王一半大,
-    # 在畫面上小到看不清細節。改成 0.68→1.00,弱怪明顯放大,強弱順序仍然讀得出來。
+    # KEEP EVERY COMMENT IN THIS FILE ASCII-ONLY. It is saved as UTF-8 with no BOM, and
+    # PowerShell 5.1 decodes such files as ANSI -- a CJK comment here silently swallowed
+    # the 'hero' line below on 2026-08-25, so hero and every hero-atk frame stopped being
+    # processed with no error at all. Put the Chinese explanations in PROMPTS.md instead.
+    #
+    # 2026-08-25 ladder compressed: the old 0.50 -> 1.00 spread was 2x, so the weakest
+    # monster rendered at half the boss's size and its detail was unreadable. Now
+    # 0.68 -> 1.00: the weak ones grow a lot and the ordering still reads.
     @{ n='hero';   flip=$false; s=0.95; mp=150 },
     @{ n='enemy1'; flip=$false; s=0.68; mp=150 },
     @{ n='enemy2'; flip=$false; s=0.76; mp=150 },
@@ -369,12 +375,32 @@ foreach ($j in $jobs) {
     Write-Output ("{0,-8} {1}" -f $j.n, $res)
 }
 
-# Attack poses: only processed when the file exists, and always locked to the
-# matching idle pose's scale factor so the character does not change size mid-swing.
+# Attack poses. Every frame is LOCKED to the idle pose's scale factor -- that is what
+# stops the character changing size mid-swing, and it is why the frames must never be
+# processed on their own without the idle having run first in the same pass.
+# Accepts both the old single '<name>-atk.png' and the numbered '<name>-atk1..9.png'.
 foreach ($j in $jobs) {
-    $atkSrc = Join-Path $srcDir ($j.n + '-atk.png')
-    if (-not (Test-Path $atkSrc)) { continue }
-    $outP = Join-Path $tmpDir ($j.n + '-atk.png')
-    $res = [Keyer]::Process($atkSrc, $outP, $flipOf[$j.n], $j.s, 512, $scaleOf[$j.n], $j.mp)
-    Write-Output ("{0,-7} <- {1,-15} {2}" -f ($j.n + '-atk'), ($j.n + '-atk.png'), $res)
+    $names = @($j.n + '-atk') + (1..9 | ForEach-Object { $j.n + '-atk' + $_ })
+    foreach ($nm in $names) {
+        $atkSrc = Join-Path $srcDir ($nm + '.png')
+        if (-not (Test-Path $atkSrc)) { continue }
+        $outP = Join-Path $tmpDir ($nm + '.png')
+        $res = [Keyer]::Process($atkSrc, $outP, $flipOf[$j.n], $j.s, 512, $scaleOf[$j.n], $j.mp)
+        Write-Output ("{0,-9} <- {1,-16} {2}" -f $nm, ($nm + '.png'), $res)
+    }
+}
+
+# Standalone effects (sword aura etc). NOT locked to any character: they are their own
+# layer in the DOM, sized by CSS, so they just get keyed and fitted to the canvas.
+# Deliberately kept out of the character images -- an effect drawn onto a character
+# inflates its alpha bounding box and shrinks the character (the dragon's fire did this).
+$fx = @(
+    @{ n='slash'; flip=$false; s=1.00; mp=150 }
+)
+foreach ($f in $fx) {
+    $inP = Join-Path $srcDir ($f.n + '.png')
+    if (-not (Test-Path $inP)) { continue }
+    $outP = Join-Path $tmpDir ($f.n + '.png')
+    $res = [Keyer]::Process($inP, $outP, $f.flip, $f.s, 512, 0, $f.mp)
+    Write-Output ("{0,-9} {1}" -f $f.n, $res)
 }

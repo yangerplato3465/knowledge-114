@@ -21,12 +21,70 @@ const ENEMY_LOOKS = [
 ];
 
 // 勇者的外觀（同樣預留 img 插槽）
-// atk：攻擊姿勢，衝刺途中會換上（見 playAttackFrame）。沒填就維持單張表現。
+//
+// atkFrames：攻擊動作的分鏡，衝刺途中依序換上（見 playAttackFrame）。
+//   每格是 { at: 佔 LUNGE_MS 的比例 0~1, img: 圖片路徑 }，必須由小到大排好。
+//   跑完最後一格後會在 ATK_END 換回站姿。留空陣列就維持「整段都是站姿」的單張表現。
+//   舊的單張 atk 欄位仍然支援（見 framesOf），六隻怪目前都還沒有攻擊圖。
+//
+// slash：劍氣。**刻意獨立成一張圖、不畫在勇者身上** —— 去背腳本是抓
+//   「全圖不透明像素的外框」再正規化高度的，特效畫進角色圖會把外框撐大，
+//   角色本體就會被等比縮小（小巨龍的火焰踩過這個坑）。獨立之後還能自己做飛行與淡出。
 const PLAYER_LOOK = {
     emoji: "🧙", name: "勇者",
     img: "../assets/images/math-rpg/hero.webp",
-    atk: "../assets/images/math-rpg/hero-atk.webp"
+    // 只有兩幀攻擊。原本規劃 4 幀（起手/斬上/斬下/收招），實作時砍掉後兩幀：
+    //   「斬下」跟「斬上」在 Gemini 手上差異太細，每次都畫成斬上的變體；
+    //   「收招」則是寫成「接近中立站姿」之後直接收斂回站姿，等於沒有資訊量。
+    // 而且收招本來就不必用圖演 —— CSS 的 .lunge 會把角色平移出去再平移回來，
+    // **回程本身就是收招**，回程時顯示站姿讀起來完全自然。
+    atkFrames: [
+        { at: 0.16, img: "../assets/images/math-rpg/hero-atk1.webp" },  // 起手：劍往後舉、身體壓低蓄力
+        { at: 0.34, img: "../assets/images/math-rpg/hero-atk2.webp" }   // 斬擊：劍掃到身前（劍氣在此出現）
+    ],
+    slash: {
+        // 0.26 x LUNGE_MS = 135ms：劍正掃到身前的那一刻（分鏡第二格在 0.34，
+        // 劍氣要比「劍到位」再早一點出現才像是被揮出去的，不是憑空冒出來）。
+        // 之後 CSS 動畫走 53% x 0.5s = 265ms 飛到怪物身上 = 400ms，
+        // 剛好對上 SLASH_IMPACT_DELAY。三個數字綁在一起，改一個就要重算另外兩個。
+        at: 0.26
+        // img 不寫死：每次出手由 takeSlashImg() 決定要播哪一張（見 SLASH_FX）
+    }
 };
+
+// === 劍氣圖庫 ===
+// normal 每次普攻隨機挑一張。這是**純視覺**的變化，傷害計算完全不受影響——
+// 玩家看到的攻擊不再是重複播同一個動畫，但數值平衡一個字都不用動。
+// crit 則是固定的：爆擊必定播十字斬，讓「這一下不一樣」一眼就讀得出來。
+//
+// 這批圖跟角色圖走不同的處理流程（見 .claude/math-rpg-fx.sh）：
+// 它們**保留純黑底、沒有去背**，靠 CSS 的 mix-blend-mode:screen 讓黑色變透明。
+// 所以不要拿 math-rpg-keyer.ps1 去處理它們，那支是洋紅去背用的。
+//
+// 舊的 slash.webp 是洋紅去背產出的透明圖，混合方式跟這批不同，已退出圖庫；
+// 檔案還留著，要回頭比對時可以直接改路徑試。
+const SLASH_FX = {
+    normal: [
+        "../assets/images/math-rpg/slash-wide.webp",    // 寬橫斬：弧度最飽滿，主力
+        "../assets/images/math-rpg/slash-arc.webp",     // 新月弧
+        "../assets/images/math-rpg/slash-thrust.webp"   // 突刺：方向感最強
+    ],
+    crit: "../assets/images/math-rpg/slash-cross.webp"  // 十字斬：中心爆閃，爆擊專用
+};
+
+// 這一擊指定要用的劍氣。爆擊時先設好，playSlash 取用後自動清掉；
+// null 就從 SLASH_FX.normal 隨機挑。
+let pendingSlashImg = null;
+
+function takeSlashImg() {
+    if (pendingSlashImg) {
+        const img = pendingSlashImg;
+        pendingSlashImg = null;
+        return img;
+    }
+    const pool = SLASH_FX.normal;
+    return pool[Math.floor(Math.random() * pool.length)];
+}
 
 // 每一關的場景背景圖，null 就用 CSS 漸層的暫時配色。
 // 這些圖是寬扁的帶狀（1600x286），不是原始的 16:9——戰鬥區的容器大約 6:1，
@@ -55,15 +113,38 @@ function currentPlayerDamage() {
     return Math.max(0, base - defenseReduction);
 }
 
+// === 爆擊 ===
+// 15% / 2 倍是刻意保守的起手值：期望傷害只上升 15%，而六隻怪的血量表
+// （20→100）本來就有餘裕，不必重算平衡。玩家感受到的是「偶爾有一下特別爽」，
+// 不是「難度變簡單了」。要調整就動這兩個數字，其他地方都不用改。
+//
+// 對答題遊戲來說爆擊還有一個好處：它是**唯一不由對錯決定的變數**。
+// 答對一定打中，這是設計上的正確選擇（不能懲罰算對的孩子），
+// 但也讓每一擊都一模一樣。爆擊在不引入「答對卻沒效果」的前提下補上了隨機性。
+let CRIT_CHANCE = 0.15;   // 爆擊機率
+let CRIT_MULT = 2;        // 爆擊傷害倍率
+
+// 這一擊是否爆擊。抽到就順便把劍氣指定成十字斬。
+function rollCrit() {
+    const crit = Math.random() < CRIT_CHANCE;
+    if (crit) pendingSlashImg = SLASH_FX.crit;
+    return crit;
+}
+
 // === 打倒敵人後可三選一的強化（依 weight 加權隨機抽 3 個）===
-// 強力攻擊 32%，其餘各 17%（總和 100）
+// weight 是相對值，pickWeighted 會自己算總和，不必湊成 100。
+// 目前：強力攻擊 32，其餘各 17（共 6 張，每次抽 3 張）
 // fx：選擇後在勇者身上播放的特效（heal 綠光上升 / buff 金色迸發）
 const UPGRADES = [
     { icon: "💚", title: "治療術", desc: "恢復 20% 最大生命", weight: 17, fx: "heal", apply: () => { playerHP = Math.min(PLAYER_MAX, playerHP + Math.round(PLAYER_MAX * 0.2)); } },
     { icon: "⚔️", title: "強力攻擊", desc: "攻擊傷害 +8", weight: 32, fx: "buff", apply: () => { HIT_TO_ENEMY += 8; } },
     { icon: "🛡️", title: "堅韌護甲", desc: "受到傷害 -5", weight: 17, fx: "buff", apply: () => { defenseReduction += 5; } },
     { icon: "❤️", title: "強健體魄", desc: "最大生命 +15", weight: 17, fx: "heal", apply: () => { PLAYER_MAX += 15; playerHP += 15; } },
-    { icon: "⏱️", title: "從容思考", desc: "作答時間 +5 秒", weight: 17, fx: "buff", apply: () => { ROUND_TIME += 5; } }
+    { icon: "⏱️", title: "從容思考", desc: "作答時間 +5 秒", weight: 17, fx: "buff", apply: () => { ROUND_TIME += 5; } },
+    // 爆擊卡：+10% 機率，五關全拿也只到 65%，不會變成「每擊都爆」。
+    // 它跟「強力攻擊 +8」是兩種成長路線——穩定加傷 vs 期望值加傷，
+    // 期望傷害相近（+8 固定 ≈ +10% 爆擊在 HIT_TO_ENEMY≈40 時），但手感完全不同。
+    { icon: "💥", title: "會心一擊", desc: "爆擊機率 +10%", weight: 17, fx: "buff", apply: () => { CRIT_CHANCE = Math.min(0.65, CRIT_CHANCE + 0.10); } }
 ];
 
 let playerHP = PLAYER_MAX;
@@ -244,14 +325,13 @@ function restart(el, cls) {
 }
 
 // ===== 攻擊動作換圖 =====
-// 有 atk 圖的角色，衝刺途中會換成攻擊姿勢，回位前換回站姿。
+// 衝刺途中依序播放 atkFrames 的分鏡，回位前換回站姿。
 // 時間點是照 CSS 的 lunge keyframes 抓的：0~18% 反向蓄力（still 站姿才對），
-// 18~70% 衝出並停留（攻擊姿），70% 之後回位（換回站姿）。
-// 整段都用攻擊圖的話就只是「平移一張圖」，分三拍才有「準備→出手→收招」。
+// 18~70% 衝出並停留（攻擊動作），70% 之後回位（換回站姿）。
+// 整段都用同一張攻擊圖的話就只是「平移一張圖」，要分拍才有「起手→揮擊→收招」。
 const LUNGE_MS = 520;               // 對應 .sprite.lunge 的 0.52s
-const ATK_IN_MS = LUNGE_MS * 0.18;
-const ATK_OUT_MS = LUNGE_MS * 0.70;
-const atkTimers = { player: {}, enemy: {} };
+const ATK_END = 0.70;               // 換回站姿的時機：lunge 開始回位的那一刻，回程即收招
+const atkTimers = { player: [], enemy: [] };
 
 function currentLook(side) {
     return side === 'player'
@@ -259,35 +339,109 @@ function currentLook(side) {
         : ENEMY_LOOKS[currentEnemyIndex % ENEMY_LOOKS.length];
 }
 
-function clearAtkTimers(side) {
-    clearTimeout(atkTimers[side].on);
-    clearTimeout(atkTimers[side].off);
+// 統一取分鏡：新的 atkFrames 優先，沒有就把舊的單張 atk 包成一格（向下相容）
+function framesOf(look) {
+    if (Array.isArray(look.atkFrames) && look.atkFrames.length) return look.atkFrames;
+    if (look.atk) return [{ at: 0.18, img: look.atk }];
+    return [];
 }
 
+function clearAtkTimers(side) {
+    atkTimers[side].forEach(clearTimeout);
+    atkTimers[side] = [];
+}
+
+// 只在「真的是一次攻擊」時才會被呼叫（見 act 的 asAttack）
 function playAttackFrame(side) {
     const look = currentLook(side);
-    if (!look.atk || !look.img) return;   // 沒有攻擊圖就維持原本的單張表現
+    const frames = framesOf(look);
+    if (!frames.length || !look.img) return;   // 沒有分鏡就維持原本的單張表現
     const sprite = document.getElementById(`${side}-sprite`);
     clearAtkTimers(side);
-    atkTimers[side].on = setTimeout(() => {
-        sprite.style.setProperty('--sprite', `url("${look.atk}")`);
-    }, ATK_IN_MS);
-    atkTimers[side].off = setTimeout(() => {
+
+    frames.forEach(f => {
+        atkTimers[side].push(setTimeout(() => {
+            sprite.style.setProperty('--sprite', `url("${f.img}")`);
+        }, LUNGE_MS * f.at));
+    });
+    // 收尾一定要排在最後，且不能早於任何一格分鏡
+    const endAt = Math.max(ATK_END, frames[frames.length - 1].at + 0.05);
+    atkTimers[side].push(setTimeout(() => {
         sprite.style.setProperty('--sprite', `url("${look.img}")`);
-    }, ATK_OUT_MS);
+    }, LUNGE_MS * endAt));
+
+    if (look.slash) playSlash(side, look.slash);
 }
 
-// 先把攻擊圖抓進快取，否則第一次出手會閃一下空白
+// 劍氣：橫跨舞台的獨立一層，從攻擊方飛向被攻擊方。
+//
+// 軌跡是**每次出手現量的**，不是寫死的座標：量攻守雙方 sprite 的中心點，
+// 換算成相對於 battle-stage 左緣的 px 再交給 CSS 變數。
+// 這樣視窗縮放、換關卡、角色圖換大小都不用回來改，怪物反打也自動成立。
+function playSlash(side, slash) {
+    const el = document.getElementById('stage-slash');
+    const stage = document.getElementById('battle-stage');
+    if (!el || !stage) return;
+
+    // 勇者的劍氣每次隨機（爆擊時已由 pendingSlashImg 指定）；
+    // 怪物若日後補上自己的 slash.img，就照它自己的走。
+    const img = (side === 'player') ? takeSlashImg() : slash.img;
+    if (!img) return;
+
+    const foe = side === 'player' ? 'enemy' : 'player';
+    const attacker = document.getElementById(`${side}-sprite`);
+    const defender = document.getElementById(`${foe}-sprite`);
+    if (!attacker || !defender) return;
+
+    const dir = side === 'player' ? 1 : -1;
+    const stageLeft = stage.getBoundingClientRect().left;
+    const centerOf = e => {
+        const r = e.getBoundingClientRect();
+        return r.left + r.width / 2 - stageLeft;
+    };
+    const u = unit();
+    const from = centerOf(attacker) + dir * 2.5 * u;  // 起點在劍尖前方，不是角色正中央
+    const to   = centerOf(defender);                  // 終點正是對手身上
+    const over = to + dir * 6 * u;                    // 命中後再往前衝一段，才有貫穿感
+
+    el.style.setProperty('--dir', dir);
+    el.style.setProperty('--from', `${from}px`);
+    el.style.setProperty('--to', `${to}px`);
+    el.style.setProperty('--over', `${over}px`);
+    el.style.setProperty('--slash', `url("${img}")`);
+
+    atkTimers[side].push(setTimeout(() => {
+        restart(el, 'slashing');
+    }, LUNGE_MS * slash.at));
+}
+
+// 先把攻擊圖抓進快取，否則第一次出手會閃一下空白。
+// 劍氣整組都要預載：隨機挑到還沒下載的那張會閃一格空白，而且只會發生在
+// 「第一次抽到它」的那一擊，很難重現也很難查。
 function preloadAttackFrames() {
     [PLAYER_LOOK].concat(ENEMY_LOOKS).forEach(l => {
-        if (l.atk) { const im = new Image(); im.src = l.atk; }
+        framesOf(l).forEach(f => { const im = new Image(); im.src = f.img; });
+        if (l.slash && l.slash.img) { const im = new Image(); im.src = l.slash.img; }
+    });
+    SLASH_FX.normal.concat(SLASH_FX.crit).forEach(src => {
+        const im = new Image(); im.src = src;
     });
 }
 
 // side 為 'player' 或 'enemy'
-function act(side, cls) {
-    restart(document.getElementById(`${side}-sprite`), cls);
-    if (cls === 'lunge') playAttackFrame(side);
+// asAttack 只在 cls==='lunge' 時有意義。false 代表「借用衝刺的位移，但這不是一次攻擊」：
+// 攻擊分鏡和劍氣都不播，角色維持站姿往前跳一下而已。升級後的得意動作就是這樣。
+function act(side, cls, asAttack = true) {
+    const sprite = document.getElementById(`${side}-sprite`);
+    restart(sprite, cls);
+    if (cls !== 'lunge') return;
+    if (asAttack) { playAttackFrame(side); return; }
+
+    // 不是攻擊：把可能還停在攻擊分鏡上的圖拉回站姿，並取消排程中的換圖，
+    // 否則上一次攻擊的收尾 timer 會在這一跳的中途把圖換掉。
+    clearAtkTimers(side);
+    const look = currentLook(side);
+    if (look.img) sprite.style.setProperty('--sprite', `url("${look.img}")`);
 }
 
 function impact() {
@@ -348,12 +502,12 @@ function fxHeal(side, count = 10) {
     }
 }
 
-function showDamage(side, amount, color = '#e53935') {
+function showDamage(side, amount, color = '#e53935', crit = false) {
     const target = document.getElementById(`${side}-sprite`);
     const dmg = document.createElement('span');
-    dmg.className = 'floating-dmg';
+    dmg.className = crit ? 'floating-dmg crit' : 'floating-dmg';
     dmg.style.color = color;
-    dmg.innerText = `-${amount}`;
+    dmg.innerText = crit ? `-${amount}!` : `-${amount}`;
     const rect = target.getBoundingClientRect();
     // 加上捲動位移，頁面捲動時數字才不會跑掉
     dmg.style.left = `${rect.left + window.scrollX + rect.width / 2 - 1.5 * unit()}px`;
@@ -362,24 +516,50 @@ function showDamage(side, amount, color = '#e53935') {
     setTimeout(() => dmg.remove(), 1600);
 }
 
-// 衝刺動畫大約在這個時間點「打到」對方，所有命中反饋都對齊這一刻
+// 「打到」對方的時間點。所有命中反饋（扣血、碎片、震動、傷害數字）都對齊這一刻。
+//
+// 兩種攻擊的節奏本來就不同，所以分成兩個值：
+//   MELEE  怪物撲上來咬 —— 近身，衝刺到位就是命中，190ms。
+//   SLASH  勇者放劍氣 —— 劍氣要飛越大半個舞台才打得到，命中必然比較晚。
+//
+// 400ms 是為了「看得清楚」訂的。原本兩者共用 190ms，劍氣只有 90ms 的飛行時間，
+// 快到只看得見怪物身上閃一下。改成 400ms 後飛行有 265ms，
+// 讀起來才是「揮劍 → 劍氣飛出去 → 打中怪物」三拍，而不是一團模糊。
+// 勇者的衝刺動作 520ms 在此期間已經開始回位 —— 這是對的：
+// 劍氣是拋射物，本來就該在揮劍收招之後才飛到對面。
 const IMPACT_DELAY = 190;
+const SLASH_IMPACT_DELAY = 400;
+
+// 只有勇者會放劍氣（ENEMY_LOOKS 目前都沒有 slash），所以用攻擊方判斷就夠。
+// 之後若幫怪物補上 slash，改成看 currentLook(attacker).slash 即可。
+function impactDelayFor(attacker) {
+    return currentLook(attacker).slash ? SLASH_IMPACT_DELAY : IMPACT_DELAY;
+}
 
 // 一次完整的攻擊：衝刺 → 命中（斬擊＋碎片＋震動＋扣血）→ 回位
 // onImpact 會在命中的瞬間呼叫，血條就是在那時候才掉，打擊感才對得上
-function strike(attacker, defender, amount, onImpact) {
+// crit：爆擊時把每一項反饋都加碼（碎片變多變金、傷害數字放大、震動加重），
+// 讓「這下不一樣」從畫面本身讀得出來，而不是只靠文字說明。
+function strike(attacker, defender, amount, onImpact, crit = false) {
     act(attacker, 'lunge');
     setTimeout(() => {
         act(defender, 'hurt');
         fxSlash(defender);
         fxRing(defender);
-        fxSparks(defender, defender === 'enemy' ? '#ffd54f' : '#ff8a80');
+        fxSparks(defender,
+            defender === 'enemy' ? (crit ? '#fff59d' : '#ffd54f') : '#ff8a80',
+            crit ? 20 : 11);
         stageFlash(defender === 'enemy' ? 'good' : 'bad');
         impact();
         shakeScreen();
-        showDamage(defender, amount);
+        if (crit) {
+            // 第二次震動晚 90ms 疊上去，讀起來是「一記更重的撞擊」而不是抖兩下
+            setTimeout(shakeScreen, 90);
+            fxRing(defender);
+        }
+        showDamage(defender, amount, crit ? '#ffca28' : undefined, crit);
         if (onImpact) onImpact();
-    }, IMPACT_DELAY);
+    }, impactDelayFor(attacker));
 }
 
 function pickWeighted(pool) {
@@ -441,7 +621,7 @@ function chooseUpgrade(upg, cardEl) {
             updateBars(); // 反映治療 / 最大生命變化
             if (upg.fx === 'heal') fxHeal('player');
             else fxSparks('player', '#ffd54f', 14);
-            act('player', 'lunge');
+            act('player', 'lunge', false);   // 得意動作，不是攻擊 —— 不放劍氣
 
             // 4) 下一隻怪登場
             setTimeout(() => {
@@ -554,10 +734,18 @@ function checkAnswer(index) {
     const feedback = document.getElementById('feedback-msg');
 
     if (index === q.correct) {
-        enemyHP -= HIT_TO_ENEMY;
+        // 先擲爆擊，再算傷害：rollCrit() 會順便把這一擊的劍氣指定成十字斬，
+        // 必須排在 strike() 之前，否則劍氣已經抽完了。
+        const crit = rollCrit();
+        const dmg = crit ? Math.round(HIT_TO_ENEMY * CRIT_MULT) : HIT_TO_ENEMY;
+        enemyHP -= dmg;
 
         // 勇者衝刺攻擊，血條在「打到」的那一刻才掉
-        strike('player', 'enemy', HIT_TO_ENEMY, updateBars);
+        strike('player', 'enemy', dmg, updateBars, crit);
+
+        // 後續每一拍都要跟著劍氣的命中時間走，不能再用近身的 IMPACT_DELAY，
+        // 否則怪物會在劍氣還沒飛到的時候就先倒下。
+        const hitAt = impactDelayFor('player');
 
         if (enemyHP <= 0) {
             const isLast = currentEnemyIndex >= ENEMY_HP_TABLE.length - 1;
@@ -566,21 +754,23 @@ function checkAnswer(index) {
                 act('enemy', 'die');
                 fxSparks('enemy', '#fff59d', 18);
                 mapDefeat(currentEnemyIndex); // 地圖同步前進一格
-            }, IMPACT_DELAY + 300);
+            }, hitAt + 300);
 
             if (isLast) {
                 feedback.innerText = '攻擊成功！最後的敵人也被打倒了！ 🎉';
                 feedback.className = 'feedback-msg good';
-                setTimeout(() => endGame(true), IMPACT_DELAY + 1250);
+                setTimeout(() => endGame(true), hitAt + 1250);
                 return;
             }
             feedback.innerText = '打倒敵人！選擇一項強化吧！ ⭐';
             feedback.className = 'feedback-msg good';
-            setTimeout(showUpgradePanel, IMPACT_DELAY + 1150);
+            setTimeout(showUpgradePanel, hitAt + 1150);
             return; // 由強化面板接手後續流程
         } else {
-            feedback.innerText = `攻擊成功！對怪獸造成 ${HIT_TO_ENEMY} 點傷害 ⚔️`;
-            feedback.className = 'feedback-msg good';
+            feedback.innerText = crit
+                ? `爆擊！對怪獸造成 ${dmg} 點傷害 💥`
+                : `攻擊成功！對怪獸造成 ${dmg} 點傷害 ⚔️`;
+            feedback.className = crit ? 'feedback-msg good crit' : 'feedback-msg good';
             scheduleNextRound(NEXT_DELAY_CORRECT);
         }
     } else {
@@ -664,6 +854,8 @@ function beginBattle() {
     HIT_TO_ENEMY = 10;
     ROUND_TIME = 30;
     defenseReduction = 0;
+    CRIT_CHANCE = 0.15;
+    pendingSlashImg = null;   // 上一場若在爆擊途中離開，指定的劍氣會殘留到下一場
     playerHP = PLAYER_MAX;
     currentEnemyIndex = 0;
     document.getElementById('upgrade-overlay').classList.add('hidden');
