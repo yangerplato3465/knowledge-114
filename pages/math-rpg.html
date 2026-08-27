@@ -571,7 +571,14 @@
                圖片在那個高度下細節看不清，而且戰鬥區太扁會把背景裁到只剩地面。
                空間是從題目區與選項區的留白挪過來的。 */
             height: calc(13 * var(--u));
-            margin-bottom: calc(0.5 * var(--u));
+            /* 2026-08-27：0.5u → 0.1u。角色與名字之間的空隙原本是
+               .sprite 的 bottom(0.375u) ＋ 這裡的 0.5u ＝ 0.875u ≈ 12.6px，
+               再加上 .name 的行高留白，看起來角色像浮在名字上方。
+               .fighter 是 align-items:flex-end，名字與血條錨在底部不動，
+               所以縮這個值等於**把角色往下移**，名字位置完全不變。
+               ⚠️ 動到這個值就會改變腳底佔戰鬥區的百分比，
+               背景的 cropY 必須跟著重算（見 .claude/math-rpg-stages.sh 的註解）。 */
+            margin-bottom: calc(0.1 * var(--u));
         }
 
         /*
@@ -648,7 +655,9 @@
         .sprite {
             position: absolute;
             left: calc(50% - 7 * var(--u));
-            bottom: calc(0.375 * var(--u));
+            /* 2026-08-27：0.375u → 0.15u（見 .sprite-slot 的註解，同一次調整）。
+               .ground-shadow 在 0.125u，所以腳底現在幾乎壓在陰影上，比原本更像踩在地上。 */
+            bottom: calc(0.15 * var(--u));
             width: calc(14 * var(--u)); height: calc(14 * var(--u));
             transform-origin: 50% 100%;
         }
@@ -681,7 +690,11 @@
             font-size: calc(1.125 * var(--u));
             font-weight: 700;
             color: #ffffff;
-            margin: calc(0.28 * var(--u)) 0 calc(0.2 * var(--u));
+            /* line-height 收到 1.15：繼承來的行高在字的上方留了約 5px 空白，
+               那段空白也算進「角色離名字太遠」的觀感裡，但它不需要移動任何東西就能收掉。
+               margin-top 一起收到 0.1u，否則它會蓋過 .sprite-slot 的 margin-bottom（相鄰邊界取大值）。 */
+            line-height: 1.15;
+            margin: calc(0.1 * var(--u)) 0 calc(0.2 * var(--u));
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 2px rgba(0, 0, 0, 0.4);
         }
 
