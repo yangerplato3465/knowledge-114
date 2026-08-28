@@ -10,11 +10,16 @@
 
 ## 0. 開始之前
 
-**這台機器沒有 Node.js**，不能 `npm install pixi.js`。用 CDN：
+**這台機器沒有 Node.js**，不能 `npm install pixi.js`。
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
-```
+> **2026-08-27 更新：本來這裡寫的是掛 CDN，已經改成本地檔。**
+> ```html
+> <script src="../assets/vendor/pixi.min.js"></script>
+> ```
+> 教室不一定有網路。頁面現在確實還吃 Google Fonts 和 FontAwesome 的 CDN，
+> 但那兩個掛掉只是字醜、圖示變方框，遊戲照樣能玩；
+> Pixi 掛掉是**整個戰鬥區空白**。這兩件事的嚴重性差太多，不能一起賭。
+> 下載指令與說明見 `assets/vendor/README.md`。
 
 功能不打折。實測 2026-08-26（`@8` 解析到 v8.20.0）：
 
@@ -24,11 +29,13 @@
 | 解壓後要解析的 JS | 818 KB |
 | 目前整包遊戲圖檔 | 約 670 KB |
 
-**載入量直接翻倍。** 這遊戲要在學校電腦跑，導入前確認兩件事：
-1. 教室網路 —— 第一次載入會明顯變久（之後有快取就還好）
-2. 舊機器的 JS 解析時間 —— 818KB 要 parse，低階機可能多花數百毫秒
+**載入量直接翻倍。** 走本地檔之後，「教室網路」那一項不再是風險，
+剩下唯一真正的成本是**舊機器的 JS 解析時間** —— 818 KB 要 parse，低階機可能多花數百毫秒。
 
-要瘦身得自己 build 只含需要的模組，但那需要 Node.js。
+要瘦身得自己 build 只含需要的模組，但那需要 Node.js，這台機器沒有。
+
+> 這一項要用 `pages/math-rpg-pixi-spike.html` 在**學校那台電腦**上實測，
+> 不能在開發機上判斷。見第 5 節。
 
 ---
 
@@ -108,10 +115,14 @@ fx 函式清單（`assets/js/math-rpg.js`）：
 血條、題目、按鈕留在 DOM。A + B 全部解鎖。
 
 ### 建議
-**先做路線一的 1、2、10**，跑起來看實際感覺，再決定要不要投入路線二。
+~~**先做路線一的 1、2、10**，跑起來看實際感覺，再決定要不要投入路線二。~~
 
-理由：路線二會動到 `.sprite` 那整套已經調得很順的動畫，如果做完發現手感不如現在的 CSS 版本，回頭成本很高。
-路線一的 1、2、10 完全不碰現有邏輯，做完就知道 Pixi 在實機上的效能和觀感。
+> **2026-08-27：這個建議被推翻了，改成先做角色 spike。理由與結果見第 5 節。**
+> 簡短版：1、2、10 用 canvas 2D 就做得到（0 KB），做完驗證不到 Pixi 的價值；
+> 真正只有 Pixi 能做的東西全部卡在第 8 項後面，所以先驗證第 8 項。
+
+原本的理由（仍然成立，只是被「先驗證高風險項」蓋過）：
+路線二會動到 `.sprite` 那整套已經調得很順的動畫，如果做完發現手感不如 CSS 版，回頭成本很高。
 
 ---
 
@@ -128,3 +139,129 @@ fx 函式清單（`assets/js/math-rpg.js`）：
 - 只有會逐幀變動的屬性要在 `dynamicProperties` 打開（預設只有 `position`）。
   粒子要變色或旋轉就得額外開 `color` / `rotation`，開越多每幀上傳 GPU 的資料越多。
 - `unit()` 是量一個隱形探針元素拿到 `--u` 的實際 px 值。Pixi 場景的縮放要跟著這個走，否則在觸控電視上放到最大時粒子會小得像灰塵。
+
+---
+
+## 5. 角色 Spike 的結果（2026-08-27）
+
+上面第 3 節建議「先做 1、2、10 再決定」。**那個順序後來被推翻了**，理由寫在這裡。
+
+### 為什麼改成先做最高風險的那一步
+
+1、2、10（拖尾、爆散、環境粒子）三項都是「畫幾百個加亮的小方塊」，
+canvas 2D 配 `globalCompositeOperation = 'lighter'` 就做得到，**0 KB**。
+做完只會知道「粒子好看」，不會知道 Pixi 值不值 818 KB。
+
+真正只有 Pixi 能做的是著色器那批（#3 衝擊波位移、#4 爆擊色差、#5 剪影碎裂、
+#8 受傷閃白／溶解、#19 灰階漸染），而它們**全部卡在 #8 這道門檻後面**。
+所以先做 #8。
+
+### 做了什麼
+
+`pages/math-rpg-pixi-spike.html` —— 獨立的比較頁，**沒有動到遊戲本體**。
+左右並排，同一組關鍵影格：左邊是從遊戲原封不動複製的 CSS `@keyframes`，
+右邊是 Pixi ticker 逐格插值。按鈕同時觸發兩邊。
+
+Pixi 這側刻意做成**兩層**對應 CSS 的巢狀結構：
+外層 `Container` 跑 `lunge`/`hurt`/`die`/`spawn`，內層 `Sprite` 跑待機呼吸，
+錨點都設 `anchor = (0.5, 1)` 對齊 CSS 的 `transform-origin: 50% 100%`。
+
+### 量測結果
+
+用 Web Animations API 把 CSS 動畫暫停在任意時間點、讀瀏覽器自己算出來的 `transform`，
+跟 Pixi 在同一時間點的值逐點對照：
+
+**四段動畫的所有停點與中間取樣點，位移誤差都是 0.00px。**
+
+自己用 Newton 迭代解的 cubic-bezier，跟瀏覽器的實作在這個精度下沒有可測差異。
+
+### 過程中抓到的坑（這是 spike 最有價值的產出）
+
+> **CSS 的 `animation-timing-function` 是套在「每一段關鍵影格之間」，不是套在整段動畫上。**
+
+第一版寫成後者，結果 `lunge` 在 38% 只衝到 x=38 而不是表定的 x=56，
+衝刺的爆發力整個消失，看起來像軟綿綿地滑過去。
+任何要把 CSS keyframes 移植到 ticker 動畫的地方都會踩到這個。
+
+另外兩個小的：
+- `ColorMatrixFilter` 的 `brightness()` / `saturate()` **每一個都是重設整個矩陣**，
+  疊著呼叫會互相蓋掉。三個效果要一次算好成一個矩陣。
+- `contrast(c)` 需要用到矩陣第 5 欄的**偏移量**（`0.5 * (1 - c)`），
+  只改係數是做不出來的。
+
+### 還沒驗證、也不該由程式碼回答的部分
+
+- **肉眼手感沒有人看過。** 上面全部是數值比對，數值一樣不等於看起來一樣。
+- **低階機器的 FPS 沒測過。** 要在學校那台電腦上開這一頁看右上角的數字。
+
+### 下一步的判斷點
+
+- 手感過關 ＋ 學校機器 FPS 可接受 → 走路線二（戰鬥區全面 Pixi），
+  A、B 兩組項目全部解鎖，818 KB 花得值得。
+- 手感不如 CSS 或機器跑不動 → **果斷放棄 Pixi**，改寫一層 canvas 2D 加亮粒子，
+  拿路線一的七成效果、零依賴、零下載。
+
+### 順帶做掉的事
+
+`assets/vendor/pixi.min.js`（8.20.1，818 KB）已經抓成本地檔，**不走 CDN**。
+理由見 `assets/vendor/README.md`：教室不一定有網路，
+Google Fonts / FontAwesome 掛掉只是字醜，Pixi 掛掉是整個戰鬥區空白。
+
+---
+
+## 6. 第一步已上線：角色改由 Pixi 繪製（2026-08-27）
+
+`assets/js/math-rpg-pixi.js`。**這一層只負責「畫」，不負責「動」。**
+
+### 作法
+
+DOM 結構完全保留，只是 `.sprite-body` 的 `background-image` 被設成 `none`
+（`.sprite.pixi-drawn` 這個 class），角色改由一張 Pixi canvas 畫出來。
+CSS 動畫照舊在跑，Pixi 每幀去讀 `.sprite` 與 `.sprite-body` 算好的
+`transform` / `filter` / `opacity` 重畫一份。
+
+**為什麼不讓 Pixi 自己跑動畫**（spike 已經證明做得到）：
+math-rpg.js 有三個地方綁在 DOM 的角色元素上 ——
+`playSlash` 量兩邊 sprite 中心算劍氣軌跡、`showDamage` 用 rect 定位傷害數字、
+`fxSpawn` 把碎片插進 `#{side}-slot`。保留 DOM 當位置來源，這三個**一行都不用改**，
+整步變成純加法、隨時可以撤。等這層穩定了再把動作搬進來，屆時只要換掉 `readPose()`。
+
+### 量測
+
+| | 結果 |
+|---|---|
+| 與 DOM 的位置吻合度 | `lunge`/`hurt`/`spawn`/`die` × 攻守兩側，最大誤差 **0.001px** |
+| 每幀成本（含渲染） | **0.071ms**，約 60fps 預算的 0.4% |
+| 受傷閃白 / 倒下灰階 | 由 `ColorMatrixFilter` 重現，逐點對得上 CSS |
+| 退場 | 網址加 `?nopixi` 或 Pixi 載入失敗 → 自動回到純 DOM，實測無殘留 |
+
+### 踩到的三個坑
+
+1. **`setFromMatrix()` 會整個覆寫物件的 local transform。**
+   貼圖的等比縮放跟 CSS 矩陣不能放在同一層，否則每幀被洗掉 ——
+   症狀是角色尺寸變成 CSS 矩陣裡的縮放值（例如 spawn 起始的 0.9）。
+   所以分兩層：holder 吃矩陣，內層 sprite 保留貼圖縮放。
+
+2. **`offsetLeft` / `offsetWidth` 回傳整數。**
+   `.sprite` 的 `left: calc(50% - 7*var(--u))` 是小數，四捨五入後產生固定
+   x +0.5 / y −0.65px 的系統性偏移。改成在「`.sprite` 自己沒有 transform 時」
+   用 `getBoundingClientRect` 量精確版面盒（idle 動畫掛在 `.sprite-body` 上，
+   所以 `.sprite` 待機時確實是 `none`），量不到就先用整數版頂著、之後自動換掉。
+   誤差從 0.7px 降到 0.001px。
+
+3. **canvas 一定要插在第一個 `.fighter` 之前，不能 `appendChild`。**
+   `.fighter` 有 `z-index:1` 且 `position:relative`，**會建立堆疊環境** ——
+   碎片特效 `.fx`(z-index:3) 是關在 fighter 裡面的，整組仍以 z=1 參與外層排序。
+   canvas 同為 z=1，同層時由 DOM 順序決定先後，`appendChild` 會讓角色蓋過
+   碎片、名字、血條。正確的疊放是：背景 → 角色(canvas) → 碎片/名字/血條 → 閃屏 → 劍氣。
+
+### 下一步可以做什麼
+
+路已經開了 —— 角色在 canvas 裡，著色器可以上了：
+- #2 命中爆散改 `ParticleContainer`，粒子能跟角色**同層互相穿插**（疊加層做不到的事）
+- #6 受傷改成血花＋角色殘影
+- #5 怪物死亡改成剪影碎裂
+- #3 衝擊波位移著色器
+
+真正把動作也搬進 Pixi（`readPose()` 換成 spike 的 `CLIPS`）要等
+`playSlash` / `showDamage` 改成讀 Pixi 座標，那是另一步。

@@ -374,7 +374,34 @@
 
     <p id="version-label" style="margin-top: 18px; font-size: 13px; color: var(--muted-2);"></p>
 
+    <!--
+      開發工具區。**預設 display:none，只有在 localhost 才會被下面的 script 打開。**
+      .github/workflows/static.yml 把 main 部署到 GitHub Pages，學生看到的是 github.io，
+      這一區在那裡永遠不會出現，不必擔心被誤點。
+
+      這裡放的是「驗證用」而不是「給學生玩」的頁面 ——
+      混進上面的遊戲清單會被誤點，但完全不放又每次都要記網址。
+      日後有新的 spike 或工具頁，加一個 <a> 進來就好。
+    -->
+    <div id="dev-tools" style="display: none; margin-top: 22px; padding-top: 14px;
+                               border-top: 1px dashed var(--muted-2); opacity: 0.8;">
+        <div style="font-size: 12px; color: var(--muted-2); margin-bottom: 6px;">
+            🔧 開發工具（僅 localhost 顯示）
+        </div>
+        <a href="pages/math-rpg-pixi-spike.html"
+           style="font-size: 13px; color: var(--muted-2); display: inline-block; padding: 3px 0;">
+            ⚔️ 數學勇者 · Pixi 角色 Spike
+            <span style="opacity: 0.7;">—— CSS 與 PixiJS 動畫手感並排比較</span>
+        </a>
+    </div>
+
     <script>
+        // 開發工具只在本機顯示。file:// 直接開的話 hostname 是空字串，
+        // 但那種開法 spike 頁的 Pixi 和圖片都會被擋掉，所以刻意不納入。
+        if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+            document.getElementById('dev-tools').style.display = 'block';
+        }
+
         function toggleCategory(head) {
             const cat = head.parentElement;
             const isOpen = cat.classList.contains('open');

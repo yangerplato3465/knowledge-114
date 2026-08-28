@@ -564,6 +564,80 @@
 
         .fighter { position: relative; z-index: 1; width: 46%; text-align: center; }
 
+        /* ---------- 狀態徽章 ---------- */
+        /* 護甲、護盾、流血、迷霧、連擊全部要能一眼看到。這些機制如果只活在程式碼裡，
+           孩子只會覺得「我的血莫名其妙一直掉」，什麼都學不到。
+           每顆徽章都有 title，滑上去看得到完整規則。
+
+           位置在舞台頂端的天空帶（.battle-stage 的 3u top padding）。
+           z-index 2 蓋過 .fighter(1)，才不會被角色的方框吃掉。 */
+        .status-row {
+            position: absolute;
+            top: calc(0.55 * var(--u));
+            z-index: 2;
+            display: flex;
+            gap: calc(0.3 * var(--u));
+            pointer-events: auto;
+            /* 空的時候完全不佔視覺，也不會擋到任何點擊 */
+            min-height: calc(1.7 * var(--u));
+        }
+        .status-row.left  { left: calc(3.5 * var(--u)); }
+        .status-row.right { right: calc(3.5 * var(--u)); flex-direction: row-reverse; }
+
+        .st-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: calc(0.18 * var(--u));
+            padding: calc(0.12 * var(--u)) calc(0.45 * var(--u));
+            border-radius: 999px;
+            font-size: calc(0.8 * var(--u));
+            font-weight: 700;
+            line-height: 1.25;
+            color: #fff;
+            background: rgba(20, 24, 34, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+            white-space: nowrap;
+            cursor: help;
+        }
+        .st-icon { font-size: calc(0.85 * var(--u)); }
+        .st-num  { font-variant-numeric: tabular-nums; }
+
+        /* 每種狀態一個顏色，孩子靠顏色記得比靠文字快 */
+        .st-badge.armor  { background: rgba(38, 82, 140, 0.85);  border-color: #90caf9; }
+        .st-badge.shield { background: rgba(21, 101, 122, 0.85); border-color: #80deea; }
+        .st-badge.bleed  { background: rgba(140, 26, 26, 0.85);  border-color: #ef9a9a; }
+        .st-badge.fog    { background: rgba(74, 74, 96, 0.85);   border-color: #cfd8dc; }
+        .st-badge.combo  { background: rgba(150, 68, 12, 0.88);  border-color: #ffcc80; }
+        .st-badge.enrage { background: rgba(150, 22, 22, 0.9);   border-color: #ff8a80; }
+        .st-badge.charge { background: rgba(96, 74, 12, 0.85);   border-color: #ffe082; }
+
+        /* 窄螢幕：.battle-stage 的上緣 padding 從 3u 掉到 1u，天空帶塞不下原尺寸的徽章。
+           **不能靠加高舞台來解決** —— 舞台是內容撐高的，加 padding 會讓背景帶跟著變高，
+           地面線就跑掉了（見 .battle-stage 的註解）。所以改成縮徽章、並把左右內縮量
+           對齊該斷點的舞台 padding。這時徽章會略微壓到角色頭頂上方，
+           那是遊戲裡常見的 buff 圖示位置，版面本身完全不受影響。 */
+        @media (max-width: 600px) {
+            .status-row { top: calc(0.2 * var(--u)); gap: calc(0.2 * var(--u)); min-height: calc(1.3 * var(--u)); }
+            .status-row.left  { left: calc(1.1 * var(--u)); }
+            .status-row.right { right: calc(1.1 * var(--u)); }
+            .st-badge { font-size: calc(0.68 * var(--u)); padding: calc(0.08 * var(--u)) calc(0.3 * var(--u)); gap: calc(0.12 * var(--u)); }
+            .st-icon  { font-size: calc(0.72 * var(--u)); }
+        }
+        /* 手機橫放：天空帶 1.4u，比直向寬鬆一點，但左右 padding 只有 1u */
+        @media (orientation: landscape) and (max-height: 520px) {
+            .status-row.left  { left: calc(1 * var(--u)); }
+            .status-row.right { right: calc(1 * var(--u)); }
+        }
+
+        /* 數字變動時彈一下 —— 3 變 2 如果沒有動作，根本不會被注意到 */
+        .st-badge.bump { animation: stBump 0.42s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes stBump {
+            0%   { transform: scale(1); }
+            35%  { transform: scale(1.42); filter: brightness(1.5); }
+            100% { transform: scale(1); }
+        }
+
         /* 角色插槽：所有特效都掛在這層，位置自動跟著角色跑 */
         .sprite-slot {
             position: relative;
@@ -683,6 +757,20 @@
             filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
         }
         .sprite.has-img .glyph { display: none; }
+
+        /* ---------- Pixi 接手繪製時，把 DOM 這邊的圖藏起來 ---------- */
+        /* 角色改由 assets/js/math-rpg-pixi.js 畫在一張 canvas 上，但**整個 DOM 結構要留著**：
+           playSlash 量它的中心算劍氣軌跡、showDamage 用它定位傷害數字、
+           fxSpawn 把碎片插進 #{side}-slot，這三個都靠這些元素還在原地。
+           CSS 動畫也照舊在跑 —— Pixi 每幀讀它算好的 transform / filter / opacity 來重畫。
+
+           ⚠️ **只能藏 background-image，不能用 opacity:0 或 visibility:hidden。**
+           Pixi 是讀 .sprite-body 的 computed opacity 當自己的 alpha，
+           設成 0 會連 Pixi 畫的那一份一起沒掉；visibility 也會被繼承。
+
+           .pixi-drawn 是 JS 在「這一側確實有貼圖畫得出來」時才加的 ——
+           貼圖沒載到、或還在用 emoji 的情況都不會加，DOM 版本自動接手，不會變空白。 */
+        .sprite.pixi-drawn .sprite-body { background-image: none; }
 
         /* 名字與血量數字是壓在場景地面上的，用白字＋深色描邊才讀得清楚
            （原本的灰字在綠色地面上幾乎看不見） */
@@ -1492,6 +1580,7 @@
                 animation: none !important;
             }
             .sprite.lunge, .sprite.hurt, .sprite.spawn,
+            .st-badge.bump,
             .battle-stage.impact, .game-card.shake,
             .option-btn.enter, .question-box.enter, .upgrade-card,
             .map-node.defeat, .map-node.current.arrive, .map-line.flowing::after,
@@ -1557,6 +1646,17 @@
                 <div class="stage-bg"></div>
                 <div id="stage-flash" class="stage-flash"></div>
 
+                <!--
+                  狀態列（護甲／護盾／流血／迷霧／連擊）。
+                  **刻意絕對定位、不放進 .fighter 裡面。**
+                  .battle-stage 是 align-items:flex-end + overflow:hidden：
+                  在血條下面多加一列，會把整個 .fighter 直欄往上頂，角色跟著離開地面線，
+                  背景圖辛苦對齊的 cropY 就白做了。放在上面那 3u 的 padding（純天空、原本空著）
+                  等於零版面成本，而且徽章浮在角色頭頂上方，讀起來就是遊戲裡該有的樣子。
+                -->
+                <div id="player-status" class="status-row left"></div>
+                <div id="enemy-status" class="status-row right"></div>
+
                 <div class="fighter">
                     <div id="player-slot" class="sprite-slot">
                         <div id="player-sprite" class="sprite" style="--dir: 1;">
@@ -1565,7 +1665,7 @@
                         <div class="ground-shadow"></div>
                     </div>
                     <div class="name">勇者</div>
-                    <div class="hp-row"><i class="fa-solid fa-heart" style="color:#66bb6a;"></i> <span id="player-hp-text">100 / 100</span></div>
+                    <div class="hp-row"><i class="fa-solid fa-heart" style="color:#66bb6a;"></i> <span id="player-hp-text">120 / 120</span></div>
                     <div id="player-hp-track" class="hp-track">
                         <div id="player-hp-ghost" class="hp-ghost"></div>
                         <div id="player-hp" class="hp-fill player"></div>
@@ -1582,7 +1682,7 @@
                         <div class="ground-shadow"></div>
                     </div>
                     <div id="enemy-name" class="name">暗影小獸</div>
-                    <div class="hp-row"><i class="fa-solid fa-heart" style="color:#ef5350;"></i> <span id="enemy-hp-text">100 / 100</span></div>
+                    <div class="hp-row"><i class="fa-solid fa-heart" style="color:#ef5350;"></i> <span id="enemy-hp-text">75 / 75</span></div>
                     <div id="enemy-hp-track" class="hp-track">
                         <div id="enemy-hp-ghost" class="hp-ghost"></div>
                         <div id="enemy-hp" class="hp-fill enemy"></div>
@@ -1636,10 +1736,15 @@
             <div class="upgrade-panel">
                 <h2>🎮 遊戲玩法</h2>
                 <p class="panel-sub" id="howto-pool-label"></p>
+                <!-- 每一條都對應一個實際存在的機制，而且順序＝孩子會遇到它們的順序。
+                     狀態那兩條特別重要：徽章出現在畫面上時，這裡是他唯一查得到意思的地方。 -->
                 <ul class="howto-text">
                     <li>⚔️ <strong>答對題目</strong>：攻擊怪獸，扣牠的血量。</li>
+                    <li>🔥 <strong>連續答對</strong>：累積連擊，每一層讓傷害再 <strong>+5%</strong>。答錯就歸零。</li>
                     <li>💥 <strong>答錯或時間到</strong>：換你被攻擊，扣自己的血量。</li>
                     <li>⏱️ 每題有 <strong>30 秒</strong>作答時間，要把握喔！</li>
+                    <li>🩸 <strong>流血</strong>：怪獸的特殊攻擊會讓你每答一題就掉血，<strong>護甲擋不住</strong>，層數會慢慢減少。</li>
+                    <li>🛡️ <strong>護甲</strong>：直接把怪獸的攻擊力減掉這麼多；<strong>✨ 護盾</strong>則是整次攻擊完全擋下。</li>
                     <li>⭐ 打倒怪獸後可<strong>三選一</strong>強化能力。</li>
                     <li>👑 一路打倒所有怪獸，擊敗最後的<strong>暗黑魔王</strong>就獲勝！</li>
                 </ul>
@@ -1675,7 +1780,12 @@
 
     <audio id="bg-music" src="../assets/audio/music.mp3" loop preload="auto"></audio>
 
+    <!-- Pixi 走本地檔不走 CDN：教室不一定有網路，字型 CDN 掛掉只是字醜，
+         Pixi 掛掉是整個角色不見。載入失敗時 math-rpg-pixi.js 會自己退回 DOM 版本。
+         想暫時關掉改用純 DOM：網址加上 ?nopixi -->
+    <script src="../assets/vendor/pixi.min.js"></script>
     <script src="../assets/js/math-rpg-pools.js"></script>
+    <script src="../assets/js/math-rpg-pixi.js"></script>
     <script src="../assets/js/math-rpg.js"></script>
     <script src="../assets/js/theme.js"></script>
 </body>
