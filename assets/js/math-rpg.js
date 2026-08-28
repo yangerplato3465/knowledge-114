@@ -4,8 +4,65 @@ let selectedPool = null;
 let activePool = [];      // 目前題庫：可為題目陣列，或會回傳題目的產生器函式
 let currentQuestion = null; // 目前這一題
 
-// === 敵人血量表：依序出現，第一隻 20，之後越來越多。可自行調整數值來平衡 ===
-const ENEMY_HP_TABLE = [20, 28, 40, 56, 76, 100];
+// ===================================================================
+// 平衡的核心：用「刀數」定義戰鬥長度，不是用血量
+// ===================================================================
+// 舊版寫死 ENEMY_HP_TABLE = [20,28,40,56,76,100] 配固定攻擊力 10，
+// 再讓「強力攻擊 +8」去改攻擊力 —— 結果是全場題數在 12 到 33 之間浮動：
+//   每次都拿強力攻擊 → 每隻怪都剛好 2 刀 → 12 題
+//   完全不拿          → 2,3,4,6,8,10 刀    → 33 題
+// 對課堂來說這是實質問題（老師無法預期時長），而且玩得越好練到的題目越少。
+//
+// 現在反過來：**先決定每隻怪要砍幾刀**，血量由「刀數 x 該關攻擊力」算出來。
+// 戰鬥長度變成設計出來的常數（基準 27 題），不再是數值運算的副產品。
+// 代價：傷害型強化必須退出卡池（見 UPGRADES），改成隨關卡自動成長。
+const ENEMY_HITS_TABLE = [3, 4, 4, 5, 5, 6];   // 基準 27 刀 = 27 題
+
+// 勇者每一關的攻擊力。玩家看到傷害數字從 25 一路長到 75、敵人血條越來越長，
+// 「我變強了」的感覺留著，但戰鬥長度不動 —— 成長是演出，不是平衡變數。
+const HERO_ATK_TABLE = [25, 32, 40, 50, 62, 75];
+
+// 敵人每一關的攻擊力。會先被勇者的護甲抵銷（見 currentPlayerDamage）。
+// 勇者 120 血：第一關扛得住 12 次失誤，最後一關 4 次。
+//
+// 這組數字是**模擬跑出來的，不是憑感覺訂的**。第一版用 [12,16,20,25,30,36] 配 100 血，
+// 3000 場模擬的結果是難度懸崖：
+//   準確率 85% → 勝率 81%，但 70% → 27%、60% → 6%
+// 一個答對七成的孩子只有四分之一機會通關，對國小課堂太嚴苛。
+// 更糟的是**題數**：40% 準確率的孩子只打 12 題就結束 ——
+// 最需要練習的人練得最少，這正是舊版「強力攻擊」問題換一個形式重演。
+//
+// 攻擊力降兩成 ＋ 基礎血量 100→120 之後：
+//   85% → 95%(26題)   70% → 49%(29題)   60% → 17%(26題)   25%(亂猜) → 0%(15題)
+// 題數對所有程度都拉平到 15~29，弱的孩子練習量幾乎翻倍。
+// 亂猜仍然必敗，這條要守住 —— 不然遊戲就不需要算了。
+const ENEMY_ATK_TABLE = [10, 13, 16, 20, 24, 28];
+
+// === 每隻怪的特性 ===
+// 讓六場戰鬥不再只是血量不同。索引對齊 ENEMY_LOOKS。
+//
+// special：每 N 次攻擊改打一次「特攻」，附帶狀態。null 就是普通怪。
+//   every：幾次攻擊觸發一次   name：畫面上顯示的招式名
+//   bleed / fog：施加的狀態層數（見「狀態」一節）
+// armor：敵人自己的護甲，每次受擊直接減免這麼多傷害。
+//   **會影響刀數**，所以血量是用「扣掉護甲後的有效傷害」回推的（見 spawnEnemy），
+//   黑騎士不會因為有護甲就變得比表定更耐打。
+// enrage：血量低於 at 時進入狂暴，攻擊力乘 atkMult，並額外附加 bleed 層。
+const ENEMY_TRAITS = [
+    // 1 暗影小獸：教學關，故意什麼特性都沒有，先讓孩子熟悉基本循環
+    null,
+    // 2 骨翼渡鴉：撕裂 —— 第一次遇到流血，層數給少一點
+    { special: { every: 3, name: '撕裂', bleed: 3 } },
+    // 3 提燈幽魂：迷霧 —— 不碰傷害，只壓縮思考時間，壓力來源換一種
+    { special: { every: 3, name: '迷霧', fog: 2 } },
+    // 4 骨龍：灼燒 —— 流血的強化版，觸發也更頻繁
+    { special: { every: 2, name: '灼燒', bleed: 4 } },
+    // 5 黑騎士：重甲 —— 敵人也有護甲，跟勇者的護甲是同一個機制，
+    //   狀態列上看得到 🛡️12，孩子從對面身上學會這個數字的意義
+    { armor: 12 },
+    // 6 暗黑魔王：狂暴 —— 半血後攻擊力 1.5 倍，且每一擊都附帶流血
+    { special: { every: 3, name: '暗影爪', bleed: 3 }, enrage: { at: 0.5, atkMult: 1.5, bleed: 2 } }
+];
 
 // 每隻敵人的外觀（數量不足時會循環使用）
 // img：日後補圖時填入圖片路徑（例如 "../assets/images/math-rpg/enemy1.webp"），
@@ -93,23 +150,88 @@ const STAGE_IMAGES = [
     "../assets/images/math-rpg/stage6.webp"
 ];
 
-let PLAYER_MAX = 100;
-let HIT_TO_ENEMY = 10;  // 勇者每次攻擊對敵人造成的固定傷害（可被強化提升）
+let PLAYER_MAX = 120;   // 見 ENEMY_ATK_TABLE 的註解：這個數字跟敵人攻擊力是一起調出來的
 let ROUND_TIME = 30;    // 每關秒數（可被強化延長）
 
-// 每隻敵人造成的傷害：10 起跳，每關 +4 直到 30（對應 6 隻敵人）
-const HIT_TO_PLAYER_TABLE = [10, 14, 18, 22, 26, 30];
-let defenseReduction = 0; // 堅韌護甲累積的減傷量
+// === 護甲 ===
+// 直接抵銷敵人的攻擊力，不是百分比減傷 —— 對小學生來說「30 打過來，我有 6 護甲，
+// 所以扣 24」是能心算驗證的，百分比不行。這個數字全程顯示在勇者的狀態列上。
+// 唯一穿透護甲的是流血（見 tickStatuses），否則後期堆護甲就等於無敵。
+let playerArmor = 0;
+
+// === 連擊 ===
+// 連續答對累積層數，每層 +5% 傷害，上限預設 10 層（+50%）。答錯或超時歸零。
+// 這是全場唯一會縮短戰鬥的變數：一路答對大約把 27 題壓到 22 題左右。
+// 刻意留這個浮動 —— 它是「一路答對」的獎勵，而且範圍遠比舊版的 12~33 可控。
+//
+// **打倒怪物不會重置連擊。** 打倒本來就是連對的一部分，在那裡歸零等於懲罰打贏的人。
+// 加成從第 2 刀才起算（連擊 1 是 +0%）—— 第一刀就加成的話，
+// ENEMY_HITS_TABLE 反推出來的血量會對不上表定刀數，而且畫面上徽章要 2 層才出現，
+// 「看不到徽章卻已經在加成」對孩子來說是無法驗證的。
+const COMBO_STEP = 0.05;
+let comboCap = 10;      // 「連擊精通」卡片會把上限往上推
+let combo = 0;
+
+function comboBonus() {
+    return Math.max(0, Math.min(combo, comboCap) - 1) * COMBO_STEP;
+}
+
+// 勇者這一刀對敵人造成的傷害（尚未計爆擊，敵人護甲在 strike 之外另外扣）
+function currentHeroDamage() {
+    const base = HERO_ATK_TABLE[Math.min(currentEnemyIndex, HERO_ATK_TABLE.length - 1)];
+    return Math.round(base * (1 + comboBonus()));
+}
 
 // 目前這一關，答錯 / 時間到時勇者實際受到的傷害
 function currentPlayerDamage() {
-    const base = HIT_TO_PLAYER_TABLE[Math.min(currentEnemyIndex, HIT_TO_PLAYER_TABLE.length - 1)];
-    return Math.max(0, base - defenseReduction);
+    let base = ENEMY_ATK_TABLE[Math.min(currentEnemyIndex, ENEMY_ATK_TABLE.length - 1)];
+    if (enemyEnraged) base = Math.round(base * (traitOf(currentEnemyIndex).enrage.atkMult));
+    return Math.max(0, base - playerArmor);
+}
+
+// ===================================================================
+// 狀態（debuff）
+// ===================================================================
+// 參考殺戮尖塔：層數制，每「回合」（這裡＝每答完一題）結算一次然後遞減。
+//
+// bleed 流血：結算時扣掉「層數」點血，**無視護甲**。護甲能擋的話堆滿護甲就免疫了，
+//             流血的整個意義就是「你不能只靠護甲」。
+// fog   迷霧：作答時間縮短，不碰傷害。壓力來源換一種，對算得慢的孩子最有感，
+//             所以只給提燈幽魂一隻，而且下限保護在 8 秒（見 effectiveRoundTime）。
+//
+// 打倒敵人進下一關時全部清除（見 spawnEnemy）—— 不讓上一關的傷害跨關累積，
+// 否則強化面板的正回饋會被一進場就掉血的挫折感抵銷。
+const STATUS_DEFS = {
+    bleed: { icon: '🩸', name: '流血', desc: '每答一題扣血，無視護甲' },
+    fog:   { icon: '🌫️', name: '迷霧', desc: '作答時間縮短' }
+};
+const FOG_SECONDS = 8;      // 迷霧生效時扣掉的秒數
+const FOG_MIN_TIME = 8;     // 但無論如何至少留這麼多秒
+let playerStatus = { bleed: 0, fog: 0 };
+let bleedResist = 0;        // 「止血繃帶」疊加：1 = 流血傷害減半，2 = 免疫
+let playerShield = 0;       // 「護盾祝福」產生的層數，一層抵免一次攻擊
+let shieldUnlocked = false; // 抽到護盾卡之後才會累積
+const SHIELD_MAX = 3;
+const SHIELD_EVERY = 3;     // 連對幾題長一層
+
+function effectiveRoundTime() {
+    return playerStatus.fog > 0
+        ? Math.max(FOG_MIN_TIME, ROUND_TIME - FOG_SECONDS)
+        : ROUND_TIME;
+}
+
+function traitOf(index) {
+    return ENEMY_TRAITS[index % ENEMY_TRAITS.length] || {};
+}
+
+// 敵人的護甲：每次受擊直接減免。spawnEnemy 已經用有效傷害回推血量，
+// 所以這裡扣掉之後刀數仍然符合 ENEMY_HITS_TABLE。
+function enemyArmorValue() {
+    return traitOf(currentEnemyIndex).armor || 0;
 }
 
 // === 爆擊 ===
-// 15% / 2 倍是刻意保守的起手值：期望傷害只上升 15%，而六隻怪的血量表
-// （20→100）本來就有餘裕，不必重算平衡。玩家感受到的是「偶爾有一下特別爽」，
+// 15% / 2 倍是刻意保守的起手值。玩家感受到的是「偶爾有一下特別爽」，
 // 不是「難度變簡單了」。要調整就動這兩個數字，其他地方都不用改。
 //
 // 對答題遊戲來說爆擊還有一個好處：它是**唯一不由對錯決定的變數**。
@@ -127,29 +249,65 @@ function rollCrit() {
 
 // === 打倒敵人後可三選一的強化（依 weight 加權隨機抽 3 個）===
 // weight 是相對值，pickWeighted 會自己算總和，不必湊成 100。
-// 目前：強力攻擊 32，其餘各 17（共 6 張，每次抽 3 張）
 // fx：選擇後在勇者身上播放的特效（heal 綠光上升 / buff 金色迸發）
+// max：這張卡整場最多能拿幾次，拿滿就退出卡池（沒寫＝不限）。
+//
+// **卡池裡刻意沒有任何「攻擊傷害 +N」。**
+// 舊版的「強力攻擊 +8」是嚴格優勢解：基礎傷害只有 10 時它等於 +80%，
+// 而且打得快＝出題少＝答錯機會少，它同時還是最好的防禦卡，玩家沒有在做選擇。
+// 現在攻擊力改由 HERO_ATK_TABLE 隨關卡自動成長，卡池專心處理「活下去」和「手感」，
+// 六張卡之間才真的有取捨。
 const UPGRADES = [
-    { icon: "💚", title: "治療術", desc: "恢復 20% 最大生命", weight: 17, fx: "heal", apply: () => { playerHP = Math.min(PLAYER_MAX, playerHP + Math.round(PLAYER_MAX * 0.2)); } },
-    { icon: "⚔️", title: "強力攻擊", desc: "攻擊傷害 +8", weight: 32, fx: "buff", apply: () => { HIT_TO_ENEMY += 8; } },
-    { icon: "🛡️", title: "堅韌護甲", desc: "受到傷害 -5", weight: 17, fx: "buff", apply: () => { defenseReduction += 5; } },
-    { icon: "❤️", title: "強健體魄", desc: "最大生命 +15", weight: 17, fx: "heal", apply: () => { PLAYER_MAX += 15; playerHP += 15; } },
-    { icon: "⏱️", title: "從容思考", desc: "作答時間 +5 秒", weight: 17, fx: "buff", apply: () => { ROUND_TIME += 5; } },
-    // 爆擊卡：+10% 機率，五關全拿也只到 65%，不會變成「每擊都爆」。
-    // 它跟「強力攻擊 +8」是兩種成長路線——穩定加傷 vs 期望值加傷，
-    // 期望傷害相近（+8 固定 ≈ +10% 爆擊在 HIT_TO_ENEMY≈40 時），但手感完全不同。
-    { icon: "💥", title: "會心一擊", desc: "爆擊機率 +10%", weight: 17, fx: "buff", apply: () => { CRIT_CHANCE = Math.min(0.65, CRIT_CHANCE + 0.10); } }
+    { icon: "💚", title: "治療術", desc: "恢復 35% 最大生命", weight: 17, fx: "heal",
+      apply: () => { playerHP = Math.min(PLAYER_MAX, playerHP + Math.round(PLAYER_MAX * 0.35)); } },
+
+    // 護甲是這一版的主力防禦卡，權重給最高：它是唯一能讓後期 36 點攻擊變得可控的東西
+    { icon: "🛡️", title: "強化護甲", desc: "護甲 +6（直接抵銷敵人攻擊力）", weight: 20, fx: "buff",
+      apply: () => { playerArmor += 6; } },
+
+    { icon: "❤️", title: "強健體魄", desc: "最大生命 +25", weight: 17, fx: "heal",
+      apply: () => { PLAYER_MAX += 25; playerHP += 25; } },
+
+    { icon: "⏱️", title: "從容思考", desc: "作答時間 +5 秒", weight: 15, fx: "buff",
+      apply: () => { ROUND_TIME += 5; } },
+
+    // 爆擊卡：+10% 機率，五關全拿也只到 65%，不會變成「每擊都爆」
+    { icon: "💥", title: "會心一擊", desc: "爆擊機率 +10%", weight: 15, fx: "buff",
+      apply: () => { CRIT_CHANCE = Math.min(0.65, CRIT_CHANCE + 0.10); } },
+
+    // 連擊上限 +5 層＝傷害上限從 +50% 拉到 +75%。拿了會讓戰鬥更短，
+    // 但那是「一路答對」才兌現得到的，答錯就歸零，所以不會變成無腦強卡
+    { icon: "🔥", title: "連擊精通", desc: "連擊上限 +5 層（每層 +5% 傷害）", weight: 15, fx: "buff",
+      apply: () => { comboCap += 5; }, max: 2 },
+
+    // 針對流血的解藥。拿兩次就完全免疫 —— 上限訂在 2 是因為第三次沒東西可減，
+    // 留在池子裡只會稀釋其他卡的出現率
+    { icon: "🩹", title: "止血繃帶", desc: "清除負面狀態，流血傷害減半", weight: 12, fx: "heal",
+      apply: () => { playerStatus.bleed = 0; playerStatus.fog = 0; bleedResist = Math.min(2, bleedResist + 1); }, max: 2 },
+
+    // 護盾按使用者的要求放進卡池，而不是預設機制：拿到之後連對才開始有額外回報
+    { icon: "✨", title: "護盾祝福", desc: `連對 ${SHIELD_EVERY} 題得 1 層護盾，抵免一次攻擊`, weight: 12, fx: "buff",
+      apply: () => { shieldUnlocked = true; playerShield = Math.min(SHIELD_MAX, playerShield + 1); }, max: 1 }
 ];
+
+// 每張卡已經拿了幾次，用 title 當 key。beginBattle 會清空。
+let upgradeTaken = {};
 
 let playerHP = PLAYER_MAX;
 let currentEnemyIndex = 0;
-let enemyMax = ENEMY_HP_TABLE[0];
+let enemyMax = HERO_ATK_TABLE[0] * ENEMY_HITS_TABLE[0];
 let enemyHP = enemyMax;
+let enemyEnraged = false;   // 魔王是否已進入狂暴
+let enemyAttackCount = 0;   // 這一關敵人打了幾次，用來判斷特攻的觸發時機
 let timerId = null;
 let timeLeft = ROUND_TIME;
+// 這一題實際的總秒數。迷霧會讓它比 ROUND_TIME 短，計時條的比例要用它算，
+// 不然一上場進度條就不是滿的。
+let roundTimeMax = ROUND_TIME;
 
 function startTimer() {
-    timeLeft = ROUND_TIME;
+    roundTimeMax = effectiveRoundTime();
+    timeLeft = roundTimeMax;
     resumeTimer();
 }
 
@@ -175,7 +333,7 @@ function renderTimer() {
     const fill = document.getElementById('timer-fill');
     const text = document.getElementById('timer-text');
     const track = document.querySelector('.timer-track');
-    fill.style.width = `${Math.max(0, timeLeft) / ROUND_TIME * 100}%`;
+    fill.style.width = `${Math.max(0, timeLeft) / roundTimeMax * 100}%`;
     // 兩段警示：10 秒開始變紅慢跳，5 秒開始急跳
     const low = timeLeft <= 10;
     const danger = timeLeft <= 5;
@@ -198,12 +356,78 @@ function setBar(side, current, max) {
 function updateBars() {
     setBar('player', playerHP, PLAYER_MAX);
     setBar('enemy', enemyHP, enemyMax);
+    renderStatus();
+}
+
+// ===================================================================
+// 狀態列
+// ===================================================================
+// 護甲、流血、迷霧、護盾、連擊全部要能一眼看到 —— 這些機制如果只存在於
+// 程式碼裡，孩子只會覺得「我的血莫名其妙一直掉」，學不到任何東西。
+// 每一顆徽章都帶 title，滑上去有完整說明。
+//
+// 有數字的徽章在數字變動時加 .bump 播一下放大，否則 3 變 2 完全不會被注意到。
+function badge(cls, icon, value, title) {
+    return `<span class="st-badge ${cls}" title="${title}" data-v="${value}">` +
+           `<span class="st-icon">${icon}</span><span class="st-num">${value}</span></span>`;
+}
+
+// 記住上一次的內容，只有真的變了才重播動畫
+const statusPrev = { player: '', enemy: '' };
+
+function paintStatus(side, html) {
+    const el = document.getElementById(`${side}-status`);
+    if (!el) return;
+    if (statusPrev[side] === html) return;
+    statusPrev[side] = html;
+    el.innerHTML = html;
+    el.querySelectorAll('.st-badge').forEach(b => {
+        b.classList.remove('bump');
+        void b.offsetWidth;   // 強制 reflow，否則連續兩次同樣的動畫不會重播
+        b.classList.add('bump');
+    });
+}
+
+function renderStatus() {
+    // --- 勇者 ---
+    let p = '';
+    if (playerArmor > 0) p += badge('armor', '🛡️', playerArmor, `護甲 ${playerArmor}：敵人攻擊力直接減 ${playerArmor}`);
+    if (playerShield > 0) p += badge('shield', '✨', playerShield, `護盾 ${playerShield} 層：每層完全抵免一次攻擊`);
+    if (playerStatus.bleed > 0) {
+        const per = bleedDamagePerTick();
+        p += badge('bleed', '🩸', playerStatus.bleed, `流血 ${playerStatus.bleed} 層：每答一題扣 ${per} 血（無視護甲），之後層數 -1`);
+    }
+    if (playerStatus.fog > 0) p += badge('fog', '🌫️', playerStatus.fog, `迷霧 ${playerStatus.fog} 層：作答時間縮短為 ${effectiveRoundTime()} 秒`);
+    if (combo >= 2) {
+        const pct = Math.round(comboBonus() * 100);
+        p += badge('combo', '🔥', combo, `連擊 ${combo}：傷害 +${pct}%（上限 ${comboCap} 層）`);
+    }
+    paintStatus('player', p);
+
+    // --- 敵人 ---
+    let e = '';
+    const trait = traitOf(currentEnemyIndex);
+    if (trait.armor) e += badge('armor', '🛡️', trait.armor, `重甲 ${trait.armor}：每次受到的傷害減 ${trait.armor}`);
+    if (enemyEnraged) e += badge('enrage', '😡', '狂暴', '狂暴：攻擊力大幅提升，且每一擊都造成流血');
+    if (trait.special && !enemyEnraged) {
+        const s = trait.special;
+        const left = s.every - (enemyAttackCount % s.every);
+        e += badge('charge', '⚡', left, `再攻擊 ${left} 次就會使出「${s.name}」`);
+    }
+    paintStatus('enemy', e);
+}
+
+// 一層流血扣幾點血。止血繃帶疊一次減半、疊兩次免疫。
+function bleedDamagePerTick() {
+    if (bleedResist >= 2) return 0;
+    const raw = playerStatus.bleed;
+    return bleedResist === 1 ? Math.floor(raw / 2) : raw;
 }
 
 function renderMap() {
     const map = document.getElementById('enemy-map');
     map.innerHTML = '';
-    ENEMY_HP_TABLE.forEach((hp, i) => {
+    ENEMY_HITS_TABLE.forEach((hits, i) => {
         if (i > 0) {
             const line = document.createElement('div');
             line.className = 'map-line' + (i <= currentEnemyIndex ? ' done' : '');
@@ -214,7 +438,7 @@ function renderMap() {
         let state = 'upcoming';
         if (i < currentEnemyIndex) state = 'done';
         else if (i === currentEnemyIndex) state = 'current';
-        const isBoss = i === ENEMY_HP_TABLE.length - 1;
+        const isBoss = i === ENEMY_HITS_TABLE.length - 1;
         // arrive：新的一關彈一下再開始脈動
         node.className = `map-node ${state}` + (isBoss ? ' boss' : '') + (state === 'current' ? ' arrive' : '');
         node.dataset.i = i;
@@ -236,6 +460,12 @@ function mapDefeat(index) {
     }
     const line = map.querySelector(`.map-line[data-i="${index + 1}"]`);
     if (line) line.classList.add('flowing');
+
+    // Pixi 介面層再加一層：節點爆開的碎光＋擴散環，以及沿著連線跑過去的流光。
+    // CSS 那邊的 .defeat / .flowing 保留 —— 兩者是疊加的，Pixi 關掉仍然看得出地圖前進了。
+    if (typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()) {
+        MathRpgPixiUI.mapDefeat(index);
+    }
 }
 
 // === 角色外觀插槽 ===
@@ -276,8 +506,24 @@ function applyStage(index) {
 
 function spawnEnemy(index) {
     currentEnemyIndex = index;
-    enemyMax = ENEMY_HP_TABLE[index];
+
+    // 血量 = 刀數 x 這一關的有效傷害。
+    // 「有效傷害」要先扣掉敵人自己的護甲，否則黑騎士的重甲 12 會憑空多出一刀，
+    // ENEMY_HITS_TABLE 就不再是它宣稱的那個意思了。
+    // 連擊加成不算進來 —— 那是玩家答對換來的，本來就該讓戰鬥變短。
+    const trait = ENEMY_TRAITS[index % ENEMY_TRAITS.length] || {};
+    const heroAtk = HERO_ATK_TABLE[Math.min(index, HERO_ATK_TABLE.length - 1)];
+    const effective = Math.max(1, heroAtk - (trait.armor || 0));
+    enemyMax = effective * ENEMY_HITS_TABLE[index];
     enemyHP = enemyMax;
+
+    // 每一關的狀態全部歸零：上一關的流血不跨關累積，
+    // 否則剛選完強化的正回饋會被「一進場就掉血」直接抵銷掉
+    enemyEnraged = false;
+    enemyAttackCount = 0;
+    playerStatus.bleed = 0;
+    playerStatus.fog = 0;
+
     const look = ENEMY_LOOKS[index % ENEMY_LOOKS.length];
 
     // 讓上一隻的倒下動畫先清掉，新的怪才會從畫面外滑進來
@@ -288,7 +534,7 @@ function spawnEnemy(index) {
     applyLook('enemy', look);
     applyStage(index);
     document.getElementById('enemy-name').innerText = look.name;
-    document.getElementById('round-label').innerText = `敵人 ${index + 1} / 共 ${ENEMY_HP_TABLE.length}`;
+    document.getElementById('round-label').innerText = `敵人 ${index + 1} / 共 ${ENEMY_HITS_TABLE.length}`;
     act('enemy', 'spawn');
     renderMap();
     updateBars();
@@ -439,13 +685,53 @@ function preloadBattleAssets() {
         im.src = src;
         if (im.decode) im.decode().catch(() => {});
     });
+
+    // Pixi 角色繪製層（assets/js/math-rpg-pixi.js）。
+    // 它**只負責「畫」**，動作仍然由這裡的 CSS class 驅動 ——
+    // act() / applyLook() / playAttackFrame() 一行都不用改，Pixi 每幀去讀 CSS 算好的結果。
+    //
+    // 要餵給 Pixi 的圖：角色（含攻擊分鏡）、場景背景（第 9 項視差用）、蓄力光柱（第 7 項）。
+    // 劍氣仍然是 DOM 在畫，所以不用給。
+    // 啟動失敗就靜靜留在 DOM 版本 —— 絕對不能因為特效層掛掉就讓遊戲玩不了。
+    if (typeof MathRpgPixi !== 'undefined') {
+        const pixiImgs = [];
+        [PLAYER_LOOK].concat(ENEMY_LOOKS).forEach(l => {
+            if (l.img) pixiImgs.push(l.img);
+            framesOf(l).forEach(f => pixiImgs.push(f.img));
+        });
+        pixiImgs.push(...STAGE_IMAGES.filter(Boolean));
+        pixiImgs.push('../assets/images/math-rpg/charge.webp');
+        MathRpgPixi.init(pixiImgs)
+            .catch(err => console.warn('Pixi 角色層啟動失敗，改用 DOM：', err));
+    }
+    // 介面特效層（傷害數字／地圖節點／勝利彩帶）。獨立一張蓋整卡的 canvas，
+    // 因為那三樣東西都會超出 #battle-stage 的 overflow:hidden。
+    if (typeof MathRpgPixiUI !== 'undefined') {
+        MathRpgPixiUI.init()
+            .catch(err => console.warn('Pixi 介面層啟動失敗，改用 DOM：', err));
+    }
 }
 
 // side 為 'player' 或 'enemy'
 // asAttack 只在 cls==='lunge' 時有意義。false 代表「借用衝刺的位移，但這不是一次攻擊」：
 // 攻擊分鏡和劍氣都不播，角色維持站姿往前跳一下而已。升級後的得意動作就是這樣。
+// 四個動作 class 是互斥的，**必須先把其他三個拿掉**。
+//
+// 2026-08-27 抓到的既有 bug：`.sprite.lunge` / `.hurt` / `.die` / `.spawn` 四條規則
+// 特異性完全相同（0,2,0），同時命中時由「樣式表裡排最後的那一條」勝出 —— 也就是 `.spawn`。
+// 而 restart() 只負責它被傳入的那一個 class，沒有人會把 `spawn` 拿掉，
+// 所以 beginBattle / spawnEnemy 之後 `spawn` 就永久黏在元素上，
+// 後續每一次 lunge / hurt / die 的 computed animation-name 都還是 `spawn`，
+// **角色的衝刺、受擊後仰、倒地整組動畫等於完全沒有在跑**。
+//
+// 之所以一直沒被發現，是因為打擊感的其他來源都還在：攻擊分鏡換圖、劍氣、
+// 畫面震動、粒子、以及 `.sprite.hurt .sprite-body` 的閃白 ——
+// 最後這條是**後代選擇器、作用在不同元素上**，不受這個覆蓋影響，所以閃白照常。
+const ACTION_CLASSES = ['lunge', 'hurt', 'die', 'spawn'];
+
 function act(side, cls, asAttack = true) {
     const sprite = document.getElementById(`${side}-sprite`);
+    ACTION_CLASSES.forEach(c => { if (c !== cls) sprite.classList.remove(c); });
     restart(sprite, cls);
     if (cls !== 'lunge') return;
     if (asAttack) { playAttackFrame(side); return; }
@@ -486,7 +772,10 @@ function fxSpawn(side, cls, life, setup) {
 function fxSlash(side) { fxSpawn(side, 'fx-slash', 500); }
 function fxRing(side)  { fxSpawn(side, 'fx-ring', 600); }
 
-// 迸散的碎片：往上方扇形噴出
+// 迸散的碎片：往上方扇形噴出。
+// Pixi 的粒子層接手之後，命中時的碎片改由 MathRpgPixi.impactFx() 噴（數量多兩個數量級、
+// 而且能穿插在角色前後）。這裡保留 DOM 版本當作 Pixi 關掉時的備援，
+// 以及**非命中**的用途（選完強化的得意特效、治療）—— 那些不會走 impactFx。
 function fxSparks(side, color = '#ffd54f', count = 11) {
     const u = unit();
     for (let i = 0; i < count; i++) {
@@ -515,12 +804,21 @@ function fxHeal(side, count = 10) {
     }
 }
 
-function showDamage(side, amount, color = '#e53935', crit = false) {
+// raw：不要自動加上「-」前綴。給「格擋」「狂暴」這種不是數字的浮動字用。
+function showDamage(side, amount, color = '#e53935', crit = false, raw = false) {
+    const text = raw ? String(amount) : (crit ? `-${amount}!` : `-${amount}`);
+
+    // Pixi 的介面層在的話交給它畫（進場超越回彈、上升帶弧線、爆擊多一圈殘影）。
+    // 它的 canvas 蓋整張卡片，所以數字可以飄到角色頭頂上方而不被裁掉 ——
+    // 戰鬥區那張 canvas 有 overflow:hidden，畫在那裡會被切掉一半。
+    if (typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()
+        && MathRpgPixiUI.showDamage(side, text, color, crit)) return;
+
     const target = document.getElementById(`${side}-sprite`);
     const dmg = document.createElement('span');
     dmg.className = crit ? 'floating-dmg crit' : 'floating-dmg';
     dmg.style.color = color;
-    dmg.innerText = crit ? `-${amount}!` : `-${amount}`;
+    dmg.innerText = text;
     const rect = target.getBoundingClientRect();
     // 加上捲動位移，頁面捲動時數字才不會跑掉
     dmg.style.left = `${rect.left + window.scrollX + rect.width / 2 - 1.5 * unit()}px`;
@@ -549,13 +847,32 @@ function impactDelayFor(attacker) {
 // 讓「這下不一樣」從畫面本身讀得出來，而不是只靠文字說明。
 function strike(attacker, defender, amount, onImpact, crit = false) {
     act(attacker, 'lunge');
+
+    // 爆擊的蓄力：出手的同時開始聚能，命中在 400ms 之後，中間的窗口剛好夠演。
+    // **刻意不加任何等待** —— 蓄力疊在既有的衝刺動作上，時序一點都沒動，
+    // 所以 slash.at / slashFly / SLASH_IMPACT_DELAY 那組綁死的數字完全不受影響。
+    if (crit && typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady()) {
+        MathRpgPixi.chargeFx(attacker);
+    }
+
     setTimeout(() => {
         act(defender, 'hurt');
         fxSlash(defender);
         fxRing(defender);
-        fxSparks(defender,
-            defender === 'enemy' ? (crit ? '#fff59d' : '#ffd54f') : '#ff8a80',
-            crit ? 20 : 11);
+
+        // 命中的粒子：Pixi 在的時候交給它（爆散 + 衝擊波 + 爆擊的光束/色差/頓幀），
+        // 不在就退回 DOM 的 11 顆碎片。**兩邊不能同時噴**，否則畫面上會有兩組碎片。
+        const pixiFx = typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady();
+        if (pixiFx) {
+            MathRpgPixi.impactFx(defender, {
+                crit,
+                tint: defender === 'enemy' ? (crit ? 0xfff59d : 0xffd54f) : 0xff8a80
+            });
+        } else {
+            fxSparks(defender,
+                defender === 'enemy' ? (crit ? '#fff59d' : '#ffd54f') : '#ff8a80',
+                crit ? 20 : 11);
+        }
         stageFlash(defender === 'enemy' ? 'good' : 'bad');
         impact();
         shakeScreen();
@@ -580,8 +897,10 @@ function pickWeighted(pool) {
 }
 
 function showUpgradePanel() {
-    // 依 weight 加權、不重複地抽出 3 個強化
-    const pool = [...UPGRADES];
+    // 依 weight 加權、不重複地抽出 3 個強化。
+    // 拿滿次數上限的卡直接排除（例如止血繃帶疊到 2 就免疫流血了，
+    // 再留在池子裡只會稀釋其他卡的出現率）。
+    const pool = UPGRADES.filter(u => !u.max || (upgradeTaken[u.title] || 0) < u.max);
     const picks = [];
     while (picks.length < 3 && pool.length) {
         const chosen = pickWeighted(pool);
@@ -625,7 +944,8 @@ function chooseUpgrade(upg, cardEl) {
 
             // 3) 套用效果，並在勇者身上播特效，讓玩家看到「我變強了」
             upg.apply();
-            updateBars(); // 反映治療 / 最大生命變化
+            upgradeTaken[upg.title] = (upgradeTaken[upg.title] || 0) + 1;
+            updateBars(); // 反映治療 / 最大生命 / 護甲 / 護盾的變化
             if (upg.fx === 'heal') fxHeal('player');
             else fxSparks('player', '#ffd54f', 14);
             act('player', 'lunge', false);   // 得意動作，不是攻擊 —— 不放劍氣
@@ -705,22 +1025,114 @@ function scheduleNextRound(seconds) {
     }, seconds * 1000);
 }
 
+// ===================================================================
+// 狀態結算
+// ===================================================================
+// 每答完一題跑一次，不論對錯。流血先扣血，然後所有狀態層數 -1。
+// delay 是為了排在這一題的攻擊演出之後 —— 兩個扣血數字疊在同一個位置上會看不清楚。
+//
+// 回傳 true = 這次流血會讓勇者倒下，呼叫端就別再排下一題了。
+// 這裡先用「現在的 playerHP」預判，是安全的：敵人的傷害在 damagePlayer 一開頭
+// 就已經同步扣掉了，這中間沒有別的東西會動到血量。
+function tickStatuses(delay) {
+    if (playerStatus.bleed <= 0 && playerStatus.fog <= 0) return false;
+
+    const dmg = bleedDamagePerTick();
+    const lethal = dmg > 0 && playerHP - dmg <= 0;
+
+    setTimeout(() => {
+        if (dmg > 0) {
+            playerHP -= dmg;
+            showDamage('player', dmg, '#e57373');
+            stageFlash('bad');
+            updateBars();
+        }
+        if (playerStatus.bleed > 0) playerStatus.bleed--;
+        if (playerStatus.fog > 0) playerStatus.fog--;
+        renderStatus();
+        if (playerHP <= 0) {
+            act('player', 'die');
+            setTimeout(() => endGame(false), 900);
+        }
+    }, delay);
+
+    return lethal;
+}
+
+// ===================================================================
+// 敵人的一次攻擊
+// ===================================================================
+// 只在勇者答錯或超時的時候呼叫 —— **答對永遠不會被反擊**。
+// 這是刻意的：不能懲罰算對的孩子，所以敵人的所有特性都只能綁在失誤上。
 function damagePlayer(prefix, emoji) {
+    const feedback = document.getElementById('feedback-msg');
+    const trait = traitOf(currentEnemyIndex);
+    const sp = trait.special;
+    const hitAt = impactDelayFor('enemy');
+
+    enemyAttackCount++;
+    // 特攻：每 every 次攻擊改打一次帶狀態的招式。狂暴中的魔王每一擊都算特攻。
+    const isSpecial = !!sp && (enemyEnraged || enemyAttackCount % sp.every === 0);
+
+    // --- 護盾優先結算 ---
+    // 擋掉的是「整次攻擊」，附帶的流血／迷霧也一起沒了。
+    // 規則越簡單，孩子越算得出來自己為什麼沒被打到。
+    if (playerShield > 0) {
+        playerShield--;
+        feedback.innerText = `${prefix}，護盾擋下了這一擊！ ✨`;
+        feedback.className = 'feedback-msg';
+        act('enemy', 'lunge');
+        setTimeout(() => {
+            act('player', 'hurt');
+            fxRing('player');
+            fxSparks('player', '#4fc3f7', 14);
+            impact();
+            showDamage('player', '擋下！', '#4fc3f7', false, true);
+            renderStatus();
+        }, hitAt);
+        if (!tickStatuses(hitAt + 640)) scheduleNextRound(NEXT_DELAY_WRONG);
+        return;
+    }
+
     const dmg = currentPlayerDamage();
     playerHP -= dmg;
-    const feedback = document.getElementById('feedback-msg');
-    feedback.innerText = `${prefix}，你受到 ${dmg} 點傷害 ${emoji}`;
+
+    // 護甲擋掉了多少，直接寫在回饋文字裡 —— 這是護甲這張卡唯一能被「看見」的時刻
+    const raw = ENEMY_ATK_TABLE[Math.min(currentEnemyIndex, ENEMY_ATK_TABLE.length - 1)];
+    const blocked = playerArmor > 0 ? `（護甲擋掉 ${Math.min(playerArmor, enemyEnraged ? Math.round(raw * trait.enrage.atkMult) : raw)}）` : '';
+
+    if (isSpecial) {
+        feedback.innerText = `${prefix}，${ENEMY_LOOKS[currentEnemyIndex % ENEMY_LOOKS.length].name}使出「${sp.name}」！受到 ${dmg} 點傷害${blocked} ${emoji}`;
+    } else {
+        feedback.innerText = `${prefix}，你受到 ${dmg} 點傷害${blocked} ${emoji}`;
+    }
     feedback.className = 'feedback-msg bad';
 
-    // 怪物衝過來攻擊，血條在「打到」的那一刻才掉
-    strike('enemy', 'player', dmg, updateBars);
+    // 怪物衝過來攻擊，血條在「打到」的那一刻才掉。
+    // 特攻借用爆擊的加碼演出（雙重震動、放大的傷害數字），不必另外做一套。
+    strike('enemy', 'player', dmg, updateBars, isSpecial);
+
+    // 狀態在命中之後才掛上去，徽章跳出來的時機才對得上「被打到」那一下
+    if (isSpecial) {
+        setTimeout(() => {
+            if (sp.bleed) playerStatus.bleed += sp.bleed;
+            if (sp.fog) playerStatus.fog += sp.fog;
+            // 狂暴的魔王每一擊額外再疊一點流血
+            if (enemyEnraged && trait.enrage.bleed) playerStatus.bleed += trait.enrage.bleed;
+            renderStatus();
+        }, hitAt + 120);
+    }
 
     if (playerHP <= 0) {
         setTimeout(() => act('player', 'die'), IMPACT_DELAY + 320);
         setTimeout(() => endGame(false), IMPACT_DELAY + 1150);
         return;
     }
-    scheduleNextRound(NEXT_DELAY_WRONG);
+
+    // 這一回合掛上的流血不會馬上生效（層數是在命中後 +120ms 才加的，
+    // 而 tickStatuses 的預判在此刻就跑完了）—— 剛中的流血從下一題才開始扣，
+    // 跟殺戮尖塔的中毒一樣，玩家有一題的時間可以反應。
+    if (!tickStatuses(hitAt + 640)) scheduleNextRound(NEXT_DELAY_WRONG);
 }
 
 function handleTimeout() {
@@ -728,6 +1140,8 @@ function handleTimeout() {
     const btns = document.querySelectorAll('.option-btn');
     btns.forEach(b => b.disabled = true);
     btns[q.correct].classList.add('correct');
+    combo = 0;
+    renderStatus();
     damagePlayer(`時間到！正確答案是 ${q.a[q.correct]}`, '⏰');
 }
 
@@ -741,10 +1155,25 @@ function checkAnswer(index) {
     const feedback = document.getElementById('feedback-msg');
 
     if (index === q.correct) {
+        // 連擊先加，這一刀就吃得到新的加成 —— 連對第 2 題就看得到「+5%」跳出來，
+        // 回饋越早出現，孩子越容易把「連續答對」和「打得更痛」連起來。
+        combo++;
+        if (shieldUnlocked && combo % SHIELD_EVERY === 0 && playerShield < SHIELD_MAX) {
+            playerShield++;
+            setTimeout(() => {
+                fxSparks('player', '#4fc3f7', 12);
+                showDamage('player', '護盾 +1', '#4fc3f7', false, true);
+                renderStatus();
+            }, 240);
+        }
+
         // 先擲爆擊，再算傷害：rollCrit() 會順便把這一擊的劍氣指定成十字斬，
         // 必須排在 strike() 之前，否則劍氣已經抽完了。
         const crit = rollCrit();
-        const dmg = crit ? Math.round(HIT_TO_ENEMY * CRIT_MULT) : HIT_TO_ENEMY;
+        // 敵人的護甲直接從這一刀扣掉，但至少留 1 點 —— 讓「答對卻毫無效果」永遠不會發生
+        const armor = enemyArmorValue();
+        const before = currentHeroDamage() * (crit ? CRIT_MULT : 1);
+        const dmg = Math.max(1, Math.round(before) - armor);
         enemyHP -= dmg;
 
         // 勇者衝刺攻擊，血條在「打到」的那一刻才掉
@@ -754,8 +1183,21 @@ function checkAnswer(index) {
         // 否則怪物會在劍氣還沒飛到的時候就先倒下。
         const hitAt = impactDelayFor('player');
 
+        // 狂暴：魔王掉到半血就翻臉。演出排在命中之後，讀起來是「這一刀把牠打火了」
+        const trait = traitOf(currentEnemyIndex);
+        if (trait.enrage && !enemyEnraged && enemyHP > 0 && enemyHP / enemyMax <= trait.enrage.at) {
+            enemyEnraged = true;
+            setTimeout(() => {
+                showDamage('enemy', '狂暴！', '#ff5252', true, true);
+                stageFlash('bad');
+                shakeScreen();
+                fxSparks('enemy', '#ff5252', 20);
+                renderStatus();
+            }, hitAt + 420);
+        }
+
         if (enemyHP <= 0) {
-            const isLast = currentEnemyIndex >= ENEMY_HP_TABLE.length - 1;
+            const isLast = currentEnemyIndex >= ENEMY_HITS_TABLE.length - 1;
             // 命中後停頓一下再倒下，最後的爆散比較有分量
             setTimeout(() => {
                 act('enemy', 'die');
@@ -774,13 +1216,19 @@ function checkAnswer(index) {
             setTimeout(showUpgradePanel, hitAt + 1150);
             return; // 由強化面板接手後續流程
         } else {
+            const comboTag = combo >= 2 ? `連擊 ${combo}（+${Math.round(comboBonus() * 100)}%）！` : '';
+            const armorTag = armor > 0 ? `（重甲吸收 ${armor}）` : '';
             feedback.innerText = crit
-                ? `爆擊！對怪獸造成 ${dmg} 點傷害 💥`
-                : `攻擊成功！對怪獸造成 ${dmg} 點傷害 ⚔️`;
+                ? `${comboTag}爆擊！對怪獸造成 ${dmg} 點傷害${armorTag} 💥`
+                : `${comboTag}攻擊成功！對怪獸造成 ${dmg} 點傷害${armorTag} ⚔️`;
             feedback.className = crit ? 'feedback-msg good crit' : 'feedback-msg good';
-            scheduleNextRound(NEXT_DELAY_CORRECT);
+            // 答對也要結算流血 —— 流血的整個意義就是「時間本身在傷害你」，
+            // 答對可以免疫的話它就退化成第二種答錯懲罰了
+            if (!tickStatuses(hitAt + 500)) scheduleNextRound(NEXT_DELAY_CORRECT);
         }
     } else {
+        combo = 0;
+        renderStatus();
         btns[index].classList.add('wrong');
         damagePlayer(`答錯了！正確答案是 ${q.a[q.correct]}`, '💥');
     }
@@ -809,6 +1257,11 @@ function rollNumber(el, to, ms, delay = 0) {
 const CONFETTI_COLORS = ['#ffd54f', '#ef5350', '#66bb6a', '#42a5f5', '#ab47bc', '#ff8a65'];
 
 function fxConfetti(container, count = 70) {
+    // Pixi 版：2000 顆帶重力、翻面、側飄，一次 draw call。
+    // DOM 版的 70 顆保留當備援 —— 兩者不能同時噴，數量差太多會看起來很怪。
+    if (typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()
+        && MathRpgPixiUI.confettiBurst()) return;
+
     const w = container.clientWidth || 800;
     const h = container.clientHeight || 400;
     for (let i = 0; i < count; i++) {
@@ -857,11 +1310,23 @@ function endGame(win) {
 function beginBattle() {
     cancelNextRound(); // 上一場可能還有排程中的倒數
     // 重置所有可被強化的數值回到初始狀態
-    PLAYER_MAX = 100;
-    HIT_TO_ENEMY = 10;
+    PLAYER_MAX = 120;
     ROUND_TIME = 30;
-    defenseReduction = 0;
+    playerArmor = 0;
     CRIT_CHANCE = 0.15;
+    combo = 0;
+    comboCap = 10;
+    playerShield = 0;
+    shieldUnlocked = false;
+    bleedResist = 0;
+    playerStatus = { bleed: 0, fog: 0 };
+    upgradeTaken = {};
+    enemyEnraged = false;
+    enemyAttackCount = 0;
+    // 狀態列的快取也要清掉，否則上一場的徽章 HTML 會被當成「沒變」而不重畫
+    statusPrev.player = statusPrev.enemy = '';
+    // 上一場如果是輸掉的，戰鬥區會停在灰階漸染的狀態，重開要清掉
+    if (typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady()) MathRpgPixi.clearGray();
     pendingSlashImg = null;   // 上一場若在爆擊途中離開，指定的劍氣會殘留到下一場
     playerHP = PLAYER_MAX;
     currentEnemyIndex = 0;
