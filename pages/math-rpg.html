@@ -339,7 +339,40 @@
             box-shadow: 0 4px 12px var(--shadow);
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
+            /* 底下那層光效要墊在卡片後面，所以卡片要自己建立定位脈絡 */
+            position: relative;
         }
+
+        /* ---------- #14 升級卡片的光效背景 ---------- */
+        /* **這一項刻意用 CSS 而不是 Pixi。**
+           它是「固定在一張 DOM 卡片後面的光暈＋旋轉光芒」——
+           conic-gradient 配一個 rotate 動畫就是它，0 KB、0 draw call。
+           要用 Pixi 得在 #upgrade-overlay 裡再開第三個 WebGL context，
+           只為了一場遊戲出現五次的面板，在學校那種機器上不划算。
+           判斷標準是「效果」不是「用什麼畫的」，這裡 CSS 就是對的工具。
+
+           z-index -1 讓它沉到卡片內容之下；卡片本身有不透明背景色，
+           所以看得到的只有超出卡片邊緣、被 blur 暈開的那一圈。 */
+        .upgrade-card::before {
+            content: '';
+            position: absolute;
+            inset: calc(-0.55 * var(--u));
+            z-index: -1;
+            border-radius: inherit;
+            background: conic-gradient(from 0deg,
+                rgba(255, 213, 79, 0.85), rgba(255, 138, 101, 0.25),
+                rgba(129, 212, 250, 0.75), rgba(206, 147, 216, 0.25),
+                rgba(255, 213, 79, 0.85));
+            filter: blur(calc(0.5 * var(--u)));
+            opacity: 0.55;
+            animation: cardHalo 6s linear infinite;
+        }
+        @keyframes cardHalo { to { transform: rotate(360deg); } }
+
+        /* 選中的那張光暈整個亮起來、轉得更快；沒選中的沉下去 */
+        .upgrade-card.chosen::before { opacity: 1; animation-duration: 1.2s; }
+        .upgrade-card.dimmed::before { opacity: 0.12; }
+        .upgrade-card:hover::before  { opacity: 0.85; }
 
         /* 三張強化卡依序滑入（popIn 定義在下方的題目區） */
         .upgrade-card:nth-child(1) { animation: popIn 0.34s ease-out 0.10s backwards; }
@@ -771,6 +804,11 @@
            .pixi-drawn 是 JS 在「這一側確實有貼圖畫得出來」時才加的 ——
            貼圖沒載到、或還在用 emoji 的情況都不會加，DOM 版本自動接手，不會變空白。 */
         .sprite.pixi-drawn .sprite-body { background-image: none; }
+
+        /* 地面陰影同理：Pixi 接手之後把 DOM 這顆藏起來。
+           Pixi 版的影子會**隨角色離地高度縮小變淡**（DOM 版只有固定的 2.6s 呼吸，
+           跟角色實際跳多高無關）。.ground-shadow 是 .sprite 的兄弟節點，所以用 ~ 選它。 */
+        .sprite.pixi-shadow ~ .ground-shadow { display: none; }
 
         /* 名字與血量數字是壓在場景地面上的，用白字＋深色描邊才讀得清楚
            （原本的灰字在綠色地面上幾乎看不見） */
@@ -1580,7 +1618,7 @@
                 animation: none !important;
             }
             .sprite.lunge, .sprite.hurt, .sprite.spawn,
-            .st-badge.bump,
+            .st-badge.bump, .upgrade-card::before,
             .battle-stage.impact, .game-card.shake,
             .option-btn.enter, .question-box.enter, .upgrade-card,
             .map-node.defeat, .map-node.current.arrive, .map-line.flowing::after,
@@ -1786,6 +1824,7 @@
     <script src="../assets/vendor/pixi.min.js"></script>
     <script src="../assets/js/math-rpg-pools.js"></script>
     <script src="../assets/js/math-rpg-pixi.js"></script>
+    <script src="../assets/js/math-rpg-pixi-ui.js"></script>
     <script src="../assets/js/math-rpg.js"></script>
     <script src="../assets/js/theme.js"></script>
 </body>

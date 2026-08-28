@@ -460,6 +460,12 @@ function mapDefeat(index) {
     }
     const line = map.querySelector(`.map-line[data-i="${index + 1}"]`);
     if (line) line.classList.add('flowing');
+
+    // Pixi 介面層再加一層：節點爆開的碎光＋擴散環，以及沿著連線跑過去的流光。
+    // CSS 那邊的 .defeat / .flowing 保留 —— 兩者是疊加的，Pixi 關掉仍然看得出地圖前進了。
+    if (typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()) {
+        MathRpgPixiUI.mapDefeat(index);
+    }
 }
 
 // === 角色外觀插槽 ===
@@ -684,24 +690,48 @@ function preloadBattleAssets() {
     // 它**只負責「畫」**，動作仍然由這裡的 CSS class 驅動 ——
     // act() / applyLook() / playAttackFrame() 一行都不用改，Pixi 每幀去讀 CSS 算好的結果。
     //
-    // 只餵角色圖進去（劍氣與場景背景還是 DOM 在畫）。
+    // 要餵給 Pixi 的圖：角色（含攻擊分鏡）、場景背景（第 9 項視差用）、蓄力光柱（第 7 項）。
+    // 劍氣仍然是 DOM 在畫，所以不用給。
     // 啟動失敗就靜靜留在 DOM 版本 —— 絕對不能因為特效層掛掉就讓遊戲玩不了。
     if (typeof MathRpgPixi !== 'undefined') {
-        const heroImgs = [];
+        const pixiImgs = [];
         [PLAYER_LOOK].concat(ENEMY_LOOKS).forEach(l => {
-            if (l.img) heroImgs.push(l.img);
-            framesOf(l).forEach(f => heroImgs.push(f.img));
+            if (l.img) pixiImgs.push(l.img);
+            framesOf(l).forEach(f => pixiImgs.push(f.img));
         });
-        MathRpgPixi.init(heroImgs)
+        pixiImgs.push(...STAGE_IMAGES.filter(Boolean));
+        pixiImgs.push('../assets/images/math-rpg/charge.webp');
+        MathRpgPixi.init(pixiImgs)
             .catch(err => console.warn('Pixi 角色層啟動失敗，改用 DOM：', err));
+    }
+    // 介面特效層（傷害數字／地圖節點／勝利彩帶）。獨立一張蓋整卡的 canvas，
+    // 因為那三樣東西都會超出 #battle-stage 的 overflow:hidden。
+    if (typeof MathRpgPixiUI !== 'undefined') {
+        MathRpgPixiUI.init()
+            .catch(err => console.warn('Pixi 介面層啟動失敗，改用 DOM：', err));
     }
 }
 
 // side 為 'player' 或 'enemy'
 // asAttack 只在 cls==='lunge' 時有意義。false 代表「借用衝刺的位移，但這不是一次攻擊」：
 // 攻擊分鏡和劍氣都不播，角色維持站姿往前跳一下而已。升級後的得意動作就是這樣。
+// 四個動作 class 是互斥的，**必須先把其他三個拿掉**。
+//
+// 2026-08-27 抓到的既有 bug：`.sprite.lunge` / `.hurt` / `.die` / `.spawn` 四條規則
+// 特異性完全相同（0,2,0），同時命中時由「樣式表裡排最後的那一條」勝出 —— 也就是 `.spawn`。
+// 而 restart() 只負責它被傳入的那一個 class，沒有人會把 `spawn` 拿掉，
+// 所以 beginBattle / spawnEnemy 之後 `spawn` 就永久黏在元素上，
+// 後續每一次 lunge / hurt / die 的 computed animation-name 都還是 `spawn`，
+// **角色的衝刺、受擊後仰、倒地整組動畫等於完全沒有在跑**。
+//
+// 之所以一直沒被發現，是因為打擊感的其他來源都還在：攻擊分鏡換圖、劍氣、
+// 畫面震動、粒子、以及 `.sprite.hurt .sprite-body` 的閃白 ——
+// 最後這條是**後代選擇器、作用在不同元素上**，不受這個覆蓋影響，所以閃白照常。
+const ACTION_CLASSES = ['lunge', 'hurt', 'die', 'spawn'];
+
 function act(side, cls, asAttack = true) {
     const sprite = document.getElementById(`${side}-sprite`);
+    ACTION_CLASSES.forEach(c => { if (c !== cls) sprite.classList.remove(c); });
     restart(sprite, cls);
     if (cls !== 'lunge') return;
     if (asAttack) { playAttackFrame(side); return; }
@@ -742,7 +772,10 @@ function fxSpawn(side, cls, life, setup) {
 function fxSlash(side) { fxSpawn(side, 'fx-slash', 500); }
 function fxRing(side)  { fxSpawn(side, 'fx-ring', 600); }
 
-// 迸散的碎片：往上方扇形噴出
+// 迸散的碎片：往上方扇形噴出。
+// Pixi 的粒子層接手之後，命中時的碎片改由 MathRpgPixi.impactFx() 噴（數量多兩個數量級、
+// 而且能穿插在角色前後）。這裡保留 DOM 版本當作 Pixi 關掉時的備援，
+// 以及**非命中**的用途（選完強化的得意特效、治療）—— 那些不會走 impactFx。
 function fxSparks(side, color = '#ffd54f', count = 11) {
     const u = unit();
     for (let i = 0; i < count; i++) {
@@ -773,11 +806,19 @@ function fxHeal(side, count = 10) {
 
 // raw：不要自動加上「-」前綴。給「格擋」「狂暴」這種不是數字的浮動字用。
 function showDamage(side, amount, color = '#e53935', crit = false, raw = false) {
+    const text = raw ? String(amount) : (crit ? `-${amount}!` : `-${amount}`);
+
+    // Pixi 的介面層在的話交給它畫（進場超越回彈、上升帶弧線、爆擊多一圈殘影）。
+    // 它的 canvas 蓋整張卡片，所以數字可以飄到角色頭頂上方而不被裁掉 ——
+    // 戰鬥區那張 canvas 有 overflow:hidden，畫在那裡會被切掉一半。
+    if (typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()
+        && MathRpgPixiUI.showDamage(side, text, color, crit)) return;
+
     const target = document.getElementById(`${side}-sprite`);
     const dmg = document.createElement('span');
     dmg.className = crit ? 'floating-dmg crit' : 'floating-dmg';
     dmg.style.color = color;
-    dmg.innerText = raw ? String(amount) : (crit ? `-${amount}!` : `-${amount}`);
+    dmg.innerText = text;
     const rect = target.getBoundingClientRect();
     // 加上捲動位移，頁面捲動時數字才不會跑掉
     dmg.style.left = `${rect.left + window.scrollX + rect.width / 2 - 1.5 * unit()}px`;
@@ -806,13 +847,32 @@ function impactDelayFor(attacker) {
 // 讓「這下不一樣」從畫面本身讀得出來，而不是只靠文字說明。
 function strike(attacker, defender, amount, onImpact, crit = false) {
     act(attacker, 'lunge');
+
+    // 爆擊的蓄力：出手的同時開始聚能，命中在 400ms 之後，中間的窗口剛好夠演。
+    // **刻意不加任何等待** —— 蓄力疊在既有的衝刺動作上，時序一點都沒動，
+    // 所以 slash.at / slashFly / SLASH_IMPACT_DELAY 那組綁死的數字完全不受影響。
+    if (crit && typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady()) {
+        MathRpgPixi.chargeFx(attacker);
+    }
+
     setTimeout(() => {
         act(defender, 'hurt');
         fxSlash(defender);
         fxRing(defender);
-        fxSparks(defender,
-            defender === 'enemy' ? (crit ? '#fff59d' : '#ffd54f') : '#ff8a80',
-            crit ? 20 : 11);
+
+        // 命中的粒子：Pixi 在的時候交給它（爆散 + 衝擊波 + 爆擊的光束/色差/頓幀），
+        // 不在就退回 DOM 的 11 顆碎片。**兩邊不能同時噴**，否則畫面上會有兩組碎片。
+        const pixiFx = typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady();
+        if (pixiFx) {
+            MathRpgPixi.impactFx(defender, {
+                crit,
+                tint: defender === 'enemy' ? (crit ? 0xfff59d : 0xffd54f) : 0xff8a80
+            });
+        } else {
+            fxSparks(defender,
+                defender === 'enemy' ? (crit ? '#fff59d' : '#ffd54f') : '#ff8a80',
+                crit ? 20 : 11);
+        }
         stageFlash(defender === 'enemy' ? 'good' : 'bad');
         impact();
         shakeScreen();
@@ -1197,6 +1257,11 @@ function rollNumber(el, to, ms, delay = 0) {
 const CONFETTI_COLORS = ['#ffd54f', '#ef5350', '#66bb6a', '#42a5f5', '#ab47bc', '#ff8a65'];
 
 function fxConfetti(container, count = 70) {
+    // Pixi 版：2000 顆帶重力、翻面、側飄，一次 draw call。
+    // DOM 版的 70 顆保留當備援 —— 兩者不能同時噴，數量差太多會看起來很怪。
+    if (typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()
+        && MathRpgPixiUI.confettiBurst()) return;
+
     const w = container.clientWidth || 800;
     const h = container.clientHeight || 400;
     for (let i = 0; i < count; i++) {
@@ -1260,6 +1325,8 @@ function beginBattle() {
     enemyAttackCount = 0;
     // 狀態列的快取也要清掉，否則上一場的徽章 HTML 會被當成「沒變」而不重畫
     statusPrev.player = statusPrev.enemy = '';
+    // 上一場如果是輸掉的，戰鬥區會停在灰階漸染的狀態，重開要清掉
+    if (typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady()) MathRpgPixi.clearGray();
     pendingSlashImg = null;   // 上一場若在爆擊途中離開，指定的劍氣會殘留到下一場
     playerHP = PLAYER_MAX;
     currentEnemyIndex = 0;

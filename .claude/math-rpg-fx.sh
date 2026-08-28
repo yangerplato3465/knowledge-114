@@ -43,9 +43,10 @@ FX=(
   "slash3:slash-wide:1"     # 寬橫斬：弧度最飽滿，普攻主力（鏡射）
   "slash4:slash-cross:0"    # 十字斬：中心爆閃，爆擊專用
   "slash5:slash-thrust:0"   # 突刺：方向感最強，普攻
-  # slash2 是垂直光刃（蓄力用）。技能系統還沒做，圖檔已從 repo 刪除以免變成孤兒素材。
-  # 要用的時候把下面這行取消註解再跑一次即可，來源 slash2.png 仍在 Downloads。
-  # "slash2:charge:0"
+  # 垂直光刃：蓄力用。2026-08-27 正式啟用 —— 爆擊出手前，粒子往劍上聚集時
+  # 疊在勇者身上的那道光柱（見 assets/js/math-rpg-pixi.js 的 chargeFx）。
+  # 本來就是垂直對稱的圖，不用鏡射。
+  "slash2:charge:0"
 )
 
 missing=0
