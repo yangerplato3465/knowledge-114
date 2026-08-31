@@ -354,9 +354,21 @@ const MathRpgPixiUI = (() => {
         return true;
     }
 
+    // 開新的一場：清掉還在飄的東西。
+    // 這一層的 frame() 沒有「畫面 hidden 就 return」的最佳化，所以東西會自己衰減完，
+    // 不像戰鬥層會凍住。但**贏了之後馬上按再挑戰**，2000 顆彩帶會繼續飄在新的戰場上，
+    // 所以還是要清。
+    function reset() {
+        if (!ready) return;
+        while (labels.length) labels.pop().t.destroy();
+        while (mapFx.length) mapFx.pop().s.destroy();
+        for (const c of confetti) { c.life = 0; c.p.alpha = 0; }
+    }
+
     return {
         init,
         isReady: () => ready,
+        reset,
         showDamage,
         mapDefeat,
         confettiBurst,
