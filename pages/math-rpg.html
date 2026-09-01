@@ -353,13 +353,28 @@
 
            z-index -1 讓它沉到卡片內容之下；卡片本身有不透明背景色，
            所以看得到的只有超出卡片邊緣、被 blur 暈開的那一圈。 */
+        /* ⚠️ **這個光暈絕對不能用 `transform: rotate` 來轉。**
+           `.upgrade-panel` 有 `overflow-y: auto` + `max-height: 100%`（給矮螢幕捲的，原本就有），
+           而旋轉中的矩形，其**外框會脹到對角線長度** —— 遠超過面板 2u 的 padding，
+           於是捲軸會跟著 6 秒的旋轉週期一直冒出來又消失。
+           實測：scrollHeight 在 316～337 之間脈動，clientHeight 是 315。
+           （`overflow-y: auto` 會讓 overflow-x 從 visible 變成 auto，所以水平捲軸也會跟著出現。）
+
+           正解是**動畫漸層本身的角度**，元素完全不做 transform，外框尺寸恆定。
+           `--halo-angle` 有註冊成 <angle> 才能補間；沒有 @property 支援的瀏覽器
+           會落到 `var(--halo-angle, 0deg)` 的預設值，變成不會轉的靜態光暈 —— 可接受的退化。 */
+        @property --halo-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
         .upgrade-card::before {
             content: '';
             position: absolute;
             inset: calc(-0.55 * var(--u));
             z-index: -1;
             border-radius: inherit;
-            background: conic-gradient(from 0deg,
+            background: conic-gradient(from var(--halo-angle, 0deg),
                 rgba(255, 213, 79, 0.85), rgba(255, 138, 101, 0.25),
                 rgba(129, 212, 250, 0.75), rgba(206, 147, 216, 0.25),
                 rgba(255, 213, 79, 0.85));
@@ -367,7 +382,7 @@
             opacity: 0.55;
             animation: cardHalo 6s linear infinite;
         }
-        @keyframes cardHalo { to { transform: rotate(360deg); } }
+        @keyframes cardHalo { to { --halo-angle: 360deg; } }
 
         /* 選中的那張光暈整個亮起來、轉得更快；沒選中的沉下去 */
         .upgrade-card.chosen::before { opacity: 1; animation-duration: 1.2s; }
@@ -950,6 +965,31 @@
         }
         .sprite.spawn { animation: spawn 0.6s cubic-bezier(0.2, 0.7, 0.3, 1); }
 
+        /* 選完強化卡的得意動作。
+           以前這裡是借用 `lunge`（`act('player','lunge',false)`），但 lunge 的位移是
+           **往前衝 56px** —— 那本來就是攻擊動作，前面沒有敵人時只會看起來像莫名其妙抖一下。
+           （2026-08-27 之前這個問題看不出來，因為殘留的 `spawn` class 把 lunge 整個蓋掉，
+             這段「得意動作」根本沒播過；`act()` 修好之後才浮現。）
+
+           改成原地慶祝：蹲 → 跳 → 落地壓縮，配一點側身擺動。
+
+           ⚠️ **跳躍高度與縱向拉伸是量出來的，不能隨便加大。**
+           #battle-stage 是 overflow:hidden，待機時角色頂端距上緣只有 26.7px，
+           而**位移和拉伸會疊加** —— 第一版寫 translateY(-10px) 配 scaleY(1.06)，
+           實測全程最小餘裕是 **−0.7px**，頭真的被切掉。
+           收成 -7px / 1.035 之後剩 6.6px，跟既有的 spawn（6.7px）同一個安全範圍。
+           動這兩個數字之後，請重量一次「全程角色頂端距舞台上緣的最小值」。
+           rotate 乘上 --dir，所以怪物那側日後要用也會自動鏡射。 */
+        @keyframes cheer {
+            0%   { transform: translateY(0)    scale(1, 1)         rotate(0deg); }
+            14%  { transform: translateY(0)    scale(1.10, 0.90)   rotate(0deg); }
+            40%  { transform: translateY(-7px) scale(0.965, 1.035) rotate(calc(-3deg * var(--dir))); }
+            62%  { transform: translateY(-5px) scale(1, 1)         rotate(calc(2deg * var(--dir))); }
+            82%  { transform: translateY(0)    scale(1.07, 0.93)   rotate(0deg); }
+            100% { transform: translateY(0)    scale(1, 1)         rotate(0deg); }
+        }
+        .sprite.cheer { animation: cheer 0.62s cubic-bezier(0.3, 0, 0.2, 1); }
+
         /* ---------- 打擊特效（由 JS 動態插入 .sprite-slot） ---------- */
         .fx { position: absolute; pointer-events: none; z-index: 3; }
 
@@ -1213,10 +1253,25 @@
         .option-btn.correct { border-color: #66bb6a; background-color: var(--good-bg); color: var(--good); animation: correctPop 0.45s ease-out; }
         .option-btn.wrong   { border-color: #ef9a9a; background-color: var(--bad-bg); color: var(--bad); animation: wrongShake 0.4s ease-out; }
 
+        /* 答對時**孩子自己按下的**那一顆。
+           上面的 .correct 答錯時也會加（要揭曉正確答案），所以那個綠色彈跳的意思是
+           「這才是答案」，不是「你答對了」—— 兩件事在畫面上長得一樣的話，
+           答對的那一下等於沒有專屬的確認。這條才是答對專用的。
+           特異性 (0,3,0) 高於 .option-btn.correct，不受樣式表順序影響。 */
+        .option-btn.correct.picked { animation: correctPicked 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+
         @keyframes correctPop {
             0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 187, 106, 0.6); }
             35%  { transform: scale(1.06); }
             100% { transform: scale(1); box-shadow: 0 0 0 14px rgba(102, 187, 106, 0); }
+        }
+        /* 彈得更高、光環兩層推得更遠 —— 跟 correctPop 一眼就分得出來 */
+        @keyframes correctPicked {
+            0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 187, 106, 0.85),
+                                                    0 0 0 0 rgba(102, 187, 106, 0.45); }
+            30%  { transform: scale(1.13); }
+            100% { transform: scale(1); box-shadow: 0 0 0 18px rgba(102, 187, 106, 0),
+                                                    0 0 0 32px rgba(102, 187, 106, 0); }
         }
         @keyframes wrongShake {
             0%, 100% { transform: translateX(0); }
@@ -1617,10 +1672,10 @@
             .map-node.boss .boss-crown, .end-screen.lose .end-icon {
                 animation: none !important;
             }
-            .sprite.lunge, .sprite.hurt, .sprite.spawn,
+            .sprite.lunge, .sprite.hurt, .sprite.spawn, .sprite.cheer,
             .st-badge.bump, .upgrade-card::before,
             .battle-stage.impact, .game-card.shake,
-            .option-btn.enter, .question-box.enter, .upgrade-card,
+            .option-btn.enter, .option-btn.correct.picked, .question-box.enter, .upgrade-card,
             .map-node.defeat, .map-node.current.arrive, .map-line.flowing::after,
             .end-screen.win .end-icon, .end-screen.lose,
             .end-screen.win h2, .end-screen.win p,
@@ -1816,7 +1871,13 @@
         </div>
     </div>
 
-    <audio id="bg-music" src="../assets/audio/music.mp3" loop preload="auto"></audio>
+    <!-- preload="none"：music.mp3 是 11.2 MB，是整個專案最大的載入成本
+         （Pixi 818 KB、所有圖檔加起來 670 KB，都遠小於它）。
+         而 startMusic() 本來就要等使用者互動才會 play()（瀏覽器的自動播放政策），
+         所以 preload="auto" 在互動前先抓完那 11MB **完全沒有用處** ——
+         play() 被呼叫時瀏覽器自己會開始串流，只差前面零點幾秒的緩衝。
+         一班 30 個學生就是 330MB 的教室頻寬，本機開發時也是 serve.ps1 最重的負擔。 -->
+    <audio id="bg-music" src="../assets/audio/music.mp3" loop preload="none"></audio>
 
     <!-- Pixi 走本地檔不走 CDN：教室不一定有網路，字型 CDN 掛掉只是字醜，
          Pixi 掛掉是整個角色不見。載入失敗時 math-rpg-pixi.js 會自己退回 DOM 版本。

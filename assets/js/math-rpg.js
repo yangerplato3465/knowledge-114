@@ -407,14 +407,28 @@ function renderStatus() {
     // --- 敵人 ---
     let e = '';
     const trait = traitOf(currentEnemyIndex);
+    let charge = 0;
     if (trait.armor) e += badge('armor', '🛡️', trait.armor, `重甲 ${trait.armor}：每次受到的傷害減 ${trait.armor}`);
     if (enemyEnraged) e += badge('enrage', '😡', '狂暴', '狂暴：攻擊力大幅提升，且每一擊都造成流血');
     if (trait.special && !enemyEnraged) {
         const s = trait.special;
-        const left = s.every - (enemyAttackCount % s.every);
-        e += badge('charge', '⚡', left, `再攻擊 ${left} 次就會使出「${s.name}」`);
+        charge = s.every - (enemyAttackCount % s.every);
+        e += badge('charge', '⚡', charge, `再攻擊 ${charge} 次就會使出「${s.name}」`);
     }
     paintStatus('enemy', e);
+
+    // 把狀態推給 Pixi 的特效層。**這裡是唯一的推送點** ——
+    // renderStatus() 本來就是所有狀態變動的匯流點（連擊、流血、迷霧、特攻倒數
+    // 只要一變就會重畫徽章），不必在 checkAnswer / damagePlayer / handleTimeout
+    // 各插一次呼叫，也就不會有「某條路徑忘了通知」的漏洞。
+    if (typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady()) {
+        MathRpgPixi.setBattleState({
+            combo,
+            bleed: playerStatus.bleed,
+            fog: playerStatus.fog,
+            enemyCharge: charge
+        });
+    }
 }
 
 // 一層流血扣幾點血。止血繃帶疊一次減半、疊兩次免疫。
@@ -713,9 +727,10 @@ function preloadBattleAssets() {
 }
 
 // side 為 'player' 或 'enemy'
-// asAttack 只在 cls==='lunge' 時有意義。false 代表「借用衝刺的位移，但這不是一次攻擊」：
-// 攻擊分鏡和劍氣都不播，角色維持站姿往前跳一下而已。升級後的得意動作就是這樣。
-// 四個動作 class 是互斥的，**必須先把其他三個拿掉**。
+// asAttack 只在 cls==='lunge' 時有意義：false 代表「借用衝刺的位移，但這不是一次攻擊」，
+// 攻擊分鏡和劍氣都不播。
+//
+// **動作 class 互斥，必須先把其他的拿掉。**
 //
 // 2026-08-27 抓到的既有 bug：`.sprite.lunge` / `.hurt` / `.die` / `.spawn` 四條規則
 // 特異性完全相同（0,2,0），同時命中時由「樣式表裡排最後的那一條」勝出 —— 也就是 `.spawn`。
@@ -727,14 +742,17 @@ function preloadBattleAssets() {
 // 之所以一直沒被發現，是因為打擊感的其他來源都還在：攻擊分鏡換圖、劍氣、
 // 畫面震動、粒子、以及 `.sprite.hurt .sprite-body` 的閃白 ——
 // 最後這條是**後代選擇器、作用在不同元素上**，不受這個覆蓋影響，所以閃白照常。
-const ACTION_CLASSES = ['lunge', 'hurt', 'die', 'spawn'];
+//
+// **加新動作時記得加進這個陣列**，否則它跟既有的四個同時存在時，
+// 誰生效就變成看樣式表的順序，又會回到上面那個 bug。
+const ACTION_CLASSES = ['lunge', 'hurt', 'die', 'spawn', 'cheer'];
 
 function act(side, cls, asAttack = true) {
     const sprite = document.getElementById(`${side}-sprite`);
     ACTION_CLASSES.forEach(c => { if (c !== cls) sprite.classList.remove(c); });
     restart(sprite, cls);
-    if (cls !== 'lunge') return;
-    if (asAttack) { playAttackFrame(side); return; }
+    if (cls !== 'lunge' && cls !== 'cheer') return;
+    if (cls === 'lunge' && asAttack) { playAttackFrame(side); return; }
 
     // 不是攻擊：把可能還停在攻擊分鏡上的圖拉回站姿，並取消排程中的換圖，
     // 否則上一次攻擊的收尾 timer 會在這一跳的中途把圖換掉。
@@ -793,8 +811,12 @@ function fxSparks(side, color = '#ffd54f', count = 11) {
     }
 }
 
-// 治療：綠色光點從腳邊往上飄
+// 治療：綠色光點從腳邊往上飄。
+// 這是最後一個還留在 DOM 的戰鬥特效，Pixi 在的話交給它（26 顆、能穿插在角色前後）。
 function fxHeal(side, count = 10) {
+    if (typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady()
+        && MathRpgPixi.healFx(side)) return;
+
     const u = unit();
     for (let i = 0; i < count; i++) {
         fxSpawn(side, 'fx-heal', 1700, el => {
@@ -948,7 +970,9 @@ function chooseUpgrade(upg, cardEl) {
             updateBars(); // 反映治療 / 最大生命 / 護甲 / 護盾的變化
             if (upg.fx === 'heal') fxHeal('player');
             else fxSparks('player', '#ffd54f', 14);
-            act('player', 'lunge', false);   // 得意動作，不是攻擊 —— 不放劍氣
+            // 得意動作：原地慶祝的跳躍。**不要用 lunge** ——
+            // 那是往前衝 56px 的攻擊位移，前面沒有敵人時只會看起來像莫名其妙抖一下。
+            act('player', 'cheer', false);
 
             // 4) 下一隻怪登場
             setTimeout(() => {
@@ -1155,6 +1179,19 @@ function checkAnswer(index) {
     const feedback = document.getElementById('feedback-msg');
 
     if (index === q.correct) {
+        // 答對的正向確認，**要排在所有計算之前** —— 這一拍的整個重點就是「立即」。
+        //
+        // ⚠️ `.correct` 不能當成「答對了」的訊號：上面那行在答錯時也會加，
+        // 因為要揭曉正確答案。所以那顆按鈕的 correctPop 綠色彈跳兩種情況都會播，
+        // 它是「這才是答案」不是「你答對了」。`.picked` 才是只有答對才有的那個。
+        btns[index].classList.add('picked');
+        // 綠色光點從按鈕爆出 ＋ 一道能量流向勇者，填掉按下到命中之間那 400ms 的空窗。
+        // Pixi 不在就退回 DOM 的火花（位置只能在角色身上，補不到按鈕那裡，但聊勝於無）。
+        if (!(typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()
+              && MathRpgPixiUI.correctFx(btns[index]))) {
+            fxSparks('player', '#66bb6a', 10);
+        }
+
         // 連擊先加，這一刀就吃得到新的加成 —— 連對第 2 題就看得到「+5%」跳出來，
         // 回饋越早出現，孩子越容易把「連續答對」和「打得更痛」連起來。
         combo++;
@@ -1325,8 +1362,11 @@ function beginBattle() {
     enemyAttackCount = 0;
     // 狀態列的快取也要清掉，否則上一場的徽章 HTML 會被當成「沒變」而不重畫
     statusPrev.player = statusPrev.enemy = '';
-    // 上一場如果是輸掉的，戰鬥區會停在灰階漸染的狀態，重開要清掉
-    if (typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady()) MathRpgPixi.clearGray();
+    // 上一場的特效全部清掉。**不只是灰階** —— 戰鬥畫面被藏起來時 Pixi 的 frame()
+    // 會直接 return，粒子與碎片是「凍住」而不是繼續衰減，不清的話新局第一幀
+    // 會原封不動接著播上一場的爆炸（中途按返回、或輸了再挑戰都會遇到）。
+    if (typeof MathRpgPixi !== 'undefined' && MathRpgPixi.isReady()) MathRpgPixi.reset();
+    if (typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()) MathRpgPixiUI.reset();
     pendingSlashImg = null;   // 上一場若在爆擊途中離開，指定的劍氣會殘留到下一場
     playerHP = PLAYER_MAX;
     currentEnemyIndex = 0;

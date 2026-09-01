@@ -255,9 +255,14 @@ const MathRpgPixi = (() => {
             ));
             n.holder.alpha = pose.alpha;
 
-            if (n.filterCss !== pose.filterCss) {
-                n.filterCss = pose.filterCss;
-                const f = filterFor(pose.filterCss);
+            // 打倒定格的白剪影要**蓋過** CSS 算出來的濾鏡。
+            // watchClasses 在這個迴圈之前跑，若直接在那裡設 holder.filters，
+            // 同一幀就會被下面這段用 die 的 grayscale 覆寫掉 —— 所以改成用旗標在這裡優先。
+            const white = n.whiteUntil && performance.now() < n.whiteUntil;
+            const wantCss = white ? '__white__' : pose.filterCss;
+            if (n.filterCss !== wantCss) {
+                n.filterCss = wantCss;
+                const f = white ? whiteFilter : filterFor(pose.filterCss);
                 n.holder.filters = f ? [f] : null;
             }
         }
@@ -598,6 +603,206 @@ const MathRpgPixi = (() => {
     }
 
     // ===============================================================
+    // 追加特效（2026-08-27 檢查之後補的六項）
+    // ===============================================================
+    // 共同點：**它們讓已經存在的規則變得看得見。**
+    // 連擊、流血、迷霧、特攻倒數本來只有狀態列上的數字 ——
+    // 對小學生來說，畫面上沒發生的事等於不存在。
+
+    // 由 math-rpg.js 的 renderStatus() 一次推過來。那裡本來就是所有狀態變動的匯流點，
+    // 不必在 checkAnswer / damagePlayer / handleTimeout 各插一次呼叫。
+    let fxCombo = 0, fxBleed = 0, fxFog = 0, fxCharge = 0;
+    function setBattleState(s) {
+        if (!s) return;
+        fxCombo = s.combo || 0;
+        fxBleed = s.bleed || 0;
+        fxFog = s.fog || 0;
+        fxCharge = s.enemyCharge || 0;   // 敵人「再幾次就放特攻」，1 = 下一次就來
+    }
+
+    // --- ① 衝擊波吹散環境粒子 -------------------------------------------
+    // 兩個粒子系統本來各跑各的。加上這個之後，打擊會把空氣中的花瓣／火星推開，
+    // 「這一拳有力量」就從場景本身讀得出來，不只是角色身上。
+    function gustAmbient(cx, cy, power) {
+        const U = u();
+        for (const key of ['back', 'front']) {
+            const L = layersA[key];
+            if (!L) continue;
+            for (const it of L.items) {
+                if (it.life <= 0) continue;
+                const dx = it.p.x - cx, dy = it.p.y - cy;
+                const d = Math.max(U, Math.hypot(dx, dy));
+                const f = power * 34 * U / d;    // 越靠近爆點吹得越開
+                it.vx += dx / d * f;
+                it.vy += dy / d * f;
+            }
+        }
+    }
+
+    // --- ② 連擊的視覺累積 -----------------------------------------------
+    // 連擊 2 和連擊 10 以前在畫面上完全一樣，只有徽章數字不同。
+    const COMBO_AURA_AT = 5;      // 開始冒金色微光
+    const COMBO_HOT_AT = 8;       // 劍氣拖尾換成更燙的色調
+    let auraAcc = 0;
+
+    function updateComboAura(dt) {
+        if (fxCombo < COMBO_AURA_AT) { auraAcc = 0; return; }
+        const n = nodes.player;
+        if (!n.box || !n.holder.visible) return;
+        const U = u();
+        // 層數越高冒得越密，但要封頂，否則高連擊時整個人會糊掉
+        auraAcc += Math.min(26, 8 + (fxCombo - COMBO_AURA_AT) * 3) * dt;
+        const hot = fxCombo >= COMBO_HOT_AT;
+        while (auraAcc >= 1) {
+            auraAcc -= 1;
+            emit(Math.random() < 0.5 ? 'back' : 'front', {
+                x: n.holder.x + (Math.random() - 0.5) * n.box.w * 0.5,
+                y: n.box.y + n.box.h - Math.random() * n.box.h * 0.75,
+                vx: (Math.random() - 0.5) * 1.4 * U,
+                vy: -(1.6 + Math.random() * 2.4) * U,
+                life: 0.5 + Math.random() * 0.5,
+                size: (0.1 + Math.random() * 0.22) * U, size1: 0,
+                tint: hot ? [0xffffff, 0xffd54f, 0xff8a65][(Math.random() * 3) | 0]
+                          : [0xffe082, 0xfff59d][(Math.random() * 2) | 0],
+                drag: 0.97, stretch: 1 + Math.random() * 0.8
+            });
+        }
+    }
+
+    // 劍氣拖尾的顏色也吃連擊 —— 高連擊時整條軌跡從冷藍轉成熱白金
+    function trailTints() {
+        if (fxCombo >= COMBO_HOT_AT) return [0xffffff, 0xffd54f, 0xffab40];
+        if (fxCombo >= COMBO_AURA_AT) return [0xffffff, 0xfff59d, 0x80d8ff];
+        return [0xffffff, 0x80d8ff, 0x40c4ff];
+    }
+
+    // --- ③④ 狀態的實體：流血滴落、迷霧、特攻預告 ------------------------
+    let bleedAcc = 0, fogAcc = 0, chargeWarnAcc = 0;
+
+    function updateStatusFx(dt) {
+        const n = nodes.player;
+        const U = u();
+
+        // 流血：腳邊持續滴落，層數越多滴越快 —— 徽章上的數字在地上有了對應物
+        if (fxBleed > 0 && n.box && n.holder.visible) {
+            bleedAcc += Math.min(14, 3 + fxBleed * 1.6) * dt;
+            while (bleedAcc >= 1) {
+                bleedAcc -= 1;
+                emit('front', {
+                    x: n.holder.x + (Math.random() - 0.5) * n.box.w * 0.28,
+                    y: n.box.y + n.box.h - n.box.h * (0.25 + Math.random() * 0.3),
+                    vx: (Math.random() - 0.5) * 0.8 * U,
+                    vy: (3 + Math.random() * 4) * U,
+                    grav: 40 * U, drag: 0.99,
+                    life: 0.45 + Math.random() * 0.3,
+                    size: (0.1 + Math.random() * 0.16) * U, size1: 0.04 * U,
+                    tint: [0xd32f2f, 0xff5252][(Math.random() * 2) | 0],
+                    stretch: 2.4 + Math.random() * 1.6
+                });
+            }
+        } else bleedAcc = 0;
+
+        // 迷霧：舞台左右邊緣飄進來的薄霧。**用 normal 混合的塵土容器** ——
+        // 加亮的霧會發光，看起來像瓦斯不像霧。
+        if (fxFog > 0 && dustPC) {
+            fogAcc += 3.2 * dt;
+            while (fogAcc >= 1) { fogAcc -= 1; fogWisp(); }
+        } else fogAcc = 0;
+
+        // 敵人特攻預告：剩最後一次時紅光往怪物身上收斂。
+        // 徽章寫著「⚡1」，但孩子看的是畫面 —— 這一圈紅光才是真正讀得到的警告。
+        const e = nodes.enemy;
+        if (fxCharge === 1 && e.box && e.holder.visible) {
+            chargeWarnAcc += 22 * dt;
+            const c = centerOf('enemy');
+            while (chargeWarnAcc >= 1) {
+                chargeWarnAcc -= 1;
+                const ang = Math.random() * Math.PI * 2;
+                const r = (4 + Math.random() * 3.5) * U;
+                const life = 0.24 + Math.random() * 0.12;
+                emit('front', {
+                    x: c.x + Math.cos(ang) * r,
+                    y: c.y + Math.sin(ang) * r * 0.8,
+                    vx: -Math.cos(ang) * r / life,
+                    vy: -Math.sin(ang) * r * 0.8 / life,
+                    life,
+                    size: (0.1 + Math.random() * 0.2) * U, size1: 0.02 * U,
+                    tint: [0xff5252, 0xff8a80, 0xffffff][(Math.random() * 3) | 0],
+                    rotation: ang, stretch: 2 + Math.random() * 2
+                });
+            }
+        } else chargeWarnAcc = 0;
+    }
+
+    function fogWisp() {
+        let it = null;
+        for (let k = 0; k < DUST_MAX; k++) {
+            const idx = (dustCursor + k) % DUST_MAX;
+            if (dustItems[idx].life <= 0) { dustCursor = (idx + 1) % DUST_MAX; it = dustItems[idx]; break; }
+        }
+        if (!it) return;
+        const U = u(), W = app.screen.width, H = app.screen.height;
+        const fromLeft = Math.random() < 0.5;
+        const p = it.p;
+        p.x = fromLeft ? -2 * U : W + 2 * U;
+        p.y = H * (0.45 + Math.random() * 0.5);
+        p.tint = [0xb0bec5, 0x90a4ae, 0xcfd8dc][(Math.random() * 3) | 0];
+        p.rotation = Math.random() * Math.PI;
+        it.life = it.max = 3.5 + Math.random() * 2.5;
+        it.vx = (fromLeft ? 1 : -1) * (3 + Math.random() * 4) * U;
+        it.vy = -(0.2 + Math.random() * 0.6) * U;
+        it.grav = 0; it.drag = 1;
+        it.s0 = (1.6 + Math.random() * 1.8) * U;
+        it.s1 = it.s0 * 1.6;
+        it.a0 = 0.14 + Math.random() * 0.1;      // 很淡，不能糊住角色
+        it.spin = (Math.random() - 0.5) * 0.4;
+        p.alpha = it.a0;
+        const k = it.s0 / 64;
+        p.scaleX = k; p.scaleY = k;
+    }
+
+    // --- ⑤ 打倒敵人的定格 -----------------------------------------------
+    // 碎裂之前先把怪物整個打成白色剪影並凍住一瞬間，再爆開。
+    // 沒有這一拍，碎裂來得太快，「我打倒牠了」那個瞬間會被自己的特效蓋過去。
+    const DEFEAT_FREEZE_MS = 110;
+    let whiteFilter = null;
+
+    function initWhiteFilter() {
+        whiteFilter = new PIXI.ColorMatrixFilter();
+        // RGB 全部推成 1、alpha 原樣保留 → 保住輪廓，成為剪影而不是白方塊
+        whiteFilter.matrix = [0,0,0,0,1,  0,0,0,0,1,  0,0,0,0,1,  0,0,0,1,0];
+    }
+
+    function defeatFreeze(side) {
+        const n = nodes[side];
+        n.whiteUntil = performance.now() + DEFEAT_FREEZE_MS;
+        hitstop(DEFEAT_FREEZE_MS);
+        setTimeout(() => { n.whiteUntil = 0; shatterFx(side); }, DEFEAT_FREEZE_MS);
+    }
+
+    // --- ⑥ 治療 ---------------------------------------------------------
+    // 原本是 10 顆 CSS span，是最後一個還留在 DOM 的戰鬥特效。
+    function healFx(side, count = 26) {
+        if (!ready) return false;
+        const n = nodes[side];
+        if (!n.box) return false;
+        const U = u();
+        for (let i = 0; i < count; i++) {
+            emit(Math.random() < 0.4 ? 'back' : 'front', {
+                x: n.holder.x + (Math.random() - 0.5) * n.box.w * 0.6,
+                y: n.box.y + n.box.h - Math.random() * 0.25 * n.box.h,
+                vx: (Math.random() - 0.5) * 1.2 * U,
+                vy: -(3 + Math.random() * 4) * U,
+                life: 0.8 + Math.random() * 0.7,
+                size: (0.14 + Math.random() * 0.3) * U, size1: 0,
+                tint: [0x69f0ae, 0xb9f6ca, 0xffffff][(Math.random() * 3) | 0],
+                drag: 0.985, stretch: 1 + Math.random() * 0.6
+            });
+        }
+        return true;
+    }
+
+    // ===============================================================
     // #17 關卡切換轉場
     // ===============================================================
     // 舊的背景不是直接換掉，而是留一張在下面淡出，上面同時掃過一道光。
@@ -750,6 +955,45 @@ const MathRpgPixi = (() => {
             syncStageFilters();
         }
         updateWipe(dt);
+    }
+
+    // ===============================================================
+    // 開新的一場：把所有還在跑的特效清乾淨
+    // ===============================================================
+    // **這個一定要有。** frame() 在 #battle-screen hidden 時會直接 return（省效能），
+    // 所以粒子與碎片不會繼續衰減，而是**整組凍在半空中**。
+    // 玩家中途按返回、或輸了之後再挑戰，下一場的第一幀就會接著播上一場的爆炸。
+    // 實測（2026-08-27）：離開時 180 顆粒子＋36 片碎片，回到選單兩秒後一顆都沒少，
+    // 開新局的第一幀原封不動全部出現。
+    function reset() {
+        if (!ready) return;
+        for (const k of ['back', 'front']) {
+            if (layersP[k]) for (const it of layersP[k].items) { it.life = 0; it.p.alpha = 0; }
+            if (layersA[k]) for (const it of layersA[k].items) { it.life = 0; it.p.alpha = 0; }
+        }
+        for (const it of dustItems) { it.life = 0; it.p.alpha = 0; }
+        while (shards.length) shards.pop().s.destroy();
+        while (afterimages.length) afterimages.pop().s.destroy();
+        for (const side of sides) {
+            const n = nodes[side];
+            n.shattered = false;
+            n.hurtAnim = null;
+            n.dieAnim = null;
+            n.afterAt = 0;
+        }
+        if (chargeSprite) chargeSprite.visible = false;
+        chargeT = -1;
+        if (bgPrev) bgPrev.visible = false;
+        if (wipeSprite) wipeSprite.visible = false;
+        wipeT = -1;
+        shockT = -1;
+        aberrT = -1;
+        ambientStage = null;          // 讓新的一關重新鋪一批環境粒子
+        fxCombo = fxBleed = fxFog = fxCharge = 0;
+        auraAcc = bleedAcc = fogAcc = chargeWarnAcc = 0;
+        for (const side of sides) nodes[side].whiteUntil = 0;
+        releaseHitstop();
+        clearGray();                  // 這一支也會取消慢動作
     }
 
     // 新的一場 / 新的一關要把灰階清掉，否則上一場的失敗染色會留到下一場。
@@ -949,8 +1193,9 @@ const MathRpgPixi = (() => {
     let pausedAnims = new Set();
     let hitstopTimer = null;
 
-    function hitstop() {
-        if (!HITSTOP_MS) return;
+    function hitstop(ms) {
+        const dur = ms || HITSTOP_MS;
+        if (!dur) return;
         const els = [document.getElementById('player-sprite'),
                      document.getElementById('enemy-sprite'),
                      document.getElementById('stage-slash')].filter(Boolean);
@@ -959,7 +1204,7 @@ const MathRpgPixi = (() => {
         app.ticker.speed = 0;
 
         clearTimeout(hitstopTimer);
-        hitstopTimer = setTimeout(releaseHitstop, HITSTOP_MS);
+        hitstopTimer = setTimeout(releaseHitstop, dur);
     }
 
     function releaseHitstop() {
@@ -980,6 +1225,7 @@ const MathRpgPixi = (() => {
         uni.uAspect = app.screen.width / app.screen.height;
         shockT = 0;
         syncStageFilters();
+        gustAmbient(c.x, c.y, 1);   // 順便把空氣中的環境粒子吹開
     }
 
     // --- #1 劍氣拖尾 -----------------------------------------------------
@@ -1012,7 +1258,7 @@ const MathRpgPixi = (() => {
                     vx: (Math.random() - 0.5) * 2 * U, vy: (Math.random() - 0.5) * 2 * U - U,
                     life: 0.22 + Math.random() * 0.3,
                     size: (0.18 + Math.random() * 0.4) * U, size1: 0,
-                    tint: [0xffffff, 0x80d8ff, 0x40c4ff][i % 3],
+                    tint: trailTints()[i % 3],
                     drag: 0.9, stretch: 1 + Math.random()
                 });
             }
@@ -1022,24 +1268,40 @@ const MathRpgPixi = (() => {
 
     // 由 CSS class 的變化推動：hurt / die 不必去改 math-rpg.js，
     // 這裡自己看 .sprite 上的 class 就知道發生了什麼。
+    // ⚠️ **不能用「class 在不在」來判斷動作是不是又觸發了一次。**
+    // act() 是 remove → reflow → add，全部在同一個 JS turn 裡完成，
+    // 而這個函式一幀才輪詢一次 —— 中間那個「沒有 class」的瞬間永遠看不到。
+    // 結果就是：連續兩次答錯，血花只噴第一次；連續兩次答對，怪物的受擊反饋也只有第一次。
+    // （2026-08-27 實測確認：第二次 hurt 的粒子增量是 0。）
+    //
+    // 改成比對 **Animation 物件本身**。restart() 每次都會產生一個全新的 instance，
+    // 所以「物件換了」就是「重新觸發了」，不管 class 有沒有中斷過。
+    function animOf(el, name) {
+        return el.getAnimations().find(a => a.animationName === name) || null;
+    }
+
     function watchClasses() {
         for (const side of sides) {
             const n = nodes[side];
-            const cl = n.sprite.classList;
-            const hurt = cl.contains('hurt');
-            if (hurt && !n.wasHurt) hurtFx(side);
-            n.wasHurt = hurt;
 
-            const die = cl.contains('die');
-            if (die && !n.wasDie) {
-                // **碎裂只給怪物。** 勇者倒下改成灰階漸染（#19）——
-                // 讓小學生看到自己的角色碎成 36 片實在太狠了，
-                // 而且失敗畫面本來就該是「世界褪色」而不是「你爆炸了」。
-                if (side === "enemy") { shatterFx(side); }
+            const hurtAnim = animOf(n.sprite, 'hurt');
+            if (hurtAnim && hurtAnim !== n.hurtAnim) {
+                // **血花＋殘影只給勇者。** 這一項的規格就是「勇者受傷」，
+                // 怪物被打的反饋由 strike() 呼叫的 impactFx 負責（金色碎片＋衝擊波）。
+                // 兩個都跑的話，怪物身上會同時噴紅色血花與金色碎片，顏色打架、粒子也翻倍。
+                if (side === 'player') hurtFx(side);
+            }
+            n.hurtAnim = hurtAnim;
+
+            const dieAnim = animOf(n.sprite, 'die');
+            if (dieAnim && dieAnim !== n.dieAnim) {
+                // **碎裂只給怪物。** 勇者是孩子的化身，碎成 36 片太狠 ——
+                // 改成慢動作倒地＋塵土，加上全畫面的灰階漸染（#19）。
+                if (side === "enemy") defeatFreeze(side);   // 先定格白剪影，再碎裂
                 else { grayWash(side); heroFallFx(side); }
             }
-            if (!die && n.wasDie) { n.shattered = false; }   // 下一隻怪登場，本體要回來
-            n.wasDie = die;
+            if (!dieAnim && n.dieAnim) n.shattered = false;   // 下一隻怪登場，本體要回來
+            n.dieAnim = dieAnim;
 
             if (n.afterAt > 0) { pushAfterimage(side); n.afterAt--; }
         }
@@ -1050,6 +1312,8 @@ const MathRpgPixi = (() => {
         // （分頁被丟到背景、或某次例外把它吃掉）。自己救回來，否則整個特效層等於死掉。
         if (app.ticker.speed === 0 && !hitstopTimer) releaseHitstop();
 
+        updateComboAura(dt);    // 連擊光暈
+        updateStatusFx(dt);     // 流血滴落、迷霧、特攻預告
         updateBackground();     // #9  視差要在角色姿態算完之後才讀得到位移
         updateShadows();        // #11 同上
         updateAmbient(dt);      // #10
@@ -1284,8 +1548,12 @@ const MathRpgPixi = (() => {
         p.tint = cfg.tints[(Math.random() * cfg.tints.length) | 0];
         p.rotation = Math.random() * Math.PI * 2;
         it.life = it.max = rnd(cfg.life);
+        // bvx/bvy 是「這顆粒子本來的飄移」。衝擊波會直接加速度到 vx/vy 上，
+        // 之後再由 updateAmbient 慢慢拉回 bvx/bvy —— 沒有這組基準值的話，
+        // 被吹一次就永遠回不來，整批粒子會被推出畫面外。
         it.vx = rnd(cfg.vx) * U * 0.5;
         it.vy = rnd(cfg.vy) * U * 0.5;
+        it.bvx = it.vx; it.bvy = it.vy;
         it.spin = (Math.random() - 0.5) * cfg.spin;
         it.s0 = rnd(cfg.size) * U;
         it.swayAmp = cfg.sway[0] * U * 0.1;
@@ -1320,6 +1588,10 @@ const MathRpgPixi = (() => {
                 if (it.life <= 0) { it.p.alpha = 0; it.life = 0; continue; }
                 const t = 1 - it.life / it.max;
                 it.phase += it.swayFreq * dt;
+                // 被衝擊波吹散之後，指數地拉回原本的飄移速度
+                const relax = Math.min(1, dt * 2.2);
+                it.vx += (it.bvx - it.vx) * relax;
+                it.vy += (it.bvy - it.vy) * relax;
                 it.p.x += (it.vx + Math.cos(it.phase) * it.swayAmp) * dt;
                 it.p.y += it.vy * dt;
                 it.p.rotation += it.spin * dt;
@@ -1495,7 +1767,7 @@ const MathRpgPixi = (() => {
             holder.addChild(pixi);
             chars.addChild(holder);
             nodes[side] = { sprite, body, holder, pixi, box: null, texKey: null, filterCss: null,
-                            wasHurt: false, wasDie: false, afterAt: 0 };
+                            hurtAnim: null, dieAnim: null, afterAt: 0 };
         }
 
         initParticles();
@@ -1504,6 +1776,7 @@ const MathRpgPixi = (() => {
         initFilters();
         initBackground();
         initWipe();
+        initWhiteFilter();
         initShadows();
 
         // UPDATE_PRIORITY.LOW：排在其他 ticker 之後跑，讀到的是這一幀最終的 CSS 狀態
@@ -1554,6 +1827,9 @@ const MathRpgPixi = (() => {
         chargeFx,
         burst,
         clearGray,
+        setBattleState,
+        healFx,
+        reset,
         get app() { return app; },
         // 除錯用：在 console 打 MathRpgPixi.stats() 看有沒有正常在畫
         stats() {

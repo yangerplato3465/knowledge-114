@@ -104,7 +104,12 @@ $handler = {
       $res.ContentLength64 = $len
 
       # Do not let a client that stopped reading hold this thread forever.
-      try { $res.OutputStream.WriteTimeout = 20000 } catch { }
+      # 6s, not 20s. This is how long a runspace stays hostage to a client that
+      # stopped reading. Nothing legitimate on localhost needs 20 seconds to
+      # accept the next 64 KB, and a shorter timeout means a burst of abandoned
+      # downloads clears in seconds instead of blocking the pool for a third of
+      # a minute.
+      try { $res.OutputStream.WriteTimeout = 6000 } catch { }
 
       $fs.Position = $start
       $buf = New-Object byte[] 65536
@@ -127,12 +132,42 @@ $handler = {
   }
 }
 
+# Preflight: refuse to start a second copy.
+#
+# HttpListener registers the prefix with http.sys machine-wide, so a second
+# instance dies on Start() with "conflicts with an existing registration".
+# Before this check that left a stray PowerShell window behind every time,
+# which looked like the server "restarting" when in fact the original one was
+# still serving the whole time. 2026-08-31: five such windows piled up in one
+# session because a slow response was misread as "the server is down".
+#
+# If you actually want a fresh one, stop the old process first:
+#   Get-Process powershell | Where-Object { $_.StartTime -lt (Get-Date).AddMinutes(-1) }
+try {
+  $probe = [System.Net.WebRequest]::Create("http://localhost:$Port/")
+  $probe.Method = "HEAD"
+  $probe.Timeout = 1500
+  $probe.GetResponse().Close()
+  Write-Host "Already serving on http://localhost:$Port/ - nothing to do."
+  Write-Host "(A second listener cannot bind the same prefix. Stop the old one first.)"
+  return
+} catch {
+  # Nothing answered, or it answered with an HTTP error - either way the port is
+  # free enough for us to try binding it below.
+}
+
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:$Port/")
 $listener.Start()
 Write-Host "Serving $Root at http://localhost:$Port/  (Ctrl+C to stop)"
 
-$pool = [runspacefactory]::CreateRunspacePool(1, 8)
+# 24, not 8. Each abandoned transfer holds its runspace until the write timeout
+# fires, so the pool size is really "how many stalled downloads before the whole
+# server stops answering". With music.mp3 at 11 MB and a page reloaded every few
+# seconds during development, 8 was reached easily - which reads exactly like the
+# server having died. The page now uses preload="none" so this should stay idle,
+# but the headroom is nearly free.
+$pool = [runspacefactory]::CreateRunspacePool(1, 24)
 $pool.Open()
 $running = New-Object System.Collections.ArrayList
 
@@ -155,6 +190,11 @@ while ($listener.IsListening) {
       }
     }
   } catch {
-    Write-Host "Error: $_"
+    # Also append to a file. When the server misbehaves the console window is
+    # usually minimised or was started hidden, so whatever it printed is lost -
+    # which is why the earlier stalls could never be diagnosed after the fact.
+    $line = "$(Get-Date -Format 'HH:mm:ss') $_"
+    Write-Host "Error: $line"
+    try { Add-Content -Path (Join-Path $PSScriptRoot 'serve.log') -Value $line -Encoding utf8 } catch { }
   }
 }
