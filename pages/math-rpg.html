@@ -1253,10 +1253,25 @@
         .option-btn.correct { border-color: #66bb6a; background-color: var(--good-bg); color: var(--good); animation: correctPop 0.45s ease-out; }
         .option-btn.wrong   { border-color: #ef9a9a; background-color: var(--bad-bg); color: var(--bad); animation: wrongShake 0.4s ease-out; }
 
+        /* 答對時**孩子自己按下的**那一顆。
+           上面的 .correct 答錯時也會加（要揭曉正確答案），所以那個綠色彈跳的意思是
+           「這才是答案」，不是「你答對了」—— 兩件事在畫面上長得一樣的話，
+           答對的那一下等於沒有專屬的確認。這條才是答對專用的。
+           特異性 (0,3,0) 高於 .option-btn.correct，不受樣式表順序影響。 */
+        .option-btn.correct.picked { animation: correctPicked 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+
         @keyframes correctPop {
             0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 187, 106, 0.6); }
             35%  { transform: scale(1.06); }
             100% { transform: scale(1); box-shadow: 0 0 0 14px rgba(102, 187, 106, 0); }
+        }
+        /* 彈得更高、光環兩層推得更遠 —— 跟 correctPop 一眼就分得出來 */
+        @keyframes correctPicked {
+            0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(102, 187, 106, 0.85),
+                                                    0 0 0 0 rgba(102, 187, 106, 0.45); }
+            30%  { transform: scale(1.13); }
+            100% { transform: scale(1); box-shadow: 0 0 0 18px rgba(102, 187, 106, 0),
+                                                    0 0 0 32px rgba(102, 187, 106, 0); }
         }
         @keyframes wrongShake {
             0%, 100% { transform: translateX(0); }
@@ -1660,7 +1675,7 @@
             .sprite.lunge, .sprite.hurt, .sprite.spawn, .sprite.cheer,
             .st-badge.bump, .upgrade-card::before,
             .battle-stage.impact, .game-card.shake,
-            .option-btn.enter, .question-box.enter, .upgrade-card,
+            .option-btn.enter, .option-btn.correct.picked, .question-box.enter, .upgrade-card,
             .map-node.defeat, .map-node.current.arrive, .map-line.flowing::after,
             .end-screen.win .end-icon, .end-screen.lose,
             .end-screen.win h2, .end-screen.win p,

@@ -181,7 +181,7 @@ const MathRpgPixiUI = (() => {
         const line = document.querySelector(`.map-line[data-i="${index + 1}"]`);
         if (line) {
             const lr = line.getBoundingClientRect();
-            const x0 = lr.left - c.left, y0 = lr.top + lr.height / 2 - c.top, w = lr.width;
+            const x0 = lr.left - c.left, y0 = lr.top + lr.height / 2 - c.top;
             for (let i = 0; i < 16; i++) {
                 const s = new PIXI.Sprite(dotTex);
                 s.anchor.set(0.5); s.position.set(x0, y0);
@@ -189,7 +189,11 @@ const MathRpgPixiUI = (() => {
                 const size = (0.16 + Math.random() * 0.2) * u;
                 s.scale.set(size / 64);
                 mapLayer.addChild(s);
-                mapFx.push({ s, life: 0.7, max: 0.7, flow: { x0, y0, w, delay: i * 0.022 }, size });
+                mapFx.push({
+                    s, life: 0.7, max: 0.7, size,
+                    // arc 負值 = 往下墜，維持這個效果原本的樣子（改成通用兩點流光時保留）
+                    flow: { x0, y0, x1: x0 + lr.width, y1: y0, arc: -3, delay: i * 0.022 }
+                });
             }
         }
     }
@@ -204,10 +208,14 @@ const MathRpgPixiUI = (() => {
                 f.s.scale.set(0.2 + p * 2.4);
                 f.s.alpha = 1 - p;
             } else if (f.flow) {
-                const q = Math.max(0, Math.min(1, (p - f.flow.delay) / (1 - f.flow.delay)));
-                f.s.x = f.flow.x0 + f.flow.w * q;
-                f.s.y = f.flow.y0 + Math.sin(q * Math.PI) * 3;
-                f.s.alpha = q <= 0 ? 0 : Math.sin(q * Math.PI);
+                // 兩點之間的流光。`arc` 是垂直方向的弧高（px）——
+                // 直線飛看起來像雷射，帶一點弧才像「一股能量被牽過去」。
+                const w = f.flow;
+                const q = Math.max(0, Math.min(1, (p - w.delay) / (1 - w.delay)));
+                const bow = Math.sin(q * Math.PI);
+                f.s.x = w.x0 + (w.x1 - w.x0) * q;
+                f.s.y = w.y0 + (w.y1 - w.y0) * q - bow * w.arc;
+                f.s.alpha = q <= 0 ? 0 : bow;
             } else {
                 f.vy += f.grav * dt;
                 f.s.x += f.vx * dt; f.s.y += f.vy * dt;
@@ -215,6 +223,99 @@ const MathRpgPixiUI = (() => {
                 f.s.scale.set(f.size * (1 - p * 0.6) / 64);
             }
         }
+    }
+
+    // ===============================================================
+    // 答對的正向確認
+    // ===============================================================
+    // **要解的問題（docs/math-rpg-pixi.md 第 12 節）：答錯的畫面比答對盛大。**
+    // 答錯 → 立刻紅色閃屏 ＋ 敵人衝過來 ＋ 四張殘影 ＋ 46 顆血花。
+    // 答對 → 按下之後**整整 400ms 什麼都沒有**，要等劍氣飛到才有東西看
+    //        （`stageFlash('good')` 排在 strike() 的命中那一刻，不是按下的那一刻）。
+    // 對一個要鼓勵孩子答對的教具，回饋強度是反的。這裡補的就是那個空窗。
+    //
+    // **為什麼不是加在題目框或血條上**：孩子的視線在他剛剛按下的那顆按鈕上。
+    // 回饋要出現在視線已經在的地方，晚一拍或偏一個區塊，那個「我對了」的瞬間就錯過了。
+    //
+    // 兩個部分：
+    //   ① 按鈕本身爆出綠色光點 —— 立即的「對！」
+    //   ② 一道能量從按鈕流向勇者 —— 把「我答對」和 400ms 後「勇者出手」接起來。
+    //      空窗因此變成蓄力，而不是空白。這是這個效果真正的價值，
+    //      光點只是讓它有個起點。
+    //
+    // ⚠️ 時間是對著 `impactDelayFor()` 抓的，但**刻意不去讀那個值**：
+    // 能量流要在勇者衝出去之前就到（FLOW_MS < SLASH_IMPACT_DELAY 400），
+    // 兩者不必精確對齊，硬綁反而會讓那組寫死的時序數字又多一個依賴。
+    const FLOW_MS = 300;
+
+    function correctFx(btn) {
+        if (!ready) return false;
+        const card = document.querySelector('.game-card');
+        const hero = document.getElementById('player-sprite');
+        if (!card || !btn) return false;
+        const c = card.getBoundingClientRect(), r = btn.getBoundingClientRect();
+        if (!r.width) return false;
+        const cx = r.left + r.width / 2 - c.left, cy = r.top + r.height / 2 - c.top;
+        const u = unitPx();
+
+        // ① 沿著按鈕的邊往外散，不是從中心點爆開 ——
+        // 從中心爆會蓋住剛按下的那個答案，孩子正要確認自己按對了什麼。
+        for (let i = 0; i < 26; i++) {
+            const ang = Math.random() * Math.PI * 2;
+            const ex = cx + Math.cos(ang) * r.width * 0.42;
+            const ey = cy + Math.sin(ang) * r.height * 0.42;
+            const sp = (1.5 + Math.random() * 4) * u;
+            const s = new PIXI.Sprite(dotTex);
+            s.anchor.set(0.5); s.position.set(ex, ey);
+            s.tint = [0x81c784, 0xffffff, 0xa5d6a7][i % 3];
+            s.blendMode = 'add';
+            const size = (0.12 + Math.random() * 0.26) * u;
+            s.scale.set(size / 64);
+            mapLayer.addChild(s);
+            // max 必須等於初始 life —— updateMapFx 用 1 - life/max 當進度，
+            // 兩個給不一樣的話粒子一出生就已經算在半途，alpha 直接從 0.6 開始。
+            const life = 0.45 + Math.random() * 0.25;
+            mapFx.push({
+                s, life, max: life, size,
+                vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - u, grav: 14 * u
+            });
+        }
+
+        // 綠色光環從按鈕擴出去
+        const ring = new PIXI.Sprite(dotTex);
+        ring.anchor.set(0.5); ring.position.set(cx, cy);
+        ring.tint = 0x66bb6a; ring.blendMode = 'add';
+        ring.scale.set(0.2);
+        mapLayer.addChild(ring);
+        mapFx.push({ s: ring, life: 0.42, max: 0.42, ring: true });
+
+        // ② 能量流向勇者。勇者不在畫面上（還在載入、或 hidden）就只做 ①。
+        if (!hero) return true;
+        const h = hero.getBoundingClientRect();
+        if (!h.width) return true;
+        const hx = h.left + h.width / 2 - c.left;
+        const hy = h.top + h.height * 0.55 - c.top;   // 打在身體中段，不是腳底
+        const life = FLOW_MS / 1000;
+        for (let i = 0; i < 14; i++) {
+            const s = new PIXI.Sprite(dotTex);
+            s.anchor.set(0.5); s.position.set(cx, cy);
+            s.tint = i % 4 === 0 ? 0xffffff : 0x66bb6a;
+            s.blendMode = 'add';
+            const size = (0.18 + Math.random() * 0.22) * u;
+            s.scale.set(size / 64);
+            mapLayer.addChild(s);
+            mapFx.push({
+                s, life, max: life, size,
+                flow: {
+                    x0: cx + (Math.random() - 0.5) * r.width * 0.5,
+                    y0: cy + (Math.random() - 0.5) * r.height * 0.4,
+                    x1: hx, y1: hy,
+                    arc: (1 + Math.random() * 2) * u,      // 往上拱，看得出是「飛過去」不是直線
+                    delay: i * 0.018
+                }
+            });
+        }
+        return true;
     }
 
     // ===============================================================
@@ -371,6 +472,7 @@ const MathRpgPixiUI = (() => {
         reset,
         showDamage,
         mapDefeat,
+        correctFx,
         confettiBurst,
         get app() { return app; },
         stats() {

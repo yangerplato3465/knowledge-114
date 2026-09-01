@@ -1179,6 +1179,19 @@ function checkAnswer(index) {
     const feedback = document.getElementById('feedback-msg');
 
     if (index === q.correct) {
+        // 答對的正向確認，**要排在所有計算之前** —— 這一拍的整個重點就是「立即」。
+        //
+        // ⚠️ `.correct` 不能當成「答對了」的訊號：上面那行在答錯時也會加，
+        // 因為要揭曉正確答案。所以那顆按鈕的 correctPop 綠色彈跳兩種情況都會播，
+        // 它是「這才是答案」不是「你答對了」。`.picked` 才是只有答對才有的那個。
+        btns[index].classList.add('picked');
+        // 綠色光點從按鈕爆出 ＋ 一道能量流向勇者，填掉按下到命中之間那 400ms 的空窗。
+        // Pixi 不在就退回 DOM 的火花（位置只能在角色身上，補不到按鈕那裡，但聊勝於無）。
+        if (!(typeof MathRpgPixiUI !== 'undefined' && MathRpgPixiUI.isReady()
+              && MathRpgPixiUI.correctFx(btns[index]))) {
+            fxSparks('player', '#66bb6a', 10);
+        }
+
         // 連擊先加，這一刀就吃得到新的加成 —— 連對第 2 題就看得到「+5%」跳出來，
         // 回饋越早出現，孩子越容易把「連續答對」和「打得更痛」連起來。
         combo++;
