@@ -32,8 +32,8 @@
         </div>
 
         <p class="start-sub">
-            看中文意思，決定這個字要接 <b>-ful</b> 還是 <b>-less</b>。<br>
-            按下面兩個大按鈕，或直接把卡片往左右甩。
+            看懂意思，幫字根接上正確的 <b>-ful</b> 或 <b>-less</b>！<br>
+            每答一題，單字就會進入一個有編號的陣列。
         </p>
 
         <div id="pool-picker" class="pool-picker"><!-- 由 JS 依題庫產生 --></div>
@@ -74,6 +74,11 @@
         <div class="stage" id="stage">
             <div class="drag-hint left" id="hint-left">-ful</div>
             <div class="drag-hint right" id="hint-right">-less</div>
+
+            <div class="array-action" id="array-action" aria-live="polite">
+                <span id="array-action-zh">讀取排在最前面的題目</span>
+                <code id="array-action-code">queue[0]</code>
+            </div>
 
             <div class="card" id="card">
                 <div class="card-stem-zh" id="card-stem-zh">希望</div>
@@ -119,6 +124,37 @@
             </button>
         </div>
 
+    </section>
+
+    <!-- 分類完成後的短版陣列挑戰。這是遊戲流程的一部分，不是結算摘要：
+         學生要真的用 index / length 讀取剛才親手建立的陣列。 -->
+    <section id="screen-challenge" class="screen screen-challenge hidden">
+        <header class="challenge-head">
+            <button id="challenge-quit-btn" class="quit-btn" type="button">
+                <i class="fa-solid fa-chevron-left"></i> 結束
+            </button>
+            <span>陣列小挑戰</span>
+            <span id="challenge-progress">1 / 3</span>
+        </header>
+
+        <div class="challenge-prompt">
+            <div id="challenge-zh">找出指定位置的單字</div>
+            <code id="challenge-code">fulArray[0]</code>
+            <div id="challenge-feedback" class="challenge-feedback" aria-live="polite"></div>
+        </div>
+
+        <div class="challenge-arrays" aria-label="剛才完成的兩個陣列">
+            <div class="challenge-array ful">
+                <span class="challenge-array-name">fulArray</span>
+                <div id="challenge-ful" class="challenge-array-items"></div>
+            </div>
+            <div class="challenge-array less">
+                <span class="challenge-array-name">lessArray</span>
+                <div id="challenge-less" class="challenge-array-items"></div>
+            </div>
+        </div>
+
+        <div id="challenge-options" class="challenge-options"></div>
     </section>
 
     <!-- ==========================================================

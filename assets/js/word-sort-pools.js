@@ -158,7 +158,10 @@ var WS_G34 = WS_G34_PAIRS.concat(WS_G34_SINGLES);   /* 31 字 */
 var WS_G56 = WS_G56_PAIRS.concat(WS_G56_SINGLES);   /* 34 字 */
 
 window.WORD_SORT_POOLS = {
-    '三四年級': WS_G34,
+    /* 三四年級先用同字根正反配對建立規則，再進到生活單字的綜合題。
+       綜合題保留完整 G34 題庫，抽題器才能維持 -ful / -less 各半。 */
+    '三四年級・基礎配對': WS_G34_PAIRS,
+    '三四年級・綜合挑戰': WS_G34,
     '五六年級': WS_G56,
     '全部混合': WS_G34.concat(WS_G56)               /* 65 字 */
 };

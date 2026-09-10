@@ -36,6 +36,7 @@
 
     var screenStart = $('screen-start');
     var screenPlay = $('screen-play');
+    var screenChallenge = $('screen-challenge');
     var screenResult = $('screen-result');
     var poolPicker = $('pool-picker');
     var stage = $('stage');
@@ -59,6 +60,15 @@
     var collLess = $('coll-less');
     var lenFulLive = $('len-ful-live');
     var lenLessLive = $('len-less-live');
+    var actionZh = $('array-action-zh');
+    var actionCode = $('array-action-code');
+    var challengeProgress = $('challenge-progress');
+    var challengeZh = $('challenge-zh');
+    var challengeCode = $('challenge-code');
+    var challengeFeedback = $('challenge-feedback');
+    var challengeFul = $('challenge-ful');
+    var challengeLess = $('challenge-less');
+    var challengeOptions = $('challenge-options');
 
     /* ---------- 狀態 ---------- */
     var queue = [];       /* 待作答，永遠從 [0] 開始出題 */
@@ -71,10 +81,32 @@
     var startTime = 0;
     var timerId = null;
     var advanceTimer = null;
+    var challengeQuestions = [];
+    var challengeAt = 0;
+    var challengeRight = 0;
 
     /* 字串結合就發生在這一行 —— 完整單字不存資料，每次現算 */
     function wordOf(item) {
         return item.stem + item.suffix;
+    }
+
+    function showArrayAction(zh, code) {
+        actionZh.textContent = zh;
+        actionCode.textContent = code;
+        var box = $('array-action');
+        box.classList.remove('bump');
+        void box.offsetWidth;
+        box.classList.add('bump');
+    }
+
+    /* 使用裝置內建語音，不下載音檔；沒有 speechSynthesis 時安靜略過。 */
+    function speakWord(word) {
+        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
+        window.speechSynthesis.cancel();
+        var utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.78;
+        window.speechSynthesis.speak(utterance);
     }
 
     /* ---------- 開始畫面 ---------- */
@@ -170,6 +202,7 @@
 
         screenStart.classList.add('hidden');
         screenResult.classList.add('hidden');
+        screenChallenge.classList.add('hidden');
         screenPlay.classList.remove('hidden');
         document.body.classList.add('playing');
 
@@ -184,6 +217,7 @@
 
         renderQueueHud();
         renderQuestion();
+        showArrayAction('讀取排在最前面的題目', 'queue[0]');
     }
 
     function tickTimer() {
@@ -239,6 +273,7 @@
         /* 佇列 HUD 不在這裡重畫 —— 它由 shiftQueue() 的動畫負責，
            在這裡再畫一次會把還沒跑完的遞補動畫洗掉。 */
         locked = false;
+        showArrayAction('讀取排在最前面的題目', 'queue[0]');
     }
 
     /* ---------- 收集籃：兩個看得見的陣列 ---------- */
@@ -300,6 +335,13 @@
         if (item.suffix === 'ful') fulArr.push(word);
         else lessArr.push(word);
 
+        var targetArr = item.suffix === 'ful' ? fulArr : lessArr;
+        var targetName = item.suffix === 'ful' ? 'fulArray' : 'lessArray';
+        showArrayAction(
+            '把 ' + word + ' 放到索引 [' + (targetArr.length - 1) + ']',
+            targetName + '.push("' + word + '")'
+        );
+
         if (isRight) {
             rightCount++;
             statRight.textContent = rightCount;
@@ -318,7 +360,10 @@
         card.classList.add(isRight ? 'correct' : 'wrong');
 
         /* 第二步：格子滑過去黏住字根 —— stem + suffix 就在這一刻完成 */
-        setTimeout(function () { wSlot.classList.add('merged'); }, MERGE_DELAY);
+        setTimeout(function () {
+            wSlot.classList.add('merged');
+            speakWord(word);
+        }, MERGE_DELAY);
 
         var hold = isRight ? HOLD_CORRECT : HOLD_WRONG;
 
@@ -360,7 +405,7 @@
         card.style.opacity = '0';
 
         shiftQueue(function () {
-            if (queue.length === 0) { finish(); return; }
+            if (queue.length === 0) { startChallenge(); return; }
             card.classList.remove('settling');
             renderQuestion();
         });
@@ -385,6 +430,7 @@
             return;
         }
 
+        showArrayAction('移除排在最前面的題目', 'queue.shift()');
         chips[0].classList.add('leaving');
 
         setTimeout(function () {
@@ -420,7 +466,13 @@
                 function (el) { el.classList.add('renumber'); }
             );
 
-            done();
+            showArrayAction(
+                queue.length ? '後面的題目往前遞補，索引重新編號' : '題目陣列已經空了',
+                'queue.length === ' + queue.length
+            );
+
+            /* 等遞補動畫和 length 提示都被看見，再換下一張卡。 */
+            setTimeout(done, 420);
         }, 260);
     }
 
@@ -513,6 +565,109 @@
     zoneFul.addEventListener('click', function () { answer('ful'); });
     zoneLess.addEventListener('click', function () { answer('less'); });
 
+    /* ---------- 分類後的陣列小挑戰 ---------- */
+
+    function makeChallengeQuestions() {
+        var fulIndex = Math.floor(Math.random() * fulArr.length);
+        var lessIndex = Math.floor(Math.random() * lessArr.length);
+        function wordOptions(arr, answer) {
+            return shuffle([answer].concat(
+                shuffle(arr.filter(function (word) { return word !== answer; })).slice(0, 3)
+            ));
+        }
+        return shuffle([
+            {
+                zh: '讀取 fulArray 的第 [' + fulIndex + '] 格',
+                code: 'fulArray[' + fulIndex + ']',
+                answer: fulArr[fulIndex],
+                options: wordOptions(fulArr, fulArr[fulIndex])
+            },
+            {
+                zh: '讀取 lessArray 的第 [' + lessIndex + '] 格',
+                code: 'lessArray[' + lessIndex + ']',
+                answer: lessArr[lessIndex],
+                options: wordOptions(lessArr, lessArr[lessIndex])
+            },
+            {
+                zh: '數一數 lessArray 裡有幾個元素',
+                code: 'lessArray.length',
+                answer: String(lessArr.length),
+                options: shuffle([
+                    String(lessArr.length),
+                    String(Math.max(0, lessArr.length - 1)),
+                    String(lessArr.length + 1),
+                    String(fulArr.length + lessArr.length)
+                ]).filter(function (v, i, a) { return a.indexOf(v) === i; })
+            }
+        ]);
+    }
+
+    function paintChallengeArray(box, arr) {
+        box.innerHTML = '';
+        arr.forEach(function (word, index) {
+            var item = document.createElement('span');
+            item.className = 'challenge-array-item';
+            item.innerHTML = '<b>[' + index + ']</b><span>' + word + '</span>';
+            box.appendChild(item);
+        });
+    }
+
+    function startChallenge() {
+        clearInterval(timerId);
+        timerId = null;
+        challengeQuestions = makeChallengeQuestions();
+        challengeAt = 0;
+        challengeRight = 0;
+        paintChallengeArray(challengeFul, fulArr);
+        paintChallengeArray(challengeLess, lessArr);
+        screenPlay.classList.add('hidden');
+        screenChallenge.classList.remove('hidden');
+        renderChallenge();
+    }
+
+    function renderChallenge() {
+        var q = challengeQuestions[challengeAt];
+        challengeProgress.textContent = (challengeAt + 1) + ' / ' + challengeQuestions.length;
+        challengeZh.textContent = q.zh;
+        challengeCode.textContent = q.code;
+        challengeFeedback.textContent = '';
+        challengeFeedback.className = 'challenge-feedback';
+        challengeOptions.innerHTML = '';
+
+        if (q.options.indexOf(q.answer) < 0) q.options.push(q.answer);
+        shuffle(q.options).forEach(function (value) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'challenge-option';
+            button.textContent = value;
+            button.addEventListener('click', function () { answerChallenge(value, button); });
+            challengeOptions.appendChild(button);
+        });
+    }
+
+    function answerChallenge(value, button) {
+        var q = challengeQuestions[challengeAt];
+        if (challengeOptions.classList.contains('locked')) return;
+        if (value !== q.answer) {
+            button.classList.add('wrong');
+            challengeFeedback.textContent = '再看一次索引或 length。';
+            challengeFeedback.className = 'challenge-feedback wrong';
+            return;
+        }
+
+        challengeRight++;
+        challengeOptions.classList.add('locked');
+        button.classList.add('correct');
+        challengeFeedback.textContent = q.code + ' = ' + q.answer;
+        challengeFeedback.className = 'challenge-feedback correct';
+        setTimeout(function () {
+            challengeOptions.classList.remove('locked');
+            challengeAt++;
+            if (challengeAt >= challengeQuestions.length) finish();
+            else renderChallenge();
+        }, 850);
+    }
+
     /* ---------- 結算 ---------- */
 
     /* 這裡刻意不再展示一次陣列 —— 陣列在遊玩過程中已經被看見了
@@ -529,6 +684,7 @@
         $('result-title').textContent = wrongList.length === 0 ? '全部答對！' : '分完了！';
         $('result-score').innerHTML = '答對 <b>' + rightCount + '</b> / ' + total
             + ' 題　·　用時 ' + Math.floor(seconds / 60) + ':' + ('0' + (seconds % 60)).slice(-2)
+            + '　·　陣列挑戰 ' + challengeRight + ' / 3'
             + '　·　' + poolName;
 
         var review = $('review-box');
@@ -542,6 +698,7 @@
         });
 
         screenPlay.classList.add('hidden');
+        screenChallenge.classList.add('hidden');
         screenResult.classList.remove('hidden');
 
         /* 全對才放大煙火，不然這個效果會廉價掉 */
@@ -566,6 +723,13 @@
         document.body.classList.remove('playing');
         if (window.WordSortFX) window.WordSortFX.clear();
         screenPlay.classList.add('hidden');
+        screenStart.classList.remove('hidden');
+    });
+
+    $('challenge-quit-btn').addEventListener('click', function () {
+        window.speechSynthesis && window.speechSynthesis.cancel();
+        document.body.classList.remove('playing');
+        screenChallenge.classList.add('hidden');
         screenStart.classList.remove('hidden');
     });
 
