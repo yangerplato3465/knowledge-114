@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A static educational website (學習主頁 / "Learning Hub") of interactive lessons for elementary students, authored in Traditional Chinese (`zh-Hant`) by "Anita 老師". No build system, no dependencies, no package manager — plain HTML/CSS/JS served as static files. External resources (Google Fonts, Font Awesome) load from CDNs.
 
+## Design docs
+
+`docs/` carries the design bible. Start at **[docs/GAME_BIBLE.md](docs/GAME_BIBLE.md)**, which indexes
+GAMEPLAY / WORLD / CHARACTERS / COMBAT / SKILLS / ITEMS / ENEMIES / UI / ART_STYLE /
+TECH_ARCHITECTURE / DECISIONS / TODO, plus the three deep-dive docs
+(`detective-authoring.md`, `math-rpg-balance.md`, `math-rpg-pixi.md`).
+
+Division of labour: **this file states the invariants** (what must not be changed and why it breaks);
+**`docs/` explains what the thing currently is and how it got that way.** When a design decision is
+reversed, update `docs/DECISIONS.md` rather than deleting the reasoning.
+
 ## Running & Deploying
 
 - **Run locally:** open `index.html` directly in a browser, or serve the root with any static server (e.g. `python -m http.server`). Use a server rather than `file://` when a page uses `fetch` — the hub loads `config.json` this way.
@@ -26,9 +37,22 @@ Each lesson is largely **independent** — there is no shared component framewor
 - `QUESTION_POOLS` is `{ 年級: { 題庫名稱: pool } }`. A pool is **either** a static array of `{ q, a: [...], correct }` **or** a generator function returning one such object (e.g. `generateDivideQuestion`). `loadQuestion()` branches on `typeof activePool === 'function'`. Add a topic by adding a key to `POOLS_G5`/`POOLS_G6`; the pool-select screen renders keys automatically.
 - Game balance lives in tunable module-level constants in `math-rpg.js`: `ENEMY_HP_TABLE`, `HIT_TO_PLAYER_TABLE`, `HIT_TO_ENEMY`, `ROUND_TIME`, `PLAYER_MAX`, and the weighted `UPGRADES` list (`weight` controls draw odds; `apply()` mutates the run's stats). `beginBattle()` resets all upgradeable values to their initial state.
 
+### word-sort specifics
+
+- **`pages/word-sort.html`** — 字尾大分流, an English `-ful` / `-less` suffix sorter built for a **classroom touch TV**. Four files, one concern each: `assets/css/word-sort.css` (layout), `assets/js/word-sort-pools.js` (word bank, must load **before** the game like math-rpg's pools), `assets/js/word-sort.js` (logic), `assets/js/word-sort-fx.js` (optional Pixi particles).
+- **The full word is never stored in the data.** `word-sort-pools.js` carries `stem` + `suffix` separately and the game computes `stem + suffix` at runtime (`wordOf()`), because string concatenation is the thing being taught. This is why the bank may only contain words whose spelling does **not** change when joined — `beauty` → `beautiful` would compute `beautyful` and is deliberately excluded.
+- Game state is three arrays: `queue` (shifted from the head), `fulArr`, `lessArr` (pushed to). The round ends on **`queue.length === 0`**, not on a timer, so "the array is empty" is something students watch happen. A wrong answer still pushes the word into its *correct* basket — the arrays stay truthful, only the score records the mistake.
+- **All three arrays are visible during play, and deliberately NOT on the result screen.** The queue HUD renders `[0] [1] [2] …` chips; the two collected baskets sit directly above their own buttons and grow with indices as words land. `shiftQueue()` animates the removal in two separate beats — head flies *up* and out, then the survivors slide forward via FLIP while every index flashes as it renumbers — because "removing the first element renumbers everything after it" is the whole point and it has to be seen, not stated. Do not "simplify" this back into a single collapse animation, and do not re-add an array dump to the result screen: a concept that only appears in a summary is announced, not taught.
+- `renderQuestion()` must **not** call `renderQueueHud()` — the queue HUD is owned by `shiftQueue()`'s animation, and repainting it there wipes the in-flight FLIP transforms.
+- **Pools are keyed by grade** (`三四年級` / `五六年級` / `全部混合`), and the split is about the *stem*, not the suffix: if a student doesn't know `law` or `motion`, `lawless` becomes two unknowns at once and the suffix rule gets buried. Chinese definitions are written to the same grade level.
+- **`pain`, `joy`, `fear`, `view`, `do`, `play` are permanently excluded** — they are the worked examples on the paper worksheet this game accompanies, and the point is applying the rule to new words.
+- **`drawQueue()` picks half `-ful` and half `-less` on purpose.** The bank is lopsided (三四年級 is 11 `-ful` to 20 `-less`, because the easiest `-ful` words are exactly the excluded worksheet ones), so a uniform draw let a student score ~60% by always tapping `-less`. It also spaces out repeated stems, since `careful` right after `careless` gives the answer away.
+- **Touch-TV layout rules are load-bearing, not cosmetic** — full-screen no-scroll, tap targets in the bottom third, tap-first with drag as a bonus, `clamp()`/`vmin` type. `body.playing` hides `theme.js`'s floating toggle, which otherwise sits on top of the `-less` button. Page-local CSS variables declare their dark values **twice** (`[data-theme="dark"]` and `@media (prefers-color-scheme: dark)`), mirroring `theme.css`; only doing the first leaves system-dark users with near-white buttons on a dark page.
+- The Pixi layer is **designed to be removable**: delete the `pixi.min.js` and `word-sort-fx.js` script tags and the game still plays, just without confetti. Every `WordSortFX` method no-ops when `PIXI` is absent. It exposes `globalThis.__PIXI_APP__` like `detective.js` does, so particles can be inspected and the ticker pumped by hand from the console.
+
 ### class-rpg specifics
 
-- **`pages/class-rpg.html`** — teacher-only class/student admin backed by Firebase (Auth + Firestore, ES-module CDN imports in `assets/js/class-rpg.js`). Its 進入遊戲 button opens **`pages/class-rpg-game.html`**, the actual game, rendered with **Pixi.js v8** (ESM from jsdelivr, pinned `8.6.6`) in `assets/js/class-rpg-game.js`. Scene layers: `world` (map/objects) and `hud` (fixed UI).
+- **`pages/class-rpg.html`** — teacher-only class/student admin backed by Firebase (Auth + Firestore, ES-module CDN imports in `assets/js/class-rpg.js`). Its 進入遊戲 button opens **`pages/class-rpg-game.html`**, the actual game, rendered with **Pixi.js v8** in `assets/js/class-rpg-game.js`, imported from the local **`assets/vendor/pixi.esm.min.js`** (8.6.6 ESM build). Never point this back at a CDN — classrooms are not guaranteed to have internet, and a failed Pixi fetch is a blank page, not a cosmetic downgrade. The same rule covers all six `assets/js/detective/*.js` modules. Scene layers: `world` (map/objects) and `hud` (fixed UI).
 - **Character sprite sheet** (`assets/images/char/char1.webp`, Mana Seed Character Base): 512×512, an 8×8 grid of 64×64 cells. Direction row order within each block is **down, up, right, left**. Frame map (from the Mana Seed "animations, page 1" guide):
   - Top block, rows 0–3: `stand` = col 0 (cols 1–2 `push`, 3–4 `pull`, 5–7 `jump` — not yet used).
   - Bottom block, rows 4–7: `walk` = cols 0–5 (6-frame cycle); `run` reuses the walk cycle with frames 3 & 6 replaced by cols 6–7, i.e. column sequence `0, 1, 6, 3, 4, 7`.
@@ -56,4 +80,4 @@ Each lesson is largely **independent** — there is no shared component framewor
 ## Conventions
 
 - UI text, comments, and question content are in Traditional Chinese — match this when editing.
-- Shared visual language: warm oat/pudding palette (`#f0e6df` background, `#fffdf9` cards, 32px radii), `Fredoka` + `Noto Sans TC` fonts, Font Awesome icons. Reuse these tokens for new pages.
+- Shared visual language: the **Japanese pale-blue palette defined in `assets/css/theme.css`** (`#eaf2ef` background, `#ffffff` cards, 32px radii), `Fredoka` + `Noto Sans TC` fonts, Font Awesome icons. `theme.css` is the only source of truth for colour — never hard-code hex in a page. Page-local CSS variables must declare their dark values **twice** (`[data-theme="dark"]` and `@media (prefers-color-scheme: dark)`), mirroring theme.css.

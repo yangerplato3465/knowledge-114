@@ -1,4 +1,4 @@
-import { Assets, Circle, Container, Graphics, Sprite } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
+import { Assets, Circle, Container, Graphics, Sprite } from '../../vendor/pixi.esm.min.js';
 import { interrogate } from './interrogation.js';
 import { spotdiff } from './spotdiff.js';
 import { wave } from './wave.js';

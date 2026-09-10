@@ -1,6 +1,6 @@
 import {
     Assets, Container, Graphics, Sprite, Text
-} from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
+} from '../../vendor/pixi.esm.min.js';
 
 // ============================================================
 // 偵探事件簿 · 共用介面工具

@@ -17,6 +17,9 @@ $Port = 8080
 $mime = @{
   ".html"="text/html; charset=utf-8"; ".htm"="text/html; charset=utf-8"
   ".css"="text/css; charset=utf-8";   ".js"="application/javascript; charset=utf-8"
+  # .mjs 沒對應的話，HttpListener 會回空的 Content-Type，瀏覽器就依規範
+  # 拒絕把它當 ES module 執行（Strict MIME type checking）—— 2026-09-10 踩到
+  ".mjs"="application/javascript; charset=utf-8"
   ".json"="application/json; charset=utf-8"; ".png"="image/png"
   ".jpg"="image/jpeg";  ".jpeg"="image/jpeg"; ".gif"="image/gif"
   ".webp"="image/webp"; ".svg"="image/svg+xml"; ".ico"="image/x-icon"

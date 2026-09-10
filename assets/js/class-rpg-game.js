@@ -1,6 +1,6 @@
 import {
     Application, Assets, AnimatedSprite, Container, Graphics, Rectangle, Text, Texture
-} from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
+} from '../vendor/pixi.esm.min.js';
 
 // ============================================================
 // 班級 RPG · 冒險世界（Pixi.js v8 基礎架構）

@@ -1,6 +1,6 @@
 import {
     Application, Assets, Container, Graphics, Rectangle
-} from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
+} from '../../vendor/pixi.esm.min.js';
 import {
     W, H, COL, mkText, mkButton, panelBase, drawProps,
     preloadImages, ensureSceneLoaded, hasTexture
