@@ -1,0 +1,712 @@
+/* ============================================================
+   字尾大分流 · -ful / -less
+   ------------------------------------------------------------
+   設計前提：這頁是給「大尺寸觸控電視」用的，不是手機也不是滑鼠。
+   所以整份 CSS 有三條規則貫穿始終：
+
+   1. 版面固定滿版一屏，永遠不捲動（100dvh + overflow:hidden）。
+      站著玩的人沒辦法一邊扶著螢幕一邊捲頁。
+   2. 所有可以按的東西都在畫面下半部。上緣要墊腳才碰得到。
+   3. 字級一律用 vmin 換算，換一台電視不用重調。
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+/* 本頁專屬色：-ful 用暖色（充滿），-less 用冷色（沒有）。
+   這個冷暖對比本身就是提示，站遠一點看不清字也分得出左右。 */
+body {
+    --ful: #d98026;
+    --ful-soft: #fdf1e2;
+    --ful-line: #f0d3ab;
+    --less: #3f7fb5;
+    --less-soft: #e8f1f9;
+    --less-line: #c2daed;
+}
+
+/* 深色版本要蓋兩次，跟 theme.css 同一套規則：
+   一次給「手動切到深色」，一次給「跟隨系統深色、而且沒有手動選淺色」。
+   只寫前者的話，系統是深色但沒點過切換鈕的人會看到
+   深色背景配近白色的靶區 —— 在教室電視上非常刺眼。 */
+:root[data-theme="dark"] body {
+    --ful: #e8a458;
+    --ful-soft: #3a2c1a;
+    --ful-line: #5c452a;
+    --less: #7fb2dc;
+    --less-soft: #1c2b3a;
+    --less-line: #2f4a63;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) body {
+        --ful: #e8a458;
+        --ful-soft: #3a2c1a;
+        --ful-line: #5c452a;
+        --less: #7fb2dc;
+        --less-soft: #1c2b3a;
+        --less-line: #2f4a63;
+    }
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    /* 觸控螢幕上長按會跳選字框跟放大鏡，全部關掉 */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.app {
+    position: relative;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+.hidden { display: none !important; }
+
+.screen {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 遊戲進行中把主題切換鈕收起來 —— 它固定在右下角，
+   正好壓在 -less 那一半的按鈕上。 */
+body.playing .theme-toggle { display: none; }
+
+/* ============================================================
+   開始畫面
+   ============================================================ */
+
+.screen-start {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: clamp(16px, 3vmin, 48px);
+    gap: clamp(10px, 2vmin, 26px);
+}
+
+.start-title {
+    font-size: clamp(30px, 6.4vmin, 76px);
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.start-sub {
+    font-size: clamp(14px, 2.3vmin, 26px);
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 30em;
+    line-height: 1.7;
+}
+
+/* 開始畫面的規則示意：hope + less = hopeless */
+.start-demo {
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 1.2vmin, 16px);
+    font-size: clamp(20px, 4vmin, 46px);
+    font-weight: 700;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    border-radius: 999px;
+    padding: clamp(8px, 1.6vmin, 20px) clamp(16px, 3vmin, 40px);
+    box-shadow: 0 6px 18px var(--shadow);
+}
+.start-demo .d-op { color: var(--muted); font-weight: 400; }
+.start-demo .d-stem { color: var(--ink); }
+.start-demo .d-suf,
+.start-demo .d-out { color: var(--less); }
+
+.pool-picker {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(10px, 2vmin, 22px);
+    width: 100%;
+    max-width: 1100px;
+}
+
+.pool-btn {
+    flex: 1 1 260px;
+    max-width: 340px;
+    min-height: clamp(84px, 15vmin, 168px);
+    border: 4px solid var(--border);
+    border-radius: 28px;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: clamp(17px, 2.9vmin, 32px);
+    font-weight: 700;
+    cursor: pointer;
+    padding: clamp(10px, 2vmin, 22px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 8px 20px var(--shadow);
+    transition: transform .12s ease, border-color .12s ease;
+}
+.pool-btn .pool-count {
+    font-size: clamp(12px, 1.8vmin, 19px);
+    font-weight: 400;
+    color: var(--muted);
+}
+.pool-btn:active {
+    transform: scale(.96);
+    border-color: var(--primary);
+}
+
+.start-foot {
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 2vmin, 24px);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.back-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: clamp(13px, 1.9vmin, 20px);
+    padding: 10px 18px;
+    border-radius: 999px;
+}
+.back-link:active { background: var(--surface-2); }
+
+.ghost-btn {
+    font-family: inherit;
+    font-size: clamp(13px, 1.9vmin, 20px);
+    color: var(--muted);
+    background: transparent;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+.ghost-btn:active { background: var(--surface-2); }
+
+/* ============================================================
+   遊戲畫面 · 頂端狀態列
+   ============================================================ */
+
+.topbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 1.6vmin, 20px);
+    padding: clamp(6px, 1.2vmin, 16px) clamp(10px, 2vmin, 28px);
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+}
+
+.topbar .quit-btn {
+    font-family: inherit;
+    font-size: clamp(13px, 1.9vmin, 20px);
+    color: var(--muted);
+    background: var(--surface-2);
+    border: none;
+    border-radius: 999px;
+    padding: clamp(6px, 1.1vmin, 12px) clamp(12px, 2vmin, 22px);
+    cursor: pointer;
+}
+
+.topbar .spacer { flex: 1; }
+
+.stat {
+    font-size: clamp(15px, 2.4vmin, 28px);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.stat.good { color: var(--good); }
+.stat.bad { color: var(--bad); }
+.stat.timer { color: var(--ink); font-variant-numeric: tabular-nums; }
+.stat.timer.urgent { color: var(--bad); animation: pulse .6s ease-in-out infinite; }
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+}
+
+/* ============================================================
+   陣列 HUD · 題目佇列
+   ------------------------------------------------------------
+   這一條是整個遊戲的「陣列教學」主角：
+   學生看得到題目排成一排、每個都有索引、答完一題就從頭部被拿走。
+   ============================================================ */
+
+.queue-hud {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 1.5vmin, 18px);
+    padding: clamp(5px, 1vmin, 14px) clamp(10px, 2vmin, 28px);
+    background: var(--surface-2);
+    border-bottom: 2px solid var(--border);
+    overflow: hidden;
+}
+
+.hud-label {
+    flex: 0 0 auto;
+    font-size: clamp(11px, 1.6vmin, 18px);
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: .5px;
+}
+
+.queue-chips {
+    flex: 1;
+    display: flex;
+    gap: clamp(5px, 1vmin, 12px);
+    overflow: hidden;
+    min-width: 0;
+}
+
+.chip {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: clamp(3px, .7vmin, 9px) clamp(7px, 1.3vmin, 16px);
+    font-size: clamp(11px, 1.7vmin, 20px);
+    color: var(--ink-soft);
+}
+.chip .chip-i {
+    font-size: .78em;
+    color: var(--muted-2);
+    font-weight: 700;
+}
+/* 佇列頭 —— 也就是正在作答的那一題 */
+.chip.head {
+    border-color: var(--primary);
+    background: var(--primary-tint);
+    color: var(--ink);
+    font-weight: 700;
+}
+/* 被 shift 出去時往「上」飛走，不是往左縮。
+   往左縮的話後面的 chip 會在這個時候就跟著滑動，
+   跟接下來的「往前遞補」混成同一個動作，看不出是兩件事。
+   分成兩步才看得懂 shift()：先把頭拿走，再全體往前、編號重排。 */
+.chip.leaving { animation: chipLeave .26s ease forwards; }
+@keyframes chipLeave {
+    to { opacity: 0; transform: translateY(-38px) scale(.72); }
+}
+
+/* 遞補完成後，索引數字閃一下 ——
+   「拿走第一個，後面每個人的編號都會變」是 shift 最反直覺的地方，
+   要讓數字的改變被看見，不能默默換掉。 */
+.chip-i.renumber { animation: renumber .5s ease; }
+@keyframes renumber {
+    0%   { transform: scale(1);   color: var(--muted-2); }
+    35%  { transform: scale(1.75); color: var(--primary); font-weight: 700; }
+    100% { transform: scale(1);   color: var(--muted-2); }
+}
+
+.hud-len {
+    flex: 0 0 auto;
+    font-size: clamp(11px, 1.6vmin, 18px);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+.hud-len b { color: var(--ink); font-size: 1.25em; }
+
+/* ============================================================
+   舞台 · 題目卡
+   ============================================================ */
+
+.stage {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(8px, 2vmin, 30px);
+}
+
+.card {
+    width: min(88vw, 1180px);
+    background: var(--surface);
+    border: 5px solid var(--border);
+    border-radius: clamp(18px, 3vmin, 40px);
+    box-shadow: 0 14px 40px var(--shadow);
+    padding: clamp(12px, 2.6vmin, 40px) clamp(16px, 3vmin, 48px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(6px, 1.4vmin, 20px);
+    will-change: transform;
+    touch-action: none;
+}
+/* 拖曳中要跟手，不能有 transition；放開後才補上 */
+.card.settling { transition: transform .28s cubic-bezier(.2, .8, .3, 1); }
+
+/* 卡片頂端：字根的中文意思 */
+.card-stem-zh {
+    font-size: clamp(14px, 2.3vmin, 28px);
+    color: var(--muted);
+    font-weight: 500;
+}
+
+/* 主字串行：hope + [ ? ] */
+.word-line {
+    display: flex;
+    align-items: center;
+    font-size: clamp(38px, 9vmin, 128px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: 1px;
+}
+
+.w-stem { color: var(--ink); }
+
+/* 待填的字尾格。答完之後這個格子會「滑過去黏在字根後面」，
+   那個瞬間就是字串結合。 */
+.w-slot {
+    margin-left: .18em;
+    padding: 0 .16em;
+    min-width: 1.6em;
+    text-align: center;
+    border: .06em dashed var(--muted-2);
+    border-radius: .14em;
+    color: var(--muted-2);
+    transition: margin-left .32s ease, border-color .32s ease,
+                color .32s ease, padding .32s ease, min-width .32s ease;
+}
+.w-slot.filled { color: var(--ink); border-color: transparent; }
+.w-slot.filled.ful { color: var(--ful); }
+.w-slot.filled.less { color: var(--less); }
+/* 合體：間距歸零、虛線消失 → 看起來就是兩段字串接成一個 */
+.w-slot.merged {
+    margin-left: 0;
+    padding: 0;
+    min-width: 0;
+    border-color: transparent;
+}
+
+/* 卡片底部：中文定義，學生就是靠這句判斷 */
+.card-def {
+    font-size: clamp(18px, 3.4vmin, 44px);
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-align: center;
+    line-height: 1.4;
+}
+.card-def::before { content: '「'; }
+.card-def::after { content: '」'; }
+
+/* 答對／答錯回饋 */
+.card.correct { border-color: var(--good); }
+.card.wrong { border-color: var(--bad); animation: shake .32s ease; }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-14px); }
+    50% { transform: translateX(12px); }
+    80% { transform: translateX(-6px); }
+}
+
+/* 答完之後補的一行提示 */
+.card-note {
+    font-size: clamp(13px, 2.1vmin, 25px);
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.6;
+    max-width: 34em;
+    color: var(--bad);
+}
+.card-note.tip { color: var(--warn); }
+
+/* 拖曳時左右浮出的大字提示 */
+.drag-hint {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: clamp(30px, 7vmin, 96px);
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .12s ease;
+}
+.drag-hint.left { left: clamp(10px, 3vmin, 60px); color: var(--ful); }
+.drag-hint.right { right: clamp(10px, 3vmin, 60px); color: var(--less); }
+.drag-hint.show { opacity: .85; }
+
+/* ============================================================
+   收集籃 · 兩個真的陣列
+   ------------------------------------------------------------
+   左半就在 -ful 按鈕正上方，右半在 -less 按鈕正上方，
+   讓「按了哪一顆 → 東西掉進哪一個陣列」在空間上直接對應。
+
+   每一格顯示 [索引] 單字。空間不夠時讓單字本身省略，
+   索引一定保留 —— 陣列的結構比單字內容更重要。
+   ============================================================ */
+
+.collected {
+    flex: 0 0 auto;
+    display: flex;
+    gap: clamp(6px, 1.2vmin, 16px);
+    padding: 0 clamp(6px, 1.2vmin, 16px);
+    height: clamp(42px, 8vh, 92px);
+}
+
+.collected-side {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: clamp(5px, 1vmin, 12px);
+    padding: clamp(3px, .7vmin, 10px) clamp(8px, 1.5vmin, 20px);
+    border: 2px solid var(--border);
+    border-radius: clamp(12px, 2vmin, 22px);
+    background: var(--surface);
+}
+.collected-side.ful { border-color: var(--ful-line); }
+.collected-side.less { border-color: var(--less-line); }
+
+.coll-name {
+    flex: 0 0 auto;
+    font-size: clamp(13px, 2.1vmin, 26px);
+    font-weight: 700;
+    letter-spacing: .5px;
+}
+.collected-side.ful .coll-name { color: var(--ful); }
+.collected-side.less .coll-name { color: var(--less); }
+
+.coll-items {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, .8vmin, 10px);
+    overflow: hidden;
+}
+
+.coll-item {
+    flex: 0 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: clamp(2px, .5vmin, 7px) clamp(6px, 1.1vmin, 14px);
+    font-size: clamp(11px, 1.7vmin, 21px);
+    color: var(--ink);
+    white-space: nowrap;
+}
+.coll-item .ci-i {
+    flex: 0 0 auto;
+    font-size: .76em;
+    font-weight: 700;
+    color: var(--muted-2);
+}
+/* 擠不下時讓單字省略，索引留著 */
+.coll-item .ci-w {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 新單字掉進陣列時彈一下 */
+.coll-item.pop { animation: collPop .42s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes collPop {
+    0%   { transform: scale(.3) translateY(-24px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.coll-empty {
+    font-size: clamp(11px, 1.6vmin, 19px);
+    color: var(--muted-2);
+    font-family: 'Consolas', 'Menlo', 'Courier New', monospace;
+}
+
+.coll-len {
+    flex: 0 0 auto;
+    font-size: clamp(10px, 1.5vmin, 18px);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+.coll-len b { color: var(--ink); font-size: 1.25em; }
+
+/* ============================================================
+   底部兩個大靶區
+   ------------------------------------------------------------
+   佔滿整個畫面寬度、約四分之一高 —— 站兩公尺外也不會按錯。
+   點擊跟拖曳都能觸發，因為觸控電視的拖曳延遲常常很明顯，
+   點擊才是主要操作方式。
+   ============================================================ */
+
+.zones {
+    flex: 0 0 auto;
+    display: flex;
+    gap: clamp(6px, 1.2vmin, 16px);
+    padding: clamp(6px, 1.2vmin, 16px);
+    /* 收集籃那一條也要吃掉一點高度，所以靶區從 26vh 收到 22vh。
+       1920×1080 下仍有 238px，比手指按得到的最低要求寬裕很多。 */
+    height: clamp(100px, 22vh, 260px);
+}
+
+.zone {
+    flex: 1;
+    border: 5px solid transparent;
+    border-radius: clamp(16px, 2.6vmin, 34px);
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(2px, .6vmin, 8px);
+    padding: clamp(6px, 1.4vmin, 20px);
+    position: relative;
+    transition: transform .1s ease, filter .1s ease;
+}
+.zone:disabled { opacity: .55; cursor: default; }
+.zone:not(:disabled):active { transform: scale(.985); filter: brightness(.96); }
+
+.zone-ful {
+    background: var(--ful-soft);
+    border-color: var(--ful-line);
+    color: var(--ful);
+}
+.zone-less {
+    background: var(--less-soft);
+    border-color: var(--less-line);
+    color: var(--less);
+}
+/* 拖曳經過時亮起來 */
+.zone.armed { border-color: currentColor; filter: brightness(1.03); }
+
+.zone-suffix {
+    font-size: clamp(26px, 6vmin, 84px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 1px;
+}
+
+.zone-mean {
+    font-size: clamp(13px, 2.2vmin, 28px);
+    font-weight: 700;
+    color: var(--ink-soft);
+}
+
+/* 方向箭頭，暗示可以用甩的 */
+.zone .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: clamp(16px, 3vmin, 40px);
+    opacity: .35;
+}
+.zone-ful .arrow { left: clamp(8px, 1.6vmin, 22px); }
+.zone-less .arrow { right: clamp(8px, 1.6vmin, 22px); }
+
+/* ============================================================
+   結算畫面 · 把兩個陣列整個攤開來看
+   ============================================================ */
+
+.screen-result {
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 1.8vmin, 24px);
+    padding: clamp(12px, 2.4vmin, 40px);
+    overflow-y: auto;
+}
+
+.result-title {
+    font-size: clamp(24px, 5vmin, 60px);
+    font-weight: 700;
+    margin: 0;
+}
+
+.result-score {
+    font-size: clamp(15px, 2.6vmin, 32px);
+    color: var(--ink-soft);
+}
+.result-score b { color: var(--good); font-size: 1.4em; }
+
+/* 答錯的字複習 */
+.review-box {
+    width: min(94vw, 1240px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(6px, 1.2vmin, 14px);
+    justify-content: center;
+}
+.review-item {
+    background: var(--bad-bg);
+    border: 2px solid var(--bad-border);
+    border-radius: 14px;
+    padding: clamp(6px, 1.1vmin, 14px) clamp(10px, 1.8vmin, 22px);
+    font-size: clamp(12px, 2vmin, 24px);
+    color: var(--ink);
+    text-align: left;
+}
+.review-item .rv-word { font-weight: 700; color: var(--bad); }
+.review-item .rv-def { color: var(--ink-soft); font-size: .82em; display: block; }
+
+.result-actions {
+    display: flex;
+    gap: clamp(10px, 2vmin, 24px);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pill-btn {
+    font-family: inherit;
+    font-size: clamp(15px, 2.5vmin, 30px);
+    font-weight: 700;
+    color: var(--on-primary);
+    background: var(--grad);
+    border: none;
+    border-radius: 999px;
+    padding: clamp(10px, 1.8vmin, 22px) clamp(24px, 4.5vmin, 60px);
+    cursor: pointer;
+    box-shadow: 0 8px 20px var(--primary-shadow);
+}
+.pill-btn:active { transform: scale(.97); }
+
+/* ============================================================
+   Pixi 特效層
+   ------------------------------------------------------------
+   蓋在全畫面最上層但完全不吃事件，只負責噴粒子。
+   Pixi 沒載入成功的話這張 canvas 就是空的，遊戲照常運作。
+   ============================================================ */
+
+#fx {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+}
+
+/* ============================================================
+   直立螢幕 / 小視窗的退讓
+   ============================================================ */
+
+@media (max-aspect-ratio: 1/1) {
+    .word-line { font-size: clamp(30px, 11vw, 90px); }
+    .zones { height: clamp(120px, 22vh, 220px); }
+    .zone-suffix { font-size: clamp(24px, 8vw, 60px); }
+}
