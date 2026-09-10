@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
+import { Container, Graphics } from '../../vendor/pixi.esm.min.js';
 import { FONT, mkText } from './ui.js';
 
 // ============================================================

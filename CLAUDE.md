@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A static educational website (學習主頁 / "Learning Hub") of interactive lessons for elementary students, authored in Traditional Chinese (`zh-Hant`) by "Anita 老師". No build system, no dependencies, no package manager — plain HTML/CSS/JS served as static files. External resources (Google Fonts, Font Awesome) load from CDNs.
 
+## Design docs
+
+`docs/` carries the design bible. Start at **[docs/GAME_BIBLE.md](docs/GAME_BIBLE.md)**, which indexes
+GAMEPLAY / WORLD / CHARACTERS / COMBAT / SKILLS / ITEMS / ENEMIES / UI / ART_STYLE /
+TECH_ARCHITECTURE / DECISIONS / TODO, plus the three deep-dive docs
+(`detective-authoring.md`, `math-rpg-balance.md`, `math-rpg-pixi.md`).
+
+Division of labour: **this file states the invariants** (what must not be changed and why it breaks);
+**`docs/` explains what the thing currently is and how it got that way.** When a design decision is
+reversed, update `docs/DECISIONS.md` rather than deleting the reasoning.
+
 ## Running & Deploying
 
 - **Run locally:** open `index.html` directly in a browser, or serve the root with any static server (e.g. `python -m http.server`). Use a server rather than `file://` when a page uses `fetch` — the hub loads `config.json` this way.
@@ -41,7 +52,7 @@ Each lesson is largely **independent** — there is no shared component framewor
 
 ### class-rpg specifics
 
-- **`pages/class-rpg.html`** — teacher-only class/student admin backed by Firebase (Auth + Firestore, ES-module CDN imports in `assets/js/class-rpg.js`). Its 進入遊戲 button opens **`pages/class-rpg-game.html`**, the actual game, rendered with **Pixi.js v8** (ESM from jsdelivr, pinned `8.6.6`) in `assets/js/class-rpg-game.js`. Scene layers: `world` (map/objects) and `hud` (fixed UI).
+- **`pages/class-rpg.html`** — teacher-only class/student admin backed by Firebase (Auth + Firestore, ES-module CDN imports in `assets/js/class-rpg.js`). Its 進入遊戲 button opens **`pages/class-rpg-game.html`**, the actual game, rendered with **Pixi.js v8** in `assets/js/class-rpg-game.js`, imported from the local **`assets/vendor/pixi.esm.min.js`** (8.6.6 ESM build). Never point this back at a CDN — classrooms are not guaranteed to have internet, and a failed Pixi fetch is a blank page, not a cosmetic downgrade. The same rule covers all six `assets/js/detective/*.js` modules. Scene layers: `world` (map/objects) and `hud` (fixed UI).
 - **Character sprite sheet** (`assets/images/char/char1.webp`, Mana Seed Character Base): 512×512, an 8×8 grid of 64×64 cells. Direction row order within each block is **down, up, right, left**. Frame map (from the Mana Seed "animations, page 1" guide):
   - Top block, rows 0–3: `stand` = col 0 (cols 1–2 `push`, 3–4 `pull`, 5–7 `jump` — not yet used).
   - Bottom block, rows 4–7: `walk` = cols 0–5 (6-frame cycle); `run` reuses the walk cycle with frames 3 & 6 replaced by cols 6–7, i.e. column sequence `0, 1, 6, 3, 4, 7`.
@@ -69,4 +80,4 @@ Each lesson is largely **independent** — there is no shared component framewor
 ## Conventions
 
 - UI text, comments, and question content are in Traditional Chinese — match this when editing.
-- Shared visual language: warm oat/pudding palette (`#f0e6df` background, `#fffdf9` cards, 32px radii), `Fredoka` + `Noto Sans TC` fonts, Font Awesome icons. Reuse these tokens for new pages.
+- Shared visual language: the **Japanese pale-blue palette defined in `assets/css/theme.css`** (`#eaf2ef` background, `#ffffff` cards, 32px radii), `Fredoka` + `Noto Sans TC` fonts, Font Awesome icons. `theme.css` is the only source of truth for colour — never hard-code hex in a page. Page-local CSS variables must declare their dark values **twice** (`[data-theme="dark"]` and `@media (prefers-color-scheme: dark)`), mirroring theme.css.
