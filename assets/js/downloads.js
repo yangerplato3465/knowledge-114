@@ -40,7 +40,13 @@ async function load() {
         return showState('err', 'fa-clock', '目前查詢人數較多，請稍等幾分鐘再重新整理。');
     if (!res.ok) return showState('err', 'fa-triangle-exclamation', `載入失敗（HTTP ${res.status}）`);
 
-    let items = await res.json();
+    let items;
+    try {
+        items = await res.json();
+        if (!Array.isArray(items)) throw new Error('Invalid file list');
+    } catch (e) {
+        return showState('err', 'fa-triangle-exclamation', '素材清單格式有誤，請稍後再試。');
+    }
     items = items
         .filter(f => f.type === 'file' && f.name !== '.gitkeep')
         .sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
@@ -54,12 +60,16 @@ async function load() {
         row.innerHTML = `
             <i class="fa-solid ${iconFor(f.name)} file-icon"></i>
             <div class="file-info">
-                <div class="file-name">${f.name}</div>
+                <div class="file-name"></div>
                 <div class="file-size">${fmtSize(f.size)}</div>
             </div>
-            <a class="dl-btn" href="${f.download_url}" download="${f.name}">
+            <a class="dl-btn">
                 <i class="fa-solid fa-download"></i> 下載
             </a>`;
+        row.querySelector('.file-name').textContent = f.name;
+        const link = row.querySelector('.dl-btn');
+        link.href = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${DIR}/${encodeURIComponent(f.name)}`;
+        link.download = f.name;
         list.appendChild(row);
     }
 }

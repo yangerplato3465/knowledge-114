@@ -16,18 +16,33 @@ const manageList = document.getElementById('manageList');
 const refreshListBtn = document.getElementById('refreshBtn');
 
 let selectedFiles = [];
+let uploading = false;
+let manageRequest = 0;
 
 // 還原記住的權杖
-const saved = localStorage.getItem('gh_upload_token');
-if (saved) { tokenInput.value = saved; rememberBox.checked = true; }
+try {
+    const saved = localStorage.getItem('gh_upload_token');
+    if (saved) { tokenInput.value = saved; rememberBox.checked = true; }
+} catch (e) { /* 不允許本機儲存時仍可手動輸入權杖。 */ }
+rememberBox.addEventListener('change', () => {
+    if (!rememberBox.checked) {
+        try { localStorage.removeItem('gh_upload_token'); } catch (e) {}
+    }
+});
 
 function refreshBtn() {
-    uploadBtn.disabled = !(tokenInput.value.trim() && selectedFiles.length);
+    uploadBtn.disabled = uploading || !(tokenInput.value.trim() && selectedFiles.length);
 }
 tokenInput.addEventListener('input', refreshBtn);
 
 // 檔案選擇
-dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('click', () => { if (!uploading) fileInput.click(); });
+dropZone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (!uploading) fileInput.click();
+    }
+});
 fileInput.addEventListener('change', () => setFiles([...fileInput.files]));
 
 ['dragover', 'dragenter'].forEach(ev =>
@@ -37,6 +52,7 @@ fileInput.addEventListener('change', () => setFiles([...fileInput.files]));
 dropZone.addEventListener('drop', e => setFiles([...e.dataTransfer.files]));
 
 function setFiles(files) {
+    if (uploading) return;
     selectedFiles = files;
     dropText.textContent = files.length
         ? `已選 ${files.length} 個檔案：${files.map(f => f.name).join('、')}`
@@ -66,8 +82,9 @@ function rowFor(name) {
     const row = document.createElement('div');
     row.className = 'result-row pending';
     row.innerHTML = `<i class="fa-solid fa-spinner fa-spin r-icon"></i>
-                     <span class="r-name">${name}</span>
+                     <span class="r-name"></span>
                      <span class="r-msg">上傳中…</span>`;
+    row.querySelector('.r-name').textContent = name;
     results.appendChild(row);
     return row;
 }
@@ -90,6 +107,7 @@ async function uploadOne(file, token) {
     let sha;
     const head = await fetch(`${url}?ref=${BRANCH}`, { headers });
     if (head.status === 200) sha = (await head.json()).sha;
+    else if (head.status !== 404) throw new Error(`無法確認現有檔案（HTTP ${head.status}）`);
 
     const content = await fileToBase64(file);
     const res = await fetch(url, {
@@ -109,25 +127,36 @@ async function uploadOne(file, token) {
 }
 
 uploadBtn.addEventListener('click', async () => {
+    if (uploading) return;
     const token = tokenInput.value.trim();
-    if (rememberBox.checked) localStorage.setItem('gh_upload_token', token);
-    else localStorage.removeItem('gh_upload_token');
+    if (!token || !selectedFiles.length) return;
+    const batch = [...selectedFiles];
+    try {
+        if (rememberBox.checked) localStorage.setItem('gh_upload_token', token);
+        else localStorage.removeItem('gh_upload_token');
+    } catch (e) { /* 儲存偏好失敗不應阻止上傳。 */ }
 
-    uploadBtn.disabled = true;
+    uploading = true;
+    refreshBtn();
+    fileInput.disabled = true;
     results.innerHTML = '';
 
-    for (const file of selectedFiles) {
-        const row = rowFor(file.name);
-        try {
-            const msg = await uploadOne(file, token);
-            setRow(row, true, msg);
-        } catch (e) {
-            setRow(row, false, e.message);
+    try {
+        for (const file of batch) {
+            const row = rowFor(file.name);
+            try {
+                const msg = await uploadOne(file, token);
+                setRow(row, true, msg);
+            } catch (e) {
+                setRow(row, false, e.message);
+            }
         }
+    } finally {
+        uploading = false;
+        fileInput.disabled = false;
+        refreshBtn();
     }
-
-    uploadBtn.disabled = false;
-    loadManage();
+    await loadManage();
 });
 
 // ===== 管理／刪除已上傳的素材 =====
@@ -138,6 +167,7 @@ function fmtSize(bytes) {
 }
 
 async function loadManage() {
+    const request = ++manageRequest;
     manageList.innerHTML = '<div class="m-state">載入中…</div>';
     // 有貼 Token 時用「已登入」方式讀取，額度從 60/hr 提升到 5000/hr
     const token = tokenInput.value.trim();
@@ -148,9 +178,11 @@ async function loadManage() {
     try {
         res = await fetch(`${API}/${DIR}?ref=${BRANCH}`, { headers });
     } catch (e) {
+        if (request !== manageRequest) return;
         manageList.innerHTML = '<div class="m-state">無法連線，稍後再試。</div>';
         return;
     }
+    if (request !== manageRequest) return;
     if (res.status === 404) {
         manageList.innerHTML = '<div class="m-state">素材庫還是空的。</div>';
         return;
@@ -164,7 +196,17 @@ async function loadManage() {
         return;
     }
 
-    let items = (await res.json())
+    let items;
+    try {
+        items = await res.json();
+        if (!Array.isArray(items)) throw new Error('Invalid file list');
+    } catch (e) {
+        if (request !== manageRequest) return;
+        manageList.innerHTML = '<div class="m-state">素材清單格式有誤，請稍後再試。</div>';
+        return;
+    }
+    if (request !== manageRequest) return;
+    items = items
         .filter(f => f.type === 'file' && f.name !== '.gitkeep')
         .sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
 
@@ -178,9 +220,10 @@ async function loadManage() {
         const row = document.createElement('div');
         row.className = 'm-row';
         row.innerHTML = `
-            <span class="m-name">${f.name}</span>
+            <span class="m-name"></span>
             <span class="m-size">${fmtSize(f.size)}</span>
             <button class="del-btn"><i class="fa-solid fa-trash"></i> 刪除</button>`;
+        row.querySelector('.m-name').textContent = f.name;
         row.querySelector('.del-btn').addEventListener('click', () =>
             deleteFile(f.name, f.sha, row));
         manageList.appendChild(row);

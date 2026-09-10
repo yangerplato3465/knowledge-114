@@ -8,7 +8,7 @@
 HTML/CSS/JS 直接放上靜態主機就會動。
 
 - 部署：GitHub repo `yangerplato3465/knowledge-114`，從根目錄靜態託管
-- 沒有 CI、沒有 lint、沒有測試套件 —— **驗證一律是在瀏覽器裡手動做的**
+- GitHub Actions 在部署前執行引用、JavaScript 語法與共用功能回歸檢查；遊戲操作與視覺仍須瀏覽器驗證。指令見 [README](../README.md)。
 - 版號在 `config.json`（`version` + `lastUpdated`），首頁執行時 `fetch` 進來顯示。
   發版時要一起 bump，git tag 跟著同一個號
 
@@ -86,8 +86,7 @@ Firebase 從 CDN import，**Pixi 從本地 `assets/vendor/pixi.esm.min.js`**。
 **為什麼 Pixi 要 vendor**：字型和圖示掛掉只是字醜、圖示變方框，遊戲照樣能玩；
 **Pixi 掛掉是整個戰鬥區空白**。這兩件事的嚴重性差太多，不能一起賭。
 
-代價：818 KB 是**完整包**。這台機器沒有 Node.js（`npm install` 跑不了），
-所以沒辦法 build 一份只含需要模組的瘦身版。低階機器要 parse 這 818 KB，
+代價：818 KB 是**完整包**。當時沒有 Node.js，未製作只含需要模組的瘦身版。低階機器要 parse 這 818 KB，
 **這是導入 Pixi 唯一真正的成本**。
 
 兩份版本不同是刻意的，理由與「ESM 那份為什麼副檔名是 `.js` 不是 `.mjs`」
@@ -169,7 +168,7 @@ tf-best                        快問快答最佳成績
 
 ## 測試與驗證的實務
 
-沒有自動化測試。實際可行的做法（都在 `http://localhost:8080/` 上做）：
+共用功能已有 Node.js 內建測試，以及 Python 靜態引用檢查（見 README）。遊戲實際可行的驗證做法（都在 `http://localhost:8080/` 上做）：
 
 - **Pixi 遊戲可以用 `javascript_tool` 全自動玩過關。**
   `globalThis.__PIXI_APP__` 是標準勾子（`detective.js` 與 `word-sort-fx.js` 都有掛），
@@ -189,7 +188,7 @@ tf-best                        快問快答最佳成績
 
 | | |
 |---|---|
-| Node.js / npm / npx | **沒有**。`npx` 開頭的官方指令一律要改成 curl + GitHub API 手動抓 |
+| Node.js / npm / npx | 原環境未安裝；本次可使用 Codex 隨附的 Node.js 執行檢查。不同電腦請先確認 PATH；網站本身不依賴 Node。 |
 | Python | 有，3.13.15 ARM64，**在 PATH 上**，含 Pillow 12.3 |
 | ffmpeg | 有 |
 | ImageMagick | 沒有 |

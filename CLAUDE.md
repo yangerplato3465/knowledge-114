@@ -20,7 +20,7 @@ reversed, update `docs/DECISIONS.md` rather than deleting the reasoning.
 ## Running & Deploying
 
 - **Run locally:** open `index.html` directly in a browser, or serve the root with any static server (e.g. `python -m http.server`). Use a server rather than `file://` when a page uses `fetch` — the hub loads `config.json` this way.
-- **Deploy:** static hosting from the repo root (GitHub: `yangerplato3465/knowledge-114`). There is no CI, lint, or test suite; verification is manual in the browser.
+- **Deploy:** static hosting from the repo root (GitHub: `yangerplato3465/knowledge-114`). GitHub Actions runs reference checks, JavaScript syntax checks, and shared-feature regression tests before deployment. Run `python scripts/check_site.py`, `node scripts/check_js.cjs`, and `node --test tests/shared.test.cjs`; gameplay still needs browser verification.
 - **Versioning:** bump `config.json` (`version` + `lastUpdated`) when releasing. The hub reads it at runtime and renders `v{version} · {lastUpdated}`; git tags/commits mirror the same version (e.g. `1.1.0`).
 
 ## Structure & Architecture

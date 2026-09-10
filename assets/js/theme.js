@@ -1,5 +1,5 @@
 /* 深色 / 淺色主題切換
-   - 讀取 localStorage('theme')：'dark' | 'light' | 未設定(跟隨系統)
+   - 讀取 localStorage('knowledge114-theme')：'dark' | 'light' | 未設定(跟隨系統)
    - 注入右下角浮動切換鈕
    多頁共用；每頁在 <head> 引入 theme.css，於 </body> 前引入本檔。 */
 (function () {
@@ -15,7 +15,7 @@
     }
 
     function isDark() {
-        const s = stored();
+        const s = root.getAttribute('data-theme');
         if (s === 'dark') return true;
         if (s === 'light') return false;
         return systemDark();
@@ -54,6 +54,14 @@
             updateBtn(btn);
         });
         document.body.appendChild(btn);
+        const media = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+        if (media && media.addEventListener) media.addEventListener('change', () => updateBtn(btn));
+        window.addEventListener('storage', event => {
+            if (event.key === KEY || event.key === null) {
+                apply(stored());
+                updateBtn(btn);
+            }
+        });
     }
 
     if (document.readyState === 'loading') {

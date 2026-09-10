@@ -11,7 +11,7 @@
 # server wedges - every later request just times out. Handling each request on a
 # runspace pool thread (plus Range support and a write timeout) fixes that.
 
-$Root = "C:\Users\nini9\Work\knowledge-114"
+$Root = Split-Path -Parent $PSScriptRoot
 $Port = 8080
 
 $mime = @{

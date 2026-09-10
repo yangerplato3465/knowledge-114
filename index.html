@@ -425,10 +425,14 @@
         }
 
         fetch('config.json')
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error('Version unavailable');
+                return r.json();
+            })
             .then(cfg => {
                 document.getElementById('version-label').textContent = `v${cfg.version} · ${cfg.lastUpdated}`;
-            });
+            })
+            .catch(() => { document.getElementById('version-label').textContent = ''; });
     </script>
 
     <script src="assets/js/theme.js"></script>
