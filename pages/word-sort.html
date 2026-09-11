@@ -33,7 +33,7 @@
 
         <p class="start-sub">
             看懂意思，幫字根接上正確的 <b>-ful</b> 或 <b>-less</b>！<br>
-            每答一題，單字就會進入一個有編號的陣列。
+            分類完成後，再到快遞站把字根和字尾組成完整單字。
         </p>
 
         <div id="pool-picker" class="pool-picker"><!-- 由 JS 依題庫產生 --></div>
@@ -61,11 +61,9 @@
             <div class="stat timer" id="stat-timer"><i class="fa-regular fa-clock"></i> <span id="timer-num">--</span></div>
         </header>
 
-        <!-- 陣列 HUD ①：題目佇列。
-             答完一題，[0] 會被抽走，後面全部往前遞補而且索引重新編號 ——
-             那個重新編號的動畫就是 shift() 最核心的教學點。 -->
+        <!-- 待分類字根：讓全班看得見這一局還剩下哪些字。 -->
         <div class="queue-hud">
-            <span class="hud-label">題目排隊中 <b>queue</b></span>
+            <span class="hud-label">待分類字根</span>
             <div id="queue-chips" class="queue-chips"></div>
             <span class="hud-len">還有 <b id="queue-len">0</b> 個</span>
         </div>
@@ -76,8 +74,8 @@
             <div class="drag-hint right" id="hint-right">-less</div>
 
             <div class="array-action" id="array-action" aria-live="polite">
-                <span id="array-action-zh">讀取排在最前面的題目</span>
-                <code id="array-action-code">queue[0]</code>
+                <span id="array-action-zh">看意思，選字尾</span>
+                <code id="array-action-code">hope + ?</code>
             </div>
 
             <div class="card" id="card">
@@ -90,19 +88,17 @@
             </div>
         </div>
 
-        <!-- 陣列 HUD ②：兩個收集籃，各自就在它那顆按鈕的正上方。
-             這不是計數器，是兩個真的陣列 —— 每答一題就有一個新單字
-             帶著自己的索引長出來，整局都看得到它們在變長。 -->
+        <!-- 已完成單字：左右位置與下方字尾按鈕保持一致。 -->
         <div class="collected">
             <div class="collected-side ful">
-                <span class="coll-name">ful</span>
+                <span class="coll-name">-ful 單字</span>
                 <div class="coll-items" id="coll-ful">
                     <span class="coll-empty">[ 還是空的 ]</span>
                 </div>
                 <span class="coll-len">共 <b id="len-ful-live">0</b> 個</span>
             </div>
             <div class="collected-side less">
-                <span class="coll-name">less</span>
+                <span class="coll-name">-less 單字</span>
                 <div class="coll-items" id="coll-less">
                     <span class="coll-empty">[ 還是空的 ]</span>
                 </div>
@@ -126,43 +122,33 @@
 
     </section>
 
-    <!-- 分類完成後的短版陣列挑戰。這是遊戲流程的一部分，不是結算摘要：
-         學生要真的用 index / length 讀取剛才親手建立的陣列。 -->
+    <!-- 分類完成後的字尾快遞站：保留輸送帶玩法，連續練三次字根＋字尾。 -->
     <section id="screen-challenge" class="screen screen-challenge hidden">
         <header class="challenge-head">
             <button id="challenge-quit-btn" class="quit-btn" type="button">
                 <i class="fa-solid fa-chevron-left"></i> 結束
             </button>
-            <span>陣列小挑戰</span>
-            <span id="challenge-progress">1 / 3</span>
+            <span>字尾快遞站</span>
+            <div id="challenge-progress" class="energy-lights" aria-label="任務進度">
+                <span></span><span></span><span></span>
+            </div>
         </header>
 
         <div class="challenge-prompt">
-            <div id="challenge-zh">找出指定位置的單字</div>
-            <code id="challenge-code">fulArray[0]</code>
+            <div id="challenge-kicker">單字快遞</div>
+            <div id="challenge-zh">看意思，抓到正確的字根</div>
+            <code id="challenge-code">? + less</code>
             <div id="challenge-feedback" class="challenge-feedback" aria-live="polite"></div>
         </div>
 
-        <div class="challenge-arrays" aria-label="剛才完成的兩個陣列">
-            <div class="challenge-array ful">
-                <span class="challenge-array-name">fulArray</span>
-                <div id="challenge-ful" class="challenge-array-items"></div>
-            </div>
-            <div class="challenge-array less">
-                <span class="challenge-array-name">lessArray</span>
-                <div id="challenge-less" class="challenge-array-items"></div>
-            </div>
-        </div>
-
+        <div id="challenge-visual" class="challenge-visual"></div>
         <div id="challenge-options" class="challenge-options"></div>
     </section>
 
     <!-- ==========================================================
          結算畫面
          ------------------------------------------------------
-         這裡刻意「不」再展示一次陣列。陣列該在玩的過程中被看見，
-         只在結算畫面秀一段程式碼的話，那不叫教、那叫宣布。
-         所以這頁只留成績跟答錯的字複習。
+         只留成績與答錯的單字，讓最後的注意力回到 -ful / -less。
          ========================================================== -->
     <section id="screen-result" class="screen screen-result hidden">
         <h2 class="result-title" id="result-title">分完了！</h2>
