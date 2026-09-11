@@ -2,17 +2,15 @@
    ------------------------------------------------------------------
    讀 word-sort-pools.js 定義的全域 WORD_SORT_POOLS（載入順序不能顛倒）。
 
-   這個遊戲要教兩件事，程式結構刻意跟著這兩件事走：
+   教學焦點是 -ful / -less 的語意與構詞：
 
-   1. 陣列 —— 全域只有三個陣列：queue（待作答）、fulArr、lessArr（已分類）。
-      每答一題就是 queue.shift() 之後 push 進其中一個籃子，
-      而且這三個陣列的長度隨時顯示在畫面上。
-      遊戲結束的條件不是計時器歸零，是 queue.length === 0，
-      這樣「陣列空了」本身就是一件學生看得見的事。
-
-   2. 字串結合 —— 完整單字從來沒有存在資料裡，一律 item.stem + item.suffix
+   1. 依中文意思判斷 -ful（有／充滿）與 -less（沒有）。
+   2. 完整單字從來沒有存在資料裡，一律 item.stem + item.suffix
       當場算出來（見 wordOf）。畫面上那個虛線格子滑過去黏住字根的動畫，
       演的就是這一行程式。
+   3. 分類後用輸送帶反向練習「意思＋字尾 → 找字根」。
+
+   queue / fulArr / lessArr 仍是內部資料結構，但不再當成學生的學習內容。
 
    觸控電視注意事項：
    - 點擊底部大按鈕是主要操作，拖曳卡片是附加的。觸控電視的拖曳延遲常常
@@ -36,6 +34,7 @@
 
     var screenStart = $('screen-start');
     var screenPlay = $('screen-play');
+    var screenChallenge = $('screen-challenge');
     var screenResult = $('screen-result');
     var poolPicker = $('pool-picker');
     var stage = $('stage');
@@ -59,22 +58,62 @@
     var collLess = $('coll-less');
     var lenFulLive = $('len-ful-live');
     var lenLessLive = $('len-less-live');
+    var actionZh = $('array-action-zh');
+    var actionCode = $('array-action-code');
+    var challengeProgress = $('challenge-progress');
+    var challengeKicker = $('challenge-kicker');
+    var challengeZh = $('challenge-zh');
+    var challengeCode = $('challenge-code');
+    var challengeFeedback = $('challenge-feedback');
+    var challengeVisual = $('challenge-visual');
+    var challengeOptions = $('challenge-options');
 
     /* ---------- 狀態 ---------- */
     var queue = [];       /* 待作答，永遠從 [0] 開始出題 */
     var fulArr = [];      /* 分到 -ful 的完整單字 */
     var lessArr = [];     /* 分到 -less 的完整單字 */
     var wrongList = [];   /* 答錯的題目，結算時複習用 */
+    var learnedItems = []; /* 本局出現過的題目，快遞站拿來做字根＋字尾複習 */
     var rightCount = 0;
     var locked = false;   /* 揭曉動畫期間擋住重複作答 */
     var poolName = '';
     var startTime = 0;
     var timerId = null;
     var advanceTimer = null;
+    var challengeTasks = [];
+    var challengeAt = 0;
+    var challengeRight = 0;
+    var courierFrame = 0;
+    var courierX = 0;
+    var courierSpeed = 0;
+    var courierStartX = 0;
+    var courierCycleWidth = 0;
+    var courierLastTime = 0;
+    var courierTrack = null;
+    var courierTarget = null;
 
     /* 字串結合就發生在這一行 —— 完整單字不存資料，每次現算 */
     function wordOf(item) {
         return item.stem + item.suffix;
+    }
+
+    function showArrayAction(zh, code) {
+        actionZh.textContent = zh;
+        actionCode.textContent = code;
+        var box = $('array-action');
+        box.classList.remove('bump');
+        void box.offsetWidth;
+        box.classList.add('bump');
+    }
+
+    /* 使用裝置內建語音，不下載音檔；沒有 speechSynthesis 時安靜略過。 */
+    function speakWord(word) {
+        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
+        window.speechSynthesis.cancel();
+        var utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.78;
+        window.speechSynthesis.speak(utterance);
     }
 
     /* ---------- 開始畫面 ---------- */
@@ -161,6 +200,7 @@
         fulArr = [];
         lessArr = [];
         wrongList = [];
+        learnedItems = [];
         rightCount = 0;
         locked = false;
 
@@ -170,6 +210,7 @@
 
         screenStart.classList.add('hidden');
         screenResult.classList.add('hidden');
+        screenChallenge.classList.add('hidden');
         screenPlay.classList.remove('hidden');
         document.body.classList.add('playing');
 
@@ -184,6 +225,7 @@
 
         renderQueueHud();
         renderQuestion();
+        showArrayAction('看意思，選出正確的字尾', queue[0].stem + ' + ?');
     }
 
     function tickTimer() {
@@ -201,15 +243,10 @@
             var chip = document.createElement('div');
             chip.className = 'chip' + (i === 0 ? ' head' : '');
 
-            var idx = document.createElement('span');
-            idx.className = 'chip-i';
-            idx.textContent = '[' + i + ']';
-
             var txt = document.createElement('span');
             /* 只露字根，不露答案 */
             txt.textContent = queue[i].stem;
 
-            chip.appendChild(idx);
             chip.appendChild(txt);
             queueChips.appendChild(chip);
         }
@@ -239,9 +276,10 @@
         /* 佇列 HUD 不在這裡重畫 —— 它由 shiftQueue() 的動畫負責，
            在這裡再畫一次會把還沒跑完的遞補動畫洗掉。 */
         locked = false;
+        showArrayAction('看意思，選出正確的字尾', item.stem + ' + ?');
     }
 
-    /* ---------- 收集籃：兩個看得見的陣列 ---------- */
+    /* ---------- 收集籃：兩組已完成單字 ---------- */
 
     function paintArray(box, arr, lenEl, animateLast) {
         box.innerHTML = '';
@@ -257,15 +295,10 @@
                 el.className = 'coll-item'
                     + (animateLast && i === arr.length - 1 ? ' pop' : '');
 
-                var idx = document.createElement('span');
-                idx.className = 'ci-i';
-                idx.textContent = '[' + i + ']';
-
                 var word = document.createElement('span');
                 word.className = 'ci-w';
                 word.textContent = w;
 
-                el.appendChild(idx);
                 el.appendChild(word);
                 box.appendChild(el);
             });
@@ -294,11 +327,16 @@
 
         var isRight = (chosen === item.suffix);
         var word = wordOf(item);
+        learnedItems.push(item);
 
-        /* 不論對錯，籃子裡放的都是正確答案 ——
-           陣列的內容必須是真的，錯的是分數不是資料。 */
+        /* 不論對錯，收集籃都放正確答案；錯的是分數，不是複習內容。 */
         if (item.suffix === 'ful') fulArr.push(word);
         else lessArr.push(word);
+
+        showArrayAction(
+            '字根和字尾合起來，變成 ' + word,
+            item.stem + ' + ' + item.suffix + ' = ' + word
+        );
 
         if (isRight) {
             rightCount++;
@@ -318,7 +356,10 @@
         card.classList.add(isRight ? 'correct' : 'wrong');
 
         /* 第二步：格子滑過去黏住字根 —— stem + suffix 就在這一刻完成 */
-        setTimeout(function () { wSlot.classList.add('merged'); }, MERGE_DELAY);
+        setTimeout(function () {
+            wSlot.classList.add('merged');
+            speakWord(word);
+        }, MERGE_DELAY);
 
         var hold = isRight ? HOLD_CORRECT : HOLD_WRONG;
 
@@ -333,7 +374,7 @@
             hold += HOLD_NOTE;
         }
 
-        /* 剛拼好的單字掉進它該去的陣列，帶著自己的索引彈出來 */
+        /* 剛拼好的單字掉進對應字尾的收集籃 */
         renderCollected(item.suffix);
 
         if (isRight) celebrate(item.suffix);
@@ -360,18 +401,17 @@
         card.style.opacity = '0';
 
         shiftQueue(function () {
-            if (queue.length === 0) { finish(); return; }
+            if (queue.length === 0) { startChallenge(); return; }
             card.classList.remove('settling');
             renderQuestion();
         });
     }
 
-    /* queue.shift() 的動畫版。
+    /* 下一題遞補的動畫版。
        ------------------------------------------------------------
        刻意拆成兩個看得懂的步驟：
-         ① [0] 往上飛走          —— 頭被拿走了
-         ② 後面全體往前遞補，
-            而且索引當場重新編號 —— 這才是 shift() 真正做的事
+         ① 已完成的字根往上飛走
+         ② 後面的字根全體往前遞補
 
        第二步用 FLIP：先重畫讓每個 chip 落到最終位置，量出位移，
        再把它們拉回舊位置、放開，讓瀏覽器自己補間。
@@ -385,6 +425,7 @@
             return;
         }
 
+        showArrayAction('這個單字完成，準備下一題', wordOf(queue[0]));
         chips[0].classList.add('leaving');
 
         setTimeout(function () {
@@ -393,8 +434,8 @@
                 return c.getBoundingClientRect().left;
             });
 
-            queue.shift();          /* ← 陣列真的從頭部被拿走一個 */
-            renderQueueHud();       /* Last：重畫，索引全部重新編號 */
+            queue.shift();          /* 內部資料移除已完成的第一題 */
+            renderQueueHud();       /* Last：重畫剩餘字根 */
 
             /* Invert：拉回舊位置 */
             var now = Array.prototype.slice.call(queueChips.children);
@@ -414,13 +455,13 @@
                 c.style.transform = '';
             });
 
-            /* 索引數字閃一下，讓「編號變了」這件事被看見 */
-            Array.prototype.forEach.call(
-                queueChips.querySelectorAll('.chip-i'),
-                function (el) { el.classList.add('renumber'); }
+            showArrayAction(
+                queue.length ? '下一個字根上場' : '全部單字都完成了',
+                queue.length ? queue[0].stem + ' + ?' : '-ful / -less ✓'
             );
 
-            done();
+            /* 等遞補動畫被看見，再換下一張卡。 */
+            setTimeout(done, 420);
         }, 260);
     }
 
@@ -513,11 +554,222 @@
     zoneFul.addEventListener('click', function () { answer('ful'); });
     zoneLess.addEventListener('click', function () { answer('less'); });
 
+    /* ---------- 分類後的字尾快遞站 ---------- */
+
+    function makeChallengeTasks() {
+        var unique = [];
+        shuffle(learnedItems).forEach(function (item) {
+            if (!unique.some(function (seen) { return seen.stem === item.stem; })) unique.push(item);
+        });
+
+        /* 三次至少各出現一次 -ful / -less，避免快遞站剛好只練到一種字尾。 */
+        var targets = [];
+        ['ful', 'less'].forEach(function (suffix) {
+            var found = unique.find(function (item) {
+                return item.suffix === suffix
+                    && !targets.some(function (picked) { return picked.stem === item.stem; });
+            });
+            if (found) targets.push(found);
+        });
+        unique.forEach(function (item) {
+            if (targets.length >= 3) return;
+            if (!targets.some(function (picked) { return picked.stem === item.stem; })) targets.push(item);
+        });
+
+        return shuffle(targets).map(function (target) {
+            var distractors = unique.filter(function (item) { return item.stem !== target.stem; });
+            var options = shuffle([target].concat(shuffle(distractors).slice(0, 5)));
+            return {
+                target: target,
+                options: options,
+                targetIndex: options.indexOf(target)
+            };
+        });
+    }
+
+    function setChallengeProgress() {
+        Array.prototype.forEach.call(challengeProgress.children, function (light, index) {
+            light.classList.toggle('lit', index < challengeRight);
+            light.classList.toggle('active', index === challengeAt);
+        });
+        challengeProgress.setAttribute('aria-label', '已完成 ' + challengeRight + ' 個，共 3 個任務');
+    }
+
+    function stopCourier() {
+        if (courierFrame) cancelAnimationFrame(courierFrame);
+        courierFrame = 0;
+        courierTrack = null;
+        courierTarget = null;
+    }
+
+    function challengeBurst(element, side) {
+        if (!window.WordSortFX || !element) return;
+        var r = element.getBoundingClientRect();
+        window.WordSortFX.burst(r.left + r.width / 2, r.top + r.height / 2, {
+            count: 80,
+            power: 15,
+            spread: Math.PI * 1.5,
+            colors: side === 'ful'
+                ? [0xd98026, 0xe8c34a, 0xffffff]
+                : [0x3f7fb5, 0x7fb2dc, 0xffffff]
+        });
+    }
+
+    function makeCrate(item, index) {
+        var crate = document.createElement('div');
+        crate.className = 'courier-crate';
+        crate.dataset.index = index;
+        crate.innerHTML = '<b>' + item.stemZh + '</b><span>' + item.stem + '</span>';
+        return crate;
+    }
+
+    function startChallenge() {
+        clearInterval(timerId);
+        timerId = null;
+        challengeTasks = makeChallengeTasks();
+        challengeAt = 0;
+        challengeRight = 0;
+        screenPlay.classList.add('hidden');
+        screenChallenge.classList.remove('hidden');
+        renderChallenge();
+    }
+
+    function renderChallenge() {
+        stopCourier();
+        var task = challengeTasks[challengeAt];
+        setChallengeProgress();
+        challengeFeedback.textContent = '';
+        challengeFeedback.className = 'challenge-feedback';
+        challengeVisual.className = 'challenge-visual courier';
+        challengeVisual.innerHTML = '';
+        challengeOptions.className = 'challenge-options courier';
+        challengeOptions.innerHTML = '';
+        renderCourier(task);
+    }
+
+    function renderCourier(task) {
+        var target = task.target;
+        challengeKicker.textContent = '單字快遞 ' + (challengeAt + 1) + ' / ' + challengeTasks.length;
+        challengeZh.textContent = '找出能組成「' + target.def + '」的字根';
+        challengeCode.textContent = '? + ' + target.suffix;
+
+        var viewport = document.createElement('div');
+        viewport.className = 'conveyor-viewport ' + target.suffix;
+        var belt = document.createElement('div');
+        belt.className = 'conveyor-belt';
+        courierTrack = document.createElement('div');
+        courierTrack.className = 'courier-track';
+        task.options.forEach(function (item, index) {
+            courierTrack.appendChild(makeCrate(item, index));
+        });
+        /* 再放一組相同箱子，首尾相接循環；否則最後一箱離場到第一箱重來之間
+           會有好幾秒空輸送帶，孩子按什麼都只能得到「還沒有箱子」。 */
+        task.options.forEach(function (item, index) {
+            var duplicate = makeCrate(item, index);
+            duplicate.dataset.cycle = '2';
+            duplicate.setAttribute('aria-hidden', 'true');
+            courierTrack.appendChild(duplicate);
+        });
+        var scanner = document.createElement('div');
+        scanner.className = 'scanner-gate';
+        scanner.innerHTML = '<span>SCAN</span>';
+        viewport.appendChild(belt);
+        viewport.appendChild(courierTrack);
+        viewport.appendChild(scanner);
+        challengeVisual.appendChild(viewport);
+
+        var send = document.createElement('button');
+        send.type = 'button';
+        send.className = 'challenge-send';
+        send.innerHTML = '<i class="fa-solid fa-truck-fast"></i><span>送出！</span>';
+        send.addEventListener('click', function () { catchCourier(task, viewport, scanner, send); });
+        challengeOptions.appendChild(send);
+
+        requestAnimationFrame(function () {
+            var first = courierTrack.children[0];
+            var secondCycle = courierTrack.querySelector('[data-cycle="2"]');
+            courierStartX = viewport.clientWidth / 2 - first.offsetWidth / 2;
+            courierCycleWidth = secondCycle.offsetLeft - first.offsetLeft;
+            courierX = courierStartX;
+            courierSpeed = Math.max(190, viewport.clientWidth * 0.19);
+            courierLastTime = performance.now();
+            courierTarget = courierTrack.querySelector('[data-index="' + task.targetIndex + '"]');
+            moveCourier(courierLastTime, viewport);
+        });
+    }
+
+    function moveCourier(now, viewport) {
+        if (!courierTrack) return;
+        var delta = Math.min(40, now - courierLastTime) / 1000;
+        courierLastTime = now;
+        courierX -= courierSpeed * delta;
+        if (courierCycleWidth && courierX <= courierStartX - courierCycleWidth) {
+            courierX += courierCycleWidth;
+        }
+        courierTrack.style.transform = 'translateX(' + courierX + 'px)';
+        courierFrame = requestAnimationFrame(function (time) { moveCourier(time, viewport); });
+    }
+
+    function catchCourier(task, viewport, scanner, button) {
+        if (!courierTrack || button.disabled) return;
+        var scanRect = scanner.getBoundingClientRect();
+        var scanX = scanRect.left + scanRect.width / 2;
+        var crates = Array.prototype.slice.call(courierTrack.children);
+        var nearest = null;
+        var distance = Infinity;
+        crates.forEach(function (crate) {
+            var r = crate.getBoundingClientRect();
+            var d = Math.abs((r.left + r.width / 2) - scanX);
+            if (d < distance) { distance = d; nearest = crate; }
+        });
+
+        var allowed = scanRect.width * 0.62;
+        if (!nearest || distance > allowed) {
+            challengeFeedback.textContent = '掃描門裡還沒有箱子，再等一下！';
+            challengeFeedback.className = 'challenge-feedback wrong';
+            viewport.classList.add('oops');
+            setTimeout(function () { viewport.classList.remove('oops'); }, 350);
+            return;
+        }
+
+        var caught = Number(nearest.dataset.index);
+        if (caught !== task.targetIndex) {
+            var wrongItem = task.options[caught];
+            challengeFeedback.textContent = '剛才抓到 ' + wrongItem.stem
+                + '，它不是「' + task.target.def + '」需要的字根。減速再試一次！';
+            challengeFeedback.className = 'challenge-feedback wrong';
+            nearest.classList.add('wrong');
+            courierSpeed = Math.max(105, courierSpeed * 0.78);
+            setTimeout(function () { nearest.classList.remove('wrong'); }, 500);
+            return;
+        }
+
+        stopCourier();
+        button.disabled = true;
+        nearest.classList.add('caught');
+        var fullWord = wordOf(task.target);
+        challengeCode.textContent = task.target.stem + ' + ' + task.target.suffix + ' = ' + fullWord;
+        challengeFeedback.textContent = fullWord + '，就是「' + task.target.def + '」！';
+        challengeFeedback.className = 'challenge-feedback correct';
+        speakWord(fullWord);
+        challengeBurst(nearest, task.target.suffix);
+        completeChallengeTask();
+    }
+
+    function completeChallengeTask() {
+        challengeRight++;
+        setChallengeProgress();
+        setTimeout(function () {
+            challengeOptions.classList.remove('locked');
+            challengeAt++;
+            if (challengeAt >= challengeTasks.length) finish();
+            else renderChallenge();
+        }, 1250);
+    }
+
     /* ---------- 結算 ---------- */
 
-    /* 這裡刻意不再展示一次陣列 —— 陣列在遊玩過程中已經被看見了
-       （上方的佇列、下方兩個收集籃）。只在結算畫面秀一段程式碼，
-       那不叫教、那叫宣布。這頁只留成績和答錯的字。 */
+    /* 結算只留成績和答錯的字，避免再增加一層課後測驗。 */
     function finish() {
         clearInterval(timerId);
         timerId = null;
@@ -529,6 +781,7 @@
         $('result-title').textContent = wrongList.length === 0 ? '全部答對！' : '分完了！';
         $('result-score').innerHTML = '答對 <b>' + rightCount + '</b> / ' + total
             + ' 題　·　用時 ' + Math.floor(seconds / 60) + ':' + ('0' + (seconds % 60)).slice(-2)
+            + '　·　字尾快遞完成'
             + '　·　' + poolName;
 
         var review = $('review-box');
@@ -542,6 +795,7 @@
         });
 
         screenPlay.classList.add('hidden');
+        screenChallenge.classList.add('hidden');
         screenResult.classList.remove('hidden');
 
         /* 全對才放大煙火，不然這個效果會廉價掉 */
@@ -566,6 +820,14 @@
         document.body.classList.remove('playing');
         if (window.WordSortFX) window.WordSortFX.clear();
         screenPlay.classList.add('hidden');
+        screenStart.classList.remove('hidden');
+    });
+
+    $('challenge-quit-btn').addEventListener('click', function () {
+        stopCourier();
+        window.speechSynthesis && window.speechSynthesis.cancel();
+        document.body.classList.remove('playing');
+        screenChallenge.classList.add('hidden');
         screenStart.classList.remove('hidden');
     });
 
