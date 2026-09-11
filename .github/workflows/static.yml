@@ -3,6 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]   # change if your default branch differs
+  pull_request:
+    branches: [main]
   workflow_dispatch:    # lets you trigger manually from the Actions tab
 
 permissions:
@@ -11,11 +13,26 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check site references and script order
+        run: python3 scripts/check_site.py
+      - name: Check JavaScript syntax
+        run: node scripts/check_js.cjs
+      - name: Test shared features
+        run: node --test tests/shared.test.cjs
+
   deploy:
+    if: github.event_name != 'pull_request'
+    needs: validate
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -24,10 +41,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare public files
+        run: |
+          mkdir -p _site
+          cp index.html config.json _site/
+          cp -R assets pages _site/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .   # or the folder your site lives in, e.g. ./public
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment

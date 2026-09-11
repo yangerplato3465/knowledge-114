@@ -1,0 +1,254 @@
+import {
+    Assets, Container, Graphics, Sprite, Text
+} from '../../vendor/pixi.esm.min.js';
+
+// ============================================================
+// 偵探事件簿 · 共用介面工具
+// 給 detective.js（引擎）和 detective-puzzles.js（謎題）一起用，
+// 這樣文字、按鈕、面板的樣式只有一份。
+// ============================================================
+
+export const W = 960, H = 600;                 // 設計尺寸（所有座標都以此為準）
+export const FONT = "'Noto Sans TC', 'Fredoka', sans-serif";
+
+export const COL = {
+    panel: 0xfffdf9,
+    panel2: 0xfaf3ea,
+    border: 0xe4d9cd,
+    ink: 0x4a3f35,
+    muted: 0x8a7b6d,
+    bar: 0x3f3730,
+    gold: 0xf0b429,
+    mint: 0x7fbf9a,
+    hint: 0xffd166,
+    red: 0xe23b3b,
+    blue: 0x2f5bd0,
+    ok: 0x3f9c62,
+};
+
+export function mkText(str, size, color, opt = {}) {
+    return new Text({
+        text: str,
+        style: {
+            fontFamily: FONT,
+            fontSize: size,
+            fill: color,
+            fontWeight: opt.weight || '400',
+            align: opt.align || 'left',
+            wordWrap: !!opt.wrap,
+            wordWrapWidth: opt.wrap || 0,
+            breakWords: true,                  // 中文沒有空格，要靠這個換行
+            lineHeight: opt.lineHeight || Math.round(size * 1.6),
+            letterSpacing: opt.spacing || 0,
+        },
+    });
+}
+
+export function mkButton({ label, x, y, w, h, color = COL.gold, textColor = COL.bar, size = 16, onClick }) {
+    const c = new Container();
+    c.position.set(x, y);
+    c.addChild(new Graphics().roundRect(0, 0, w, h, h / 2).fill({ color }));
+    // 滑過去的亮片：疊一層白色圓角蓋在鈕面上，用 alpha 控制亮度。
+    // 不用 tint 是因為 tint 只能把顏色乘暗，做不出「變亮」；
+    // 也不用縮放整顆鈕 —— 容器的原點在左上角，放大會往右下歪掉，
+    // 而改 pivot 會動到所有呼叫端算好的 x/y。
+    const gloss = new Graphics().roundRect(0, 0, w, h, h / 2).fill({ color: 0xffffff });
+    gloss.alpha = 0;
+    gloss.eventMode = 'none';
+    c.addChild(gloss);
+    const t = mkText(label, size, textColor, { weight: '700' });
+    t.anchor.set(0.5);
+    t.position.set(w / 2, h / 2);
+    c.addChild(t);
+    c.eventMode = 'static';
+    c.cursor = 'pointer';
+    // 按下去整顆往下沉 2px、亮片收掉，放開再浮回來 —— 實體按鍵的手感
+    const lift = dy => c.position.set(x, y + dy);
+    c.on('pointerover', () => { if (!c.locked) { c.alpha = 0.94; gloss.alpha = 0.20; } });
+    c.on('pointerout', () => { c.alpha = c.locked ? 0.45 : 1; gloss.alpha = 0; lift(0); });
+    c.on('pointerdown', () => { if (!c.locked) { gloss.alpha = 0.06; lift(2); } });
+    c.on('pointerup', () => { if (!c.locked) { gloss.alpha = 0.20; lift(0); } });
+    c.on('pointerupoutside', () => { gloss.alpha = 0; lift(0); });
+    c.on('pointertap', () => { if (!c.locked && onClick) onClick(); });
+    c.setLabel = s => { t.text = s; };
+    // 讓外面（引擎）可以借這層亮片做「數字跳動了」的閃光。
+    // 動畫本身交給呼叫端的 tween 驅動 —— ui.js 沒有 app/ticker，
+    // 在這裡自己開一支 requestAnimationFrame 會變成第二套時間軸。
+    c.setGloss = v => { gloss.alpha = v; };
+    c.setLocked = v => {
+        c.locked = v;
+        c.alpha = v ? 0.45 : 1;
+        gloss.alpha = 0;
+        lift(0);
+        c.cursor = v ? 'default' : 'pointer';
+    };
+    return c;
+}
+
+// 覆蓋面板的底：白卡片 + 標題，回傳可用的內容範圍
+// bg 給了正式美術底圖（例如推理板的羊皮紙）就整張鋪在面板範圍上 ——
+// 撕邊、圖釘那些都畫在圖裡，所以不再另外描白卡片的圓角框。缺圖時自動退回白卡片。
+// titleY 是標題離面板上緣的距離，底圖上緣有東西（推理板那顆圖釘）時往下讓一點
+export function panelBase(panel, { x = 140, y = 64, w = 680, h = 472, title, bg, titleY = 22 }) {
+    if (hasTexture(bg)) {
+        drawProps([{ t: 'img', src: bg, x, y, w, h }], panel);
+    } else {
+        panel.addChild(
+            new Graphics().roundRect(x, y, w, h, 28)
+                .fill({ color: COL.panel }).stroke({ width: 6, color: COL.border })
+        );
+    }
+    const t = mkText(title, 25, COL.ink, { weight: '700' });
+    t.anchor.set(0.5, 0);
+    t.position.set(x + w / 2, y + titleY);
+    panel.addChild(t);
+    return { x, y, w, h, cx: x + w / 2 };
+}
+
+// ============================================================
+// 場景美術：把資料檔裡的 props 畫出來
+// 之後換成正式美術素材時，只要把 props 換成 { t:'img', src:'...' } 即可，
+// 熱點座標完全不用動。
+// ============================================================
+export function drawProps(list, layer) {
+    for (const p of list) {
+        let node;
+        switch (p.t) {
+            case 'rect': {
+                const g = new Graphics();
+                p.r ? g.roundRect(p.x, p.y, p.w, p.h, p.r) : g.rect(p.x, p.y, p.w, p.h);
+                g.fill({ color: p.c, alpha: p.a ?? 1 });
+                if (p.s) g.stroke({ width: p.sw ?? 3, color: p.s });
+                node = g;
+                break;
+            }
+            case 'circle':
+                node = new Graphics().circle(p.x, p.y, p.rad).fill({ color: p.c, alpha: p.a ?? 1 });
+                if (p.s) node.stroke({ width: p.sw ?? 3, color: p.s });
+                break;
+            case 'ellipse':
+                node = new Graphics().ellipse(p.x, p.y, p.rx, p.ry).fill({ color: p.c, alpha: p.a ?? 1 });
+                break;
+            case 'poly':
+                node = new Graphics().poly(p.pts).fill({ color: p.c, alpha: p.a ?? 1 });
+                break;
+            case 'line': {
+                const g = new Graphics().moveTo(p.pts[0], p.pts[1]);
+                for (let i = 2; i < p.pts.length; i += 2) g.lineTo(p.pts[i], p.pts[i + 1]);
+                node = g.stroke({ width: p.w ?? 3, color: p.c, cap: 'round' });
+                break;
+            }
+            case 'emoji':
+                node = mkText(p.s, p.size, 0xffffff);
+                node.anchor.set(0.5);
+                node.position.set(p.x, p.y);
+                if (p.rot) node.rotation = p.rot;
+                if (p.a != null) node.alpha = p.a;
+                break;
+            case 'text':
+                node = mkText(p.s, p.size, p.c, { weight: p.weight, wrap: p.wrap, spacing: p.spacing });
+                node.anchor.set(p.ax ?? 0, p.ay ?? 0);
+                node.position.set(p.x, p.y);
+                if (p.rot) node.rotation = p.rot;
+                break;
+            case 'img': {
+                // 正式素材用；圖還沒放進來時就跳過，不會壞掉
+                const tex = Assets.cache.has(p.src) ? Assets.get(p.src) : null;
+                if (!tex) break;
+                node = new Sprite(tex);
+                node.position.set(p.x, p.y);
+                if (p.w) node.width = p.w;
+                if (p.h) node.height = p.h;
+                if (p.anchor) node.anchor.set(p.anchor);
+                if (p.a != null) node.alpha = p.a;
+                // tint：把素材壓成場景的色溫。平光的向量素材直接貼進畫好的房間裡
+                // 會亮得像貼紙，乘上一個暖色就融進去了
+                if (p.tint != null) node.tint = p.tint;
+                break;
+            }
+        }
+        if (node) layer.addChild(node);
+    }
+}
+
+// 把資料檔裡所有 { t:'img' } 的圖載進來（缺圖不會讓遊戲當掉）
+// 掃描範圍：場景背景、props、物件的 art / artDone、謎題畫作的四種濾鏡圖，
+// 還有放大檢視面板（zoom.img）用的特寫圖。
+const PAINT_KEYS = ['img', 'imgRed', 'imgBlue', 'imgPurple'];
+
+// 依場景把圖分堆：{ global, byScene }
+// global 是不屬於任何場景的（助手立繪、結局的本尊）。
+export function collectImages(caseData) {
+    const global = new Set();
+    const byScene = {};
+    const add = (set, s) => { if (s) set.add(s); };
+    const fromProps = (set, list) => {
+        for (const p of list || []) if (p.t === 'img' && p.src) add(set, p.src);
+    };
+    const fromPuzzle = (set, puzzle) => {
+        for (const p of puzzle?.paintings || []) {
+            for (const k of PAINT_KEYS) add(set, p[k]);
+        }
+        // 凱撒盤的正式美術：信紙、外圈底座、內轉盤；bgImg 是謎題面板的底圖
+        for (const k of ['bgImg', 'noteImg', 'dialImg', 'dialInnerImg']) add(set, puzzle?.[k]);
+    };
+    // 放大檢視可以給單張（img）或一疊（imgs）
+    const fromZoom = (set, z) => {
+        if (!z) return;
+        add(set, z.img);
+        for (const s of z.imgs || []) add(set, s);
+    };
+
+    add(global, caseData.assistantImg);            // 對話框左邊的助手立繪，一開場就會出現
+    for (const [id, sc] of Object.entries(caseData.scenes)) {
+        const set = byScene[id] = new Set();
+        add(set, sc.bg);
+        fromProps(set, sc.props);
+        for (const r of sc.records || []) add(set, r.img);   // 黑板上的證詞紀錄表
+        for (const o of sc.objects || []) {
+            fromProps(set, o.art);
+            fromProps(set, o.artDone);
+            fromPuzzle(set, o.puzzle);
+            fromZoom(set, o.zoom);
+        }
+        for (const h of sc.hotspots || []) {
+            fromPuzzle(set, h.puzzle);
+            fromZoom(set, h.zoom);
+        }
+    }
+    // 結局的失竊本尊排最後：整場只有破案那一刻會用到
+    add(global, caseData.ending?.img);
+    return { global, byScene };
+}
+
+// 一次把一堆圖平行載進來。單張失敗只是那張沒有正式美術，會退回向量替代圖形，
+// 所以每張各自 catch，不讓一張壞圖拖垮整批。
+export function loadImages(srcs) {
+    return Promise.all([...srcs].map(src => Assets.load(src).catch(() => {
+        console.warn('[偵探事件簿] 找不到素材，先用替代圖形：', src);
+    })));
+}
+
+// 開場只等「起始場景 + 全域」那一批，其餘場景在背景繼續載 ——
+// 玩家在校長室摸索的時間，足夠把推理室的圖載完。
+// 真的還沒載完就走過去也不會出事：transitionTo 會等 ensureSceneLoaded()。
+export async function preloadImages(caseData, startScene) {
+    const { global, byScene } = collectImages(caseData);
+    const first = new Set([...global, ...(byScene[startScene] || [])]);
+    await loadImages(first);
+    const rest = Object.entries(byScene)
+        .filter(([id]) => id !== startScene)
+        .flatMap(([, set]) => [...set])
+        .filter(s => !first.has(s));
+    loadImages(rest);          // 故意不 await：背景載，不擋開場
+    return { first: first.size, rest: rest.length };
+}
+
+// 進場景前確認它的圖都到齊了。通常背景那批早就載完，會立刻 resolve。
+export function ensureSceneLoaded(caseData, id) {
+    const { byScene } = collectImages(caseData);
+    return loadImages(byScene[id] || []);
+}
+
+// 圖載進來了沒？（沒有就讓呼叫端退回向量替代圖形）
+export const hasTexture = src => !!src && Assets.cache.has(src);

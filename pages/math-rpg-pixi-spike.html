@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數學勇者 · Pixi 角色 Spike</title>
+<!--
+  ============================================================================
+  這是一個 SPIKE，不是遊戲的一部分。
+  ============================================================================
+  目的只有一個：**回答「角色搬進 Pixi 之後，手感能不能跟現在的 CSS 版一樣」**。
+
+  docs/math-rpg-pixi.md 的第 3 節指出，第 8 項（角色搬進 Pixi）是整條路線的門檻 ——
+  過了它，衝擊波位移、爆擊色差、剪影碎裂、受傷閃白這些著色器效果才解鎖；
+  過不了，就整個放棄 Pixi 改用 canvas 2D 粒子層。
+
+  那份文件建議「先做 1、2、10（粒子）再決定」，但那三項用 canvas 2D 的
+  globalCompositeOperation='lighter' 就做得到，0 KB —— 做完只會知道「粒子好看」，
+  不會知道 Pixi 值不值 818 KB。所以這裡反過來先做最高風險的那一步。
+
+  比較方式：左右兩邊**同時**跑同一組關鍵影格。
+  - 左：從遊戲裡原封不動複製過來的 CSS @keyframes
+  - 右：Pixi ticker，逐格插值同一組數值
+  兩邊的數值表就並排放在下面的 JS 裡，誰漂掉了一眼看得出來。
+
+  結論寫回 docs/math-rpg-pixi.md，不要寫在這裡。
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    :root {
+        /* 兩邊共用同一個 u。遊戲裡 --u 是量探針元素得到的，這裡固定住，
+           因為 spike 要比的是動畫手感，不是 RWD。 */
+        --u: 20px;
+        --panel-w: 420px;
+        --panel-h: 340px;
+        color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0; padding: 24px;
+        background: #12151d; color: #e8eaf0;
+        font-family: 'Noto Sans TC', system-ui, sans-serif;
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .sub { color: #99a1b3; font-size: 13px; margin: 0 0 20px; line-height: 1.6; }
+    .sub code { background: #1e2330; padding: 1px 5px; border-radius: 4px; }
+
+    .stage-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .panel { background: #1a1f2b; border: 1px solid #2a3142; border-radius: 12px; overflow: hidden; }
+    .panel-head {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 8px 14px; background: #202634; font-size: 13px; font-weight: 700;
+        border-bottom: 1px solid #2a3142;
+    }
+    .panel-head .meta { font-weight: 400; color: #7f8a9e; font-variant-numeric: tabular-nums; }
+    .panel-body {
+        position: relative; width: var(--panel-w); height: var(--panel-h);
+        /* 跟遊戲一樣的天空/地面配色，避免因為背景不同而誤判亮度 */
+        background: linear-gradient(180deg, #cfe8f7 0%, #cfe8f7 68%, #9ad06f 68%, #68a349 100%);
+        overflow: hidden;
+    }
+
+    /* ================= 左：CSS 版（以下規則從 pages/math-rpg.html 原封不動搬過來） ============ */
+    .sprite-slot { position: absolute; inset: 0; }
+    .sprite {
+        position: absolute;
+        left: calc(50% - 7 * var(--u));
+        bottom: calc(0.15 * var(--u));
+        width: calc(14 * var(--u)); height: calc(14 * var(--u));
+        transform-origin: 50% 100%;
+    }
+    .sprite-body {
+        width: 100%; height: 100%;
+        background-image: var(--sprite);
+        background-size: contain; background-repeat: no-repeat; background-position: center bottom;
+        animation: var(--idle-anim, breathe) var(--idle-dur, 2.6s) ease-in-out infinite;
+        transform-origin: 50% 100%;
+    }
+    .sprite.idle-float .sprite-body { --idle-anim: floatIdle; --idle-dur: 3.4s; }
+    .sprite.idle-heavy .sprite-body { --idle-anim: heavyIdle; --idle-dur: 4.2s; }
+
+    .ground-shadow {
+        position: absolute; left: 50%; bottom: calc(0.125 * var(--u));
+        width: calc(6 * var(--u)); height: calc(0.9 * var(--u));
+        margin-left: calc(-3 * var(--u));
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0.34), rgba(0,0,0,0) 70%);
+        animation: shadowBreathe 2.6s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+        0%, 100% { transform: translateY(0) scale(1, 1); }
+        50%      { transform: translateY(-9px) scale(0.972, 1.028); }
+    }
+    @keyframes floatIdle {
+        0%, 100% { transform: translateY(0)     rotate(-1.4deg); }
+        50%      { transform: translateY(-18px) rotate(1.4deg); }
+    }
+    @keyframes heavyIdle {
+        0%, 100% { transform: translateY(0)    scale(1, 1); }
+        50%      { transform: translateY(-4px) scale(1.014, 0.986); }
+    }
+    @keyframes shadowBreathe {
+        0%, 100% { transform: scale(1);    opacity: 1; }
+        50%      { transform: scale(0.92); opacity: 0.78; }
+    }
+    @keyframes lunge {
+        0%   { transform: translateX(0) scale(1, 1); }
+        18%  { transform: translateX(calc(-14px * var(--dir))) scale(1.10, 0.90); }
+        38%  { transform: translateX(calc(56px  * var(--dir))) scale(0.90, 1.12); }
+        52%  { transform: translateX(calc(50px  * var(--dir))) scale(1.04, 0.96); }
+        100% { transform: translateX(0) scale(1, 1); }
+    }
+    .sprite.lunge { animation: lunge 0.52s cubic-bezier(0.3, 0, 0.2, 1); }
+    @keyframes hurt {
+        0%   { transform: translateX(0) rotate(0deg); }
+        12%  { transform: translateX(calc(-22px * var(--dir))) rotate(calc(-9deg * var(--dir))); }
+        34%  { transform: translateX(calc(10px  * var(--dir))) rotate(calc(5deg  * var(--dir))); }
+        56%  { transform: translateX(calc(-6px  * var(--dir))) rotate(calc(-3deg * var(--dir))); }
+        78%  { transform: translateX(calc(3px   * var(--dir))) rotate(calc(1deg  * var(--dir))); }
+        100% { transform: translateX(0) rotate(0deg); }
+    }
+    .sprite.hurt { animation: hurt 0.55s ease-out; }
+    .sprite.hurt .sprite-body {
+        animation: var(--idle-anim, breathe) var(--idle-dur, 2.6s) ease-in-out infinite,
+                   flashWhite 0.16s steps(1) 2;
+    }
+    @keyframes flashWhite {
+        0%, 49%   { filter: brightness(2.8) saturate(0.1) contrast(1.3); }
+        50%, 100% { filter: none; }
+    }
+    @keyframes die {
+        0%   { transform: translateX(0) rotate(0deg) scale(1); opacity: 1; }
+        20%  { transform: translateX(calc(-12px * var(--dir))) rotate(calc(-14deg * var(--dir))) scale(1.05); opacity: 1; }
+        100% { transform: translateX(calc(-48px * var(--dir))) translateY(20px) rotate(calc(-84deg * var(--dir))) scale(0.86); opacity: 0; }
+    }
+    .sprite.die { animation: die 0.85s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+    .sprite.die .sprite-body { animation: none; filter: grayscale(0.75) brightness(0.85); }
+    @keyframes spawn {
+        0%   { transform: translateX(calc(-130px * var(--dir))) scale(0.9); opacity: 0; }
+        55%  { transform: translateX(0) scale(1.08, 0.92); opacity: 1; }
+        72%  { transform: translateX(0) translateY(-10px) scale(0.97, 1.05); }
+        100% { transform: translateX(0) translateY(0) scale(1, 1); opacity: 1; }
+    }
+    .sprite.spawn { animation: spawn 0.6s cubic-bezier(0.2, 0.7, 0.3, 1); }
+
+    /* ================= 控制列 ================= */
+    .controls { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    button {
+        background: #2b3446; color: #e8eaf0; border: 1px solid #3a465e;
+        border-radius: 8px; padding: 9px 16px; font-size: 14px; font-weight: 600;
+        cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: #364259; }
+    button.primary { background: #3d6ea8; border-color: #4d84c4; }
+    button.primary:hover { background: #4a80bd; }
+    .group-label { color: #7f8a9e; font-size: 12px; margin-right: 2px; }
+    .divider { width: 1px; height: 24px; background: #2a3142; margin: 0 4px; }
+
+    .notes { margin-top: 24px; max-width: 900px; color: #99a1b3; font-size: 13px; line-height: 1.75; }
+    .notes h2 { color: #e8eaf0; font-size: 15px; margin: 20px 0 8px; }
+    .notes ul { padding-left: 20px; margin: 6px 0; }
+    .notes code { background: #1e2330; padding: 1px 5px; border-radius: 4px; color: #c9d4e6; }
+    .warn { color: #ffb74d; }
+    #boot-error { color: #ff8a80; font-weight: 700; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<h1>數學勇者 · Pixi 角色 Spike</h1>
+<p class="sub">
+    左右同時跑<strong>同一組關鍵影格</strong>：左邊是遊戲現在用的 CSS 動畫，右邊是 Pixi ticker 逐格插值。<br>
+    要判斷的不是「Pixi 能不能動」，而是<strong>手感有沒有掉</strong> —— 蓄力的頓挫、受擊的擺盪衰減、倒下的重量。
+</p>
+
+<div class="stage-row">
+    <div class="panel">
+        <div class="panel-head"><span>CSS（現況）</span><span class="meta" id="css-meta">—</span></div>
+        <div class="panel-body">
+            <div class="sprite-slot">
+                <div id="css-sprite" class="sprite" style="--dir: 1; --sprite: url('../assets/images/math-rpg/hero.webp');">
+                    <div class="sprite-body"></div>
+                </div>
+                <div class="ground-shadow"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head"><span>PixiJS 8.20.1</span><span class="meta" id="pixi-meta">載入中…</span></div>
+        <div class="panel-body" id="pixi-host"></div>
+    </div>
+</div>
+
+<div class="controls">
+    <span class="group-label">動作</span>
+    <button class="primary" onclick="fire('lunge')">衝刺攻擊</button>
+    <button class="primary" onclick="fire('hurt')">受擊</button>
+    <button class="primary" onclick="fire('spawn')">登場</button>
+    <button class="primary" onclick="fire('die')">倒下</button>
+    <button onclick="fire('reset')">重置</button>
+    <div class="divider"></div>
+    <span class="group-label">待機</span>
+    <button onclick="setIdle('breathe')">呼吸</button>
+    <button onclick="setIdle('float')">飄浮</button>
+    <button onclick="setIdle('heavy')">重量</button>
+    <div class="divider"></div>
+    <span class="group-label">角色</span>
+    <button onclick="setLook('hero')">勇者</button>
+    <button onclick="setLook('enemy4')">骨龍</button>
+    <button onclick="setLook('enemy6')">魔王</button>
+    <div class="divider"></div>
+    <button onclick="fire('slash')">劍氣（僅 Pixi）</button>
+</div>
+
+<div id="boot-error"></div>
+
+<div class="notes">
+    <h2>這個 spike 在驗證什麼</h2>
+    <ul>
+        <li><strong>手感能不能 1:1 重現。</strong> 左右的數值表是同一份，差異只會來自插值與 easing 的實作。</li>
+        <li><strong>巢狀 transform 有沒有正確對應。</strong> CSS 是兩層：<code>.sprite</code> 跑動作、<code>.sprite-body</code> 跑待機呼吸。
+            Pixi 這邊也做成兩層（外層 Container ＝ 動作，內層 Sprite ＝ 待機），錨點都設在 <code>50% 100%</code>（<code>anchor = (0.5, 1)</code>）
+            對齊 CSS 的 <code>transform-origin</code>，縮放與旋轉才會繞同一個點。</li>
+        <li><strong>受傷閃白</strong>：CSS 用 <code>filter: brightness(2.8) saturate(0.1)</code>，Pixi 用 <code>ColorMatrixFilter</code>。
+            這是 Pixi 真正的價值所在 —— 同一條路上還有溶解、色差、殘影，CSS filter 做不到。</li>
+        <li><strong>效能</strong>：右上角的 FPS 是 <code>app.ticker.FPS</code>。學校的低階機器要看這個數字。</li>
+    </ul>
+
+    <h2>量測結果（2026-08-27）</h2>
+    <p>
+        用 Web Animations API 把 CSS 動畫暫停在任意時間點、讀瀏覽器自己算出來的 <code>transform</code>，
+        跟 Pixi 在同一時間點的值逐點對照：
+    </p>
+    <ul>
+        <li><strong><code>lunge</code> / <code>hurt</code> / <code>spawn</code> / <code>die</code> 四段，
+            所有關鍵影格停點與中間取樣點的位移誤差都是 0.00px。</strong>
+            自己解的 cubic-bezier（Newton 迭代）跟瀏覽器的實作在這個精度下沒有可測差異。</li>
+        <li>過程中抓到一個真 bug，也是這個 spike 唯一真正的產出：
+            <strong>CSS 的 <code>animation-timing-function</code> 是套在「每一段關鍵影格之間」，不是整段動畫上。</strong>
+            寫成後者的話，<code>lunge</code> 在 38% 只會衝到 x=38 而不是 x=56，衝刺的爆發力整個不見。
+            見 <code>sampleClip()</code> 的註解。</li>
+    </ul>
+
+    <h2>還沒驗證的部分</h2>
+    <ul>
+        <li class="warn"><strong>肉眼手感沒有人看過。</strong> 上面全部是數值比對。
+            數值一樣不等於看起來一樣（動態模糊、合成時機、螢幕更新率都可能造成差異）——
+            <strong>請自己開這一頁按幾下</strong>，這是這個 spike 唯一要你做的事。</li>
+        <li class="warn"><strong>低階機器的 FPS 沒測過。</strong> 右上角的數字要在學校那台電腦上看才算數。</li>
+        <li>倒下的 <code>filter: grayscale(0.75) brightness(0.85)</code> 在 Pixi 是手寫色彩矩陣。
+            數值有對齊 CSS 的 luma 係數，但沒有逐像素比對過，顏色可能有肉眼可見的小差。</li>
+        <li>劍氣只有 Pixi 那側有。素材的 alpha 已經烘進檔案（見 <code>.claude/math-rpg-fx.sh</code>），
+            Pixi 這裡設 <code>blendMode = 'add'</code>，<strong>不要</strong>再做一次亮度轉透明。</li>
+    </ul>
+</div>
+
+<script src="../assets/vendor/pixi.min.js"></script>
+<script>
+// ===================================================================
+// 關鍵影格表 —— 左右兩邊的唯一真相
+// ===================================================================
+// 上面 CSS 的 @keyframes 是從遊戲原封不動複製的；這裡是同一組數值的 JS 版。
+// **改任何一邊都要改另一邊**，否則這個 spike 就失去比較的意義了。
+//
+// x/y  : px 位移        sx/sy : 縮放       rot : 度數（會乘上 dir）
+// a    : opacity
+// 沒寫到的屬性沿用預設（x=y=rot=0, sx=sy=1, a=1）。
+const CLIPS = {
+    lunge: {
+        dur: 520, ease: [0.3, 0, 0.2, 1],
+        keys: [
+            { t: 0.00, x: 0,   sx: 1.00, sy: 1.00 },
+            { t: 0.18, x: -14, sx: 1.10, sy: 0.90 },
+            { t: 0.38, x: 56,  sx: 0.90, sy: 1.12 },
+            { t: 0.52, x: 50,  sx: 1.04, sy: 0.96 },
+            { t: 1.00, x: 0,   sx: 1.00, sy: 1.00 }
+        ]
+    },
+    hurt: {
+        dur: 550, ease: 'ease-out', flash: true,
+        keys: [
+            { t: 0.00, x: 0,   rot: 0 },
+            { t: 0.12, x: -22, rot: -9 },
+            { t: 0.34, x: 10,  rot: 5 },
+            { t: 0.56, x: -6,  rot: -3 },
+            { t: 0.78, x: 3,   rot: 1 },
+            { t: 1.00, x: 0,   rot: 0 }
+        ]
+    },
+    die: {
+        dur: 850, ease: [0.4, 0, 0.6, 1], hold: true, dead: true,
+        keys: [
+            { t: 0.00, x: 0,   y: 0,  rot: 0,   sx: 1.00, sy: 1.00, a: 1 },
+            { t: 0.20, x: -12, y: 0,  rot: -14, sx: 1.05, sy: 1.05, a: 1 },
+            { t: 1.00, x: -48, y: 20, rot: -84, sx: 0.86, sy: 0.86, a: 0 }
+        ]
+    },
+    spawn: {
+        dur: 600, ease: [0.2, 0.7, 0.3, 1],
+        keys: [
+            { t: 0.00, x: -130, y: 0,   sx: 0.90, sy: 0.90, a: 0 },
+            { t: 0.55, x: 0,    y: 0,   sx: 1.08, sy: 0.92, a: 1 },
+            { t: 0.72, x: 0,    y: -10, sx: 0.97, sy: 1.05, a: 1 },
+            { t: 1.00, x: 0,    y: 0,   sx: 1.00, sy: 1.00, a: 1 }
+        ]
+    }
+};
+
+// 待機動作。CSS 是 `ease-in-out infinite` 的來回，這裡用同樣的週期與端點值。
+const IDLES = {
+    breathe: { dur: 2600, y: -9,  sx: 0.972, sy: 1.028, rot: 0 },
+    float:   { dur: 3400, y: -18, sx: 1,     sy: 1,     rot: 1.4, rotFrom: -1.4 },
+    heavy:   { dur: 4200, y: -4,  sx: 1.014, sy: 0.986, rot: 0 }
+};
+
+const LOOKS = {
+    hero:   { img: '../assets/images/math-rpg/hero.webp',   idle: 'breathe' },
+    enemy4: { img: '../assets/images/math-rpg/enemy4.webp', idle: 'breathe' },
+    enemy6: { img: '../assets/images/math-rpg/enemy6.webp', idle: 'heavy' }
+};
+
+// ===================================================================
+// easing
+// ===================================================================
+// CSS 的 cubic-bezier(x1,y1,x2,y2) 是「給定 x 求 y」，而不是直接代入 t。
+// 先用 Newton 迭代把 x 解回參數 s，再算 y。誤差比肉眼可辨的門檻小兩個數量級。
+function cubicBezier(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    const sampleX = s => ((ax * s + bx) * s + cx) * s;
+    const sampleY = s => ((ay * s + by) * s + cy) * s;
+    const slopeX  = s => (3 * ax * s + 2 * bx) * s + cx;
+    return x => {
+        let s = x;
+        for (let i = 0; i < 8; i++) {
+            const d = sampleX(s) - x;
+            if (Math.abs(d) < 1e-6) break;
+            const k = slopeX(s);
+            if (Math.abs(k) < 1e-6) break;
+            s -= d / k;
+        }
+        return sampleY(Math.min(1, Math.max(0, s)));
+    };
+}
+const EASE = {
+    'ease-out':    cubicBezier(0, 0, 0.58, 1),
+    'ease-in-out': cubicBezier(0.42, 0, 0.58, 1)
+};
+function easeFn(spec) {
+    if (Array.isArray(spec)) return cubicBezier(...spec);
+    return EASE[spec] || (x => x);
+}
+
+// 在關鍵影格之間插值。
+//
+// ⚠️ 這裡踩過一次坑，寫清楚免得再踩：
+// **CSS 的 animation-timing-function 是套在「每一段關鍵影格之間」，不是套在整段動畫上。**
+// 一開始寫成「先把整體進度 t 過 easing，再拿去找區間」，結果停點全部漂掉 ——
+// lunge 在 38% 應該是 x=56（衝到最前面），實測只有 38.2，衝刺的爆發力整個消失，
+// 看起來像軟綿綿地滑過去。
+//
+// 正確作法：用**原始的 t** 找出所在區間，把區間內的進度算成 0~1，再對這個局部進度做 easing。
+// 這樣每個關鍵影格的停點值都會被精準命中，跟 CSS 一致。
+function sampleClip(clip, t) {
+    const keys = clip.keys;
+    let i = 0;
+    while (i < keys.length - 2 && t > keys[i + 1].t) i++;
+    const a = keys[i], b = keys[i + 1];
+    const span = b.t - a.t;
+    const raw = span <= 0 ? 0 : Math.min(1, Math.max(0, (t - a.t) / span));
+    const k = easeFn(clip.ease)(raw);
+    const get = (o, p, dflt) => (o[p] === undefined ? dflt : o[p]);
+    const lerp = (p, dflt) => get(a, p, dflt) + (get(b, p, dflt) - get(a, p, dflt)) * k;
+    return { x: lerp('x', 0), y: lerp('y', 0), rot: lerp('rot', 0),
+             sx: lerp('sx', 1), sy: lerp('sy', 1), a: lerp('a', 1) };
+}
+
+// ===================================================================
+// 左：CSS 側的驅動（就是加 class 而已，跟遊戲裡的 act() 一樣）
+// ===================================================================
+const cssSprite = document.getElementById('css-sprite');
+function cssPlay(name) {
+    cssSprite.classList.remove('lunge', 'hurt', 'die', 'spawn');
+    void cssSprite.offsetWidth;   // 強制 reflow，否則同一個動畫連按兩次不會重播
+    if (name !== 'reset') cssSprite.classList.add(name);
+}
+function cssIdle(kind) {
+    cssSprite.classList.remove('idle-float', 'idle-heavy');
+    if (kind === 'float') cssSprite.classList.add('idle-float');
+    if (kind === 'heavy') cssSprite.classList.add('idle-heavy');
+}
+
+// ===================================================================
+// 右：Pixi 側
+// ===================================================================
+let app, actionLayer, bodySprite, shadowGfx, slashSprite, flashFilter, deadFilter;
+let current = null;      // { clip, name, start }
+let idleKind = 'breathe';
+let dir = 1;
+const U = 20;            // 跟 CSS 的 --u 一致
+const SPRITE_PX = 14 * U;
+
+// CSS 的 filter: brightness(2.8) saturate(0.1) contrast(1.3) 對應的色彩矩陣。
+//
+// **不要用 ColorMatrixFilter 的 brightness()/saturate() 疊著呼叫** ——
+// 那些方法每一個都是重設整個矩陣（第二個參數 multiply 才是相乘），很容易互相蓋掉。
+// 三個效果一次算好比較不會出錯：
+//   saturate  是一個以 luma 權重內插到灰階的矩陣
+//   brightness 是整體乘 b
+//   contrast   是 out = (in - 0.5) * c + 0.5，需要用到第 5 欄的**偏移量**
+// 合併後：係數全部乘上 (b*c)，偏移量 = 0.5 * (1 - c)。
+function makeFlashFilter() {
+    const f = new PIXI.ColorMatrixFilter();
+    const b = 2.8, s = 0.1, c = 1.3;
+    const lr = 0.2126, lg = 0.7152, lb = 0.0722;
+    const k = b * c, off = 0.5 * (1 - c);
+    f.matrix = [
+        k * (lr + s * (1 - lr)), k * (lg * (1 - s)),      k * (lb * (1 - s)),      0, off,
+        k * (lr * (1 - s)),      k * (lg + s * (1 - lg)), k * (lb * (1 - s)),      0, off,
+        k * (lr * (1 - s)),      k * (lg * (1 - s)),      k * (lb + s * (1 - lb)), 0, off,
+        0, 0, 0, 1, 0
+    ];
+    return f;
+}
+// CSS 的 filter: grayscale(0.75) brightness(0.85)（倒下）
+function makeDeadFilter() {
+    const f = new PIXI.ColorMatrixFilter();
+    const g = 0.75, b = 0.85;
+    const lr = 0.2126, lg = 0.7152, lb = 0.0722;
+    const m = [
+        b * (1 - g + g * lr), b * (g * lg),         b * (g * lb),         0, 0,
+        b * (g * lr),         b * (1 - g + g * lg), b * (g * lb),         0, 0,
+        b * (g * lr),         b * (g * lg),         b * (1 - g + g * lb), 0, 0,
+        0, 0, 0, 1, 0
+    ];
+    f.matrix = m;
+    return f;
+}
+
+async function boot() {
+    const host = document.getElementById('pixi-host');
+    app = new PIXI.Application();
+    await app.init({
+        width: host.clientWidth,
+        height: host.clientHeight,
+        backgroundAlpha: 0,          // 背景交給 .panel-body 的 CSS 漸層，兩邊才是同一個底
+        antialias: true,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true
+    });
+    host.appendChild(app.canvas);
+    app.canvas.style.position = 'absolute';
+    app.canvas.style.inset = '0';
+
+    const paths = Object.values(LOOKS).map(l => l.img)
+        .concat(['../assets/images/math-rpg/slash-wide.webp']);
+    await PIXI.Assets.load(paths);
+
+    const groundY = host.clientHeight - 0.15 * U;   // 對齊 CSS 的 bottom: 0.15u
+    const centerX = host.clientWidth / 2;
+
+    // 地面陰影（CSS 是 radial-gradient，這裡用一個橢圓 + alpha 近似）
+    shadowGfx = new PIXI.Graphics();
+    shadowGfx.ellipse(0, 0, 3 * U, 0.45 * U).fill({ color: 0x000000, alpha: 0.34 });
+    shadowGfx.position.set(centerX, host.clientHeight - 0.125 * U);
+    app.stage.addChild(shadowGfx);
+
+    // **兩層結構，對應 CSS 的 .sprite / .sprite-body**
+    // 外層 actionLayer 跑 lunge/hurt/die/spawn，內層 bodySprite 跑待機呼吸。
+    // 錨點都在底部中央，等同 CSS 的 transform-origin: 50% 100%，
+    // 縮放與旋轉才會繞同一個點 —— 這一點錯了，蓄力的擠壓會看起來像整個角色在飄。
+    actionLayer = new PIXI.Container();
+    actionLayer.position.set(centerX, groundY);
+    app.stage.addChild(actionLayer);
+
+    bodySprite = new PIXI.Sprite(PIXI.Assets.get(LOOKS.hero.img));
+    bodySprite.anchor.set(0.5, 1);
+    fitSprite(bodySprite);
+    actionLayer.addChild(bodySprite);
+
+    // 劍氣：素材的 alpha 已經烘進檔案，這裡只要加亮混合，不要再轉一次
+    slashSprite = new PIXI.Sprite(PIXI.Assets.get('../assets/images/math-rpg/slash-wide.webp'));
+    slashSprite.anchor.set(0.5, 0.5);
+    slashSprite.blendMode = 'add';
+    slashSprite.alpha = 0;
+    slashSprite.height = 12 * U;
+    slashSprite.width = slashSprite.height * 1.83;   // 三張寬幅圖是 1.83:1
+    slashSprite.position.set(centerX, groundY - 6 * U);
+    app.stage.addChild(slashSprite);
+
+    flashFilter = makeFlashFilter();
+    deadFilter = makeDeadFilter();
+
+    app.ticker.add(tick);
+    document.getElementById('pixi-meta').innerText = '就緒';
+}
+
+// 讓圖片以「高度 = 14u、底部貼齊、等比」呈現，對齊 CSS 的 background-size: contain + center bottom
+function fitSprite(sp) {
+    const tex = sp.texture;
+    const scale = SPRITE_PX / tex.height;
+    sp.scale.set(scale);
+    sp._baseScale = scale;
+}
+
+let slashStart = -1;
+
+function tick() {
+    const now = performance.now();
+    const meta = document.getElementById('pixi-meta');
+    meta.innerText = `${app.ticker.FPS.toFixed(0)} FPS`;
+
+    // --- 待機（內層）---
+    const idle = IDLES[idleKind];
+    // CSS 的 ease-in-out infinite 是 0→50%→100% 的來回，用 easing 過的三角波重現
+    const phase = (now % idle.dur) / idle.dur;
+    const tri = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
+    const k = EASE['ease-in-out'](tri);
+    const base = bodySprite._baseScale;
+    if (current && current.name === 'die') {
+        // 倒下時 CSS 是 animation: none —— 待機必須停掉，否則屍體還在呼吸
+        bodySprite.y = 0;
+        bodySprite.scale.set(base);
+        bodySprite.rotation = 0;
+    } else {
+        bodySprite.y = idle.y * k;
+        bodySprite.scale.set(base * (1 + (idle.sx - 1) * k), base * (1 + (idle.sy - 1) * k));
+        const rFrom = idle.rotFrom !== undefined ? idle.rotFrom : 0;
+        bodySprite.rotation = (rFrom + (idle.rot - rFrom) * k) * Math.PI / 180;
+    }
+
+    // 陰影：CSS 的 shadowBreathe 固定 2.6s，與角色的待機週期無關
+    const sp = (now % 2600) / 2600;
+    const stri = sp < 0.5 ? sp * 2 : (1 - sp) * 2;
+    const sk = EASE['ease-in-out'](stri);
+    shadowGfx.scale.set(1 + (0.92 - 1) * sk);
+    shadowGfx.alpha = 1 + (0.78 - 1) * sk;
+
+    // --- 動作（外層）---
+    if (current) {
+        const t = Math.min(1, (now - current.start) / current.clip.dur);
+        const v = sampleClip(current.clip, t);
+        actionLayer.x = centerOf() + v.x * dir;
+        actionLayer.y = groundOf() + v.y;
+        actionLayer.scale.set(v.sx, v.sy);
+        actionLayer.rotation = v.rot * dir * Math.PI / 180;
+        actionLayer.alpha = v.a;
+
+        // 受擊閃白：CSS 是 steps(1) 跑 2 次、每次前半亮 —— 不是漸變，是硬切
+        if (current.clip.flash) {
+            const cycle = 160;
+            const elapsed = now - current.start;
+            const on = elapsed < cycle * 2 && (elapsed % cycle) < cycle * 0.5;
+            bodySprite.filters = on ? [flashFilter] : null;
+        }
+
+        if (t >= 1) {
+            if (current.clip.dead) {
+                bodySprite.filters = [deadFilter];   // 停在倒下的樣子（CSS 的 forwards）
+            } else if (!current.clip.hold) {
+                actionLayer.position.set(centerOf(), groundOf());
+                actionLayer.scale.set(1); actionLayer.rotation = 0; actionLayer.alpha = 1;
+                bodySprite.filters = null;
+            }
+            if (!current.clip.hold) current = null;
+        }
+    }
+
+    // --- 劍氣 ---
+    if (slashStart >= 0) {
+        const t = (now - slashStart) / 500;
+        if (t >= 1) { slashSprite.alpha = 0; slashStart = -1; }
+        else {
+            // 0~53% 飛行、之後淡出，跟遊戲的 slashFly 同一組時序
+            const fly = Math.min(1, Math.max(0, t / 0.53));
+            slashSprite.x = centerOf() - 5 * U + fly * 10 * U;
+            // 兩端都要夾 —— 只夾上界的話，t 是負數時 alpha 會算出負值
+            const rise = Math.min(1, Math.max(0, t / 0.15));
+            const fade = Math.min(1, Math.max(0, 1 - (t - 0.53) / 0.47));
+            slashSprite.alpha = t < 0.53 ? rise : fade;
+            slashSprite.scale.x = Math.abs(slashSprite.scale.x) * (dir >= 0 ? 1 : -1);
+        }
+    }
+}
+
+function centerOf() { return app.screen.width / 2; }
+function groundOf() { return app.screen.height - 0.15 * U; }
+
+function pixiPlay(name) {
+    bodySprite.filters = null;
+    if (name === 'reset' || name === 'slash') {
+        current = null;
+        actionLayer.position.set(centerOf(), groundOf());
+        actionLayer.scale.set(1); actionLayer.rotation = 0; actionLayer.alpha = 1;
+        if (name === 'slash') slashStart = performance.now();
+        return;
+    }
+    current = { clip: CLIPS[name], name, start: performance.now() };
+}
+
+// ===================================================================
+// 兩邊一起觸發 —— 這個 spike 唯一的重點
+// ===================================================================
+function fire(name) {
+    if (name !== 'slash') cssPlay(name);
+    if (app) pixiPlay(name);
+    document.getElementById('css-meta').innerText = name === 'reset' ? '—' : name;
+}
+function setIdle(kind) {
+    idleKind = kind;
+    cssIdle(kind);
+    fire('reset');
+}
+function setLook(key) {
+    const look = LOOKS[key];
+    cssSprite.style.setProperty('--sprite', `url('${look.img}')`);
+    if (app) {
+        bodySprite.texture = PIXI.Assets.get(look.img);
+        fitSprite(bodySprite);
+    }
+    setIdle(look.idle);
+}
+
+boot().catch(err => {
+    document.getElementById('boot-error').innerText =
+        'Pixi 啟動失敗：' + err.message + '（先確認 assets/vendor/pixi.min.js 存在）';
+    document.getElementById('pixi-meta').innerText = '失敗';
+    console.error(err);
+});
+</script>
+</body>
+</html>

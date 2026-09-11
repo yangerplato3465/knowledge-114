@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大耳狗教學網</title>
-    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <link rel="icon" type="image/webp" href="assets/images/favicon.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -163,6 +163,11 @@
         .page-btn .btn-desc { font-size: 13px; color: var(--muted); font-weight: 400; }
         .page-btn .btn-arrow { margin-left: auto; font-size: 16px; color: var(--muted-2); }
 
+        /* 直接連到單一頁面的大主題（沒有下拉） */
+        .category-link { display: block; text-decoration: none; color: inherit; }
+        .category-link:hover { border-color: var(--primary); }
+        .category-link:hover .cat-chevron { color: var(--primary); transform: translateX(4px); }
+
         /* ---------- 手機版 ---------- */
         @media (max-width: 600px) {
             body { padding: 24px 12px; }
@@ -186,7 +191,7 @@
 
     <div class="hub-card">
         <h1>
-            <img src="assets/images/logo.png"
+            <img src="assets/images/logo.webp"
             style="position: relative; 
             top: -5px; 
             vertical-align: middle;">
@@ -258,6 +263,14 @@
                                         </div>
                                         <i class="fa-solid fa-chevron-right btn-arrow"></i>
                                     </a>
+                                    <a href="pages/word-sort.html" class="page-btn">
+                                        <div class="btn-icon">🔤</div>
+                                        <div class="btn-text">
+                                            <div class="btn-title">字尾大分流</div>
+                                            <div class="btn-desc">英文 -ful / -less · 看中文意思把單字甩到正確的那一邊，觸控大螢幕玩最順</div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                                    </a>
                                     <a href="pages/quick-quiz.html" class="page-btn">
                                         <div class="btn-icon">⚡</div>
                                         <div class="btn-text">
@@ -269,6 +282,39 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 偵探事件簿：一個系列一個分類，案件收在裡面。
+                 以後新增案件就在 sub-inner 裡多加一顆 .page-btn，首頁不會再長高。 -->
+            <div class="category">
+                <div class="category-head" onclick="toggleCategory(this)">
+                    <div class="cat-icon">🔍</div>
+                    <div class="cat-text">
+                        <div class="cat-title">偵探事件簿</div>
+                        <div class="cat-desc">點擊尋找線索 · 推理破案</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-down cat-chevron"></i>
+                </div>
+                <div class="sub-list">
+                    <div class="sub-inner">
+                        <a href="pages/detective-golden-owl.html" class="page-btn">
+                            <div class="btn-icon">🦉</div>
+                            <div class="btn-text">
+                                <div class="btn-title">黃金貓頭鷹雕像失竊事件</div>
+                                <div class="btn-desc">校園失竊案 · 密碼與邏輯推理</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
+                        <a href="pages/detective-ai-museum.html" class="page-btn">
+                            <div class="btn-icon">🛰️</div>
+                            <div class="btn-text">
+                                <div class="btn-title">AI 展覽館的消失記憶</div>
+                                <div class="btn-desc">建置中 · 觀察比對與審訊推理</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right btn-arrow"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -334,7 +380,34 @@
 
     <p id="version-label" style="margin-top: 18px; font-size: 13px; color: var(--muted-2);"></p>
 
+    <!--
+      開發工具區。**預設 display:none，只有在 localhost 才會被下面的 script 打開。**
+      .github/workflows/static.yml 把 main 部署到 GitHub Pages，學生看到的是 github.io，
+      這一區在那裡永遠不會出現，不必擔心被誤點。
+
+      這裡放的是「驗證用」而不是「給學生玩」的頁面 ——
+      混進上面的遊戲清單會被誤點，但完全不放又每次都要記網址。
+      日後有新的 spike 或工具頁，加一個 <a> 進來就好。
+    -->
+    <div id="dev-tools" style="display: none; margin-top: 22px; padding-top: 14px;
+                               border-top: 1px dashed var(--muted-2); opacity: 0.8;">
+        <div style="font-size: 12px; color: var(--muted-2); margin-bottom: 6px;">
+            🔧 開發工具（僅 localhost 顯示）
+        </div>
+        <a href="pages/math-rpg-pixi-spike.html"
+           style="font-size: 13px; color: var(--muted-2); display: inline-block; padding: 3px 0;">
+            ⚔️ 數學勇者 · Pixi 角色 Spike
+            <span style="opacity: 0.7;">—— CSS 與 PixiJS 動畫手感並排比較</span>
+        </a>
+    </div>
+
     <script>
+        // 開發工具只在本機顯示。file:// 直接開的話 hostname 是空字串，
+        // 但那種開法 spike 頁的 Pixi 和圖片都會被擋掉，所以刻意不納入。
+        if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+            document.getElementById('dev-tools').style.display = 'block';
+        }
+
         function toggleCategory(head) {
             const cat = head.parentElement;
             const isOpen = cat.classList.contains('open');
@@ -350,10 +423,14 @@
         }
 
         fetch('config.json')
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error('Version unavailable');
+                return r.json();
+            })
             .then(cfg => {
                 document.getElementById('version-label').textContent = `v${cfg.version} · ${cfg.lastUpdated}`;
-            });
+            })
+            .catch(() => { document.getElementById('version-label').textContent = ''; });
     </script>
 
     <script src="assets/js/theme.js"></script>

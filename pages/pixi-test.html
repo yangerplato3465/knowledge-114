@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PixiJS v8 功能測試</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    background: #0d1117; color: #e6edf3;
+    font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  }
+  h1 { font-size: 18px; font-weight: 600; margin: 16px 0 0; letter-spacing: .04em; }
+  #wrap { width: min(96vw, 1200px); aspect-ratio: 960 / 600; position: relative; }
+  #wrap canvas { width: 100%; height: 100%; display: block; border-radius: 10px; }
+  #boot {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 15px; color: #8b949e; pointer-events: none;
+  }
+  #boot.err { color: #ff7b72; white-space: pre-wrap; padding: 24px; text-align: left; font-family: ui-monospace, monospace; font-size: 13px; }
+  #log {
+    width: min(96vw, 1200px); font-family: ui-monospace, "Cascadia Code", monospace;
+    font-size: 12.5px; line-height: 1.7; color: #8b949e;
+    border-top: 1px solid #21262d; padding: 10px 2px 24px;
+  }
+  #log b { color: #3fb950; font-weight: 600; }
+  #log i { color: #ff7b72; font-style: normal; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<h1>PixiJS v8 功能測試</h1>
+
+<div id="wrap"><div id="boot">正在從 CDN 載入 PixiJS…</div></div>
+<div id="log"></div>
+
+<script type="module">
+const boot = document.getElementById('boot');
+const logEl = document.getElementById('log');
+const results = [];
+
+function ok(name, detail = '')  { results.push({ name, pass: true,  detail }); draw(); }
+function bad(name, detail = '') { results.push({ name, pass: false, detail }); draw(); }
+function draw() {
+  logEl.innerHTML = results
+    .map(r => `${r.pass ? '<b>[PASS]</b>' : '<i>[FAIL]</i>'} ${r.name}${r.detail ? ' — ' + r.detail : ''}`)
+    .join('<br>');
+}
+
+try {
+
+// ── 1. 載入 + Application 初始化 ───────────────────────────────────────
+const PIXI = await import('https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.mjs');
+const {
+  Application, Container, Graphics, Text, Sprite, Texture, Rectangle,
+  FillGradient, BlurFilter, ColorMatrixFilter, ParticleContainer, Particle,
+} = PIXI;
+ok('CDN 載入 pixi.mjs', 'v' + PIXI.VERSION);
+
+const W = 960, H = 600;
+const app = new Application();
+await app.init({ width: W, height: H, background: '#0d1117', antialias: true, resolution: 2, autoDensity: false });
+document.getElementById('wrap').appendChild(app.canvas);
+boot.remove();
+
+globalThis.__PIXI_APP__ = app;   // Pixi Devtools 掛勾（沿用偵探事件簿的慣例）
+ok('Application 非同步 init()', `renderer=${app.renderer.name}, ${W}×${H} @${app.renderer.resolution}x`);
+
+// ── 版面小工具 ────────────────────────────────────────────────────────
+const PANEL = 0x161b22, EDGE = 0x30363d;
+function panel(x, y, w, h, title) {
+  const c = new Container();
+  c.position.set(x, y);
+  c.addChild(new Graphics().roundRect(0, 0, w, h, 10).fill(PANEL).stroke({ width: 1, color: EDGE }));
+  c.addChild(new Text({
+    text: title,
+    style: { fontFamily: 'Microsoft JhengHei, sans-serif', fontSize: 13, fill: 0x7d8590 },
+    x: 12, y: 9,
+  }));
+  app.stage.addChild(c);
+  return c;
+}
+function button(parent, x, y, w, label, onTap) {
+  const b = new Container();
+  b.position.set(x, y);
+  const bg = new Graphics().roundRect(0, 0, w, 28, 6).fill(0x21262d).stroke({ width: 1, color: 0x3d444d });
+  const tx = new Text({ text: label, style: { fontFamily: 'Microsoft JhengHei, sans-serif', fontSize: 12, fill: 0xc9d1d9 } });
+  tx.anchor.set(0.5); tx.position.set(w / 2, 14);
+  b.addChild(bg, tx);
+  b.eventMode = 'static';
+  b.cursor = 'pointer';
+  b.hitArea = new Rectangle(0, 0, w, 28);
+  b.on('pointertap', onTap);
+  b.on('pointerover', () => { bg.tint = 0xcccccc; });
+  b.on('pointerout',  () => { bg.tint = 0xffffff; });
+  parent.addChild(b);
+  return { root: b, label: tx };
+}
+
+// ── 2. Graphics：shape-then-fill、漸層、路徑 ──────────────────────────
+{
+  const p = panel(16, 42, 300, 236, 'Graphics — 形狀 / 描邊 / 漸層');
+  const g = new Graphics();
+  g.roundRect(18, 36, 78, 52, 8).fill({ color: 0x388bfd, alpha: 0.85 }).stroke({ width: 2, color: 0x58a6ff });
+  g.circle(140, 62, 27).fill(0xe74c3c);
+  g.star(214, 62, 5, 30, 15, 0).fill(0xf0b429);
+  g.poly([20, 118, 84, 118, 52, 168], true).fill(0x9b59b6);
+
+  const grad = new FillGradient({
+    end: { x: 1, y: 0 },
+    colorStops: [{ offset: 0, color: 0x00d4aa }, { offset: 1, color: 0x7c3aed }],
+  });
+  g.rect(104, 116, 176, 30).fill(grad);
+
+  g.moveTo(104, 168).bezierCurveTo(150, 130, 220, 200, 280, 162).stroke({ width: 4, color: 0x3fb950, cap: 'round' });
+  p.addChild(g);
+  ok('Graphics 形狀/路徑/描邊', 'roundRect·circle·star·poly·bezier');
+  ok('FillGradient 線性漸層', '2 個 colorStop');
+}
+
+// ── 3. generateTexture + Sprite + tint ────────────────────────────────
+let particleTex;
+{
+  const p = panel(330, 42, 300, 236, 'Sprite — generateTexture + tint 動畫');
+  const src = new Graphics().star(20, 20, 6, 19, 9, 0).fill(0xffffff);
+  const tex = app.renderer.generateTexture(src);
+  particleTex = app.renderer.generateTexture(new Graphics().circle(6, 6, 6).fill(0xffffff));
+
+  const tints = [0xff6b6b, 0xffd93d, 0x6bcB77, 0x4d96ff, 0xc77dff, 0xff9f1c];
+  const stars = tints.map((t, i) => {
+    const s = new Sprite(tex);
+    s.anchor.set(0.5);
+    s.tint = t;
+    s.position.set(46 + (i % 3) * 104, 82 + Math.floor(i / 3) * 84);
+    p.addChild(s);
+    return s;
+  });
+  app.ticker.add((ticker) => {
+    stars.forEach((s, i) => {
+      s.rotation += (0.02 + i * 0.006) * ticker.deltaTime;
+      s.scale.set(0.9 + Math.sin(performance.now() / 420 + i) * 0.22);
+    });
+  });
+  ok('renderer.generateTexture()', `${tex.width}×${tex.height}px`);
+  ok('Sprite tint + anchor + scale', tints.length + ' 個');
+}
+
+// ── 4. Container zIndex 排序 + 點擊置頂 ───────────────────────────────
+{
+  const p = panel(644, 42, 300, 236, 'Container — zIndex / 點擊置頂');
+  const deck = new Container();
+  deck.position.set(0, 0);
+  deck.sortableChildren = true;
+  p.addChild(deck);
+
+  const colors = [0x4d96ff, 0x6bcB77, 0xff9f1c];
+  const names = ['卡片 A', '卡片 B', '卡片 C'];
+  let top = 3;
+  colors.forEach((col, i) => {
+    const card = new Container();
+    card.position.set(46 + i * 62, 74 + i * 30);
+    card.zIndex = i;
+    card.addChild(new Graphics().roundRect(0, 0, 132, 96, 10).fill(col).stroke({ width: 2, color: 0x0d1117 }));
+    const label = new Text({ text: names[i], style: { fontFamily: 'Microsoft JhengHei, sans-serif', fontSize: 15, fill: 0x0d1117, fontWeight: 'bold' } });
+    label.position.set(12, 10);
+    card.addChild(label);
+    card.eventMode = 'static';
+    card.cursor = 'pointer';
+    card.on('pointertap', () => { card.zIndex = ++top; });
+    deck.addChild(card);
+  });
+  ok('Container sortableChildren + zIndex', '點卡片可置頂');
+}
+
+// ── 5. 事件：拖曳 ─────────────────────────────────────────────────────
+let dragCount = 0;
+{
+  const p = panel(16, 292, 300, 236, 'Events — 拖曳我');
+  const ball = new Container();
+  ball.position.set(150, 140);
+  ball.addChild(new Graphics().circle(0, 0, 30).fill(0x58a6ff).stroke({ width: 3, color: 0xbfe3ff }));
+  const hint = new Text({ text: '拖曳', style: { fontFamily: 'Microsoft JhengHei, sans-serif', fontSize: 13, fill: 0x0d1117, fontWeight: 'bold' } });
+  hint.anchor.set(0.5);
+  ball.addChild(hint);
+  ball.eventMode = 'static';
+  ball.cursor = 'grab';
+  p.addChild(ball);
+
+  let dragging = false;
+  ball.on('pointerdown', () => { dragging = true; ball.cursor = 'grabbing'; ball.alpha = 0.75; });
+  const stop = () => { if (dragging) dragCount++; dragging = false; ball.cursor = 'grab'; ball.alpha = 1; };
+  ball.on('pointerup', stop);
+  ball.on('pointerupoutside', stop);
+  ball.on('globalpointermove', (e) => {
+    if (!dragging) return;
+    ball.parent.toLocal(e.global, undefined, ball.position);
+    ball.x = Math.max(38, Math.min(262, ball.x));
+    ball.y = Math.max(66, Math.min(200, ball.y));
+  });
+  globalThis.__DRAG_BALL__ = ball;
+  ok('eventMode static + globalpointermove', '含 toLocal 座標換算');
+}
+
+// ── 6. Filters 開關 ───────────────────────────────────────────────────
+{
+  const p = panel(330, 292, 300, 236, 'Filters — Blur / ColorMatrix');
+  const fx = new Container();
+  fx.position.set(0, 24);
+  const art = new Graphics();
+  art.circle(88, 84, 40).fill(0xff6b6b);
+  art.circle(150, 84, 40).fill(0x4d96ff);
+  art.circle(119, 130, 40).fill(0x6bcB77);
+  fx.addChild(art);
+  p.addChild(fx);
+
+  const blur = new BlurFilter({ strength: 6, quality: 4 });
+  const cm = new ColorMatrixFilter();
+  cm.desaturate();
+
+  let mode = 0;
+  const modes = ['無濾鏡', 'BlurFilter', 'ColorMatrix (灰階)', 'Blur + ColorMatrix'];
+  const btn = button(p, 24, 190, 252, modes[0], () => {
+    mode = (mode + 1) % 4;
+    fx.filters = [null, [blur], [cm], [blur, cm]][mode];
+    btn.label.text = modes[mode];
+  });
+  ok('BlurFilter / ColorMatrixFilter', '點按鈕循環 4 種組合');
+}
+
+// ── 7. ParticleContainer ──────────────────────────────────────────────
+const PARTICLES = 4000;
+{
+  const p = panel(644, 292, 300, 236, `ParticleContainer — ${PARTICLES} 顆`);
+  const PW = 276, PH = 168;
+  const pc = new ParticleContainer({
+    texture: particleTex,
+    boundsArea: new Rectangle(0, 0, PW, PH),
+    dynamicProperties: { position: true, rotation: false, color: false },
+  });
+  pc.position.set(12, 46);
+  p.addChild(pc);
+
+  const vel = [];
+  const palette = [0x58a6ff, 0x3fb950, 0xf0b429, 0xff7b72, 0xc77dff];
+  for (let i = 0; i < PARTICLES; i++) {
+    pc.addParticle(new Particle({
+      texture: particleTex,
+      x: Math.random() * PW,
+      y: Math.random() * PH,
+      anchorX: 0.5, anchorY: 0.5,
+      scaleX: 0.28, scaleY: 0.28,
+      tint: palette[i % palette.length],
+      alpha: 0.55 + Math.random() * 0.45,
+    }));
+    vel.push((Math.random() - 0.5) * 1.6, (Math.random() - 0.5) * 1.6);
+  }
+  app.ticker.add((ticker) => {
+    const d = ticker.deltaTime;
+    const kids = pc.particleChildren;
+    for (let i = 0; i < kids.length; i++) {
+      const q = kids[i];
+      q.x += vel[i * 2] * d;
+      q.y += vel[i * 2 + 1] * d;
+      if (q.x < 0) q.x += PW; else if (q.x > PW) q.x -= PW;
+      if (q.y < 0) q.y += PH; else if (q.y > PH) q.y -= PH;
+    }
+    pc.update();
+  });
+  ok('ParticleContainer + Particle', `${PARTICLES} 顆，1 個 draw call`);
+}
+
+// ── 8. HUD：FPS / 狀態 ────────────────────────────────────────────────
+{
+  const hud = new Text({
+    text: '',
+    style: { fontFamily: 'Consolas, monospace', fontSize: 13, fill: 0x7d8590 },
+    x: 18, y: 546,
+  });
+  app.stage.addChild(hud);
+
+  let acc = 0, frames = 0, fps = 0;
+  app.ticker.add((ticker) => {
+    acc += ticker.deltaMS; frames++;
+    if (acc >= 250) { fps = Math.round(frames * 1000 / acc); acc = 0; frames = 0; }
+    hud.text = `FPS ${String(fps).padStart(3)}  |  ${app.renderer.name.toUpperCase()}  |  `
+             + `舞台物件 ${app.stage.children.length}  |  粒子 ${PARTICLES}  |  拖曳次數 ${dragCount}`;
+  });
+  ok('Ticker deltaTime / deltaMS 迴圈', 'FPS 計數器已啟動');
+}
+
+// ── 給自動化測試用的把手 ──────────────────────────────────────────────
+globalThis.__PIXI_TEST__ = {
+  app, results,
+  get passed() { return results.filter(r => r.pass).length; },
+  get failed() { return results.filter(r => !r.pass).length; },
+  get fps() { return Math.round(app.ticker.FPS); },
+  find(text) {
+    let hit = null;
+    (function walk(n) { if (hit) return; if (n.text === text) { hit = n; return; } n.children?.forEach(walk); })(app.stage);
+    return hit;
+  },
+};
+
+ok('全部測試完成', `${results.length} 項通過`);
+
+} catch (err) {
+  boot.className = 'err';
+  boot.textContent = '載入失敗：\n' + (err && err.stack ? err.stack : String(err));
+  bad('執行期例外', String(err));
+  console.error(err);
+}
+</script>
+</body>
+</html>

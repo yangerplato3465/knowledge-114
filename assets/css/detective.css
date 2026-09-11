@@ -1,0 +1,266 @@
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    background-color: var(--bg);
+    margin: 0;
+    padding: 16px;
+    font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.game-bar {
+    display: flex; align-items: center; gap: 16px;
+    flex-wrap: wrap;
+}
+.game-bar h1 { font-size: 22px; font-weight: 700; margin: 0; }
+.back-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--muted); text-decoration: none; font-size: 15px;
+}
+.back-link:hover { color: var(--primary); }
+
+/* 全螢幕時：拿掉圓角外框，底色改成遊戲的深色，畫面就只剩遊戲
+   （切換鈕在畫布右上角的 HTML 頂欄這裡不放，見 detective.js 的 fsHudBtn）*/
+#gameContainer:fullscreen {
+    border: none;
+    border-radius: 0;
+    background: #2b2320;
+}
+
+/* ---- 假全螢幕（iPhone 的 Safari 不讓一般元素進原生全螢幕）----
+   容器 fixed 撐滿視窗、頁面頂欄收起來，看起來就只剩遊戲。
+   100dvh 會扣掉 Safari 那條會縮放的網址列；不支援的瀏覽器退回 100vh。 */
+body.fs-fallback { padding: 0; gap: 0; overflow: hidden; }
+body.fs-fallback .game-bar { display: none; }
+body.fs-fallback #gameContainer {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 999;
+    border: none;
+    border-radius: 0;
+    background: #2b2320;
+}
+
+/* Pixi 畫布容器：吃滿剩餘視窗高度 */
+#gameContainer {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    background: var(--surface-2);
+    border: 3px solid var(--border);
+    border-radius: 22px;
+    box-shadow: 0 8px 22px var(--shadow);
+    overflow: hidden;
+}
+#gameContainer canvas { display: block; }
+
+.game-loading {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 15px;
+}
+
+/* ---- 上課驗證碼門檻（見 assets/js/detective-gate.js）---- */
+
+/* 組別切換器。用 :not([hidden]) 才設 display，否則 display 會蓋掉 hidden 屬性，
+   還沒解鎖時就會冒出一顆空按鈕（跟下面 .gate 是同一個坑）。
+   position:relative 是給底下的下拉選單定位用的。 */
+.group-switch:not([hidden]) {
+    position: relative;
+    margin-left: auto;              /* 整組推到頂欄最右邊 */
+}
+
+/* 目前是哪一組。名字本身就是開選單的按鈕。 */
+.group-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 13px;
+    border: 2px solid var(--primary);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.group-tag:hover { background: var(--primary); color: var(--surface); }
+.group-tag::after { content: '▾'; font-size: 11px; opacity: 0.8; }
+
+/* 連不上進度伺服器：整顆轉成警示色，讓老師走過去就看得到 */
+.group-tag.offline { border-color: var(--bad); color: var(--bad); }
+.group-tag.offline:hover { background: var(--bad); color: var(--surface); }
+
+/* 下拉選單。z-index 要壓過遊戲畫布。 */
+.group-menu:not([hidden]) {
+    display: block;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 900;
+    min-width: 240px;
+    padding: 8px;
+    border: 2px solid var(--border-strong);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+.group-menu button {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 10px;
+    background: none;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.group-menu button:hover:not(:disabled) { background: var(--surface-2); }
+/* 目前這一組：留在清單裡當作標示，但不能點 */
+.group-menu button:disabled {
+    color: var(--primary);
+    font-weight: 700;
+    cursor: default;
+}
+.group-menu hr {
+    margin: 8px 4px;
+    border: none;
+    border-top: 2px solid var(--border);
+}
+
+/* 遮罩本體。用 :not([hidden]) 而不是 .gate{display:flex}，
+   否則 flex 會蓋掉 hidden 屬性，遮罩在不該出現時也會冒出來。 */
+.gate:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--bg);
+}
+.gate-card {
+    width: 100%;
+    max-width: 380px;
+    padding: 34px 28px 26px;
+    text-align: center;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    border-radius: 26px;
+    box-shadow: 0 10px 30px var(--shadow);
+}
+.gate-icon { font-size: 44px; line-height: 1; margin-bottom: 8px; }
+.gate-card h2 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
+.gate-hint { margin: 0 0 22px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+/* 這台裝置記住的組別。同樣用 :not([hidden]) 才設 display，
+   沒有記住任何組別時整塊不該出現。 */
+.gate-groups:not([hidden]) { display: block; margin-bottom: 20px; }
+.gate-groups-title {
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+.gate-group-list { display: flex; flex-direction: column; gap: 8px; }
+.gate-group {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--primary);
+    border-radius: 14px;
+    background: var(--surface-2);
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.gate-group:hover { background: var(--primary); color: var(--surface); }
+.gate-group:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.gate-forget {
+    margin-top: 10px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.gate-forget:hover { color: var(--bad); }
+
+/* 「或輸入驗證碼」的分隔線 */
+.gate-or {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+.gate-or::before,
+.gate-or::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+}
+
+#gateCode {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid var(--border-strong);
+    border-radius: 14px;
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-align: center;
+    text-transform: uppercase;
+}
+#gateCode:focus { outline: none; border-color: var(--primary); }
+#gateCode:disabled { opacity: 0.6; }
+
+.gate-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 13px;
+    border: none;
+    border-radius: 14px;
+    background: var(--grad);
+    color: var(--on-primary);
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.gate-btn:hover:not(:disabled) { box-shadow: 0 6px 16px var(--primary-shadow); }
+.gate-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.gate-err { min-height: 20px; margin-top: 12px; color: var(--bad); font-size: 13px; }
+.gate-back { display: inline-block; margin-top: 4px; color: var(--muted); font-size: 13px; text-decoration: none; }
+.gate-back:hover { color: var(--primary); }
+
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    .game-bar h1 { font-size: 18px; }
+    .group-tag { padding: 4px 10px; font-size: 12px; }
+    .group-menu:not([hidden]) { min-width: 200px; }
+}

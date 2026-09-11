@@ -213,11 +213,11 @@ body.playing .tm-screen { padding-top: 14px; }
 .wb-slots { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-height: 34px; align-items: center; }
 .wb-count { font-size: 15px; font-weight: 700; color: var(--ink-soft); flex-shrink: 0; }
 
-/* 學者圖示：一律用 logo.png（原圖 98×56 → 寬高比 1.75，寬度都跟著高度算） */
+/* 學者圖示：一律用 logo.webp（原圖 98×56 → 寬高比 1.75，寬度都跟著高度算） */
 .w-icon {
     display: inline-block; flex-shrink: 0; vertical-align: middle;
     height: 24px; width: 42px;
-    background: url('../images/logo.png') center / contain no-repeat;
+    background: url('../images/logo.webp') center / contain no-repeat;
 }
 .worker {
     height: 24px; width: 42px;

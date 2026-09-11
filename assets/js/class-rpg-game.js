@@ -1,6 +1,6 @@
 import {
     Application, Assets, AnimatedSprite, Container, Graphics, Rectangle, Text, Texture
-} from 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs';
+} from '../vendor/pixi.esm.min.js';
 
 // ============================================================
 // 班級 RPG · 冒險世界（Pixi.js v8 基礎架構）
@@ -28,7 +28,7 @@ container.appendChild(app.canvas);
 
 // ---- 角色圖集 ----
 const CELL = 64;
-const sheet = await Assets.load('../assets/images/char/char1.png');
+const sheet = await Assets.load('../assets/images/char/char1.webp');
 sheet.source.scaleMode = 'nearest';            // 像素風：放大不模糊
 
 const frameAt = (col, row) =>
