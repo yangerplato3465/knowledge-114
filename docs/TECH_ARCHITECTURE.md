@@ -14,6 +14,8 @@
 
 ## 檔案結構
 
+React 新版目前有 `next/index.html` 與 `next/quick-quiz.html` 兩個 Vite 入口，共享 React／主題程式，快問快答的 205 題題庫保留在遊戲 chunk。首頁依賴圖於建置時檢查不得載入遊戲模組。所有舊頁面仍原樣複製至 dist 作為相容入口。
+
 ```
 index.html                首頁（自帶 inline style，獨立於其他頁）
 config.json               版號

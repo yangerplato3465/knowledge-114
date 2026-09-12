@@ -14,10 +14,12 @@ for (const path of ['assets', 'pages']) await compare(path);
 for (const path of ['index.html', 'config.json']) {
   assert.deepEqual(await readFile(new URL(path, root)), await readFile(new URL(`dist/${path}`, root)), path);
 }
-const html = await readFile(new URL('dist/next/index.html', root), 'utf8');
 const base = process.env.VITE_BASE_PATH || '/';
+for (const entry of ['index.html', 'quick-quiz.html']) {
+const html = await readFile(new URL(`dist/next/${entry}`, root), 'utf8');
 for (const [, url] of html.matchAll(/(?:src|href)="([^"]*app-assets\/[^"]+)"/g)) {
   assert.ok(url.startsWith(base), `錯誤的 base: ${url}`);
   await readFile(new URL(`dist/${url.slice(base.length)}`, root));
+}
 }
 console.log('舊站檔案完整保留；新版入口資源與 base 檢查通過。');

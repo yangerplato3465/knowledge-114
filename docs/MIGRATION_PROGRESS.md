@@ -1,5 +1,18 @@
 # 遷移進度 · 2026-09-12
 
+## Phase 3：快問快答
+
+- [x] 新增 `next/quick-quiz.html` 與 React 頁面；新版首頁導向新入口，原 `pages/quick-quiz.html` 保留。
+- [x] 205 題文字及布林答案與原版逐題比對通過；抽題仍採 Fisher–Yates，無重複抽取，不改題目內容。
+- [x] 保留每題 1～60 秒、題數 1～205、快速選項、倒數後公布答案、手動下一題／完成、回設定與重玩。沒有增加計分或存檔。
+- [x] 抽出 PageLayout，沿用 ThemeProvider 與 ErrorBoundary；倒數在回設定與卸載時取消，StrictMode 測試通過。
+- [x] 頁面分入口打包，題庫只在快問快答載入；首頁依賴圖禁止引入遊戲模組。build 檢查兩個 React HTML 入口資源。
+- [x] 21 項既有測試、13 項 React／模型測試通過；typecheck、根路徑與 GitHub Pages 子路徑 build、169 個本機引用檢查通過。
+- [x] 瀏覽器實測設定 1 題／1 秒、倒數揭答、Enter 完成及重玩保留設定，深色畫面可正常閱讀。
+- [ ] 教室觸控實機、窄螢幕與同條件效能量測。
+
+本批沒有 commit 或正式部署。React 預覽為 `http://127.0.0.1:4174/knowledge-114/next/quick-quiz.html`；常用 `http://localhost:8080/` 仍提供原站。不能把本機預覽視為正式上線或完整 Phase 3 完成。
+
 已完成 Phase 1 建置外殼，並接續完成 Phase 2 的完整首頁移植。尚未進行正式部署，也不代表全站遷移完成。
 
 ## Phase 2 首頁移植
