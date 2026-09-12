@@ -149,3 +149,6 @@ el.classList.add('bump');
 ```
 
 water-acid-base、字尾大分流都用這招。同一個道理也用在 FLIP 動畫的 Invert 階段。
+## React 外殼預覽（2026-09-12）
+
+`/next/` 使用原有 `assets/css/theme.css` 作為色彩唯一來源。主題選單提供系統／淺色／深色，沿用 `knowledge114-theme` 並支援跨分頁同步；導覽提供跳至主要內容與可見 focus。現已移植完整四分類、11 個活動及版號；分類使用 button 與 hidden，支援鍵盤展開且收合內容不進入 Tab 順序。活動仍以完整頁面導覽進入舊遊戲，尚未更動遊戲 HUD 或教室觸控版面。

@@ -350,3 +350,6 @@ Canvas 文字是把字變點陣圖再放大會糊。Pixi 只用在 DOM 做不好
 老師要求所有學生角色同時出現在世界並自行移動，並授權定案升級與屬性公式。世界改用教師擁有的 Firestore 名冊，每人獨立自動散步，支援暫停與選角，取代原本單人鍵盤／臨時拾幣原型。沿用本地 PixiJS 8.6.6 和像素圖集。
 
 成長共用 class-rpg-model.js：最高 50 級，每級所需經驗從 100 起、每級遞增 20；生命／攻擊／防禦基礎 100／12／5，每級增加 12／3／2，加上已定義裝備的小幅加成。舊資料以固定 expOffset 保留原等級進度，獎勵與復原同交易重算等級。詳細數值及資料介面見 CLASS_RPG_DESIGN_BRIEF.md 第 16 節。冒險能量、戰鬥技能與個人換裝仍屬後續工作。
+## 2026-09-12：遷移外殼與相容建置
+
+React 首階段入口採 `/next/index.html`，舊站保留原網址與完整 reload。Vite 僅打包新入口至 `app-assets/`，之後原樣複製舊站並逐檔比對，避免改寫偵探 gate、相對素材路徑或新增 Pixi runtime。GitHub Pages 上傳 `dist/`；目前僅完成本機驗證。詳見 [MIGRATION_PROGRESS](MIGRATION_PROGRESS.md)。

@@ -2,6 +2,8 @@
 
 > 性質：一次性執行文件。完成遷移並將仍有效的架構決策回寫至 `TECH_ARCHITECTURE.md`、`DECISIONS.md`、`UI.md` 後，本文件即可封存；它不是新的永久規則來源。
 
+> 2026-09-12 執行進度：已完成 Phase 1 外殼與 Phase 2 完整首頁移植、本機建置及測試；Phase 2 共用視窗與教室觸控驗收、Phase 0 完整流程／效能基準仍待補齊，尚未正式部署。每批實作後同步更新勾選與進度紀錄，僅驗證完成的項目才標記完成。詳見 [MIGRATION_PROGRESS.md](MIGRATION_PROGRESS.md)。
+
 ## 1. 目標
 
 在不破壞現有遊戲、存檔、Firebase 權限、教室離線可玩性與既有網址的前提下，建立新的 **React + Vite + TypeScript** 外殼，讓數學勇者、班級 RPG、偵探事件簿及未來小型遊戲都以 **PixiJS v8** 為主要遊戲渲染基礎。
@@ -292,10 +294,10 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 
 ### Phase 0：凍結與 baseline
 
-- [ ] 建立遷移分支或可回退工作區。
-- [ ] 執行現有 `check_site.py`、`check_js.cjs` 與 Node tests。
+- [x] 建立遷移分支或可回退工作區。
+- [x] 執行現有 `check_site.py`、`check_js.cjs` 與 Node tests。
 - [ ] 記錄首頁、數學勇者、班級 RPG、字尾大分流、兩個偵探案件的主要流程。
-- [ ] 記錄 localStorage／Firestore 契約與版本。
+- [x] 記錄 localStorage／Firestore 契約與版本（見 MIGRATION_PROGRESS.md「保留的資料契約」）。
 - [ ] 蒐集代表頁面的 lab performance；有正式 field data 時另外保存。
 - [ ] 列出各頁載入的 JS、CSS、Pixi 版本、Firebase 與大型素材。
 
@@ -303,21 +305,24 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 
 ### Phase 1：只建立新外殼
 
-- [ ] 建立 React + Vite + TypeScript 設定。
-- [ ] 設定 GitHub Pages base path、production build 與 preview。
-- [ ] 將現有靜態素材暫時以相容路徑提供，不大搬家。
-- [ ] 建立 ErrorBoundary、GameShell、ThemeProvider 與 PixiHost lifecycle。
-- [ ] 新舊網站可並行啟動，舊版仍是可用 fallback。
-- [ ] 更新 CI：先執行舊測試，再 typecheck、build，最後上傳 `dist`。
+- [x] 建立 React + Vite + TypeScript 設定。
+- [x] 設定 GitHub Pages base path、production build 與 preview。
+- [x] 將現有靜態素材暫時以相容路徑提供，不大搬家。
+- [x] 建立 ErrorBoundary、GameShell、ThemeProvider 與 PixiHost lifecycle。
+- [x] 新舊網站可並行啟動，舊版仍是可用 fallback。
+- [x] 更新 CI：先執行舊測試，再 typecheck、build，最後上傳 `dist`。
 
 完成條件：空的 React 外殼可建置並部署，不影響舊頁面。
 
 ### Phase 2：首頁與共用 DOM
 
-- [ ] 搬首頁、版號、主題切換、導覽和共用按鈕。
+- [x] 搬首頁、版號、主題切換、導覽和共用按鈕。
 - [ ] 抽出 layout、Modal、Toast、載入與錯誤狀態。
-- [ ] 保持原 URL 或建立明確 redirect／相容入口。
-- [ ] 驗證鍵盤、觸控、深色模式、系統主題與跨分頁同步。
+- [x] 保持原 URL 或建立明確 redirect／相容入口。
+- [x] 驗證首頁鍵盤操作與收合後的連結可存取性。
+- [x] 驗證深淺色、系統主題與跨分頁同步（瀏覽器及 React 測試）。
+- [x] 驗證 390px 窄螢幕首頁版面。
+- [ ] 驗證教室設備的實際觸控操作。
 
 完成條件：不載入任何遊戲時，首頁 chunk 不含 PixiJS 與 Firebase 遊戲碼。
 
@@ -435,4 +440,3 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 - GitHub Pages custom workflow：https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 - Core Web Vitals：https://web.dev/articles/vitals
 - HTTP Cache-Control：https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control
-
