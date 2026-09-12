@@ -149,3 +149,27 @@ input:focus, select:focus { border-color: var(--primary); }
     .card { padding: 18px; }
     .login-card { padding: 26px 20px; }
 }
+
+/* 觸控獎勵介面沿用主題色，像素角色使用既有圖集。 */
+.wrap { max-width: 1200px; }
+.btn, input, select { min-height: 48px; }
+.reward-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+#rewardBtn { font-size: 20px; min-height: 60px; flex: 1; }
+.hint, .student-team { color: var(--muted); line-height: 1.7; }
+.student:has([aria-pressed="true"]) { border-color: var(--primary); background: var(--primary-tint); }
+.student-actions { flex-wrap: wrap; }
+.pixel-avatar { width: 64px; height: 64px; background-image: url('../images/char/char1.webp'); background-size: 512px 512px; background-position: 0 0; image-rendering: pixelated; border-radius: 0; }
+#rewardHistory { padding-left: 24px; max-height: 240px; overflow: auto; }
+#rewardHistory li { padding: 8px; line-height: 1.6; overflow-wrap: anywhere; }
+#connectionState { color: var(--muted); }
+button:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+dialog { width: min(560px, 95vw); max-height: 90vh; overflow: auto; border: 2px solid var(--border); border-radius: 22px; background: var(--surface); color: var(--ink); padding: 28px; }
+dialog::backdrop { background: var(--shadow); }
+#dialogFields label { margin-top: 16px; }
+@media (max-width: 600px) { .game-link { position: static; margin-bottom: 16px; } .auth-bar { flex-wrap: wrap; } }
+summary { cursor: pointer; font-size: 19px; font-weight: 700; min-height: 48px; }
+#rewardBtn { position: sticky; bottom: 12px; z-index: 2; }
+
+#rewardDock { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; margin: 0; padding: 12px max(16px, calc((100vw - 1150px) / 2)); background: var(--surface); border-top: 2px solid var(--border); box-shadow: 0 -4px 18px var(--shadow); }
+body { padding-bottom: 160px; }
+.toast { bottom: 110px; }

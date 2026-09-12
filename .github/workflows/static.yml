@@ -28,7 +28,7 @@ jobs:
       - name: Check JavaScript syntax
         run: node scripts/check_js.cjs
       - name: Test shared features
-        run: node --test tests/shared.test.cjs
+        run: node --test tests/*.test.cjs
 
   deploy:
     if: github.event_name != 'pull_request'

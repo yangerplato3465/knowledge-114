@@ -1,168 +1,131 @@
-import {
-    Application, Assets, AnimatedSprite, Container, Graphics, Rectangle, Text, Texture
-} from '../vendor/pixi.esm.min.js';
+import { Application, Assets, AnimatedSprite, Container, Graphics, Rectangle, Text, Texture } from '../vendor/pixi.esm.min.js';
+import { statsOf } from './class-rpg-model.js';
+import { spawnPosition, stepWalker } from './class-rpg-wander.js';
 
-// ============================================================
-// 班級 RPG · 冒險世界（Pixi.js v8 基礎架構）
-// 角色使用 Mana Seed Character Base 素材（64×64 格、8×8 張圖）。
-// 動畫對照（animations, page 1）：
-//   上半 rows 0–3：stand = col 0，方向順序 下、上、右、左
-//   下半 rows 4–7：walk = cols 0–5 六格循環
-//                  run  = walk 的第 3、6 格換成 cols 6、7
-// ============================================================
-
-const container = document.getElementById('gameContainer');
-const cssVar = name => getComputedStyle(document.body).getPropertyValue(name).trim();
-
-// ---- 建立 Pixi 應用 ----
+const $ = id => document.getElementById(id);
+const container = $('gameContainer');
+const color = name => getComputedStyle(document.body).getPropertyValue(name).trim();
 const app = new Application();
-await app.init({
-    resizeTo: container,                       // 跟著容器自動調整大小
-    background: cssVar('--surface') || '#ffffff',
-    antialias: true,
-    resolution: window.devicePixelRatio || 1,
-    autoDensity: true,
-});
-document.getElementById('gameLoading')?.remove();
-container.appendChild(app.canvas);
+const actors = new Map();
+let world, scenery, animations, selectedId = '', paused = false, stopData;
+let mapWidth = 1200, mapHeight = 700;
 
-// ---- 角色圖集 ----
-const CELL = 64;
-const sheet = await Assets.load('../assets/images/char/char1.webp');
-sheet.source.scaleMode = 'nearest';            // 像素風：放大不模糊
-
-const frameAt = (col, row) =>
-    new Texture({ source: sheet.source, frame: new Rectangle(col * CELL, row * CELL, CELL, CELL) });
-
-const DIRS = ['down', 'up', 'right', 'left'];  // 圖集的方向列順序
-const ANIMS = {};
-DIRS.forEach((dir, row) => {
-    ANIMS[dir] = {
-        stand: [frameAt(0, row)],
-        walk:  [0, 1, 2, 3, 4, 5].map(c => frameAt(c, row + 4)),
-        run:   [0, 1, 6, 3, 4, 7].map(c => frameAt(c, row + 4)),
-    };
-});
-
-// ---- 場景層級 ----
-const world = new Container();   // 地圖 / 裝飾 / 物品
-const hud = new Container();     // 固定在畫面上的介面
-app.stage.addChild(world, hud);
-
-const emoji = (char, size) => {
-    const t = new Text({ text: char, style: { fontSize: size } });
-    t.anchor.set(0.5);
-    return t;
-};
-
-// ---- 裝飾（樹木）----
-const rand = (min, max) => min + Math.random() * (max - min);
-for (let i = 0; i < 8; i++) {
-    const tree = emoji('🌲', rand(34, 52));
-    tree.position.set(rand(40, app.screen.width - 40), rand(60, app.screen.height - 40));
-    world.addChild(tree);
+function status(message) { $('worldStatus').textContent = message; }
+function details() {
+    const actor = actors.get(selectedId);
+    if (!actor) { $('characterInfo').textContent = '點選角色或使用名冊，查看能力與成長。'; return; }
+    const s = actor.student, p = statsOf(s);
+    $('characterInfo').textContent = `${s.name || '未命名'} · ${s.team || '未分組'} · Lv.${p.level} ｜ 生命 ${p.hp}　攻擊 ${p.atk}　防禦 ${p.def} ｜ ${p.cost ? `距離升級 ${p.remaining} 經驗` : '已達最高等級'} ｜ 武器：${s.weapon || '未裝備'}／防具：${s.equipment || '未裝備'}${p.unknownEquipment ? '（自訂裝備尚無能力加成）' : ''}`;
 }
-
-// ---- 金幣 ----
-const coin = emoji('🪙', 26);
-function placeCoin() {
-    coin.position.set(rand(50, app.screen.width - 50), rand(70, app.screen.height - 50));
+function selectActor(id) {
+    selectedId = actors.has(id) ? id : '';
+    $('studentFocus').value = selectedId;
+    for (const a of actors.values()) a.marker.visible = a.student.id === selectedId;
+    details();
 }
-placeCoin();
-world.addChild(coin);
-
-// ---- 主角 ----
-const WALK_FPS = 0.13;           // AnimatedSprite 的速度（每 tick 前進的影格數）
-const RUN_FPS = 0.2;
-const player = new Container();
-const shadow = new Graphics().ellipse(0, 50, 18, 6).fill({ color: 0x000000, alpha: 0.15 });
-const hero = new AnimatedSprite(ANIMS.down.stand);
-hero.anchor.set(0.5);
-hero.scale.set(2);
-hero.animationSpeed = WALK_FPS;
-hero.play();
-player.addChild(shadow, hero);
-player.position.set(app.screen.width / 2, app.screen.height / 2);
-world.addChild(player);
-
-let facing = 'down';
-let state = 'stand';
-function setAnim(nextState, nextFacing) {
-    if (nextState === state && nextFacing === facing) return;
-    state = nextState;
-    facing = nextFacing;
-    hero.textures = ANIMS[facing][state];
-    hero.animationSpeed = state === 'run' ? RUN_FPS : WALK_FPS;
-    hero.play();
+function createActor(student, index, count) {
+    const node = new Container();
+    const marker = new Graphics().rect(-26, 20, 52, 6).fill(color('--primary'));
+    marker.visible = false;
+    const sprite = new AnimatedSprite(animations.down.stand);
+    sprite.autoUpdate = false;
+    sprite.anchor.set(0.5); sprite.scale.set(2); sprite.animationSpeed = 0.12;
+    const label = new Text({ text: '', style: { fontFamily: '"Noto Sans TC", sans-serif', fontSize: 15, fontWeight: '700', fill: color('--ink'), stroke: { color: color('--surface'), width: 3 } } });
+    label.anchor.set(0.5, 0); label.y = 32;
+    node.addChild(marker, sprite, label);
+    node.eventMode = 'static'; node.cursor = 'pointer'; node.interactiveChildren = false;
+    node.hitArea = new Rectangle(-32, -34, 64, 94);
+    node.on('pointertap', () => selectActor(student.id));
+    world.addChild(node);
+    const position = spawnPosition(index, count, mapWidth, mapHeight);
+    return { student, node, sprite, marker, label, ...position, speed: 20 + Math.random() * 16,
+        target: null, wait: Math.random() * 2, facing: 'down', animation: '', rewardTime: 0 };
 }
-
-// ---- HUD：金幣數 ----
-let gold = 0;
-const goldText = new Text({
-    text: '🪙 0',
-    style: {
-        fontFamily: 'Fredoka, "Noto Sans TC", sans-serif',
-        fontSize: 20,
-        fontWeight: '700',
-        fill: cssVar('--ink') || '#2f3e60',
-    },
-});
-goldText.position.set(16, 12);
-hud.addChild(goldText);
-
-// ---- 鍵盤 ----
-const KEYMAP = {
-    ArrowUp: 'up', KeyW: 'up',
-    ArrowDown: 'down', KeyS: 'down',
-    ArrowLeft: 'left', KeyA: 'left',
-    ArrowRight: 'right', KeyD: 'right',
-    ShiftLeft: 'run', ShiftRight: 'run',
-};
-const keys = new Set();
-window.addEventListener('keydown', e => {
-    const k = KEYMAP[e.code];
-    if (k) { keys.add(k); e.preventDefault(); }
-});
-window.addEventListener('keyup', e => {
-    const k = KEYMAP[e.code];
-    if (k) keys.delete(k);
-});
-
-// ---- 主迴圈 ----
-const WALK_SPEED = 3;
-const RUN_SPEED = 5.5;
-app.ticker.add(ticker => {
-    const dt = ticker.deltaTime;
-    let dx = 0, dy = 0;
-    if (keys.has('up')) dy -= 1;
-    if (keys.has('down')) dy += 1;
-    if (keys.has('left')) dx -= 1;
-    if (keys.has('right')) dx += 1;
-    if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; } // 斜向等速
-
-    const running = keys.has('run');
-    const speed = running ? RUN_SPEED : WALK_SPEED;
-    player.x += dx * speed * dt;
-    player.y += dy * speed * dt;
-
-    // 動畫狀態：移動中依方向播 walk / run，停下播 stand
-    if (dx || dy) {
-        const dir = dx < 0 ? 'left' : dx > 0 ? 'right' : dy < 0 ? 'up' : 'down';
-        setAnim(running ? 'run' : 'walk', dir);
-    } else {
-        setAnim('stand', facing);
+function syncStudents(students) {
+    const ids = new Set(students.map(s => s.id));
+    for (const [id, actor] of actors) {
+        if (!ids.has(id)) { actor.node.destroy({ children: true }); actors.delete(id); }
     }
-
-    // 限制在畫面內
-    player.x = Math.min(Math.max(player.x, 32), app.screen.width - 32);
-    player.y = Math.min(Math.max(player.y, 48), app.screen.height - 56);
-
-    // 金幣旋轉 + 撿取判定
-    coin.rotation += 0.03 * dt;
-    const d = Math.hypot(player.x - coin.x, player.y - coin.y);
-    if (d < 40) {
-        gold++;
-        goldText.text = `🪙 ${gold}`;
-        placeCoin();
+    students.forEach((student, i) => {
+        let actor = actors.get(student.id);
+        if (!actor) { actor = createActor(student, i, students.length); actors.set(student.id, actor); }
+        else if (Number(student.exp) > Number(actor.student.exp)) actor.rewardTime = 2;
+        actor.student = student;
+        const shortName = Array.from(String(student.name || '未命名')).slice(0, 8).join('');
+        actor.label.text = `${shortName} · ${statsOf(student).level}`;
+    });
+    $('studentFocus').replaceChildren(new Option('選擇學生', ''), ...students.map(s => new Option(String(s.name || '未命名'), s.id)));
+    $('studentFocus').disabled = !students.length;
+    selectActor(selectedId);
+    $('worldCount').textContent = `${students.length} 位冒險者`;
+}
+function layout() {
+    const width = Math.max(1, container.clientWidth), height = Math.max(1, container.clientHeight);
+    app.renderer.resize(width, height);
+    mapWidth = Math.max(960, width); mapHeight = Math.max(600, height);
+    const scale = Math.min(width / mapWidth, height / mapHeight);
+    world.scale.set(scale); world.position.set((width - mapWidth * scale) / 2, (height - mapHeight * scale) / 2);
+    scenery.scale.copyFrom(world.scale); scenery.position.copyFrom(world.position);
+    scenery.clear().rect(0, 0, mapWidth, mapHeight).fill(color('--surface-2'));
+    // 方格步道與樹木採硬邊矩形，維持像素視覺，不使用 emoji 裝飾。
+    scenery.rect(0, mapHeight / 2 - 24, mapWidth, 48).fill(color('--border'));
+    for (let x = 32; x < mapWidth; x += 128) {
+        for (const y of [24, mapHeight - 42]) {
+            scenery.rect(x + 12, y + 16, 8, 16).fill(color('--muted'));
+            scenery.rect(x, y, 32, 20).fill(color('--primary'));
+            scenery.rect(x + 8, y - 8, 16, 12).fill(color('--primary'));
+        }
     }
-});
+    for (const actor of actors.values()) { actor.target = null; actor.x = Math.min(mapWidth - 48, actor.x); actor.y = Math.min(mapHeight - 48, actor.y); }
+}
+async function boot() {
+    await app.init({ width: container.clientWidth, height: container.clientHeight, background: color('--surface'), antialias: false, resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true });
+    container.appendChild(app.canvas);
+    app.canvas.setAttribute('aria-label', '全班角色自由散步的像素世界；可用上方學生名冊選取角色');
+    const sheet = await Assets.load('../assets/images/char/char1.webp');
+    sheet.source.scaleMode = 'nearest';
+    const frame = (col, row) => new Texture({ source: sheet.source, frame: new Rectangle(col * 64, row * 64, 64, 64) });
+    animations = {};
+    ['down', 'up', 'right', 'left'].forEach((dir, row) => animations[dir] = { stand: [frame(0, row)], walk: [0,1,2,3,4,5].map(c => frame(c, row + 4)) });
+    scenery = new Graphics(); scenery.eventMode = 'none';
+    world = new Container(); world.sortableChildren = true;
+    app.stage.addChild(scenery, world);
+    // 提供本地除錯工具檢視場景，不提供測試假名冊的正式入口。
+    globalThis.__PIXI_APP__ = app;
+    layout(); $('gameLoading').remove();
+    const resize = new ResizeObserver(layout); resize.observe(container);
+    const theme = new MutationObserver(() => {
+        layout();
+        for (const a of actors.values()) { a.label.style.fill = color('--ink'); a.label.style.stroke = { color: color('--surface'), width: 3 }; }
+    });
+    theme.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    app.ticker.maxFPS = 30;
+    app.ticker.add(ticker => {
+        const dt = Math.min(ticker.deltaMS / 1000, 0.05);
+        for (const a of actors.values()) {
+            const walking = !paused && !document.hidden && stepWalker(a, dt, mapWidth, mapHeight);
+            const key = `${walking ? 'walk' : 'stand'}:${a.facing}`;
+            if (a.animation !== key) {
+                a.animation = key; a.sprite.textures = animations[a.facing][walking ? 'walk' : 'stand'];
+                a.sprite.play();
+            }
+            if (walking) a.sprite.update(ticker);
+            if (!paused && !document.hidden) a.rewardTime = Math.max(0, a.rewardTime - dt);
+            a.sprite.y = a.rewardTime > 0 ? -Math.abs(Math.sin(a.rewardTime * 8)) * 8 : 0;
+            a.node.position.set(Math.round(a.x), Math.round(a.y)); a.node.zIndex = a.y;
+        }
+    });
+    $('pauseWorld').disabled = false;
+    $('pauseWorld').addEventListener('click', () => { paused = !paused; $('pauseWorld').textContent = paused ? '繼續散步' : '暫停散步'; $('pauseWorld').setAttribute('aria-pressed', String(paused)); });
+    $('studentFocus').addEventListener('change', () => selectActor($('studentFocus').value));
+    try {
+        const { connectWorld } = await import('./class-rpg-world-data.js');
+        stopData = connectWorld({ select: $('worldClass'), onStudents: syncStudents, onStatus: status });
+    } catch (error) { console.error(error); status('無法連接班級服務，請確認網路後重新整理；或回班級管理登入。'); }
+    window.addEventListener('pagehide', event => {
+        if (event.persisted) return;
+        stopData?.(); resize.disconnect(); theme.disconnect(); app.destroy(true, { children: true });
+        delete globalThis.__PIXI_APP__;
+    }, { once: true });
+}
+boot().catch(error => { console.error(error); $('gameLoading').textContent = '世界載入失敗，請重新整理或回班級管理。'; status('圖集或繪圖引擎無法載入。'); });

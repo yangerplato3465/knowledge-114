@@ -15,7 +15,7 @@
 <body>
     <div class="wrap">
         <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
-        <a href="class-rpg-game.html" target="_blank" class="btn game-link"><i class="fa-solid fa-gamepad"></i> 進入遊戲</a>
+        <a id="gameLink" href="class-rpg-game.html" target="_blank" class="btn game-link"><i class="fa-solid fa-gamepad"></i> 進入遊戲</a>
         <h1>⚔️ 班級 RPG</h1>
         <p class="subtitle">建立班級、新增學生角色，資料即時儲存到雲端。老師專用。</p>
 
@@ -60,13 +60,38 @@
             </div>
         </div>
 
+        <section class="card" aria-labelledby="rewardTitle">
+            <h2 id="rewardTitle">課堂快速獎勵</h2>
+            <p id="connectionState" role="status"></p>
+            <div class="row">
+                <div><label for="selectionMode">選取方式</label><select id="selectionMode"><option value="individual">個人（點選下方角色）</option><option value="team">小隊</option><option value="all">全班</option></select></div>
+                <div id="teamField" hidden><label for="teamSelect">選擇小隊</label><select id="teamSelect"></select></div>
+                <button id="clearSelection" class="btn btn-ghost">清除選取</button>
+            </div>
+            <p id="selectionSummary" aria-live="polite">尚未選取學生</p>
+            <div class="row">
+                <div><label for="rewardReason">獎勵原因</label><select id="rewardReason"><option>專心投入</option><option>勇於嘗試</option><option>明顯進步</option><option>幫助同伴</option><option>小隊合作</option><option>完成任務</option><option>提出好問題</option><option>從錯誤中修正</option></select></div>
+                <div><label for="rewardAmount">每人經驗值</label><input id="rewardAmount" type="number" min="1" max="1000" step="1" value="10"></div>
+            </div>
+            <div class="reward-actions" id="rewardDock"><button id="rewardBtn" class="btn" disabled>發送獎勵</button><button id="undoBtn" class="btn btn-ghost" disabled>復原上一筆獎勵</button></div>
+            <p class="hint">經驗值自動換算等級與能力；1→2 級需 100 經驗，之後每級多 20。最高 50 級。</p>
+        </section>
+        <!-- 學生列表 -->
+        <div class="card">
+            <h2>📋 學生名冊 <span id="countBadge" style="font-size:14px;color:var(--muted);font-weight:400"></span></h2>
+            <div id="studentList" class="students"></div>
+            <div id="studentEmpty" class="state">尚未選擇班級。</div>
+        </div>
+
+        <section class="card"><h2>本堂課操作紀錄</h2><p class="hint">以本次開啟頁面為一堂課；保留班級最近 40 筆獎勵。</p><ol id="rewardHistory" aria-live="polite"></ol></section>
         <!-- 新增學生 -->
-        <div class="card" id="addCard">
-            <h2>🧙 新增學生角色</h2>
+        <details class="card" id="addCard">
+            <summary>新增學生角色</summary>
             <div class="row" style="margin-bottom:12px">
                 <div>
                     <label>姓名 *</label>
-                    <input id="f_name" placeholder="例：小明">
+                    <input id="f_name" maxlength="60" placeholder="例：小明">
+                    <label for="f_team">小隊（可留白）</label><input id="f_team" maxlength="60" placeholder="例：第一隊">
                 </div>
                 <div>
                     <label>性別</label>
@@ -76,10 +101,7 @@
                         <option value="其他">其他</option>
                     </select>
                 </div>
-                <div>
-                    <label>等級</label>
-                    <input id="f_level" type="number" value="1" min="1">
-                </div>
+
             </div>
             <div class="row" style="margin-bottom:12px">
                 <div>
@@ -94,28 +116,23 @@
             <div class="row" style="margin-bottom:16px">
                 <div>
                     <label>武器</label>
-                    <input id="f_weapon" placeholder="例：木劍">
+                    <input id="f_weapon" list="weaponOptions" placeholder="劍／弓／槌／法杖">
                 </div>
                 <div>
                     <label>裝備</label>
-                    <input id="f_equipment" placeholder="例：布衣、皮靴">
+                    <input id="f_equipment" list="armorOptions" placeholder="布衣／皮甲／鐵甲">
                 </div>
             </div>
             <button class="btn" id="addStudentBtn"><i class="fa-solid fa-user-plus"></i> 新增學生</button>
-        </div>
-
-        <!-- 學生列表 -->
-        <div class="card">
-            <h2>📋 學生名冊 <span id="countBadge" style="font-size:14px;color:var(--muted);font-weight:400"></span></h2>
-            <div id="studentList" class="students"></div>
-            <div id="studentEmpty" class="state">尚未選擇班級。</div>
-        </div>
-
+        </details>
         </div><!-- /#app -->
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast" role="status"></div>
+    <dialog id="editDialog" aria-labelledby="dialogTitle"><form id="editForm"><h2 id="dialogTitle"></h2><div id="dialogFields"></div><div class="reward-actions"><button type="submit" class="btn">儲存</button><button type="button" id="dialogCancel" class="btn btn-ghost">取消</button></div></form></dialog>
 
+    <datalist id="weaponOptions"><option value="劍"><option value="弓"><option value="槌"><option value="法杖"></datalist>
+    <datalist id="armorOptions"><option value="布衣"><option value="皮甲"><option value="鐵甲"></datalist>
     <script type="module" src="../assets/js/class-rpg.js"></script>
     <script src="../assets/js/theme.js"></script>
 </body>
