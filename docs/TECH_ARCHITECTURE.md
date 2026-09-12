@@ -14,6 +14,8 @@
 
 ## 檔案結構
 
+新增第三個 React 入口 `next/magic-ink.html`：`src/lessons/magic-ink/` 保存教材 JSX、題目與三組互動狀態，沿用 PageLayout。原 `assets/js/magic-ink.js` 不被新頁載入，計時器由 effect 清理。頁面獨立打包，教材不進首頁 chunk。
+
 React 新版目前有 `next/index.html` 與 `next/quick-quiz.html` 兩個 Vite 入口，共享 React／主題程式，快問快答的 205 題題庫保留在遊戲 chunk。首頁依賴圖於建置時檢查不得載入遊戲模組。所有舊頁面仍原樣複製至 dist 作為相容入口。
 
 ```

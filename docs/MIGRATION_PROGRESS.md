@@ -1,5 +1,20 @@
 # 遷移進度 · 2026-09-12
 
+## Phase 3：原子筆教材
+
+- [x] 新增 `/next/magic-ink.html` 與 React 教材頁，新版首頁已改連新入口；原 HTML／JS／CSS 保留。
+- [x] 保留原教材段落、標題、配方與安全提醒、圖片及說明；測試直接比對原 HTML。DOM 圖片補齊實際寬高，首屏封面不延遲載入。
+- [x] 四題冷知識及一題隨堂考以 React 狀態鎖定作答；冷知識只計四題，不重複累計。
+- [x] 吸水大賽保留 92／55／4% 水位及 4.8 秒揭曉；彩虹橋保留 0.6／1.8／2.3／4.9 秒階段與正確混色結算。離頁取消 timer，重玩重置狀態。
+- [x] 保留視覺結構與原 CSS，新增鍵盤按鈕、aria-pressed、結果 status 和 reduced-motion 過渡停用。
+- [x] 21 項舊測試 + 18 項 React／模型測試、typecheck、根路徑／Pages 子路徑建置通過。首頁建置邊界新增禁止載入 lessons 模組。
+- [x] 瀏覽器實測吸水大賽紙巾勝出、彩虹橋 2/2、冷知識 4/4，深色畫面可讀。
+- [ ] 教室觸控實機、窄螢幕與效能量測；酸鹼教材尚未移植。
+
+教材 JSX 由 `scripts/migrate_magic_ink.py` 一次性轉換原 HTML（需要 Python 與 Pillow），後續可直接維護 React 元件；不需在 build 或 CI 執行轉換，重新執行會覆寫 LessonContent、兩個 View 與 questions。圖片、教材內容仍以資料等價為本次範圍。
+
+本批未 commit、未部署；本機 React 教材預覽：`http://127.0.0.1:4175/knowledge-114/next/magic-ink.html`。
+
 ## Phase 3：快問快答
 
 - [x] 新增 `next/quick-quiz.html` 與 React 頁面；新版首頁導向新入口，原 `pages/quick-quiz.html` 保留。

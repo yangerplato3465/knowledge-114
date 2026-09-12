@@ -13,7 +13,7 @@ export default defineConfig({
         visited.add(fileName);
         const output = bundle[fileName];
         if (!output || output.type !== 'chunk') return;
-        const forbidden = Object.keys(output.modules).filter(id => /(?:pixi|firebase|assets\/js\/|src\/games\/)/i.test(id.replaceAll('\\', '/')));
+        const forbidden = Object.keys(output.modules).filter(id => /(?:pixi|firebase|assets\/js\/|src\/(?:games|lessons)\/)/i.test(id.replaceAll('\\', '/')));
         if (forbidden.length) this.error(`首頁不應包含遊戲模組：${forbidden.join(', ')}`);
         output.imports.forEach(inspect);
       };
@@ -24,6 +24,6 @@ export default defineConfig({
   }],
   build: {
     assetsDir: 'app-assets',
-    rollupOptions: { input: ['next/index.html', 'next/quick-quiz.html'] },
+    rollupOptions: { input: ['next/index.html', 'next/quick-quiz.html', 'next/magic-ink.html'] },
   },
 });

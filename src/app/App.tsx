@@ -6,7 +6,7 @@ import { VersionLabel } from '../components/VersionLabel';
 
 function ActivityLinks({ items }: { items: Activity[] }) {
   return <ul className="activity-list">{items.map(item => <li key={item.path}>
-    <a className="activity" href={`${import.meta.env.BASE_URL}${item.path === 'quick-quiz' ? 'next' : 'pages'}/${item.path}.html`}>
+    <a className="activity" href={`${import.meta.env.BASE_URL}${['quick-quiz', 'magic-ink'].includes(item.path) ? 'next' : 'pages'}/${item.path}.html`}>
       <span><span className="activity-title">{item.title}</span>{' '}<span className="activity-description">{item.description}</span></span>
       <span aria-hidden="true">→</span>
     </a>

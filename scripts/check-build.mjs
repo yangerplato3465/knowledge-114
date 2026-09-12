@@ -15,7 +15,7 @@ for (const path of ['index.html', 'config.json']) {
   assert.deepEqual(await readFile(new URL(path, root)), await readFile(new URL(`dist/${path}`, root)), path);
 }
 const base = process.env.VITE_BASE_PATH || '/';
-for (const entry of ['index.html', 'quick-quiz.html']) {
+for (const entry of ['index.html', 'quick-quiz.html', 'magic-ink.html']) {
 const html = await readFile(new URL(`dist/next/${entry}`, root), 'utf8');
 for (const [, url] of html.matchAll(/(?:src|href)="([^"]*app-assets\/[^"]+)"/g)) {
   assert.ok(url.startsWith(base), `錯誤的 base: ${url}`);
