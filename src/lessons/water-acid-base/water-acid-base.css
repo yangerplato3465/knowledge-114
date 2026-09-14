@@ -1,0 +1,75 @@
+body { display: block; }
+#root { width: 100%; }
+.water-lesson { display: grid; gap: 25px; max-width: 1280px; margin: auto; }
+.water-lesson .slide-container { width: 100%; height: auto; min-height: 720px; overflow: hidden; }
+.water-lesson .slide-container > * { min-width: 0; }
+.water-lesson .two-column > * { min-width: 0; }
+.water-lesson button { min-height: 44px; }
+.water-lesson button:disabled { opacity: .6; cursor: default; }
+.water-lesson .lab-btn-reset { color: var(--ink-soft); }
+.water-lesson .correct { background: var(--good-bg); border-color: var(--good); color: var(--good); }
+.water-lesson .incorrect { background: var(--bad-bg); border-color: var(--bad); color: var(--bad); }
+.water-lesson .feedback-alert.shown { display: block; }
+.water-lesson #beaker-wrapper { position: relative; width: 100%; height: 190px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 5px 0; }
+.water-lesson .thermometer { position: absolute; left: 15px; bottom: 10px; height: 160px; width: 50px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.water-lesson #thermometer-label { font-size: 14px; font-weight: 900; color: var(--bad); margin-bottom: 5px; }
+.water-lesson .thermometer-track { position: relative; width: 14px; height: 110px; background: var(--surface-2); border: 2.5px solid var(--border-strong); border-radius: 7px; }
+.water-lesson #mercury-bar { position: absolute; bottom: 0; width: 100%; background: var(--bad); transition: height .6s ease-out; }
+.water-lesson #beaker { position: relative; width: 150px; height: 150px; margin-left: 45px; }
+.water-lesson .beaker-outline { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+.water-lesson #water-liquid { position: absolute; bottom: 6px; left: 18px; width: 114px; height: 96px; background: rgba(179,229,252,.55); border-radius: 0 0 16px 16px; transition: background-color 1.6s; overflow: hidden; }
+.water-lesson #water-liquid.pink { background: rgba(233,30,99,.72); }
+.water-lesson #water-wave { position: absolute; top: 0; width: 100%; height: 8px; background: rgba(129,212,250,.45); }
+.water-lesson #ion-container { position: relative; width: 100%; height: 100%; }
+.water-lesson .experiment-status { font-size: 14px; margin-bottom: 10px; }
+.water-lesson .experiment-status + div { flex-wrap: wrap; }
+@media (max-width: 1080px) { .water-lesson .slide-container { min-height: 0; } .water-lesson .title-slide { min-height: 420px; } }
+@media (prefers-reduced-motion: reduce) { .water-lesson *, .water-lesson *::before, .water-lesson *::after { animation: none !important; transition: none !important; } }
+@media (min-width: 1081px) and (max-width: 1320px) {
+    body {
+        padding: 16px 10px;
+        gap: 20px;
+    }
+
+    .slide-container {
+        width: 100%;
+        height: auto;
+        padding: 28px 20px;
+        border-width: 6px;
+    }
+
+    .content-area {
+        height: auto;
+    }
+
+    .slide-container h2.slide-title { font-size: 26px; margin-bottom: 20px; }
+    .slide-container h3 { font-size: 20px; }
+    .slide-container p,
+    .slide-container li { font-size: 16px; }
+    math { font-size: 16px; }
+
+    /* 兩欄改單欄（slide5 有 inline 欄寬設定，需 !important 蓋過） */
+    .two-column {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+    }
+
+    .image-wrapper { height: 280px; }
+    .wide-image-wrapper { height: 260px; padding: 8px 10px; }
+    .wide-top-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+
+    .slide-container.title-slide { min-height: 420px; }
+    .title-layout { padding: 24px 10px; }
+    .title-layout h1 { font-size: 34px; }
+    .title-layout .subtitle { font-size: 17px; }
+
+    .tiled-content { flex-direction: column; gap: 18px; }
+    .tile { padding: 26px 22px; }
+
+    /* 實驗室操作鈕與答題選項允許換行／堆疊 */
+    #beaker-wrapper + div { flex-wrap: wrap; }
+    .option-group { flex-direction: column; }
+}
+
+@media (max-width: 1320px) { .water-lesson .slide-container { min-height: 0; } .water-lesson .title-slide { min-height: 420px; } }
+

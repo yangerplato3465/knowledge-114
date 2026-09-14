@@ -1,4 +1,17 @@
-# 遷移進度 · 2026-09-12
+# 遷移進度 · 2026-09-14
+
+## Phase 3：水與酸鹼教材 · 2026-09-14
+
+- [x] 新增 `/next/water-acid-base.html`，新版首頁導向新入口；五張投影片、段落、MathML 公式、SVG 圖解及三題選項保留，文字與答案直接比對舊版。
+- [x] React 管理 NaOH／指示劑投放、溫度、離子、作答與重設；維持 600／500ms 投放、最多六片、每片升溫 14.5°C、最高 85°C。重設與卸載取消尚未完成的投放，不依賴 animationend 更新資料。
+- [x] 沿用 PageLayout、ThemeProvider 與 ErrorBoundary；教材獨立入口，首頁不載入教材、Pixi 或 Firebase。舊頁與素材逐檔比對保持完整。
+- [x] 21 項既有測試、22 項 React／模型測試、typecheck、根路徑與 Pages 子路徑 build、169 個本機引用與 36 個 script 語法檢查通過。
+- [x] Edge 瀏覽器確認變色、1920／1100／390px 無橫向溢出、深色／reduced-motion／Enter 投放與零 pageerror。窄螢幕截圖見 [驗證截圖](migration-evidence/water-acid-base-mobile.png)。
+- [ ] 教室觸控實機與同條件 lab performance；未宣稱 CWV 通過。
+
+教材 JS 28.06 KB（gzip 7.09 KB），不含共用 React runtime；這是產物大小而非效能量測。`scripts/migrate_water_acid_base.mjs` 是一次性轉換工具，明確執行會覆寫 LessonContent 與 questions，不在 build／CI 執行。實作核對 [React TypeScript 官方文件](https://react.dev/learn/typescript)。
+
+本批未 commit、未正式部署。預覽：`http://127.0.0.1:4180/knowledge-114/next/water-acid-base.html`。下一批可處理字尾大分流，但移植前須補齊該遊戲基準；教室驗收仍待實機。
 
 ## Phase 3：原子筆教材
 

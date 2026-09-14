@@ -353,3 +353,7 @@ Canvas 文字是把字變點陣圖再放大會糊。Pixi 只用在 DOM 做不好
 ## 2026-09-12：遷移外殼與相容建置
 
 React 首階段入口採 `/next/index.html`，舊站保留原網址與完整 reload。Vite 僅打包新入口至 `app-assets/`，之後原樣複製舊站並逐檔比對，避免改寫偵探 gate、相對素材路徑或新增 Pixi runtime。GitHub Pages 上傳 `dist/`；目前僅完成本機驗證。詳見 [MIGRATION_PROGRESS](MIGRATION_PROGRESS.md)。
+
+## 酸鹼教材投放狀態與動畫分離 · 2026-09-14
+
+React 以可取消的 600／500ms 計時器完成 NaOH／指示劑投放，保留原數值與操作順序。CSS animationend 不再是資料更新條件，避免 reduced-motion 阻擋實驗，以及重設後舊動畫再次加料。重設／卸載清理計時器；舊入口保持可回退。

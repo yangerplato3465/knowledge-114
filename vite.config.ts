@@ -24,6 +24,6 @@ export default defineConfig({
   }],
   build: {
     assetsDir: 'app-assets',
-    rollupOptions: { input: ['next/index.html', 'next/quick-quiz.html', 'next/magic-ink.html'] },
+    rollupOptions: { input: ['next/index.html', 'next/quick-quiz.html', 'next/magic-ink.html', 'next/water-acid-base.html'] },
   },
 });

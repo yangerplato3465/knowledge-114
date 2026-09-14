@@ -202,3 +202,7 @@ tf-best                        快問快答最佳成績
 **無 BOM UTF-8 且滿是中文註解**，讀進來就變亂碼，寫回去等於整份毀掉
 （2026-08-03 毀過 `detective-puzzles.js`）。`perl -0777 -i -pe` 配 `\x{...}`
 逸出也有同一類的雙重編碼問題。
+
+## 酸鹼教材 React 入口（2026-09-14）
+
+新增第四個入口 next/water-acid-base.html。src/lessons/water-acid-base 保存教材、題目與投放狀態；以可取消計時器更新低頻資料，CSS 僅呈現動畫。原 styles.css 與 script.js 保留，新頁不載入 script.js。
