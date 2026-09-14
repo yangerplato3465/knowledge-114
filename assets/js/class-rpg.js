@@ -1,25 +1,12 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { growthOf, growthFields, statsOf } from "./class-rpg-model.js";
+import { db, auth } from "./class-rpg-firebase.js";
 import {
-    getFirestore, collection, doc, addDoc, setDoc, getDocs,
-    deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp
+    collection, doc, addDoc, getDocs,
+    deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import {
-    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile
+    signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBW7V3sXHn8MsaP4KFmHDOHUFXSz3ksRDM",
-    authDomain: "classroom-rpg-a931a.firebaseapp.com",
-    projectId: "classroom-rpg-a931a",
-    storageBucket: "classroom-rpg-a931a.firebasestorage.app",
-    messagingSenderId: "548698002427",
-    appId: "1:548698002427:web:896b85619015fc9303315e",
-    measurementId: "G-9R7TMK6B7T"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
 
 // ---- DOM ----
 const $ = id => document.getElementById(id);
@@ -31,6 +18,10 @@ const countBadge = $('countBadge');
 let currentClassId = null;
 let unsubStudents = null;
 let currentUser = null;
+let roster = [], selected = new Set(), busy = false, rosterReady = false;
+let unsubClass = null, classData = {};
+const lessonId = crypto.randomUUID();
+
 
 function toast(msg) {
     const t = $('toast');
@@ -40,7 +31,6 @@ function toast(msg) {
     t._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-const genderEmoji = g => g === '女' ? '🧝‍♀️' : g === '男' ? '🧙‍♂️' : '🧚';
 const num = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
 // ---- 班級 ----
@@ -70,7 +60,7 @@ async function loadClasses(selectId) {
 }
 
 async function createClass() {
-    const name = prompt('輸入班級名稱：', '');
+    const name = await askText('建立班級', '班級名稱', '');
     if (name === null) return;
     const trimmed = name.trim();
     if (!trimmed) { toast('班級名稱不可空白'); return; }
@@ -97,11 +87,19 @@ async function deleteCurrentClass() {
 
 function selectClass(id) {
     currentClassId = id;
+    $('gameLink').href = `class-rpg-game.html?class=${encodeURIComponent(id)}`;
     watchStudents(id);
 }
 
 // ---- 學生 ----
 function watchStudents(classId) {
+    roster = []; selected.clear(); rosterReady = false; classData = {};
+    if (unsubClass) unsubClass();
+    unsubClass = null;
+    renderRewardState();
+    if (classId) unsubClass = onSnapshot(doc(db, 'classes', classId), snap => {
+        classData = snap.data() || {}; renderRewardState();
+    }, () => { rosterReady = false; renderRewardState(); toast('無法讀取班級，請重新選擇班級'); });
     if (unsubStudents) { unsubStudents(); unsubStudents = null; }
     if (!classId) {
         studentList.innerHTML = '';
@@ -114,8 +112,13 @@ function watchStudents(classId) {
     unsubStudents = onSnapshot(query(col, orderBy('name', 'asc')), snap => {
         const students = [];
         snap.forEach(d => students.push({ id: d.id, ...d.data() }));
+        roster = students;
+        selected = new Set([...selected].filter(id => students.some(s => s.id === id)));
+        rosterReady = true;
         renderStudents(students);
+        renderRewardState();
     }, err => {
+        rosterReady = false; renderRewardState();
         console.error(err);
         studentEmpty.style.display = 'block';
         studentEmpty.textContent = '載入失敗：' + err.message;
@@ -131,26 +134,30 @@ function renderStudents(students) {
         return;
     }
     studentEmpty.style.display = 'none';
+    const activeIds = new Set(targets().map(s => s.id));
     studentList.innerHTML = students.map(s => {
         const name = escapeHtml(s.name || '');
+        const stats = statsOf(s);
         return `
         <div class="student" data-id="${s.id}">
             <div class="student-top">
-                <div class="avatar">${genderEmoji(s.gender)}</div>
+                <div class="avatar pixel-avatar" aria-hidden="true"></div>
                 <div>
                     <div class="student-name">${name}</div>
-                    <div class="student-lv">Lv.${num(s.level)} · ${escapeHtml(s.gender || '—')}</div>
+                    <div class="student-lv">Lv.${stats.level} · ${escapeHtml(s.gender || '—')}</div>
                 </div>
             </div>
             <div class="stats">
-                <div class="stat"><span class="k">⭐ 經驗</span><span class="v">${num(s.exp)}</span>
-                    <span class="adj"><button data-act="exp" data-d="-10">−</button><button data-act="exp" data-d="10">＋</button></span></div>
-                <div class="stat"><span class="k">🪙 金幣</span><span class="v">${num(s.gold)}</span>
-                    <span class="adj"><button data-act="gold" data-d="-5">−</button><button data-act="gold" data-d="5">＋</button></span></div>
+                <div class="stat"><span class="k">⭐ 經驗</span><span class="v">${num(s.exp)}</span></div>
+                <div class="stat"><span class="k">🪙 金幣</span><span class="v">${num(s.gold)}</span></div>
                 <div class="stat"><span class="k">🗡️ 武器</span><span class="v">${escapeHtml(s.weapon || '—')}</span></div>
                 <div class="stat"><span class="k">🛡️ 裝備</span><span class="v">${escapeHtml(s.equipment || '—')}</span></div>
             </div>
+            <div class="growth-stats">生命 ${stats.hp} · 攻擊 ${stats.atk} · 防禦 ${stats.def}</div>
+            <div class="student-lv">${stats.cost ? `距離升級還需 ${stats.remaining} 經驗` : '已達等級上限'}</div>
+            <div class="student-team">小隊：${escapeHtml(s.team || '未分組')}</div>
             <div class="student-actions">
+                <button class="btn btn-ghost" data-act="select" aria-pressed="${activeIds.has(s.id)}">${activeIds.has(s.id) ? '已選取' : '選取'}</button>
                 <button class="btn btn-ghost btn-sm" data-act="edit">編輯</button>
                 <button class="btn-danger btn btn-sm" data-act="del">刪除</button>
             </div>
@@ -158,50 +165,47 @@ function renderStudents(students) {
     }).join('');
 }
 
-// 事件委派：加減 / 編輯 / 刪除
+// 名冊操作共用鎖定，避免重複送出。
 studentList.addEventListener('click', async e => {
     const btn = e.target.closest('button');
-    if (!btn) return;
-    const card = e.target.closest('.student');
-    const sid = card?.dataset.id;
-    if (!sid || !currentClassId) return;
-    const ref = doc(db, 'classes', currentClassId, 'students', sid);
-    const act = btn.dataset.act;
-
-    if (act === 'exp' || act === 'gold') {
-        const cur = num(card.querySelector(`[data-act="${act}"]`).closest('.stat').querySelector('.v').textContent);
-        const next = Math.max(0, cur + Number(btn.dataset.d));
-        await updateDoc(ref, { [act]: next });
-    } else if (act === 'del') {
-        const nm = card.querySelector('.student-name').textContent;
-        if (confirm(`確定刪除學生「${nm}」？`)) { await deleteDoc(ref); toast('已刪除'); }
-    } else if (act === 'edit') {
-        openEdit(sid, card);
+    const sid = btn?.closest('.student')?.dataset.id;
+    if (!sid || !currentClassId || busy) return;
+    if (btn.dataset.act === 'select') {
+        $('selectionMode').value = 'individual';
+        selected.has(sid) ? selected.delete(sid) : selected.add(sid);
+        renderStudents(roster); renderRewardState(); return;
+    }
+    const student = roster.find(s => s.id === sid);
+    const classId = currentClassId;
+    if (btn.dataset.act === 'edit') {
+        const values = await formDialog('編輯角色', [
+            ['name', '姓名', student.name], ['team', '小隊（可留白）', student.team || ''],
+            ['weapon', '武器', student.weapon || ''], ['equipment', '防具', student.equipment || '']
+        ]);
+        if (!values || !values.name.trim()) return;
+        await perform(() => updateDoc(doc(db, 'classes', classId, 'students', sid),
+            Object.fromEntries(Object.entries(values).map(([k,v]) => [k,v.trim()]))));
+    } else if (btn.dataset.act === 'del') {
+        if (confirm('確定刪除學生「' + student.name + '」？'))
+            await perform(() => deleteDoc(doc(db, 'classes', classId, 'students', sid)));
     }
 });
-
-async function openEdit(sid, card) {
-    const nm = card.querySelector('.student-name').textContent;
-    const level = prompt(`「${nm}」的等級：`, num(card.querySelector('.student-lv').textContent.match(/Lv\.(\d+)/)?.[1]));
-    if (level === null) return;
-    const weapon = prompt('武器：', card.querySelectorAll('.stat .v')[2].textContent.replace('—',''));
-    if (weapon === null) return;
-    const equipment = prompt('裝備：', card.querySelectorAll('.stat .v')[3].textContent.replace('—',''));
-    if (equipment === null) return;
-    await updateDoc(doc(db, 'classes', currentClassId, 'students', sid), {
-        level: num(level), weapon: weapon.trim(), equipment: equipment.trim()
-    });
-    toast('已更新');
-}
 
 async function addStudent() {
     if (!currentClassId) { toast('請先建立或選擇班級'); return; }
     const name = $('f_name').value.trim();
     if (!name) { toast('請輸入姓名'); $('f_name').focus(); return; }
+    const initial = ['f_exp', 'f_gold'].map(id => Number($(id).value));
+    if (initial.some(n => !Number.isSafeInteger(n) || n < 0)) {
+        toast('經驗與金幣須為非負整數'); return;
+    }
     const data = {
         name,
         gender: $('f_gender').value,
-        level: num($('f_level').value) || 1,
+        team: $('f_team').value.trim(),
+        schemaVersion: 2,
+        growthVersion: 1, expOffset: 0,
+        level: growthOf({ exp: num($('f_exp').value) }).level,
         exp: num($('f_exp').value),
         gold: num($('f_gold').value),
         weapon: $('f_weapon').value.trim(),
@@ -212,7 +216,7 @@ async function addStudent() {
     toast('已新增：' + name);
     // 清空表單（保留性別/等級預設）
     ['f_name','f_weapon','f_equipment'].forEach(id => $(id).value = '');
-    $('f_exp').value = 0; $('f_gold').value = 0; $('f_level').value = 1;
+    $('f_exp').value = 0; $('f_gold').value = 0;
     $('f_name').focus();
 }
 
@@ -267,7 +271,7 @@ onAuthStateChanged(auth, user => {
     } else {
         // 未登入：清空並顯示登入畫面
         if (unsubStudents) { unsubStudents(); unsubStudents = null; }
-        currentClassId = null;
+        currentClassId = null; watchStudents(null);
         $('app').style.display = 'none';
         $('loginScreen').style.display = 'flex';
     }
@@ -275,17 +279,17 @@ onAuthStateChanged(auth, user => {
 
 // ---- 綁定 ----
 classSelect.addEventListener('change', e => selectClass(e.target.value));
-$('newClassBtn').addEventListener('click', createClass);
-$('delClassBtn').addEventListener('click', deleteCurrentClass);
-$('addStudentBtn').addEventListener('click', addStudent);
-$('f_name').addEventListener('keydown', e => { if (e.key === 'Enter') addStudent(); });
+$('newClassBtn').addEventListener('click', () => perform(createClass));
+$('delClassBtn').addEventListener('click', () => perform(deleteCurrentClass));
+$('addStudentBtn').addEventListener('click', () => perform(addStudent));
+$('f_name').addEventListener('keydown', e => { if (e.key === 'Enter') perform(addStudent); });
 $('loginBtn').addEventListener('click', doLogin);
 $('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 $('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginPassword').focus(); });
 $('logoutBtn').addEventListener('click', () => signOut(auth));
 $('editNameBtn').addEventListener('click', async () => {
     if (!currentUser) return;
-    const name = prompt('設定你的顯示名稱（例如：Gorgeous Tr.Anita）：', currentUser.displayName || '');
+    const name = await askText('顯示名稱', '老師名稱', currentUser.displayName || '');
     if (name === null) return;
     const trimmed = name.trim();
     try {
@@ -296,3 +300,111 @@ $('editNameBtn').addEventListener('click', async () => {
         toast('更新失敗：' + err.message);
     }
 });
+
+// 獎勵和紀錄寫在同一個交易；沿用班級擁有者規則，不新增公開資料路徑。
+function targets() {
+    const mode = $('selectionMode').value;
+    return roster.filter(s => mode === 'all' || (mode === 'team'
+        ? Boolean(s.team) && s.team === $('teamSelect').value : selected.has(s.id)));
+}
+function renderRewardState() {
+    const teamValue = $('teamSelect').value;
+    const teams = [...new Set(roster.map(s => s.team).filter(Boolean))].sort();
+    $('teamSelect').innerHTML = '<option value="">請選擇小隊</option>' + teams.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    if (teams.includes(teamValue)) $('teamSelect').value = teamValue;
+    $('teamField').hidden = $('selectionMode').value !== 'team';
+    const people = targets();
+    $('selectionSummary').textContent = people.length ? `已選取 ${people.length} 人：${people.map(s => s.name).join('、')}` : '尚未選取學生';
+    $('connectionState').textContent = !navigator.onLine ? '目前離線，暫停寫入。連線恢復後請重新操作。' : busy ? '正在處理，請稍候…' : !rosterReady ? '等待班級名冊載入…' : '名冊已載入；獎勵成功後會顯示紀錄。';
+    $('rewardBtn').textContent = busy ? '處理中…' : `發送獎勵${people.length ? `（${people.length} 人）` : ''}`;
+    $('rewardBtn').disabled = busy || !navigator.onLine || !rosterReady || !people.length;
+    const history = (classData.rewardHistory || []).filter(e => e.lessonId === lessonId);
+    $('undoBtn').disabled = busy || !navigator.onLine || !rosterReady || !history.some(e => !e.undone);
+    $('rewardHistory').innerHTML = history.length ? history.slice().reverse().map(e => `<li>${escapeHtml(new Date(e.at).toLocaleTimeString('zh-TW'))} · ${escapeHtml(e.reason)} · ${e.students.length} 人，每人 +${e.amount} 經驗${e.undone ? '（已復原）' : ''}<br>${escapeHtml(e.students.map(s => s.name).join('、'))}</li>`).join('') : '<li>本堂課尚無獎勵紀錄。</li>';
+    for (const id of ['classSelect','newClassBtn','delClassBtn','addStudentBtn','logoutBtn','editNameBtn','selectionMode','teamSelect','clearSelection','rewardReason','rewardAmount']) $(id).disabled = busy;
+    studentList.querySelectorAll('button').forEach(b => b.disabled = busy);
+}
+async function perform(work) {
+    if (busy) return;
+    if (!navigator.onLine) { toast('目前離線，請恢復連線後再試'); return; }
+    busy = true; renderRewardState();
+    try { await work(); }
+    catch (err) { console.error(err); toast('操作未完成：' + (err.message || '請重試')); }
+    finally { busy = false; renderRewardState(); }
+}
+async function grantReward() {
+    const ids = targets().map(s => s.id);
+    const amount = Number($('rewardAmount').value);
+    if (!currentClassId || !rosterReady || !ids.length) return;
+    if (!Number.isSafeInteger(amount) || amount < 1 || amount > 1000) { toast('經驗值請輸入 1～1000 的整數'); return; }
+    if (ids.length > 100) { toast('單次最多選取 100 人，請分小隊操作'); return; }
+    const classId = currentClassId, uid = currentUser.uid;
+    const operationId = crypto.randomUUID(), reason = $('rewardReason').value;
+    await perform(async () => {
+        await runTransaction(db, async tx => {
+            const classRef = doc(db, 'classes', classId);
+            const c = await tx.get(classRef);
+            if (!c.exists() || c.data().ownerId !== uid) throw new Error('班級不存在或無權限');
+            const history = c.data().rewardHistory || [];
+            if (history.some(e => e.id === operationId)) return;
+            const refs = ids.map(id => doc(db, 'classes', classId, 'students', id));
+            const snapshots = await Promise.all(refs.map(ref => tx.get(ref)));
+            const students = snapshots.map((snap, i) => {
+                if (!snap.exists()) throw new Error('名冊已變更，請重新選取學生');
+                const before = num(snap.data().exp);
+                if (!Number.isSafeInteger(before) || before < 0 || !Number.isSafeInteger(before + amount)) throw new Error('學生經驗值格式不正確');
+                return { id: ids[i], name: String(snap.data().name || '').slice(0,60), before, after: before + amount };
+            });
+            students.forEach((s,i) => tx.update(refs[i], growthFields(snapshots[i].data(), s.after)));
+            tx.update(classRef, { rewardHistory: [...history, { id: operationId, lessonId, reason, amount, students, at: Date.now(), undone: false }].slice(-40) });
+        });
+        toast(`已獎勵 ${ids.length} 人，每人 +${amount} 經驗`);
+    });
+}
+async function undoReward() {
+    const entry = (classData.rewardHistory || []).slice().reverse().find(e => e.lessonId === lessonId && !e.undone);
+    if (!entry || !currentClassId) return;
+    const classId = currentClassId;
+    await perform(async () => {
+        await runTransaction(db, async tx => {
+            const classRef = doc(db, 'classes', classId);
+            const c = await tx.get(classRef);
+            if (!c.exists()) throw new Error('班級已不存在');
+            const history = c.data().rewardHistory || [];
+            const record = history.find(e => e.id === entry.id);
+            if (!record || record.undone) throw new Error('這筆紀錄已復原或已過期');
+            const refs = record.students.map(s => doc(db, 'classes', classId, 'students', s.id));
+            const snapshots = await Promise.all(refs.map(ref => tx.get(ref)));
+            snapshots.forEach((s,i) => {
+                if (!s.exists() || num(s.data().exp) !== record.students[i].after) throw new Error('學生資料已有後續變更，為避免覆蓋請先處理後續獎勵');
+            });
+            refs.forEach((ref,i) => tx.update(ref, growthFields(snapshots[i].data(), record.students[i].before)));
+            tx.update(classRef, { rewardHistory: history.map(e => e.id === record.id ? { ...e, undone: true } : e) });
+        });
+        toast('已復原上一筆獎勵');
+    });
+}
+function formDialog(title, fields) {
+    const dialog = $('editDialog');
+    if (dialog.open) return Promise.resolve(null);
+    $('dialogTitle').textContent = title;
+    $('dialogFields').innerHTML = fields.map(([key,label,value]) => `<label for="edit_${key}">${escapeHtml(label)}</label><input id="edit_${key}" name="${key}" maxlength="60" value="${escapeHtml(value)}" ${key === 'name' ? 'required' : ''}>`).join('');
+    return new Promise(resolve => {
+        let value = null;
+        $('editForm').onsubmit = e => { e.preventDefault(); value = Object.fromEntries(new FormData(e.target)); dialog.close(); };
+        $('dialogCancel').onclick = () => dialog.close();
+        dialog.addEventListener('close', () => resolve(value), { once: true });
+        dialog.showModal();
+    });
+}
+async function askText(title, label, value) {
+    const result = await formDialog(title, [['name', label, value]]);
+    return result ? result.name : null;
+}
+$('selectionMode').addEventListener('change', () => { renderRewardState(); renderStudents(roster); });
+$('teamSelect').addEventListener('change', () => { renderRewardState(); renderStudents(roster); });
+$('clearSelection').addEventListener('click', () => { selected.clear(); $('selectionMode').value = 'individual'; renderStudents(roster); renderRewardState(); });
+$('rewardBtn').addEventListener('click', grantReward);
+$('undoBtn').addEventListener('click', undoReward);
+window.addEventListener('online', renderRewardState);
+window.addEventListener('offline', renderRewardState);

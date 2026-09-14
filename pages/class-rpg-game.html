@@ -16,13 +16,20 @@
     <div class="game-bar">
         <a href="class-rpg.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回班級管理</a>
         <h1>⚔️ 冒險世界</h1>
-        <span class="hint">方向鍵 / WASD 移動 · 按住 Shift 跑步</span>
+        <span id="worldCount" class="hint">等待班級名冊</span>
     </div>
 
+    <div class="world-controls">
+        <label>班級<select id="worldClass" disabled><option>等待登入…</option></select></label>
+        <label>角色名冊<select id="studentFocus" disabled><option>選擇學生</option></select></label>
+        <button id="pauseWorld" disabled aria-pressed="false">暫停散步</button>
+    </div>
+    <p id="worldStatus" role="status">正在準備班級世界…</p>
     <div id="gameContainer">
         <div id="gameLoading" class="game-loading">遊戲載入中…</div>
     </div>
 
+    <div id="characterInfo" role="status">點選角色或使用名冊，查看能力與成長。</div>
     <script type="module" src="../assets/js/class-rpg-game.js"></script>
     <script src="../assets/js/theme.js"></script>
 </body>
