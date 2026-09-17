@@ -1,0 +1,32 @@
+.mr-card { max-width: 960px; margin: auto; padding: clamp(16px, 3vw, 32px); background: var(--surface); border: 3px solid var(--border); border-radius: 24px; }
+.mr-card button { min-height: 48px; padding: 12px 20px; border: 2px solid var(--border-strong); border-radius: 14px; background: var(--surface-2); cursor: pointer; }
+.mr-card button:hover:not(:disabled) { border-color: var(--primary); }
+.mr-card button:focus-visible, .mr-card select:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+.mr-card button:disabled { cursor: default; }
+.mr-card h2:focus { outline: none; }
+.mr-toolbar, .mr-hud { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center; }
+.mr-hud { justify-content: center; font-size: .95rem; }
+.mr-map { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 0; list-style: none; font-size: .85rem; text-align: center; }
+.mr-map li { padding: 8px 4px; border: 2px solid var(--border); border-radius: 12px; }
+.mr-map li[aria-current] { border-color: var(--ink); font-weight: 700; }
+.mr-map span { display: block; }
+.mr-stage { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-top: 16px; background: var(--surface-2); border-radius: 20px; }
+.mr-stage figure { margin: 12px; min-width: 0; text-align: center; }
+.mr-stage figcaption span { display: block; font-variant-numeric: tabular-nums; }
+.mr-stage img { display: block; width: 100%; height: clamp(120px, 22vw, 210px); object-fit: contain; }
+.mr-stage progress { width: 100%; height: 18px; accent-color: var(--primary); }
+.mr-versus { font-weight: 700; }
+.mr-panel { padding-top: 20px; }
+.mr-panel h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); overflow-wrap: anywhere; }
+.mr-options, .mr-upgrades { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.mr-upgrades { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mr-options button { font-size: 1.3rem; overflow-wrap: anywhere; }
+.mr-options small, .mr-upgrades span, .mr-settings label { display: block; }
+.mr-options small { font-size: .85rem; }
+.mr-options .mr-correct { border: 3px solid var(--ink); font-weight: 700; }
+.mr-upgrades span { font-size: .9rem; margin-top: 8px; }
+.mr-feedback { min-height: 2em; }
+.mr-settings { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
+.mr-settings select { display: block; max-width: 100%; width: 100%; }
+.mr-settings label { min-width: 0; max-width: 100%; }
+@media (max-width: 560px) { .mr-map { grid-template-columns: repeat(3, 1fr); } .mr-upgrades { grid-template-columns: 1fr; } .mr-stage { gap: 0; } .mr-stage figure { margin: 8px; } }

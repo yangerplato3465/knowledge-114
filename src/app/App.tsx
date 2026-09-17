@@ -34,6 +34,7 @@ export function App() {
     </main>
     <footer><VersionLabel />{local && <aside className="dev-tools" aria-label="開發工具"><p>開發工具（僅 localhost 顯示）</p>
       <a href={`${import.meta.env.BASE_URL}pages/math-rpg-pixi-spike.html`}>數學勇者 · Pixi 角色 Spike</a>
+      <a href={`${import.meta.env.BASE_URL}next/math-rpg.html`}>數學勇者 · React 試玩版</a>
     </aside>}</footer>
   </>;
 }

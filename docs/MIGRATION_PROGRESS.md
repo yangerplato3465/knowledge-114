@@ -1,5 +1,24 @@
 # 遷移進度 · 2026-09-17
 
+## Phase 4 第五批：雙畫布生命週期邊界
+
+- 新增 src/games/math-rpg/renderer.ts：MathRpgRenderer 管理 battle／overlay 兩個獨立 Application；runtime 與繪圖 layer 由呼叫端注入，不載入舊全域單例。兩層 setup 成功後才一起附加 canvas。
+- 初始化與非同步 setup 途中離場會先取消延遲效果，再等初始化結束釋放 Application；任一層失敗清理全部已取得資源。ResizeObserver、visibilitychange、motion preference listener 與 canvas 均由實例擁有。
+- RendererScope 管理延遲效果和私有資源；reset／reduced-motion 取消舊效果，dispose 逐項清理，單一清理例外不阻止其他資源釋放。不使用全域 pool 清除或遞迴銷毀共享貼圖，避免破壞其他實例。
+- 依 Pixi 技能保留 async init → setup → 顯示 → destroy 邊界；reduced-motion 交由 layer 停用裝飾，不停止必要角色／HUD 更新。
+- 10 項 mock runtime 測試涵蓋雙層提交、init／setup 離場、第二層失敗、renderer 尚未建立即失敗、重複清理、新舊實例隔離、暫停、偏好、reset 與失效回呼。
+- 全套 21 項 Node + 79 項 Vitest（100 項）、typecheck 與正式建置通過；最終產物使用 `/knowledge-114/` base，舊站逐檔相容檢查通過。
+- 本批僅建立可測試的控制器，未接入 React、未搬入舊繪圖邏輯、未量測真實 GPU 回收。試玩版維持 DOM 圖片；下一批提供 runtime loader 與角色／介面 layer。既有未提交變更保留，本批未提交或推送。
+
+## Phase 4 第四批：數學勇者 React 試玩入口
+
+- 新增 `/next/math-rpg.html`，React 管理年級／題庫、六關 HUD、題目／答案、倒數、強化、勝敗及重玩。useBattle 在 effect 建立 BattleSession，StrictMode cleanup 與離場清除回合和畫面倒數。
+- 數值仍即時結算，生命條在 impact／status-tick 才顯示變化；固定題庫依原版有放回抽樣，動態除法沿用產生器。題目、選卡、結果及返回選單有焦點管理。
+- 沿用網站主題與既有角色圖片。依 UI/UX 技能內建指引補上鍵盤焦點、文字揭答及至少 44px 觸控目標；未新增動畫，沒有 reduced-motion 額外動作。
+- 21 項 Node + 69 項 Vitest（90 項）通過；新增 StrictMode 六關勝利／選卡／重玩、錯答命中時序、超時、切換題庫、卸載與動態題庫測試。根路徑與 `/knowledge-114/` 正式建置均通過。
+- 子路徑瀏覽器實測 Tab／Enter 作答、正解標記與鎖定、圖片載入、返回選單焦點；390px 無橫向溢出，答案按鈕約 63px 高，無 console error。完整六關在元件測試驗證，未宣稱瀏覽器完整通關或教室實機驗收。
+- Pixi 生命週期檢查發現舊雙畫布為全域單例且缺完整 destroy；本批不載入舊 renderer，也不宣稱視覺等價。首頁遊戲連結仍指向舊版，localhost 開發工具新增試玩連結。下一批處理 renderer 實例化／清理及雙畫布接線。本批未提交、推送或部署。
+
 ## Phase 4 第三批：可取消回合排程與作答鎖
 
 - 新增 src/games/math-rpg/session.ts，BattleSession 管理題目期限、回合事件、選卡、換關、勝敗及重玩；提供獨立快照，尚未接入 React／Pixi。

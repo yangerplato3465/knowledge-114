@@ -348,6 +348,8 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 - [x] 題庫、純傷害／狀態公式及強化卡池 TypeScript 抽離與新舊等價測試（2026-09-17）。
 - [x] 純回合時間線抽離：432 組邊界逐拍與 20 組連續戰鬥／選卡／跨關對照（2026-09-17）；尚未接入畫面與可取消排程器。
 - [x] 可取消回合排程與作答鎖：題目 token、期限判定、失效回呼、重玩／離場清理及六關流程測試（2026-09-17）；尚未接入 React／renderer。
+- [x] React 試玩入口：題庫、HUD、作答、選卡、勝敗／重玩接線，StrictMode 及子路徑瀏覽器檢查（2026-09-17）。DOM 角色圖片暫代 Pixi；首頁舊入口保留，完整特效未完成。
+- [x] 雙 canvas 生命週期控制器與私有資源 scope：非同步取消、失敗回收、reset、motion／visibility 及實例隔離測試（2026-09-17）；尚未注入實際 runtime／繪圖 layer，未作 GPU 驗收。
 - [ ] 先抽離題庫、規則、戰鬥模型與 Pixi renderer 邊界。
 - [ ] React 接手題目、血條、選卡、設定與結果 UI。
 - [ ] 現有 Pixi 戰鬥保持 imperative，不在首次遷移改成 `@pixi/react`。
