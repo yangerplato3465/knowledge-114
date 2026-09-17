@@ -4,8 +4,8 @@
 
 ## 一句話
 
-**純靜態網站。沒有建置流程、沒有套件管理、沒有測試框架。**
-HTML/CSS/JS 直接放上靜態主機就會動。
+**靜態網站，正逐步導入 React + Vite + TypeScript 外殼。**
+既有 HTML/CSS/JS 保留；新增 `/next/` 預覽入口。pnpm 建置至 `dist/`，舊頁面與素材原樣複製，GitHub Actions 驗證後部署產物。執行進度與限制見 [MIGRATION_PROGRESS](MIGRATION_PROGRESS.md)。
 
 - 部署：GitHub repo `yangerplato3465/knowledge-114`，從根目錄靜態託管
 - GitHub Actions 在部署前執行引用、JavaScript 語法與共用功能回歸檢查；遊戲操作與視覺仍須瀏覽器驗證。指令見 [README](../README.md)。
@@ -13,6 +13,10 @@ HTML/CSS/JS 直接放上靜態主機就會動。
   發版時要一起 bump，git tag 跟著同一個號
 
 ## 檔案結構
+
+新增第三個 React 入口 `next/magic-ink.html`：`src/lessons/magic-ink/` 保存教材 JSX、題目與三組互動狀態，沿用 PageLayout。原 `assets/js/magic-ink.js` 不被新頁載入，計時器由 effect 清理。頁面獨立打包，教材不進首頁 chunk。
+
+React 新版目前有 `next/index.html` 與 `next/quick-quiz.html` 兩個 Vite 入口，共享 React／主題程式，快問快答的 205 題題庫保留在遊戲 chunk。首頁依賴圖於建置時檢查不得載入遊戲模組。所有舊頁面仍原樣複製至 dist 作為相容入口。
 
 ```
 index.html                首頁（自帶 inline style，獨立於其他頁）
@@ -62,7 +66,7 @@ powershell -NoProfile -File "C:\Users\nini9\Work\knowledge-114\.claude\serve.ps1
 
 ## 相依與載入順序
 
-**沒有模組打包器。** 順序靠 `<script>` 標籤，而且有幾處**順序不能顛倒**：
+**舊遊戲仍不經模組打包器改寫。** 順序靠 `<script>` 標籤，而且有幾處**順序不能顛倒**：
 
 | 頁面 | 順序 |
 |---|---|
@@ -198,3 +202,7 @@ tf-best                        快問快答最佳成績
 **無 BOM UTF-8 且滿是中文註解**，讀進來就變亂碼，寫回去等於整份毀掉
 （2026-08-03 毀過 `detective-puzzles.js`）。`perl -0777 -i -pe` 配 `\x{...}`
 逸出也有同一類的雙重編碼問題。
+
+## 酸鹼教材 React 入口（2026-09-14）
+
+新增第四個入口 next/water-acid-base.html。src/lessons/water-acid-base 保存教材、題目與投放狀態；以可取消計時器更新低頻資料，CSS 僅呈現動畫。原 styles.css 與 script.js 保留，新頁不載入 script.js。

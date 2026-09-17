@@ -42,3 +42,10 @@ GitHub Actions 會在 main 推送與 PR 執行上述檢查。main 或手動執�
 
 Pixi 引擎已放在 `assets/vendor/`，保留各頁原有版本。Firebase 教師管理與偵探存檔、GitHub 素材管理仍需要網路。
 切勿將真實權杖或學生資料放入測試、文件或版本庫。
+# React 外殼開發
+
+使用 Node.js 24 與 pnpm 11.19.0：`pnpm install --frozen-lockfile`、`pnpm dev`，開啟 `http://127.0.0.1:5173/next/`。原版入口與遊戲仍可使用。
+
+驗證：`pnpm test`、`pnpm build`；產物預覽：`pnpm preview`。GitHub Pages 使用 `VITE_BASE_PATH=/knowledge-114/` 建置，CI 已設定。
+
+詳見 [遷移進度](docs/MIGRATION_PROGRESS.md)。目前完成建置外殼，遊戲尚未搬入 React。
