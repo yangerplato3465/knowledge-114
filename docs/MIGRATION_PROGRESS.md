@@ -1,5 +1,12 @@
 # 遷移進度 · 2026-09-17
 
+## Phase 4 第一批：數學勇者題庫與純規則
+
+- 新增 src/games/math-rpg/questions.ts 與 model.ts，抽離 36 題固定題目、動態除法產生器、六關傷害／狀態公式與八張強化卡池。
+- 初始狀態、傷害、換關與選卡結果直接對照舊碼；動態題目連續 1,000 題一致，100 組種子各五輪強化一致。
+- 21 項 Node + 54 項 Vitest（75 項）與 production build 通過；舊入口、renderer 和資料契約未改。本批未提交、未部署。
+- [規則與回合邊界紀錄](migration-evidence/math-rpg-rules.md) 已保存。仍待回合時間線、完整戰鬥模擬及 React／Pixi 接線，未將 Phase 4 整體或「完整 renderer 邊界」標記完成。
+
 ## 素材下載／上傳 React 移植
 
 - 新增 `/next/downloads.html`、`/next/upload.html`，新版首頁改連新入口；沿用 PageLayout、ThemeProvider、ErrorBoundary 與原主題色彩。舊頁及素材原樣保留。

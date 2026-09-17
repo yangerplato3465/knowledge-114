@@ -345,6 +345,7 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 
 ### Phase 4：數學勇者
 
+- [x] 題庫、純傷害／狀態公式及強化卡池 TypeScript 抽離與新舊等價測試（2026-09-17）。
 - [ ] 先抽離題庫、規則、戰鬥模型與 Pixi renderer 邊界。
 - [ ] React 接手題目、血條、選卡、設定與結果 UI。
 - [ ] 現有 Pixi 戰鬥保持 imperative，不在首次遷移改成 `@pixi/react`。

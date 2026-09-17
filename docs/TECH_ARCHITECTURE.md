@@ -14,6 +14,8 @@
 
 ## 檔案結構
 
+數學勇者的遷移預備模組位於 `src/games/math-rpg/`：題庫 factory 可注入亂數，model 保存明確戰鬥狀態並提供純數值計算、換關與不可變強化套用。尚未接正式頁面，既有 math-rpg.js 的動畫／回合排程保留；完整時間線等價驗證是接線前置條件。
+
 素材入口為 `next/downloads.html` 與 `next/upload.html`，共享 `src/features/materials/` 的型別化 GitHub Contents API adapter、可取消清單 hook 及樣式。React 管理表單與每檔進度；上傳及刪除序列化，讀清單可重新整理並取消過期請求。維持 main 的 assets/uploads 與 gh_upload_token 儲存契約，舊 HTML／JS 不變。所有入口均輸出實體 HTML，首頁保持純導覽。
 
 第五個 React 入口為 `next/word-sort.html`：`useRound` 處理低頻遊戲狀態與可取消計時器，`Courier` 以 DOM ref/rAF 管理輸送帶，`WordSortFX` 透過 PixiHost 管理獨立特效生命週期。滿版教室頁沿用舊 CSS，未套上會佔用垂直空間的 PageLayout 頂欄；起始頁提供共用 ThemeSelect。首頁不載入遊戲模組，遊戲選題後才載入既有 UMD vendor，未增加第三份 Pixi runtime。
