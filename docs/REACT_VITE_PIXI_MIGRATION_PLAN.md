@@ -345,17 +345,21 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 
 ### Phase 4：數學勇者
 
+2026-09-17 功能遷移收尾：新版首頁已接 React 入口；完整驗證與未量測項目見 [數學勇者收尾紀錄](migration-evidence/math-rpg-completion.md)。以下分批項目的「尚未」描述保留作歷史。
+
 - [x] 題庫、純傷害／狀態公式及強化卡池 TypeScript 抽離與新舊等價測試（2026-09-17）。
 - [x] 純回合時間線抽離：432 組邊界逐拍與 20 組連續戰鬥／選卡／跨關對照（2026-09-17）；尚未接入畫面與可取消排程器。
 - [x] 可取消回合排程與作答鎖：題目 token、期限判定、失效回呼、重玩／離場清理及六關流程測試（2026-09-17）；尚未接入 React／renderer。
 - [x] React 試玩入口：題庫、HUD、作答、選卡、勝敗／重玩接線，StrictMode 及子路徑瀏覽器檢查（2026-09-17）。DOM 角色圖片暫代 Pixi；首頁舊入口保留，完整特效未完成。
 - [x] 雙 canvas 生命週期控制器與私有資源 scope：非同步取消、失敗回收、reset、motion／visibility 及實例隔離測試（2026-09-17）；尚未注入實際 runtime／繪圖 layer，未作 GPU 驗收。
-- [ ] 先抽離題庫、規則、戰鬥模型與 Pixi renderer 邊界。
-- [ ] React 接手題目、血條、選卡、設定與結果 UI。
-- [ ] 現有 Pixi 戰鬥保持 imperative，不在首次遷移改成 `@pixi/react`。
-- [ ] 保留兩 canvas + DOM 的既有決定。
-- [ ] 加入 reduced-motion command，統一停用裝飾粒子。
-- [ ] 跑完整數值模擬、功能測試與瀏覽器手感驗收。
+- [x] 基本 Pixi layer 接入 React：本地 runtime、角色貼圖、命中傷害文字、DOM 備援與高 DPI 修正（2026-09-17）。雙畫布實際載入／離場驗證通過；進階演出與 GPU 量測仍待完成。
+- [x] 基礎攻擊／受傷／倒地姿勢與 ticker 接線，含 reduced-motion、重玩重置及過期動畫測試（2026-09-17）；尚非舊分鏡逐幀等價。
+- [x] 抽離題庫、規則、戰鬥模型與 Pixi renderer 邊界。
+- [x] React 接手題目、血條、選卡、設定與結果 UI。
+- [x] Pixi 戰鬥保持 imperative，不在首次遷移改成 `@pixi/react`。
+- [x] 保留兩 canvas + DOM 的既有決定。
+- [x] 加入 reduced-motion command，統一停用裝飾粒子。
+- [x] 跑新舊數值模擬、功能測試與桌面／390px 瀏覽器流程驗收；教室實機效能另列未驗證。
 
 完成條件：題數、傷害、卡池、關卡結果與舊版等價；Pixi lifecycle 可安全重進頁面。
 

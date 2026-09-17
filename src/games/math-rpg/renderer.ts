@@ -11,6 +11,7 @@ export interface RendererApplication {
 }
 export interface RendererRuntime { Application: new () => RendererApplication }
 export interface RendererLayer {
+  resize?(): void;
   /** Register ticker callbacks and create scene-local resources here. */
   setup(app: RendererApplication, scope: RendererScope): void | Promise<void>;
   /** Clear decorative effects, not essential battle state. */
@@ -106,7 +107,8 @@ export class MathRpgRenderer {
       this.slots.forEach((slot, index) => {
         const canvas = slot.app.canvas;
         canvas.setAttribute('aria-hidden', 'true');
-        canvas.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+        // Preserve autoDensity's CSS width/height (different from backing pixels).
+        Object.assign(canvas.style, { position: 'absolute', inset: '0', pointerEvents: 'none' });
         canvas.dataset.mathRpgLayer = index === 0 ? 'battle' : 'overlay';
         (index === 0 ? targets.battle : targets.overlay).append(canvas);
       });
@@ -153,6 +155,7 @@ export class MathRpgRenderer {
     this.slots.forEach((slot, index) => {
       const host = index === 0 ? this.targets!.battle : this.targets!.overlay;
       slot.app.renderer!.resize(Math.max(1, host.clientWidth), Math.max(1, host.clientHeight));
+      slot.layer.resize?.();
       slot.app.render();
     });
   }

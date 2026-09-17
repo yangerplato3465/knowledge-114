@@ -38,5 +38,6 @@ export function useBattle(pool: QuestionPool) {
     return () => { game.dispose(); session.current = null; choose.current = () => {}; };
   }, [pool]);
   return { view, answer: (index: number) => choose.current(index),
-    upgrade: (title: string) => session.current?.chooseUpgrade(title), reset: () => session.current?.reset() };
+    upgrade: (title: string) => session.current?.chooseUpgrade(title, true), reset: () => session.current?.reset(),
+    pause: () => session.current?.pause(), resume: () => session.current?.resume() };
 }

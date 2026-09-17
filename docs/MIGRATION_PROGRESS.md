@@ -1,5 +1,32 @@
 # 遷移進度 · 2026-09-17
 
+## Phase 4：數學勇者功能收尾
+
+- React 版完成六關、全部題庫、規則／狀態／選卡、勝敗與重玩；新版學習主頁已改接 `/next/math-rpg.html`，原版網址及全部素材保持可回退。
+- 補齊六張場景、勇者攻擊貼圖分鏡、三種普通劍氣／爆擊交叉劍氣、命中粒子、回復／流血文字、勝利彩花與選卡過場。雙 canvas 維持 imperative，24 個裝飾節點重用，ticker 不讀 DOM 版面、不驅動 React state。
+- 新增玩法、音樂（使用者開啟才播放）、全螢幕及離場確認。說明／確認視窗同時暫停答題、回合排程及角色動畫；恢復不重播命中，重複選卡鎖定。原生 dialog 管理焦點與 Escape；減少動態效果同時涵蓋 DOM 與 Pixi。
+- 驗證：21 項 Node + 92 項 Vitest（113 項）通過，typecheck、子路徑 build、舊檔逐 byte 相容檢查通過。390px 瀏覽器完成六關、五次選卡及勝利重玩；音樂開關／全螢幕狀態、玩法暫停與退出清理通過，退出後 canvas 為 0，通關時 console error 為 0。
+- 細節與驗收範圍見 `migration-evidence/math-rpg-completion.md`。本次完成新版功能遷移，不宣稱舊版濾鏡／分鏡逐像素等價，也未量測教室設備 FPS／GPU 記憶體或正式站效能。未提交、推送或部署。
+- 以下逐批紀錄保留作歷史，當時「尚未接線」與「首頁仍指舊版」不再代表目前狀態。
+
+## Phase 4 第七批：基礎角色動作
+
+- 新增 motion.ts：純視覺姿勢模型，以絕對毫秒採樣攻擊前衝（520ms）、命中後退染色（320ms）及倒地傾斜／淡出（700ms）。不修改戰鬥狀態，也不以動畫完成事件推進回合。
+- 依 Pixi Ticker 技能，在獨立 Application ticker 更新 Sprite；每幀只改座標／旋轉／顏色／透明度，不讀 DOM 版面或觸發 React state。版面尺寸只在 resize／低頻快照時更新，離場移除同一 ticker callback。
+- 倒地由 player-defeated／enemy-defeated 事件觸發，不因即時 HP 歸零提前播放；選卡／勝敗保留倒地姿勢，下一題／新局清空。背景長停頓以絕對時間落至終點，不重播過期動作。
+- reduced-motion 取消位移／染色且不在關閉偏好後重播，仍以靜態透明度表示倒地；沿用 UI/UX 技能的減少動態效果原則。
+- 新增 5 項姿勢測試，另補 ticker 解除註冊驗證。21 項 Node + 88 項 Vitest（109 項）及子路徑正式建置通過。瀏覽器確認角色前衝與答對扣血流程；完整倒地／行動裝置手感仍待驗收。
+- 這是基礎動作，不是舊 CSS 分鏡的逐幀等價移植；尚待攻擊貼圖分鏡、劍氣、粒子、濾鏡與完整視覺驗收。保留舊版正式入口及既有未提交變更，本批未提交或推送。
+
+## Phase 4 第六批：實際雙畫布與 React 接線
+
+- 新增 pixiLayers.ts 與 PixiBattle.tsx：按需載入本地 Pixi vendor，battle layer 顯示既有勇者／六隻敵人貼圖，overlay layer 於命中顯示傷害／爆擊／護盾文字。角色依 DOM 圖片框定位、換關更新貼圖，DOM 仍管理題目、生命條與操作。
+- 兩層成功才隱藏 DOM 角色圖片；失敗或 `?nopixi` 保留基本顯示與完整答題流程。StrictMode 舊初始化不影響新实例，離場清理 renderer 及容器。reduced-motion 隱藏裝飾傷害標籤，必要生命數值仍由 DOM 顯示。
+- 依 Pixi Sprite／Text／Application 技能處理貼圖載入、選項式 constructor 與 async lifecycle。瀏覽器發現並修正 autoDensity CSS 尺寸被覆蓋的高 DPI 裁切問題，加入尺寸保留回歸測試。
+- 21 項 Node + 83 項 Vitest（104 項）通過；新增 StrictMode／備援／nopixi 元件測試與真實 layer 邏輯的貼圖切關、傷害標籤、重玩測試。根路徑及子路徑建置通過。
+- 正式子路徑瀏覽器確認兩張 canvas、完整角色顯示與作答；返回選單 canvas 歸零，無 console error。七張角色貼圖保留在頁面級 Assets cache，Application 各自釋放 renderer；未量測 GPU 記憶體，未宣稱 cache 全清。
+- 尚未移植劍氣、攻擊分鏡、粒子、濾鏡及全部原版演出；首頁正式入口仍指舊版。下一批補上攻擊／受傷／倒地演出與完整視覺驗收。本批未提交、推送或部署。
+
 ## Phase 4 第五批：雙畫布生命週期邊界
 
 - 新增 src/games/math-rpg/renderer.ts：MathRpgRenderer 管理 battle／overlay 兩個獨立 Application；runtime 與繪圖 layer 由呼叫端注入，不載入舊全域單例。兩層 setup 成功後才一起附加 canvas。

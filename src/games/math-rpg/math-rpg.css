@@ -1,4 +1,11 @@
 .mr-card { max-width: 960px; margin: auto; padding: clamp(16px, 3vw, 32px); background: var(--surface); border: 3px solid var(--border); border-radius: 24px; }
+.mr-battle-root, .mr-stage { position: relative; }
+.mr-stage { overflow: hidden; }
+.mr-battle-canvas, .mr-overlay-canvas { position: absolute; inset: 0; pointer-events: none; }
+.mr-battle-canvas { z-index: 1; }
+.mr-overlay-canvas { z-index: 2; }
+.mr-pixi-ready [data-character] { opacity: 0; }
+.mr-renderer-status { font-size: .85rem; color: var(--ink-soft); }
 .mr-card button { min-height: 48px; padding: 12px 20px; border: 2px solid var(--border-strong); border-radius: 14px; background: var(--surface-2); cursor: pointer; }
 .mr-card button:hover:not(:disabled) { border-color: var(--primary); }
 .mr-card button:focus-visible, .mr-card select:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
@@ -29,4 +36,18 @@
 .mr-settings { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
 .mr-settings select { display: block; max-width: 100%; width: 100%; }
 .mr-settings label { min-width: 0; max-width: 100%; }
+.mr-stage { background-size: cover; background-position: center; }
+.mr-stage figcaption, .mr-versus { position: relative; z-index: 2; background: var(--surface); border-radius: 10px; padding: 4px; }
+.mr-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.mr-dialog { color: var(--ink); background: var(--surface); border: 3px solid var(--border-strong); border-radius: 20px; padding: 24px; max-width: min(560px, 90vw); max-height: 85vh; overflow: auto; }
+.mr-dialog::backdrop { background: #101827bb; }
+.mr-dialog button { margin: 4px; }
+.mr-howto { line-height: 1.8; padding-left: 24px; }
+.mr-upgrades button { transition: transform .3s, opacity .3s; }
+.mr-upgrades .mr-chosen { transform: translateY(-6px); border-color: var(--primary); }
+.mr-upgrades .mr-dimmed { opacity: .4; }
+.mr-result { text-align: center; animation: mr-arrive .5s ease-out; }
+.mr-battle-root:fullscreen { overflow: auto; background: var(--surface); color: var(--ink); padding: clamp(16px, 3vw, 32px); box-sizing: border-box; }
+@keyframes mr-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .mr-upgrades button { transition: none; } .mr-result { animation: none; } .mr-upgrades .mr-chosen { transform: none; } }
 @media (max-width: 560px) { .mr-map { grid-template-columns: repeat(3, 1fr); } .mr-upgrades { grid-template-columns: 1fr; } .mr-stage { gap: 0; } .mr-stage figure { margin: 8px; } }

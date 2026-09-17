@@ -22,7 +22,7 @@ function fixture(init?: (index: number) => Promise<void>, layers = { battle: lay
     canvas = document.createElement('canvas');
     renderer = { resize: vi.fn() }; stage = { destroy: vi.fn() };
     start = vi.fn(); stop = vi.fn(); render = vi.fn(); destroy = vi.fn();
-    init = vi.fn(async () => { await init?.(apps.indexOf(this)); });
+    init = vi.fn(async () => { this.canvas.style.width = '320px'; this.canvas.style.height = '180px'; await init?.(apps.indexOf(this)); });
     constructor() { apps.push(this); }
   } };
   const targets = { battle: document.createElement('div'), overlay: document.createElement('div') };
@@ -43,6 +43,8 @@ it('兩層都完成才附加畫布；兩種尺寸獨立 resize，重複 mount �
   for (const app of f.apps) {
     expect(app.init).toHaveBeenCalledWith(expect.objectContaining({ autoStart: false, sharedTicker: false, preference: 'webgl' }));
     expect(app.canvas.getAttribute('aria-hidden')).toBe('true');
+    expect(app.canvas.style.width).toBe('320px');
+    expect(app.canvas.style.height).toBe('180px');
     expect(app.renderer!.resize).toHaveBeenCalledWith(1, 1);
   }
   expect(observers[0].observe).toHaveBeenCalledTimes(2);

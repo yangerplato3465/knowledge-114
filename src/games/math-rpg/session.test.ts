@@ -5,6 +5,35 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 const answer = (game: BattleSession, result: 'correct' | 'wrong' = 'correct') => game.answer(result, game.getSnapshot().questionId);
 
+it('暫停凍結答題與命中排程，恢復後僅觸發一次', () => {
+  const game = new BattleSession({ random: () => 1 });
+  vi.advanceTimersByTime(10000); game.pause();
+  expect(answer(game)).toBe(false);
+  vi.advanceTimersByTime(60000);
+  expect(game.getSnapshot().state.playerHP).toBe(120);
+  game.resume(); vi.advanceTimersByTime(19999);
+  expect(game.getSnapshot().phase).toBe('question');
+  vi.advanceTimersByTime(1); game.pause();
+  vi.advanceTimersByTime(10000);
+  expect(game.getSnapshot().cue).toBe(null);
+  game.resume(); vi.advanceTimersByTime(190);
+  expect(game.getSnapshot().cue).toBe('impact');
+  expect(game.getSnapshot().state.playerHP).toBe(110);
+  game.dispose(); expect(vi.getTimerCount()).toBe(0);
+});
+
+it('選卡過場鎖定重複操作，離場取消換關', () => {
+  const game = new BattleSession({ random: () => 0 });
+  while (game.getSnapshot().phase !== 'upgrade') { answer(game); vi.advanceTimersByTime(1650); }
+  const title = game.getSnapshot().offers[0];
+  expect(game.chooseUpgrade(title, true)).toBe(true);
+  expect(game.chooseUpgrade(title, true)).toBe(false);
+  vi.advanceTimersByTime(1199); expect(game.getSnapshot().state.enemyIndex).toBe(0);
+  game.pause(); vi.advanceTimersByTime(5000); game.resume(); vi.advanceTimersByTime(1);
+  expect(game.getSnapshot().state.enemyIndex).toBe(1);
+  game.dispose(); expect(vi.getTimerCount()).toBe(0);
+});
+
 it('作答立即鎖定，答題倒數取消，命中與下一題依時間線通知', () => {
   const updates: BattleSnapshot[] = [];
   const game = new BattleSession({ random: () => 1, onChange: snapshot => updates.push(snapshot) });
