@@ -1,6 +1,6 @@
 # 數學勇者純規則基準 · 2026-09-17
 
-目前已建立純規則與回合時間線對照，不代表排程控制器或 React 畫面已完成。
+目前已建立純規則、回合時間線及可取消排程控制器；React 畫面與 renderer 接線尚未完成。
 
 ## 已抽離
 
@@ -30,6 +30,14 @@ src/games/math-rpg/turn.ts 的 resolveTurn 回傳 immediate 及帶毫秒 offset�
 2. 敵人攻擊次數先增加，即使護盾擋下仍計次。護盾擋下整次直接傷害與附加狀態，但既有流血仍會結算。
 3. tickStatuses 在排程當下擷取流血傷害，回呼執行時才扣血與遞減層數。新附加的流血不增加本題傷害，但可能在本題回呼被遞減；不能改成「先加所有狀態，再算傷害」。
 4. 擊殺敵人後直接進入選卡／勝利流程，不再執行該題流血結算；換關清空流血與迷霧。
-5. 下一批建立可取消排程器與作答鎖，再把 React HUD／題目和既有兩個 canvas 接到新的狀態。未做瀏覽器、教室實機與 lab performance 驗收。
+5. 第三批已建立可取消排程器與作答鎖；下一批把 React HUD／題目和既有兩個 canvas 接到新的狀態。未做瀏覽器、教室實機與 lab performance 驗收。
+
+## 可取消排程（第三批）
+
+BattleSession 每個掛載實例各自建立，建構時開啟第一題倒數；呼叫端應在 effect 中建立並在 cleanup 呼叫 dispose，不可在 render 期間建立。constructor 不通知，建立後先讀 getSnapshot；後續 onChange 提供獨立快照。questionId 是作答必要參數，reset 不重用舊 token。
+
+question → resolving → question／upgrade／victory／defeat 由時間線推進。選卡限當次 offers，成功後換關並重新計時；重玩可取消進行中回合，dispose 後所有操作停止。clock 可注入，正式預設使用 performance.now 與 setTimeout；沒有逐幀 React 更新。
+
+8 項新增測試使用虛擬時鐘，包括即使 clear 無法阻止回呼仍安全、已過期點擊轉超時、通知期間重玩，以及通知拋錯時清理。全套 86 項測試與正式建置通過。這些驗證不代表實際元件／canvas 卸載已驗收。
 
 舊入口及原腳本未改，新模組目前僅供測試與下一批接線，不會增加首頁產物。
