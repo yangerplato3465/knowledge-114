@@ -24,6 +24,6 @@ export default defineConfig({
   }],
   build: {
     assetsDir: 'app-assets',
-    rollupOptions: { input: ['next/index.html', 'next/quick-quiz.html', 'next/magic-ink.html', 'next/water-acid-base.html', 'next/word-sort.html', 'next/downloads.html', 'next/upload.html', 'next/math-rpg.html'] },
+    rollupOptions: { input: ['next/index.html', 'next/quick-quiz.html', 'next/magic-ink.html', 'next/water-acid-base.html', 'next/word-sort.html', 'next/downloads.html', 'next/upload.html', 'next/math-rpg.html', 'next/class-rpg.html', 'next/class-rpg-game.html', 'next/detective-golden-owl.html', 'next/detective-ai-museum.html'] },
   },
 });

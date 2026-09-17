@@ -366,19 +366,19 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 ### Phase 5：班級 RPG
 
 - [ ] React 管理登入、名冊、教師操作及錯誤回復。
-- [ ] Pixi 管角色世界與高頻移動。
-- [ ] Firebase subscription 與 Pixi entity 之間使用 adapter，不互相直接依賴。
-- [ ] 維持 owner 驗證、切班取消舊 subscription 與交易一致性。
+- [x] Pixi 管角色世界與高頻移動（2026-09-17：新版 React 外殼接入既有 imperative world module）。
+- [x] Firebase subscription 與 Pixi entity 之間使用 adapter，不互相直接依賴（沿用 `class-rpg-world-data.js`）。
+- [x] 維持 owner 驗證、切班取消舊 subscription 與交易一致性（既有 14 項模型／資料邊界測試持續通過）。
 - [ ] 新玩法另開功能變更，不混進架構搬遷。
 
 完成條件：既有 21 項回歸測試及新增 lifecycle／訂閱測試通過。
 
 ### Phase 6：偵探事件簿
 
-- [ ] 保留 gate 驗證通過後才 dynamic import engine。
-- [ ] 保留完整 reload 的小組切換。
-- [ ] 保留 `saveBlocked`、flush-before-leave 與離線可玩語意。
-- [ ] 案件資料保持純資料模組，engine 不硬編碼圖片路徑。
+- [x] 保留 gate 驗證通過後才 dynamic import engine（2026-09-17：兩案新版 React 外殼的載入順序測試及瀏覽器 smoke test 通過）。
+- [x] 保留完整 reload 的小組切換。
+- [x] 保留 `saveBlocked`、flush-before-leave 與離線可玩語意。
+- [x] 案件資料保持純資料模組，engine 不硬編碼圖片路徑。
 - [ ] 驗證兩案完整流程、錯誤指控、結局、存檔恢復與權限失敗。
 
 完成條件：既有解鎖碼和存檔可讀，Firebase 規則未被客戶端架構繞過。

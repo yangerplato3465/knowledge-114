@@ -12,7 +12,7 @@
 | `assets/js/theme.js` | 深淺主題切換，注入右下角浮動鈕 |
 | CDN | Google Fonts（Fredoka + Noto Sans TC）、Font Awesome 6.5.1 |
 
-**沒有共用元件框架。** 同名的 helper（例如 `checkAnswer`）在不同頁面是
+舊 `pages/` **沒有共用元件框架**；新版 `next/` 已有 React 的 `PageLayout`、`ThemeProvider`、`ErrorBoundary` 與遊戲 host。舊頁同名的 helper（例如 `checkAnswer`）在不同頁面仍是
 不同的實作、不同的簽章。**不要假設邏輯跨頁共用**，除非它來自 `assets/js` 的引入檔。
 
 `assets/css/styles.css` 與 `assets/js/script.js` **只有 water-acid-base 在用**，

@@ -1,5 +1,7 @@
 # TECH_ARCHITECTURE · 技術架構
 
+> 2026-09-17 過渡狀態：正式新版入口位於 `next/`，由 Vite 建置 React 外殼。班級 RPG 與偵探事件簿先以 React 建立 DOM、再啟動保留的 imperative Firebase／Pixi 模組；這是保護既有資料契約的 adapter 階段，不代表其狀態管理已全數 React 化。舊 `pages/` 仍是可回退入口。
+
 ---
 
 ## 一句話

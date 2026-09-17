@@ -1,5 +1,14 @@
 # 遷移進度 · 2026-09-17
 
+## Phase 5／6 第一部分：高風險頁面接入新版外殼
+
+- 新增 `/next/class-rpg.html` 與 `/next/class-rpg-game.html`。React 先建立具語意的登入、名冊、獎勵、狀態與世界 DOM，再由 adapter 啟動保留的 Firebase／Pixi imperative 模組；首頁已改接新版管理入口，舊頁仍完整保留作回退。
+- 班級世界仍由 Pixi 管高頻移動，Firebase 名冊透過既有 `class-rpg-world-data.js` adapter 傳入，不讓 renderer 直接持有 Firestore；owner、切班取消過期訂閱與交易一致性的既有測試均持續通過。
+- 新增兩個偵探 React 入口。案件純資料 script 載入完成後才啟動 gate，gate 驗證前不載入 engine；`owl`／`ai-museum` ID、完整 reload、`saveBlocked`、flush-before-leave 及既有存檔格式均未改動。
+- 新增 React 契約測試，鎖定班級管理必要表單與 adapter 啟動，以及「案件資料 → gate、但尚無 engine」的安全載入順序。21 項 Node + 94 項 Vitest、typecheck、production build、舊站逐 byte 相容檢查通過。
+- 本機 production preview 已確認班級管理、角色世界與兩案 gate 均可載入且無 console error；兩案 gate 前均未出現 engine script。
+- 尚未完成：班級管理狀態完全抽成 React hook／Firebase adapter、真實帳號操作、兩案完整破關與存檔／權限失敗驗證。這些仍屬第一部分的後續深化，不把本次接入誤標為完整 Phase 5／6 驗收。
+
 ## Phase 4：數學勇者功能收尾
 
 - React 版完成六關、全部題庫、規則／狀態／選卡、勝敗與重玩；新版學習主頁已改接 `/next/math-rpg.html`，原版網址及全部素材保持可回退。
