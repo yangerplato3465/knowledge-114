@@ -14,6 +14,8 @@
 
 ## 檔案結構
 
+素材入口為 `next/downloads.html` 與 `next/upload.html`，共享 `src/features/materials/` 的型別化 GitHub Contents API adapter、可取消清單 hook 及樣式。React 管理表單與每檔進度；上傳及刪除序列化，讀清單可重新整理並取消過期請求。維持 main 的 assets/uploads 與 gh_upload_token 儲存契約，舊 HTML／JS 不變。所有入口均輸出實體 HTML，首頁保持純導覽。
+
 第五個 React 入口為 `next/word-sort.html`：`useRound` 處理低頻遊戲狀態與可取消計時器，`Courier` 以 DOM ref/rAF 管理輸送帶，`WordSortFX` 透過 PixiHost 管理獨立特效生命週期。滿版教室頁沿用舊 CSS，未套上會佔用垂直空間的 PageLayout 頂欄；起始頁提供共用 ThemeSelect。首頁不載入遊戲模組，遊戲選題後才載入既有 UMD vendor，未增加第三份 Pixi runtime。
 
 遊戲共用層的 GameController.dispatch(GameCommand) 接收低頻指令。PixiHost 在非同步 mount 完成後、resume 前同步系統 reduced-motion；後續偏好變動不重建遊戲。React 可重用 useReducedMotion，DOM CSS 仍使用同一系統媒體查詢。控制器須只停用裝飾效果，不改遊戲計時與規則；目前尚未接入真實 Pixi renderer。

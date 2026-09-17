@@ -1,5 +1,17 @@
 # 遷移進度 · 2026-09-17
 
+## 素材下載／上傳 React 移植
+
+- 新增 `/next/downloads.html`、`/next/upload.html`，新版首頁改連新入口；沿用 PageLayout、ThemeProvider、ErrorBoundary 與原主題色彩。舊頁及素材原樣保留。
+- `src/features/materials/api.ts` 集中 GitHub Contents API、清單驗證、檔名編碼、二進位 Base64、同名 SHA 更新及刪除。維持原 repo、main、assets/uploads 路徑及 gh_upload_token key；權杖只在既有記住偏好勾選且執行上傳時儲存，取消勾選立即移除。
+- useMaterials 取消前次請求並忽略過期結果；上傳／刪除共用操作鎖，批次檔案依序處理，避免並行提交衝突。離場中止請求和後續批次，操作進行中保留離站提醒。中止請求不保證撤銷 GitHub 已接受的提交，應重新整理清單確認結果。
+- 保留原生刪除確認，API 失敗提供可重試提示；格式不正確或前置查詢失敗不發送 PUT。檔名作純文字、連結固定可信 host 並編碼檔名。
+- 驗證：21 項 Node + 48 項 Vitest（共 69 項）通過，typecheck、根路徑及 `/knowledge-114/` build 通過。新增素材測試覆蓋清單過濾、特殊檔名、格式錯誤、限流、請求競爭、Base64、SHA、批次序列、重複點擊、storage 封鎖、離場取消及刪除取消／衝突。
+- 正式產物子路徑瀏覽器確認下載及管理清單讀到現有三個檔案；390px 無橫向溢出，下載／刪除／重新整理按鈕約 46px 高、上傳 48px。Enter 可重新整理，無 console error。沿用 UI/UX 技能的可見焦點與 44px 操作目標指引。
+- 寫入流程使用模擬 API 與測試權杖驗證，未上傳或刪除正式素材；本批未提交、未部署。教室觸控與同條件效能驗收仍待補齊。
+
+實作核對 [GitHub Contents API 官方文件](https://docs.github.com/en/rest/repos/contents)：同名更新使用既有 SHA，寫入與刪除依序處理。
+
 ## 字尾大分流：React 入口與特效 controller
 
 - 新增 `/next/word-sort.html`，新版首頁導向新入口。沿用舊 CSS／主題與滿版教室配置，React 管理分類、收集、錯題、快遞任務、結果及重玩；舊入口與 vendor 保留。

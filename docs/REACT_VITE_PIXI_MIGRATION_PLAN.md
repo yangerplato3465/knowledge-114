@@ -338,7 +338,7 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 - [x] 字尾大分流 React 入口與 imperative Pixi controller 接入，規則等價、完整流程及離場回歸完成（2026-09-17）。
 - [ ] 字尾大分流教室觸控、完整視覺與同條件效能驗收。
 - [x] 字尾大分流題庫／純規則 TypeScript 抽離，400 組固定亂數新舊等價驗證；瀏覽器與效能基準另待補齊（2026-09-17）。
-- [ ] 素材下載／上傳頁。
+- [x] 素材下載／上傳頁 React 移植、Contents API adapter、批次與刪除回歸測試及子路徑瀏覽器驗證（2026-09-17；寫入使用模擬 API）。
 - [ ] 補齊舊測試對 React DOM 的等價覆蓋。
 
 完成條件：簡單頁面功能等價，且能示範共用元件與 route-level splitting。
