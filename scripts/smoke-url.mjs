@@ -10,7 +10,7 @@ async function request(path, init) {
   return response;
 }
 
-for (const path of ['next/index.html', 'next/math-rpg.html', 'next/class-rpg.html', 'next/detective-golden-owl.html']) {
+for (const path of ['index.html', 'pages/math-rpg.html', 'pages/class-rpg.html', 'pages/detective-golden-owl.html']) {
   const response = await request(path);
   assert.equal(response.status, 200, `${path} 回傳 ${response.status}`);
   assert.match(response.headers.get('content-type') || '', /text\/html/i, `${path} MIME 錯誤`);

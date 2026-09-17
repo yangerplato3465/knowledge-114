@@ -11,11 +11,13 @@ const home = js.find(name => name.startsWith('index-'));
 assert.ok(home, '找不到首頁 JavaScript chunk');
 assert.ok(sizes[home] <= 12_000, `首頁功能 chunk 超過 12 KB：${sizes[home]} bytes`);
 
-const shell = js.find(name => name.startsWith('ErrorBoundary-'));
+const homeHtml = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+// Shared chunk names vary with Rollup's dependency graph; inspect actual preloads.
+const shared = [...homeHtml.matchAll(/rel="modulepreload"[^>]+href="[^"]*app-assets\/([^"/]+\.js)"/g)].map(match => match[1]);
+const shell = shared.sort((a, b) => sizes[b] - sizes[a])[0];
 assert.ok(shell, '找不到共用 React shell chunk');
 assert.ok(sizes[shell] <= 240_000, `共用 React shell 超過 240 KB：${sizes[shell]} bytes`);
 
-const homeHtml = await readFile(new URL('../dist/next/index.html', import.meta.url), 'utf8');
 assert.doesNotMatch(homeHtml, /pixi|firebase|class-rpg|detective/i, '首頁 HTML 不得直接載入 Pixi、Firebase 或大型遊戲');
 assert.equal(js.filter(name => /pixi/i.test(name)).length, 0, 'Pixi vendor 應維持按遊戲載入，不得進入 Vite 初始 chunks');
 

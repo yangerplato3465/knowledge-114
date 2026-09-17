@@ -1,3 +1,5 @@
+> 歷史設計紀錄：部分內容描述已下架功能或切換前架構；目前入口與技術現況以 [TECH_ARCHITECTURE.md](TECH_ARCHITECTURE.md) 為準。
+
 # UI · 介面語言與各頁硬限制
 
 ---

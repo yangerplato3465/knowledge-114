@@ -1,25 +1,22 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, access } from 'node:fs/promises';
 import assert from 'node:assert/strict';
-
 const root = new URL('../', import.meta.url);
-async function compare(path) {
-  const entries = await readdir(new URL(path, root), { withFileTypes: true });
-  for (const entry of entries) {
-    const child = `${path}/${entry.name}`;
-    if (entry.isDirectory()) await compare(child);
-    else assert.deepEqual(await readFile(new URL(child, root)), await readFile(new URL(`dist/${child}`, root)), child);
+const base = process.env.VITE_BASE_PATH || '/';
+const entries = ['index.html', ...(await readdir(new URL('pages/', root))).filter(p => p.endsWith('.html')).map(p => 'pages/' + p)];
+for (const entry of entries) {
+  const html = await readFile(new URL('dist/' + entry, root), 'utf8');
+  assert.match(html, /id="root"/, entry + ' 必須使用 React root');
+  assert.match(html, /type="module"[^>]+app-assets\//, entry + ' 必須載入 Vite 模組');
+  assert.doesNotMatch(html, /原版|舊版|\/next\//);
+  for (const [, url] of html.matchAll(/(?:src|href)="([^"]*app-assets\/[^"#]+)"/g)) {
+    assert.ok(url.startsWith(base), '錯誤的 base: ' + url);
+    await access(new URL('dist/' + url.slice(base.length), root));
   }
 }
-for (const path of ['assets', 'pages']) await compare(path);
-for (const path of ['index.html', 'config.json']) {
-  assert.deepEqual(await readFile(new URL(path, root)), await readFile(new URL(`dist/${path}`, root)), path);
+for (const path of ['next', 'pages/turbo-museum.html', 'pages/word-sort.html', 'pages/quick-quiz.html', 'assets/js/theme.js', 'assets/js/math-rpg.js', 'assets/js/upload.js']) {
+  await assert.rejects(access(new URL('dist/' + path, root)), path + ' 不可再發布');
 }
-const base = process.env.VITE_BASE_PATH || '/';
-for (const entry of ['index.html', 'quick-quiz.html', 'magic-ink.html', 'water-acid-base.html', 'word-sort.html', 'downloads.html', 'upload.html', 'math-rpg.html', 'class-rpg.html', 'class-rpg-game.html', 'detective-golden-owl.html', 'detective-ai-museum.html']) {
-const html = await readFile(new URL(`dist/next/${entry}`, root), 'utf8');
-for (const [, url] of html.matchAll(/(?:src|href)="([^"]*app-assets\/[^"]+)"/g)) {
-  assert.ok(url.startsWith(base), `錯誤的 base: ${url}`);
-  await readFile(new URL(`dist/${url.slice(base.length)}`, root));
+for (const path of ['config.json', 'assets/js/class-rpg.js', 'assets/js/detective/gate.js', 'assets/js/detective/admin.js', 'assets/vendor/pixi.esm.min.js', 'pages/firestore.rules.txt']) {
+  assert.deepEqual(await readFile(new URL(path, root)), await readFile(new URL('dist/' + path, root)), path);
 }
-}
-console.log('舊站檔案完整保留；新版入口資源與 base 檢查通過。');
+console.log(entries.length + ' 個 React 正式入口、base 與移除舊站檢查通過。');

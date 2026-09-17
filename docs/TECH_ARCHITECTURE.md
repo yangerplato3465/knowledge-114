@@ -1,218 +1,23 @@
-# TECH_ARCHITECTURE · 技術架構
+# 技術架構 · 2026-09-17
 
-> 2026-09-17 過渡狀態：正式新版入口位於 `next/`，由 Vite 建置 React 外殼。班級 RPG 與偵探事件簿先以 React 建立 DOM、再啟動保留的 imperative Firebase／Pixi 模組；這是保護既有資料契約的 adapter 階段，不代表其狀態管理已全數 React 化。舊 `pages/` 仍是可回退入口。
+唯一頁面框架為 React 19 + Vite + TypeScript。首頁是 index.html，其餘 10 個入口在 pages/，所有 HTML 都只掛載 React root。沒有 next/ 雙軌或獨立舊 HTML 回退頁。
 
----
+## 功能邊界
 
-## 一句話
+- 首頁：純導覽，建置護欄禁止載入遊戲、Pixi 與 Firebase。
+- 科學教材、數學勇者、素材管理：React 管理介面與互動狀態。
+- 班級管理／世界、兩個偵探案件、偵探後台：React 建立頁面 DOM，assets/js 的現役 imperative 模組負責 Firebase 與遊戲流程；尚非全部 React hooks 狀態管理。
+- Pixi 是繪圖引擎，不是並存的網頁框架；保留本地 UMD／ESM 8.20.1，依遊戲需要載入。
+- 共用 CSS 留在 assets/css；沿用樣式不代表保留舊頁框架。
 
-**以 React + Vite + TypeScript 建置正式入口，並保留舊靜態頁作回退。**
-`/next/` 是新版入口；pnpm 建置至 `dist/`，舊頁面與素材原樣複製，GitHub Actions 驗證後部署產物。執行進度與限制見 [MIGRATION_PROGRESS](MIGRATION_PROGRESS.md)。
+## 建置
 
-- 部署：GitHub repo `yangerplato3465/knowledge-114`，從根目錄靜態託管
-- GitHub Actions 在部署前執行引用、JavaScript 語法與共用功能回歸檢查；遊戲操作與視覺仍須瀏覽器驗證。指令見 [README](../README.md)。
-- 版號在 `config.json`（`version` + `lastUpdated`），首頁執行時 `fetch` 進來顯示。
-  發版時要一起 bump，git tag 跟著同一個號
+pnpm dev 提供開發站；pnpm build 執行型別、Vite、靜態素材複製、入口與效能預算檢查。只發布 dist/。copy-static.mjs 不複製來源 HTML，避免覆蓋 React 建置結果。
 
-## 檔案結構
+所有正式 pages/ 網址不變，根首頁改為 React。next/ 與測試用 Pixi HTML 已移除。教材內容基準與數學規則參考僅放在 tests/fixtures，不進入發布產物。
 
-數學勇者正式新版位於 `src/games/math-rpg/`：題庫、戰鬥模型、可取消回合排程與雙 Pixi layer 均已接入 `next/math-rpg.html`，DOM 管題目／血條／設定，Pixi 管高頻戰鬥演出。
+## 資料契約
 
-素材入口為 `next/downloads.html` 與 `next/upload.html`，共享 `src/features/materials/` 的型別化 GitHub Contents API adapter、可取消清單 hook 及樣式。React 管理表單與每檔進度；上傳及刪除序列化，讀清單可重新整理並取消過期請求。維持 main 的 assets/uploads 與 gh_upload_token 儲存契約，舊 HTML／JS 不變。所有入口均輸出實體 HTML，首頁保持純導覽。
+偵探 game ID、驗證碼衍生演算法、儲存 key、進度讀取失敗時禁止寫入、切換組別完整 reload、離場先 flush 及班級 owner filter／交易語意均保留。不要把 assets/js/class-rpg* 或 assets/js/detective 當成可刪除的舊網站。
 
-第五個 React 入口為 `next/word-sort.html`：`useRound` 處理低頻遊戲狀態與可取消計時器，`Courier` 以 DOM ref/rAF 管理輸送帶，`WordSortFX` 透過 PixiHost 管理獨立特效生命週期。滿版教室頁沿用舊 CSS，未套上會佔用垂直空間的 PageLayout 頂欄；起始頁提供共用 ThemeSelect。首頁不載入遊戲模組，遊戲選題後才載入既有 UMD vendor，未增加第三份 Pixi runtime。
-
-遊戲共用層的 GameController.dispatch(GameCommand) 接收低頻指令。PixiHost 在非同步 mount 完成後、resume 前同步系統 reduced-motion；後續偏好變動不重建遊戲。React 可重用 useReducedMotion，DOM CSS 仍使用同一系統媒體查詢。控制器須只停用裝飾效果，不改遊戲計時與規則。數學勇者與字尾大分流均已接入真實 Pixi renderer／controller。
-
-新增第三個 React 入口 `next/magic-ink.html`：`src/lessons/magic-ink/` 保存教材 JSX、題目與三組互動狀態，沿用 PageLayout。原 `assets/js/magic-ink.js` 不被新頁載入，計時器由 effect 清理。頁面獨立打包，教材不進首頁 chunk。
-
-React 新版目前有 `next/index.html` 與 `next/quick-quiz.html` 兩個 Vite 入口，共享 React／主題程式，快問快答的 205 題題庫保留在遊戲 chunk。首頁依賴圖於建置時檢查不得載入遊戲模組。所有舊頁面仍原樣複製至 dist 作為相容入口。
-
-```
-index.html                首頁（自帶 inline style，獨立於其他頁）
-config.json               版號
-CLAUDE.md                 給 AI 助理的架構不變式
-pages/<name>.html         一課 / 一個遊戲一頁
-assets/
-  css/<name>.css          theme.css 是唯一共用的
-  js/<name>.js            + <name>-pools.js 之類的資料檔
-  js/detective/           偵探是唯一有子模組的
-  images/<主題>/
-  audio/music.mp3         10.7 MB（見下面的坑）
-  vendor/pixi.min.js      PixiJS 8.20.1 UMD，818 KB（全域 PIXI）
-  vendor/pixi.esm.min.js  PixiJS 8.20.1 ESM，約 800 KB（import）
-  uploads/
-docs/                     本批文件 + 三份既有深入文件
-.claude/                  開發用腳本（不會部署）
-```
-
-舊 `pages/` 基本上各自獨立；新版 `next/` 共用 React shell、主題、錯誤邊界、PageLayout 與 PixiHost。同名舊 helper 在不同頁仍是不同實作。
-
-## 本地開發
-
-伺服器：`.claude/serve.ps1`，固定 `http://localhost:8080/`。
-
-```powershell
-powershell -NoProfile -File "C:\Users\nini9\Work\knowledge-114\.claude\serve.ps1"
-```
-
-也可以用 `python -m http.server`。**用 `file://` 開不行** —— 首頁要 `fetch config.json`。
-
-### ★ 連不上的時候先確認是不是還活著
-
-`Get-NetTCPConnection -LocalPort 8080 -State Listen` 顯示 **OwningProcess = 4（System）
-是正常的** —— `HttpListener` 把 prefix 註冊在 http.sys 核心層，不是使用者程序在監聽。
-看到 4 不代表沒有伺服器。
-
-- **逾時 = 卡死；connection refused = 真的沒開。**
-- 重複啟動會噴 `conflicts with an existing registration`，那代表已經可以連了。
-  現在 serve.ps1 有 preflight，會印 `Already serving...` 並乾淨退出。
-- 錯誤寫在 `.claude/serve.log`。
-
-**歷史地雷**：舊版 serve.ps1 是單執行緒 + 阻塞式 write。`assets/audio/music.mp3`
-有 10.7 MB，頁面用 `<audio preload="auto">` 抓它，自動播放被擋掉後瀏覽器停止讀取
-→ 那個 write 永遠不返回 → **整台伺服器再也不處理任何請求**。
-2026-08-19 改寫成 runspace pool 多執行緒 + HTTP Range + 分塊串流 + `WriteTimeout`。
-
-## 相依與載入順序
-
-**舊遊戲仍不經模組打包器改寫。** 順序靠 `<script>` 標籤，而且有幾處**順序不能顛倒**：
-
-| 頁面 | 順序 |
-|---|---|
-| math-rpg | `math-rpg-pools.js`（定義 `QUESTION_POOLS`）→ `math-rpg.js` |
-| word-sort | `word-sort-pools.js`（定義 `WORD_SORT_POOLS`）→ `word-sort.js` |
-| 所有頁 | `theme.js` 一律最後 |
-
-例外：`class-rpg.js`、`class-rpg-game.js` 與 `assets/js/detective/*` 是
-**ES module**（`type="module"`），用 `import` 而不是 `<script src>`。
-Firebase 從 CDN import，**Pixi 從本地 `assets/vendor/pixi.esm.min.js`**。
-
-## 第三方
-
-| 東西 | 來源 | 為什麼 |
-|---|---|---|
-| PixiJS 8.20.1 UMD | **本地 `assets/vendor/pixi.min.js`** | 教室不一定有網路 |
-| PixiJS 8.20.1 ESM | **本地 `assets/vendor/pixi.esm.min.js`** | 同上；2026-09-17 與 UMD 統一版本 |
-| Firebase 11.0.2 | gstatic CDN，ESM | |
-| Google Fonts / Font Awesome | CDN | 掛掉只是變醜，可以賭 |
-
-**為什麼 Pixi 要 vendor**：字型和圖示掛掉只是字醜、圖示變方框，遊戲照樣能玩；
-**Pixi 掛掉是整個戰鬥區空白**。這兩件事的嚴重性差太多，不能一起賭。
-
-代價：818 KB 是**完整包**。當時沒有 Node.js，未製作只含需要模組的瘦身版。低階機器要 parse 這 818 KB，
-**這是導入 Pixi 唯一真正的成本**。
-
-兩份檔案版本相同、格式不同；理由與「ESM 那份為什麼副檔名是 `.js` 不是 `.mjs`」
-都寫在 `assets/vendor/README.md`（有重新下載的指令）。**不要手改 vendor 裡的檔案。**
-
-**`.mjs` 的地雷**：`serve.ps1` 的 MIME 表原本沒有 `.mjs`，回傳空的 Content-Type，
-瀏覽器就依規範拒絕執行模組。已補上對應，但**新增任何模組檔請優先用 `.js` 副檔名** ——
-正式主機可能有同樣的缺口，而且會用同樣的方式無聲失敗。
-
-## Firebase
-
-兩個地方用到，專案 `classroom-rpg-a931a`：
-
-**班級 RPG** — Auth（老師登入）+ Firestore：
-
-```
-classes/{classId}                     ownerId 綁老師
-classes/{classId}/students/{id}       學生角色
-```
-
-**偵探事件簿的解鎖碼** — 在 `pages/detective-admin.html` 產生（owner-only），
-對 Firestore 驗證。
-
-- 文件 ID = `PBKDF2(gameId + ':' + normalizedCode)`，推導邏輯在
-  `detective/code.js`，**兩端共用**
-- **改 `PEPPER`、迭代次數或正規化函式 = 所有已發出的碼全部失效**
-- 規則在 `pages/firestore.rules.txt`（**不是自動部署的**）。
-  `allow list: if isOwner()` 是防止有人 dump 整個碼表的那道鎖；
-  `isOwner()` 是 email 允許清單，**發布規則前要先改**
-- 未登入的 client 只能寫 `progress` / `progressAt`，且 `progress.size() <= 28`
-
-## 偵探事件簿的架構
-
-```
-assets/js/detective/
-  engine.js  ui.js  puzzles.js  interrogation.js  spotdiff.js  wave.js
-  gate.js  code.js  admin.js
-  cases/<case>.js        ← 只有資料，沒有 Pixi 程式碼
-```
-
-一個案件 = 三個都帶案件名的東西：
-`pages/detective-<case>.html` + `cases/<case>.js` + `images/detective/<case>/`。
-
-**`cases/*.js` 比其他檔深一層**，所以它的 `IMG` 常數要往回走三層
-（`../../../images/detective/<case>/`）。引擎不寫死任何圖片路徑 ——
-每張圖都從案件檔自己的 `IMG` 解析，換美術只要改一行。
-
-### ★ 檔名可以改，id 不能
-
-第一案的檔名是 `golden-owl` 但 id 是 `'owl'`，**這個不一致不准「整理掉」**。
-id 餵進 `PBKDF2(id + ':' + code)` 和
-`localStorage['detective.unlock.<id>']` / `detective.groups.<id>`，
-**改了就讓所有已發出的碼失效、所有小組的存檔變孤兒**。
-
-檔名隨時可以改；**id 在第一組碼發出去的那一刻就凍結了**。
-
-### 頁面不直接載引擎
-
-`detective-<case>.html` 載的是 `gate.js`，驗證解鎖碼通過後才 `import()` engine.js。
-開發時設 `localStorage['detective.dev.<id>'] = '1'` 可繞過（不驗碼、不讀寫進度，
-頂欄會標示「開發模式」）。
-
-**只有 session 不算繞過** —— `readSession()` 一定要有 `codeId`，
-否則任何殘留的 localStorage 都變成免費通行證。
-
-### localStorage key
-
-```
-detective.unlock.<gameId>      本機這一組的 session（exp / codeId / label，不存明碼）
-detective.groups.<gameId>      這台裝置記住的所有小組
-detective.gateFocus.<gameId>
-detective.dev.<gameId>         開發繞過
-knowledge114-theme             深淺主題
-tf-best                        快問快答最佳成績
-```
-
-**每次切換小組都走 `location.reload()`**，絕不原地換 —— 引擎的 state 是在模組
-求值時建好的，重新指向另一份存檔等於要手動重設整個遊戲。
-
-## 測試與驗證的實務
-
-共用功能已有 Node.js 內建測試，以及 Python 靜態引用檢查（見 README）。遊戲實際可行的驗證做法（都在 `http://localhost:8080/` 上做）：
-
-- **Pixi 遊戲可以用 `javascript_tool` 全自動玩過關。**
-  `globalThis.__PIXI_APP__` 是標準勾子（`detective.js` 與 `word-sort-fx.js` 都有掛），
-  從那裡拿 stage 走訪整棵樹找節點
-- **瀏覽器窗格沒顯示時 rAF 是凍結的** → Pixi 從不 render → `hitTest` 全部失效。
-  每次 dispatch 指標事件前要先 `app.render()`；場景轉場要手動
-  `app.ticker.update(...)` 推完
-- **CSS 動畫同樣受 rAF 凍結影響**，`getComputedStyle` 讀到的是起點不是終點，
-  很容易誤判成 CSS 寫錯
-- 版面驗證用 `getBoundingClientRect()` 量，比截圖精確
-- `resize_window` **不會**自動觸發頁面的 resize 事件，要自己
-  `dispatchEvent(new Event('resize'))`
-- `javascript_tool` 跑在 isolated world：讀得到 DOM，**讀不到頁面的 `const`/`let` 全域**
-（`function` 宣告掛在 window 上所以叫得到）
-
-## 這台開發機的限制
-
-| | |
-|---|---|
-| Node.js / npm / npx | 原環境未安裝；本次可使用 Codex 隨附的 Node.js 執行檢查。不同電腦請先確認 PATH；網站本身不依賴 Node。 |
-| Python | 有，3.13.15 ARM64，**在 PATH 上**，含 Pillow 12.3 |
-| ffmpeg | 有 |
-| ImageMagick | 沒有 |
-
-**不要用 PowerShell 讀寫含中文的原始碼。** Windows PowerShell 5.1 的
-`Get-Content` 在檔案沒有 BOM 時預設用 cp950 解碼，這個專案的 js 全是
-**無 BOM UTF-8 且滿是中文註解**，讀進來就變亂碼，寫回去等於整份毀掉
-（2026-08-03 毀過 `detective-puzzles.js`）。`perl -0777 -i -pe` 配 `\x{...}`
-逸出也有同一類的雙重編碼問題。
-
-## 酸鹼教材 React 入口（2026-09-14）
-
-新增第四個入口 next/water-acid-base.html。src/lessons/water-acid-base 保存教材、題目與投放狀態；以可取消計時器更新低頻資料，CSS 僅呈現動畫。原 styles.css 與 script.js 保留，新頁不載入 script.js。
+下一階段若要把剩餘 imperative UI 改為 React state，需逐項抽離資料 adapter 和生命週期，並驗證有效帳號、群組存檔、權限失敗及離線路徑。

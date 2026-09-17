@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "static",
-      "runtimeExecutable": "powershell",
-      "runtimeArgs": ["-NoProfile", "-Command", "iex (Get-Content -Raw '.claude/serve.ps1')"],
+      "name": "react",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--port", "8080"],
       "port": 8080
     }
   ]

@@ -1,3 +1,5 @@
+> 歷史設計紀錄：部分內容描述已下架功能或切換前架構；目前入口與技術現況以 [TECH_ARCHITECTURE.md](TECH_ARCHITECTURE.md) 為準。
+
 # ART_STYLE · 配色、字體、素材流程
 
 ---

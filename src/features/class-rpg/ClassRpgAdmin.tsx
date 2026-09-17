@@ -3,7 +3,7 @@ import { LoadingStatus, ModalFrame, ToastRegion } from '../../components/Feedbac
 
 export function ClassRpgAdmin() {
   return <div className="wrap">
-    <a href={`${import.meta.env.BASE_URL}next/index.html`} className="back-link">← 回學習主頁</a>
+    <a href={`${import.meta.env.BASE_URL}index.html`} className="back-link">← 回學習主頁</a>
     <a id="gameLink" href="class-rpg-game.html" target="_blank" rel="noreferrer" className="btn game-link">進入遊戲</a>
     <h1>班級 RPG</h1><p className="subtitle">建立班級、新增學生角色，資料即時儲存到雲端。老師專用。</p>
     <div id="loginScreen" className="login-screen" style={{display:'none'}}><div className="login-card"><div className="lock" aria-hidden="true">🔐</div><h2>老師登入</h2><p className="hint">請使用管理員配發的帳號登入</p>

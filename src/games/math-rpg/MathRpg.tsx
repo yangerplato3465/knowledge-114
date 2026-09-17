@@ -80,7 +80,7 @@ export function MathRpg() {
   const wasPlaying = useRef(false);
   useEffect(() => { if (wasPlaying.current && !playing) start.current?.focus(); wasPlaying.current = playing; }, [playing]);
   return <PageLayout><div className="mr-card"><h1>數學勇者</h1>
-    <p>答題闖關 · 六段冒險旅程。<a href={`${import.meta.env.BASE_URL}pages/math-rpg.html`}>開啟完整特效舊版</a></p>
+    <p>答題闖關 · 六段冒險旅程。</p>
     {playing ? <Battle pool={questionPools[grade][poolName]} title={`${grade} · ${poolName}`} leave={() => setPlaying(false)} /> :
       <section className="mr-panel"><h2>選擇你的冒險</h2><p>六場戰鬥，每關可選一項強化。支援鍵盤 Tab 與 Enter 作答。</p>
         <details><summary>開始前看看遊戲玩法</summary><HowTo /></details>

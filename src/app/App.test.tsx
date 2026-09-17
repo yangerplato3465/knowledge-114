@@ -11,22 +11,18 @@ function setup(config: unknown = { version: '2.13.0', lastUpdated: '2026-09-11' 
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => config }));
   return render(<ThemeProvider><App /></ThemeProvider>);
 }
-it('新版全部活動的網址、標題、說明與原首頁一致', () => {
-  const legacy = new DOMParser().parseFromString(readFileSync('index.html', 'utf8'), 'text/html');
-  const expected = Array.from(legacy.querySelectorAll('a.page-btn')).map(a => ({
-    path: a.getAttribute('href')!.replace('pages/', '').replace('.html', ''),
-    title: a.querySelector('.btn-title')!.textContent,
-    description: a.querySelector('.btn-desc')!.textContent,
-  }));
-  expect(categories.flatMap(c => c.groups ? c.groups.flatMap(g => g.items) : c.items!)).toEqual(expected);
+it('活動均有正式 React 入口且清單不含已移除遊戲', () => {
+  const activities = categories.flatMap(c => c.groups ? c.groups.flatMap(g => g.items) : c.items!);
+  expect(activities.map(a => a.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'detective-golden-owl', 'detective-ai-museum', 'downloads', 'upload', 'class-rpg']);
+  for (const activity of activities) expect(readFileSync('pages/' + activity.path + '.html', 'utf8')).toContain('id="root"');
 });
 it('分類互斥展開，收合內容不出現在可操作的連結清單', async () => {
   setup();
   expect(screen.queryByRole('link', { name: /數學勇者 RPG/ })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /教學內容/ }));
   fireEvent.click(screen.getByRole('button', { name: '互動學習小遊戲' }));
-  expect(screen.getByRole('link', { name: /數學勇者 RPG/ }).getAttribute('href')).toBe('/next/math-rpg.html');
-  expect(screen.getByRole('link', { name: /字尾大分流/ }).getAttribute('href')).toBe('/next/word-sort.html');
+  expect(screen.getByRole('link', { name: /數學勇者 RPG/ }).getAttribute('href')).toBe('/pages/math-rpg.html');
+  expect(screen.queryByRole('link', { name: /字尾大分流|極速博物館|快問快答/ })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /偵探事件簿/ }));
   expect(screen.queryByRole('link', { name: /數學勇者 RPG/ })).toBeNull();
   expect(screen.getByRole('link', { name: /黃金貓頭鷹雕像/ })).toBeTruthy();
@@ -36,8 +32,8 @@ it('分類互斥展開，收合內容不出現在可操作的連結清單', asyn
 it('素材導覽使用獨立 React 入口', () => {
   setup();
   fireEvent.click(screen.getByRole('button', { name: /素材 遊戲素材的下載與上傳/ }));
-  expect(screen.getByRole('link', { name: /素材下載 下載遊戲素材/ }).getAttribute('href')).toBe('/next/downloads.html');
-  expect(screen.getByRole('link', { name: /上傳素材 老師專用/ }).getAttribute('href')).toBe('/next/upload.html');
+  expect(screen.getByRole('link', { name: /素材下載 下載遊戲素材/ }).getAttribute('href')).toBe('/pages/downloads.html');
+  expect(screen.getByRole('link', { name: /上傳素材 老師專用/ }).getAttribute('href')).toBe('/pages/upload.html');
 });
 it('不合法版號不顯示但首頁仍可使用', async () => {
   setup({ version: '<script>', lastUpdated: 'bad' });

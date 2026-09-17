@@ -18,12 +18,12 @@ export default defineConfig({
         output.imports.forEach(inspect);
       };
       for (const output of Object.values(bundle)) {
-        if (output.type === 'chunk' && output.isEntry && output.facadeModuleId?.replaceAll('\\', '/').endsWith('/next/index.html')) inspect(output.fileName);
+        if (output.type === 'chunk' && output.isEntry && output.facadeModuleId?.replaceAll('\\', '/').endsWith('/index.html')) inspect(output.fileName);
       }
     },
   }],
   build: {
     assetsDir: 'app-assets',
-    rollupOptions: { input: ['next/index.html', 'next/quick-quiz.html', 'next/magic-ink.html', 'next/water-acid-base.html', 'next/word-sort.html', 'next/downloads.html', 'next/upload.html', 'next/math-rpg.html', 'next/class-rpg.html', 'next/class-rpg-game.html', 'next/detective-golden-owl.html', 'next/detective-ai-museum.html'] },
+    rollupOptions: { input: ['index.html', 'pages/class-rpg-game.html', 'pages/class-rpg.html', 'pages/detective-admin.html', 'pages/detective-ai-museum.html', 'pages/detective-golden-owl.html', 'pages/downloads.html', 'pages/magic-ink.html', 'pages/math-rpg.html', 'pages/upload.html', 'pages/water-acid-base.html'] },
   },
 });

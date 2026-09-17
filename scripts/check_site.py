@@ -42,9 +42,8 @@ pages = [ROOT/'index.html', *sorted((ROOT/'pages').glob('*.html'))]
 for source in pages:
     page = Page(source)
     page.feed(source.read_text(encoding='utf-8'))
-    for data, game in [('math-rpg-pools.js', 'math-rpg.js'), ('word-sort-pools.js', 'word-sort.js')]:
-        if game in page.scripts and (data not in page.scripts or page.scripts.index(data) > page.scripts.index(game)):
-            errors.append(f'{source.name}: {data} must load before {game}')
+    if 'id="root"' not in source.read_text(encoding='utf-8'):
+        errors.append(f'{source.name}: missing React root')
 for source in (ROOT/'assets/css').glob('*.css'):
     for value in re.findall(r'url\(\s*[\'"]?([^\'"\)]+)', source.read_text(encoding='utf-8')):
         check(source, value.strip())

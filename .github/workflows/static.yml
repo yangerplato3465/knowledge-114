@@ -35,7 +35,7 @@ jobs:
         run: node scripts/check_js.cjs
       - name: Test shared features
         run: pnpm test
-      - name: Build and verify compatible output
+      - name: Build and verify React output
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: pnpm build

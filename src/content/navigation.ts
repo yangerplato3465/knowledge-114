@@ -12,9 +12,6 @@ export const categories: Category[] = [
     ] },
     { id: 'games', title: '互動學習小遊戲', items: [
       { path: 'math-rpg', title: '數學勇者', description: 'RPG 闖關問答 · 答對攻擊怪獸，答錯就會受傷' },
-      { path: 'turbo-museum', title: '極速博物館', description: '派學者修復古物搶時間 · 該加人？還是改流程？每局都不一樣' },
-      { path: 'word-sort', title: '字尾大分流', description: '英文 -ful / -less · 看中文意思把單字甩到正確的那一邊，觸控大螢幕玩最順' },
-      { path: 'quick-quiz', title: '快問快答', description: '是非題挑戰 · 可自訂每題秒數，時間到公布答案' },
     ] },
   ] },
   { id: 'detective', title: '偵探事件簿', description: '點擊尋找線索 · 推理破案', items: [

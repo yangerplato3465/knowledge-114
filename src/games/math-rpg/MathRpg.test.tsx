@@ -42,7 +42,7 @@ it('玩法視窗暫停倒數，取消離場後繼續原題', () => {
   expect(screen.getByRole('timer').textContent).toBe('剩餘 30 秒');
 });
 
-it('StrictMode 六關作答、選卡、勝利與重玩，舊版連結保留', () => {
+it('StrictMode 六關作答、選卡、勝利與重玩', () => {
   setup(); start();
   let upgrades = 0;
   for (let i = 0; i < 60 && !screen.queryByRole('heading', { name: '六關全破！勇者勝利！' }); i++) {
@@ -56,7 +56,6 @@ it('StrictMode 六關作答、選卡、勝利與重玩，舊版連結保留', ()
   advance(0); expect(vi.getTimerCount()).toBe(0);
   fireEvent.click(screen.getByRole('button', { name: '再玩一次' }));
   expect(screen.getByTestId('player-hp').textContent).toBe('120 / 120');
-  expect(screen.getByRole('link', { name: '開啟完整特效舊版' }).getAttribute('href')).toContain('pages/math-rpg.html');
 });
 
 it('答錯立即揭答並鎖定，生命在命中時才顯示變化', () => {

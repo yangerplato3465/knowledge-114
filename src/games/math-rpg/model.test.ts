@@ -6,12 +6,7 @@ import { applyUpgrade, bleedDamagePerTick, comboBonus, currentHeroDamage, curren
 import { createQuestionPools, type Question, type QuestionPools } from './questions';
 import { resolveTurn, type Answer } from './turn';
 
-const source = readFileSync('assets/js/math-rpg.js', 'utf8');
-const prelude = source.slice(0, source.indexOf('function startTimer()'));
-const bleeding = source.slice(source.indexOf('function bleedDamagePerTick()'), source.indexOf('function renderMap()'));
-const weighted = source.slice(source.indexOf('function pickWeighted(pool)'), source.indexOf('function showUpgradePanel()'));
-const draw = source.slice(source.indexOf('    const pool = UPGRADES.filter'), source.indexOf("    const container = document.getElementById('upgrade-options')"));
-const spawn = source.slice(source.indexOf('    currentEnemyIndex = index;', source.indexOf('function spawnEnemy(index)')), source.indexOf('    const look = ENEMY_LOOKS', source.indexOf('function spawnEnemy(index)')));
+const { prelude, bleeding, weighted, draw, spawn, turns } = JSON.parse(readFileSync('tests/fixtures/math-rpg-rules.json', 'utf8'));
 const fields: Record<keyof BattleState, string> = {
   playerMax: 'PLAYER_MAX', playerHP: 'playerHP', roundTime: 'ROUND_TIME', playerArmor: 'playerArmor',
   combo: 'combo', comboCap: 'comboCap', critChance: 'CRIT_CHANCE', critMult: 'CRIT_MULT',
@@ -44,7 +39,6 @@ function legacyTurn(input: BattleState, answer: Answer, rng: () => number) {
     endGame: (win: boolean) => outcomes.push({ at: now, cue: win ? 'victory' : 'defeat' }),
     showUpgradePanel: () => outcomes.push({ at: now, cue: 'upgrade' }),
   });
-  const turns = source.slice(source.indexOf('function tickStatuses(delay)'), source.indexOf('function nextRound()'));
   runInContext(`${prelude}\n${bleeding}\n${turns}\nconst IMPACT_DELAY=190, NEXT_DELAY_CORRECT=1.6, NEXT_DELAY_WRONG=3;
     ${assign}\ncurrentQuestion={correct:0,a:['a','b']};
     ${answer === 'timeout' ? 'handleTimeout()' : `checkAnswer(${answer === 'correct' ? 0 : 1})`};`, context);
@@ -172,7 +166,7 @@ it('加權三選一：100 組種子、五輪強化與取滿限制均對照原版
 });
 
 it('九組固定題庫內容與答案逐題等價', () => {
-  const original = JSON.parse(runInNewContext(`${readFileSync('assets/js/math-rpg-pools.js', 'utf8')}; JSON.stringify(QUESTION_POOLS)`));
+  const original = JSON.parse(runInNewContext(`${readFileSync('tests/fixtures/math-rpg-pools.reference.txt', 'utf8')}; JSON.stringify(QUESTION_POOLS)`));
   const actual = JSON.parse(JSON.stringify(createQuestionPools()));
   expect(actual).toEqual(original);
   expect(Object.values(actual as QuestionPools).flatMap(grade => Object.values(grade)).flat()).toHaveLength(36);
@@ -180,7 +174,7 @@ it('九組固定題庫內容與答案逐題等價', () => {
 
 it('動態除法題連續 1000 題的新舊亂數序列、選項與正解相同', () => {
   const seed = 12345;
-  const original = runInNewContext(`${readFileSync('assets/js/math-rpg-pools.js', 'utf8')}; generateDivideQuestion`, { Math: Object.assign(Object.create(Math), { random: random(seed) }) }) as () => Question;
+  const original = runInNewContext(`${readFileSync('tests/fixtures/math-rpg-pools.reference.txt', 'utf8')}; generateDivideQuestion`, { Math: Object.assign(Object.create(Math), { random: random(seed) }) }) as () => Question;
   const generate = createQuestionPools(random(seed))['五年級']['整數、小數除以整數'] as () => Question;
   for (let i = 0; i < 1000; i++) {
     const question = generate();
