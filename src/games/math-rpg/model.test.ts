@@ -4,6 +4,7 @@ import { expect, it } from 'vitest';
 import { applyUpgrade, bleedDamagePerTick, comboBonus, currentHeroDamage, currentPlayerDamage, drawUpgrades, effectiveRoundTime,
   ENEMY_ATK_TABLE, ENEMY_HITS_TABLE, ENEMY_TRAITS, HERO_ATK_TABLE, initialBattle, rollCrit, spawnEnemy, strikeDamage, UPGRADES, type BattleState } from './model';
 import { createQuestionPools, type Question, type QuestionPools } from './questions';
+import { resolveTurn, type Answer } from './turn';
 
 const source = readFileSync('assets/js/math-rpg.js', 'utf8');
 const prelude = source.slice(0, source.indexOf('function startTimer()'));
@@ -26,6 +27,98 @@ function reference(state = initialBattle(), seed = 1) {
   runInContext(`${prelude}\n${bleeding}\n${weighted}\n${assign}`, context);
   return (expression: string) => JSON.parse(runInContext(`JSON.stringify(${expression})`, context));
 }
+
+function legacyTurn(input: BattleState, answer: Answer, rng: () => number) {
+  let now = 0;
+  const jobs: { at: number; run: () => void }[] = [];
+  const outcomes: { at: number; cue: string }[] = [];
+  const noop = () => {};
+  const node = { classList: { add: noop }, disabled: false };
+  const context = createContext({ input: structuredClone(input), Math: Object.assign(Object.create(Math), { random: rng }),
+    document: { getElementById: () => ({}), querySelectorAll: () => [node, node] },
+    setTimeout: (run: () => void, delay: number) => jobs.push({ at: now + delay, run }),
+    stopTimer: noop, renderStatus: noop, fxSparks: noop, showDamage: noop, stageFlash: noop,
+    updateBars: noop, act: noop, fxRing: noop, impact: noop, strike: noop, shakeScreen: noop, mapDefeat: noop,
+    impactDelayFor: (who: string) => who === 'player' ? 400 : 190,
+    scheduleNextRound: (seconds: number) => jobs.push({ at: now + seconds * 1000, run: () => outcomes.push({ at: now, cue: 'next-question' }) }),
+    endGame: (win: boolean) => outcomes.push({ at: now, cue: win ? 'victory' : 'defeat' }),
+    showUpgradePanel: () => outcomes.push({ at: now, cue: 'upgrade' }),
+  });
+  const turns = source.slice(source.indexOf('function tickStatuses(delay)'), source.indexOf('function nextRound()'));
+  runInContext(`${prelude}\n${bleeding}\n${turns}\nconst IMPACT_DELAY=190, NEXT_DELAY_CORRECT=1.6, NEXT_DELAY_WRONG=3;
+    ${assign}\ncurrentQuestion={correct:0,a:['a','b']};
+    ${answer === 'timeout' ? 'handleTimeout()' : `checkAnswer(${answer === 'correct' ? 0 : 1})`};`, context);
+  const read = () => JSON.parse(runInContext(`JSON.stringify(${snapshot})`, context));
+  return { outcomes, read, advance(at: number) {
+    while (true) {
+      jobs.sort((a, b) => a.at - b.at);
+      if (!jobs.length || jobs[0].at > at) break;
+      const job = jobs.shift()!; now = job.at; job.run();
+    }
+    now = at;
+    return read();
+  } };
+}
+
+it('回合時間線：六關、答對／答錯／超時與狀態邊界逐拍對照舊碼', () => {
+  for (let stage = 0; stage < 6; stage++) for (const answer of ['correct', 'wrong', 'timeout'] as const)
+    for (let variant = 0; variant < 24; variant++) {
+      const state = { ...spawnEnemy(initialBattle(), stage), combo: variant % 4, shieldUnlocked: true,
+        playerShield: variant % 3 === 0 ? 1 : 0, playerHP: variant % 4 === 0 ? 2 : 100,
+        playerArmor: variant % 5 === 0 ? 100 : 6, enemyAttackCount: variant % 3,
+        enemyEnraged: stage === 5 && variant % 2 === 0, bleedResist: variant % 3,
+        playerStatus: { bleed: variant % 4, fog: variant % 2 } };
+      if (variant % 6 === 0) state.enemyHP = 1;
+      if (stage === 5 && variant % 6 === 1) state.enemyHP = state.enemyMax / 2 + 1;
+      const before = structuredClone(state);
+      const plan = resolveTurn(state, answer, random(variant));
+      const old = legacyTurn(state, answer, random(variant));
+      expect(plan.immediate).toEqual(old.read());
+      for (const at of [...new Set(plan.events.map(event => event.at))]) {
+        const latest = plan.events.filter(event => event.at === at).at(-1)!;
+        expect(latest.state).toEqual(old.advance(at));
+      }
+      old.advance(4000);
+      expect(plan.events.filter(e => ['victory', 'defeat', 'upgrade', 'next-question'].includes(e.cue)).map(({ at, cue }) => ({ at, cue }))).toEqual(old.outcomes);
+      expect(state).toEqual(before);
+    }
+});
+
+it('已結束回合拒絕再結算；擊殺不結算既有流血', () => {
+  expect(() => resolveTurn({ ...initialBattle(), playerHP: 0 }, 'correct')).toThrow(RangeError);
+  expect(() => resolveTurn({ ...initialBattle(), enemyHP: 0 }, 'wrong')).toThrow(RangeError);
+  const plan = resolveTurn({ ...initialBattle(), enemyHP: 1, playerHP: 1, playerStatus: { bleed: 5, fog: 2 } }, 'correct', () => 1);
+  expect(plan.events.at(-1)?.cue).toBe('upgrade');
+  expect(plan.events.at(-1)?.state.playerHP).toBe(1);
+});
+
+it('20 組完整六關戰鬥：每回合、選卡與跨關後狀態連續對照', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    let state = initialBattle();
+    let ended = false;
+    for (let turn = 0; turn < 100; turn++) {
+      const answer: Answer = turn % 7 === 2 ? 'wrong' : turn % 11 === 4 ? 'timeout' : 'correct';
+      const plan = resolveTurn(state, answer, random(seed * 100 + turn));
+      const old = legacyTurn(state, answer, random(seed * 100 + turn));
+      state = plan.events.at(-1)!.state;
+      expect(state).toEqual(old.advance(4000));
+      const outcome = plan.events.at(-1)!.cue;
+      if (outcome === 'victory' || outcome === 'defeat') { ended = true; break; }
+      if (outcome === 'upgrade') {
+        const offered = drawUpgrades(state, random(seed + turn));
+        const title = offered[0].title;
+        const ref = reference(state, seed + turn);
+        expect(offered.map(u => u.title)).toEqual(ref(`(() => { ${draw}; return picks.map(u => u.title); })()`));
+        state = applyUpgrade(state, title);
+        expect(state).toEqual(ref(`(() => { const u=UPGRADES.find(u=>u.title===${JSON.stringify(title)}); u.apply(); upgradeTaken[u.title]=(upgradeTaken[u.title]||0)+1; return ${snapshot}; })()`));
+        const index = state.enemyIndex + 1;
+        state = spawnEnemy(state, index);
+        expect(state).toEqual(ref(`(() => { const index=${index}; ${spawn}; return ${snapshot}; })()`));
+      }
+    }
+    expect(ended).toBe(true);
+  }
+});
 
 it('六關數值、特性、八張卡片及初始狀態逐欄對照原版', () => {
   const ref = reference();
