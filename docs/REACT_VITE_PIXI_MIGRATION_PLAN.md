@@ -309,6 +309,7 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 - [x] 設定 GitHub Pages base path、production build 與 preview。
 - [x] 將現有靜態素材暫時以相容路徑提供，不大搬家。
 - [x] 建立 ErrorBoundary、GameShell、ThemeProvider 與 PixiHost lifecycle。
+- [x] 補齊 PixiHost 的系統 reduced-motion 指令同步與非同步初始化回歸測試（2026-09-17；真實遊戲效果待各階段接入）。
 - [x] 新舊網站可並行啟動，舊版仍是可用 fallback。
 - [x] 更新 CI：先執行舊測試，再 typecheck、build，最後上傳 `dist`。
 
@@ -334,7 +335,9 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 - [ ] 原子筆教材：教室觸控、窄螢幕與效能驗收。
 - [x] 快問快答 React 移植（205 題等價、倒數揭答、設定／重玩、獨立入口及回歸測試完成）。
 - [ ] 快問快答教室觸控設備與效能驗收。
-- [ ] 字尾大分流；Pixi 特效先透過 imperative controller 接入。
+- [x] 字尾大分流 React 入口與 imperative Pixi controller 接入，規則等價、完整流程及離場回歸完成（2026-09-17）。
+- [ ] 字尾大分流教室觸控、完整視覺與同條件效能驗收。
+- [x] 字尾大分流題庫／純規則 TypeScript 抽離，400 組固定亂數新舊等價驗證；瀏覽器與效能基準另待補齊（2026-09-17）。
 - [ ] 素材下載／上傳頁。
 - [ ] 補齊舊測試對 React DOM 的等價覆蓋。
 

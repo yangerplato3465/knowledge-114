@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { GameController } from './GameController';
+import { useReducedMotion } from '../../features/reduced-motion/useReducedMotion';
 
 /** createController 必須保持穩定；每次 effect 使用獨立容器，避免非同步 mount 汙染新場景。 */
 export function PixiHost({ createController, label, paused = false }: {
@@ -10,7 +11,13 @@ export function PixiHost({ createController, label, paused = false }: {
   const host = useRef<HTMLDivElement>(null);
   const active = useRef<GameController | null>(null);
   const pausedRef = useRef(paused);
+  const reducedMotion = useReducedMotion();
+  const reducedMotionRef = useRef(reducedMotion);
   const [error, setError] = useState(false);
+  useEffect(() => {
+    reducedMotionRef.current = reducedMotion;
+    active.current?.dispatch({ type: 'set-reduced-motion', enabled: reducedMotion });
+  }, [reducedMotion]);
   useEffect(() => {
     pausedRef.current = paused;
     if (active.current) {
@@ -49,6 +56,7 @@ export function PixiHost({ createController, label, paused = false }: {
         if (disposed) { destroy(); return; }
         ready = true;
         active.current = controller;
+        controller.dispatch({ type: 'set-reduced-motion', enabled: reducedMotionRef.current });
         controller.resize();
         sync();
       } catch {

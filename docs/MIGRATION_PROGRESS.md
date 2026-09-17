@@ -1,4 +1,33 @@
-# 遷移進度 · 2026-09-14
+# 遷移進度 · 2026-09-17
+
+## 字尾大分流：React 入口與特效 controller
+
+- 新增 `/next/word-sort.html`，新版首頁導向新入口。沿用舊 CSS／主題與滿版教室配置，React 管理分類、收集、錯題、快遞任務、結果及重玩；舊入口與 vendor 保留。
+- `useRound` 管理可取消的計時器與朗讀，`Courier` 以 ref 更新輸送帶 transform，不把每幀座標送進 React state；卸載清理 rAF、ResizeObserver、計時器及語音。
+- `WordSortFX` 實作 GameController，選題後按需載入既有 UMD。每次 mount 有獨立 Application／貼圖；缺少 GPU／vendor 時 DOM 遊戲仍可完成。reduced-motion 清空彩帶，不停止必要的輸送帶玩法。全域 Pixi pools 不跨實例清除，避免 StrictMode 非同步重疊時破壞其他實例。
+- 可見焦點、按鈕名稱、鍵盤「下一題」與窄螢幕覆寫依 UI/UX 技能內建指引補齊；未重設整站視覺。
+- 21 項 Node + 34 項 Vitest 測試通過，包括 400 組規則等價、完整 12+3 流程、錯抓重試、重玩、快速離場、初始化失敗及資源釋放。根路徑與 `/knowledge-114/` build 通過。
+- 瀏覽器新舊版均完成 12 題及 3 次快遞，確認 6/12 與六題錯題複習；新版重玩歸零。390px 無橫向溢出，主按鈕約 186×174px。正式產物子路徑可鍵盤開始與答題，實際 canvas 載入且離場移除；無 console error。
+- 尚待教室觸控實機、完整拖曳／視覺細節驗收、同條件 lab performance 與 GPU 記憶體量測，未宣稱 Phase 3 全部完成。此批未提交、未部署。
+
+下一批：依 [基準紀錄](migration-evidence/word-sort-baseline.md) 補齊字尾大分流的視覺／效能驗收，或續接素材下載／上傳頁。不要把瀏覽器完成流程視為教室實機通過。
+
+## 字尾大分流：題庫與規則抽離
+
+- 新增 src/games/word-sort 的 TypeScript 題庫、抽題與快遞任務模型，尚未接入正式頁面。
+- 四组題庫逐欄相同；400 組固定亂數對照原函式，題序、快遞目標和選項一致。
+- 21 項既有 Node + 28 項 Vitest 測試、typecheck 與 build 通過；既有入口保持原樣。
+- [規則基準與待驗收項目](migration-evidence/word-sort-baseline.md) 已記錄。下一批接 React DOM 與 Pixi controller；瀏覽器完整流程與效能基準尚未完成，因此未勾選遊戲移植完成。
+
+## 遊戲共用層：動態偏好指令
+
+- 驗證：21 項既有 Node 測試、24 項 React／模型測試、TypeScript 與 production build 全部通過；產物相容檢查確認舊站檔案完整保留。
+- 新增 useReducedMotion，訂閱系統偏好並於卸載解除監聽；無 matchMedia 時採減少動態。
+- GameController.dispatch 成為必要型別介面；PixiHost 等待 mount 完成後、resume 前送出最新 set-reduced-motion，偏好變更不重建 controller。
+- 暫停仍由 paused 與頁面可見性控制，減少動態不得停止遊戲規則或答題計時。
+- 本批只完成共用接線；尚未接入真實 Pixi 遊戲，GPU 清理、粒子停用及教室實機驗收仍待遊戲移植。
+- 參考 React 官方 [useSyncExternalStore](https://react.dev/reference/react/useSyncExternalStore) 的瀏覽器 API 訂閱方式。
+
 
 ## Phase 3：水與酸鹼教材 · 2026-09-14
 

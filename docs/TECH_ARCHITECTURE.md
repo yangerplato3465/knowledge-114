@@ -14,6 +14,10 @@
 
 ## 檔案結構
 
+第五個 React 入口為 `next/word-sort.html`：`useRound` 處理低頻遊戲狀態與可取消計時器，`Courier` 以 DOM ref/rAF 管理輸送帶，`WordSortFX` 透過 PixiHost 管理獨立特效生命週期。滿版教室頁沿用舊 CSS，未套上會佔用垂直空間的 PageLayout 頂欄；起始頁提供共用 ThemeSelect。首頁不載入遊戲模組，遊戲選題後才載入既有 UMD vendor，未增加第三份 Pixi runtime。
+
+遊戲共用層的 GameController.dispatch(GameCommand) 接收低頻指令。PixiHost 在非同步 mount 完成後、resume 前同步系統 reduced-motion；後續偏好變動不重建遊戲。React 可重用 useReducedMotion，DOM CSS 仍使用同一系統媒體查詢。控制器須只停用裝飾效果，不改遊戲計時與規則；目前尚未接入真實 Pixi renderer。
+
 新增第三個 React 入口 `next/magic-ink.html`：`src/lessons/magic-ink/` 保存教材 JSX、題目與三組互動狀態，沿用 PageLayout。原 `assets/js/magic-ink.js` 不被新頁載入，計時器由 effect 清理。頁面獨立打包，教材不進首頁 chunk。
 
 React 新版目前有 `next/index.html` 與 `next/quick-quiz.html` 兩個 Vite 入口，共享 React／主題程式，快問快答的 205 題題庫保留在遊戲 chunk。首頁依賴圖於建置時檢查不得載入遊戲模組。所有舊頁面仍原樣複製至 dist 作為相容入口。

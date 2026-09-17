@@ -26,6 +26,7 @@ it('分類互斥展開，收合內容不出現在可操作的連結清單', asyn
   fireEvent.click(screen.getByRole('button', { name: /教學內容/ }));
   fireEvent.click(screen.getByRole('button', { name: '互動學習小遊戲' }));
   expect(screen.getByRole('link', { name: /數學勇者 RPG/ }).getAttribute('href')).toBe('/pages/math-rpg.html');
+  expect(screen.getByRole('link', { name: /字尾大分流/ }).getAttribute('href')).toBe('/next/word-sort.html');
   fireEvent.click(screen.getByRole('button', { name: /偵探事件簿/ }));
   expect(screen.queryByRole('link', { name: /數學勇者 RPG/ })).toBeNull();
   expect(screen.getByRole('link', { name: /黃金貓頭鷹雕像/ })).toBeTruthy();
