@@ -7,12 +7,12 @@
 | 檔案 | 版本 | 格式 | 誰在用 |
 |---|---|---|---|
 | `pixi.min.js` | 8.20.1（818 KB） | UMD，掛全域 `PIXI` | 數學勇者、字尾大分流（`<script src>`） |
-| `pixi.esm.min.js` | 8.6.6（666 KB） | ESM，`import {} from` | 偵探事件簿、班級 RPG（`type="module"`） |
+| `pixi.esm.min.js` | 8.20.1（約 800 KB） | ESM，`import {} from` | 偵探事件簿、班級 RPG（`type="module"`） |
 
-版本不同是**刻意的**：2026-09-10 把偵探與班級 RPG 從 CDN 改成本地時，
-刻意抓了跟原本 CDN 完全相同的 8.6.6，讓那次改動**純粹只是拿掉網路依賴、
-零行為變化**。要升到 8.20.1 是另一件事，該單獨做、單獨測 ——
-把「拿掉網路依賴」和「升級函式庫」混在一次改，出問題會分不清是哪個造成的。
+兩種格式現已統一為 8.20.1。仍保留 UMD 與 ESM 各一份，因為舊頁使用全域
+`PIXI`，偵探與班級 RPG 則使用原生 module import；這是載入格式相容副本，
+不是兩個不同 runtime 版本。2026-09-17 升級 ESM 後已重新跑兩案 gate、
+班級世界、單元測試與 production build。
 
 ## 抓下來的指令
 
@@ -22,7 +22,7 @@ curl -sL "https://cdn.jsdelivr.net/npm/pixi.js@8.20.1/dist/pixi.min.js" -o asset
 sed -i 's|//# sourceMappingURL=pixi\.min\.js\.map||' assets/vendor/pixi.min.js
 
 # ESM（import）—— 注意副檔名刻意用 .js 不是 .mjs，見下面
-curl -sL "https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.mjs" -o assets/vendor/pixi.esm.min.js
+curl -sL "https://cdn.jsdelivr.net/npm/pixi.js@8.20.1/dist/pixi.min.mjs" -o assets/vendor/pixi.esm.min.js
 sed -i 's|//# sourceMappingURL=pixi\.min\.mjs\.map||' assets/vendor/pixi.esm.min.js
 ```
 

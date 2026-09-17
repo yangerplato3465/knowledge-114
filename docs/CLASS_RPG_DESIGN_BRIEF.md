@@ -99,7 +99,7 @@ classes/{classId}/students/{studentId}
 
 目前遊戲端是 PixiJS v8 技術原型，已有：
 
-- 本地 PixiJS 8.6.6 ESM，不從 CDN 載入引擎。
+- 本地 PixiJS 8.20.1 ESM，不從 CDN 載入引擎。
 - `world` 與 `hud` 場景層。
 - Mana Seed 512×512、8×8 的角色圖集。
 - 四方向站立、走路與跑步動畫。

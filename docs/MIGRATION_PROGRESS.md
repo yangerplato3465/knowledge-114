@@ -1,5 +1,14 @@
 # 遷移進度 · 2026-09-17
 
+## Phase 7／8：runtime 與部署護欄收尾
+
+- `pixi.esm.min.js` 已由 8.6.6 升至 8.20.1，與 UMD 副本一致；仍保留兩種格式供全域 script 與 ESM import 使用，不讓同一入口同時下載兩份。Node 匯出檢查回報 `PIXI.VERSION = 8.20.1`。
+- production preview 驗證班級世界在未登入狀態仍成功建立一張 canvas、移除 loading，且無 console error；黃金貓頭鷹 gate 前未載入 engine。
+- 新增 `check-performance-budget.mjs`：首頁功能 chunk ≤ 12 KB、共用 React shell ≤ 240 KB、首頁 HTML 不得直載 Pixi／Firebase／大型遊戲，Pixi 不得進 Vite chunks。本次 lab build 為首頁 5,550 B、共用 shell 220,979 B、Vite JS 合計 414,672 B；這是未壓縮產物大小，不是 CWV field data。
+- 新增 `smoke-url.mjs` 並接到 Pages deploy 後，檢查新版代表入口、動態資源 MIME／狀態碼、真正 404 與音訊 Range。只有 main／手動工作流會部署，PR 僅驗證。
+- 正式架構、決策、UI、TODO、班級設計與 vendor 文件已回寫 8.20.1 與新版入口現況。
+- 尚需外部環境才能完成：GitHub Actions 實際執行、正式站 smoke、有效 Firebase 教師帳號／權限、兩案有效驗證碼與完整存檔往返、教室觸控設備 FPS／GPU 記憶體及 CWV field data。
+
 ## Phase 5／6 第一部分：高風險頁面接入新版外殼
 
 - 新增 `/next/class-rpg.html` 與 `/next/class-rpg-game.html`。React 先建立具語意的登入、名冊、獎勵、狀態與世界 DOM，再由 adapter 啟動保留的 Firebase／Pixi imperative 模組；首頁已改接新版管理入口，舊頁仍完整保留作回退。

@@ -1,6 +1,6 @@
 # 學習主頁 · knowledge-114
 
-Anita 老師的國小互動教學網站，使用繁體中文。以原生 HTML、CSS、JavaScript 製作，無須安裝套件或建置即可提供靜態網頁。
+Anita 老師的國小互動教學網站，使用繁體中文。正式新版以 React + Vite + TypeScript 建置，舊原生 HTML/CSS/JavaScript 頁面保留作相容回退。
 
 ## 開啟網站
 
@@ -20,12 +20,14 @@ Anita 老師的國小互動教學網站，使用繁體中文。以原生 HTML、
 
 ## 修改後檢查
 
-需要 Python 3 與支援 `node:test` 的 Node.js；不需要 npm install。
+完整新版驗證需要 Node.js 24、pnpm 11 與 Python 3。
 
 ```text
+pnpm install --frozen-lockfile
 python scripts/check_site.py
 node scripts/check_js.cjs
-node --test tests/shared.test.cjs
+pnpm test
+pnpm build
 ```
 
 檢查包含本地 HTML/CSS/模組引用、重複 HTML id、題庫載入順序、JavaScript 語法與素材/主題功能的回歸測試。
@@ -35,12 +37,12 @@ node --test tests/shared.test.cjs
 ## 部署
 
 GitHub Actions 會在 main 推送與 PR 執行上述檢查。main 或手動執行必須通過檢查才部署到 GitHub Pages；PR 只檢查。
-部署只包含 `index.html`、`config.json`、`assets/` 與 `pages/`。開發腳本、文件及測試不納入網站成品。
+部署 `dist/`，包含新版 `next/`、雜湊 app assets，以及逐檔保留的 `index.html`、`config.json`、`assets/` 與 `pages/`。部署完成後會自動執行入口、MIME、404 與音訊 Range smoke test。
 發版時更新 `config.json` 的版本與日期。Firebase 規則不由此流程部署。
 
 ## 網路與資料
 
-Pixi 引擎已放在 `assets/vendor/`，保留各頁原有版本。Firebase 教師管理與偵探存檔、GitHub 素材管理仍需要網路。
+Pixi 8.20.1 引擎已放在 `assets/vendor/`，分成 UMD／ESM 相容格式。Firebase 教師管理與偵探存檔、GitHub 素材管理仍需要網路。
 切勿將真實權杖或學生資料放入測試、文件或版本庫。
 # React 外殼開發
 
@@ -48,4 +50,4 @@ Pixi 引擎已放在 `assets/vendor/`，保留各頁原有版本。Firebase 教�
 
 驗證：`pnpm test`、`pnpm build`；產物預覽：`pnpm preview`。GitHub Pages 使用 `VITE_BASE_PATH=/knowledge-114/` 建置，CI 已設定。
 
-詳見 [遷移進度](docs/MIGRATION_PROGRESS.md)。目前完成建置外殼，遊戲尚未搬入 React。
+詳見 [遷移進度](docs/MIGRATION_PROGRESS.md)與[入口載入清單](docs/migration-evidence/load-inventory.md)。首頁、教材、小遊戲、數學勇者、班級 RPG 與兩個偵探案件皆已有新版入口；舊頁仍保留回退。

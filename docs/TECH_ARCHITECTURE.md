@@ -6,8 +6,8 @@
 
 ## 一句話
 
-**靜態網站，正逐步導入 React + Vite + TypeScript 外殼。**
-既有 HTML/CSS/JS 保留；新增 `/next/` 預覽入口。pnpm 建置至 `dist/`，舊頁面與素材原樣複製，GitHub Actions 驗證後部署產物。執行進度與限制見 [MIGRATION_PROGRESS](MIGRATION_PROGRESS.md)。
+**以 React + Vite + TypeScript 建置正式入口，並保留舊靜態頁作回退。**
+`/next/` 是新版入口；pnpm 建置至 `dist/`，舊頁面與素材原樣複製，GitHub Actions 驗證後部署產物。執行進度與限制見 [MIGRATION_PROGRESS](MIGRATION_PROGRESS.md)。
 
 - 部署：GitHub repo `yangerplato3465/knowledge-114`，從根目錄靜態託管
 - GitHub Actions 在部署前執行引用、JavaScript 語法與共用功能回歸檢查；遊戲操作與視覺仍須瀏覽器驗證。指令見 [README](../README.md)。
@@ -16,13 +16,13 @@
 
 ## 檔案結構
 
-數學勇者的遷移預備模組位於 `src/games/math-rpg/`：題庫 factory 可注入亂數，model 保存明確戰鬥狀態並提供純數值計算、換關與不可變強化套用。尚未接正式頁面，既有 math-rpg.js 的動畫／回合排程保留；完整時間線等價驗證是接線前置條件。
+數學勇者正式新版位於 `src/games/math-rpg/`：題庫、戰鬥模型、可取消回合排程與雙 Pixi layer 均已接入 `next/math-rpg.html`，DOM 管題目／血條／設定，Pixi 管高頻戰鬥演出。
 
 素材入口為 `next/downloads.html` 與 `next/upload.html`，共享 `src/features/materials/` 的型別化 GitHub Contents API adapter、可取消清單 hook 及樣式。React 管理表單與每檔進度；上傳及刪除序列化，讀清單可重新整理並取消過期請求。維持 main 的 assets/uploads 與 gh_upload_token 儲存契約，舊 HTML／JS 不變。所有入口均輸出實體 HTML，首頁保持純導覽。
 
 第五個 React 入口為 `next/word-sort.html`：`useRound` 處理低頻遊戲狀態與可取消計時器，`Courier` 以 DOM ref/rAF 管理輸送帶，`WordSortFX` 透過 PixiHost 管理獨立特效生命週期。滿版教室頁沿用舊 CSS，未套上會佔用垂直空間的 PageLayout 頂欄；起始頁提供共用 ThemeSelect。首頁不載入遊戲模組，遊戲選題後才載入既有 UMD vendor，未增加第三份 Pixi runtime。
 
-遊戲共用層的 GameController.dispatch(GameCommand) 接收低頻指令。PixiHost 在非同步 mount 完成後、resume 前同步系統 reduced-motion；後續偏好變動不重建遊戲。React 可重用 useReducedMotion，DOM CSS 仍使用同一系統媒體查詢。控制器須只停用裝飾效果，不改遊戲計時與規則；目前尚未接入真實 Pixi renderer。
+遊戲共用層的 GameController.dispatch(GameCommand) 接收低頻指令。PixiHost 在非同步 mount 完成後、resume 前同步系統 reduced-motion；後續偏好變動不重建遊戲。React 可重用 useReducedMotion，DOM CSS 仍使用同一系統媒體查詢。控制器須只停用裝飾效果，不改遊戲計時與規則。數學勇者與字尾大分流均已接入真實 Pixi renderer／controller。
 
 新增第三個 React 入口 `next/magic-ink.html`：`src/lessons/magic-ink/` 保存教材 JSX、題目與三組互動狀態，沿用 PageLayout。原 `assets/js/magic-ink.js` 不被新頁載入，計時器由 effect 清理。頁面獨立打包，教材不進首頁 chunk。
 
@@ -40,13 +40,13 @@ assets/
   images/<主題>/
   audio/music.mp3         10.7 MB（見下面的坑）
   vendor/pixi.min.js      PixiJS 8.20.1 UMD，818 KB（全域 PIXI）
-  vendor/pixi.esm.min.js  PixiJS 8.6.6 ESM，666 KB（import）
+  vendor/pixi.esm.min.js  PixiJS 8.20.1 ESM，約 800 KB（import）
   uploads/
 docs/                     本批文件 + 三份既有深入文件
 .claude/                  開發用腳本（不會部署）
 ```
 
-**每一頁基本上是獨立的**，沒有共用元件框架。同名 helper 在不同頁是不同實作。
+舊 `pages/` 基本上各自獨立；新版 `next/` 共用 React shell、主題、錯誤邊界、PageLayout 與 PixiHost。同名舊 helper 在不同頁仍是不同實作。
 
 ## 本地開發
 
@@ -93,7 +93,7 @@ Firebase 從 CDN import，**Pixi 從本地 `assets/vendor/pixi.esm.min.js`**。
 | 東西 | 來源 | 為什麼 |
 |---|---|---|
 | PixiJS 8.20.1 UMD | **本地 `assets/vendor/pixi.min.js`** | 教室不一定有網路 |
-| PixiJS 8.6.6 ESM | **本地 `assets/vendor/pixi.esm.min.js`** | 同上（2026-09-10 從 CDN 改過來） |
+| PixiJS 8.20.1 ESM | **本地 `assets/vendor/pixi.esm.min.js`** | 同上；2026-09-17 與 UMD 統一版本 |
 | Firebase 11.0.2 | gstatic CDN，ESM | |
 | Google Fonts / Font Awesome | CDN | 掛掉只是變醜，可以賭 |
 
@@ -103,7 +103,7 @@ Firebase 從 CDN import，**Pixi 從本地 `assets/vendor/pixi.esm.min.js`**。
 代價：818 KB 是**完整包**。當時沒有 Node.js，未製作只含需要模組的瘦身版。低階機器要 parse 這 818 KB，
 **這是導入 Pixi 唯一真正的成本**。
 
-兩份版本不同是刻意的，理由與「ESM 那份為什麼副檔名是 `.js` 不是 `.mjs`」
+兩份檔案版本相同、格式不同；理由與「ESM 那份為什麼副檔名是 `.js` 不是 `.mjs`」
 都寫在 `assets/vendor/README.md`（有重新下載的指令）。**不要手改 vendor 裡的檔案。**
 
 **`.mjs` 的地雷**：`serve.ps1` 的 MIME 表原本沒有 `.mjs`，回傳空的 Content-Type，

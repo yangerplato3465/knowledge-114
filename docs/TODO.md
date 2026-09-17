@@ -9,7 +9,7 @@
 
 ## 🔴 會影響使用者的
 
-### T-01 · Pixi 特效層完全不理會 `prefers-reduced-motion`
+### T-01 · 舊版 Pixi 特效層不理會 `prefers-reduced-motion`
 **數學勇者**｜來源：[math-rpg-pixi.md](math-rpg-pixi.md) 第 9 節
 
 CSS 那邊有完整的 reduced-motion 區塊（`.fx, .confetti { display: none }`，
@@ -18,7 +18,7 @@ CSS 那邊有完整的 reduced-motion 區塊（`.fx, .confetti { display: none }
 對前庭敏感的學生是真的會不舒服的問題。這是整層的既有缺口，
 **要修就該一次處理所有效果**，不該只補其中一個。
 
-字尾大分流的 `word-sort-fx.js` 有同樣的問題（新寫的，同一個模式）。
+新版 React 數學勇者與字尾大分流已透過 GameController command 處理；這項只剩舊回退頁仍存在。
 
 ### T-02 · AI 展覽館的兩個謎題還沒做
 **偵探**｜來源：`cases/ai-museum.js:191`
@@ -105,15 +105,6 @@ CSS 那邊有完整的 reduced-motion 區塊（`.fx, .confetti { display: none }
 [math-rpg-pixi.md](math-rpg-pixi.md) 第 0 節說它已經刪除（技能系統沒做）。
 **檔案與文件不一致，要嘛刪檔要嘛更新文件。**
 
-### T-11 · 兩份 vendor 的 Pixi 版本不同（8.20.1 UMD / 8.6.6 ESM）
-**全站**
-
-這是 D-28 刻意留下的：那次改動只做「拿掉網路依賴」，不動版本，
-所以零行為變化、好回溯。
-
-要不要統一到 8.20.1 是**獨立的一件事**，做的話要重測偵探兩案與班級 RPG。
-不統一也完全能運作，只是 repo 裡有兩份（合計約 1.5 MB）。
-
 ### T-12 · 已補基本自動化檢查；遊戲整合驗證待補
 **全站**
 
@@ -124,6 +115,8 @@ CSS 那邊有完整的 reduced-motion 區塊（`.fx, .confetti { display: none }
 ---
 
 ## 已完成（本次盤點時確認）
+
+- ~~兩份 vendor 的 Pixi 版本不同~~ → 2026-09-17 UMD／ESM 均統一為 8.20.1（D-31）
 
 - ~~字尾大分流的陣列只出現在結算畫面~~ → 已改成遊玩中呈現（D-22）
 - ~~字尾大分流的抽題偏向 -less~~ → 已強制各半（D-20）

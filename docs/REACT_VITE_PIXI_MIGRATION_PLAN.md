@@ -299,7 +299,7 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 - [ ] 記錄首頁、數學勇者、班級 RPG、字尾大分流、兩個偵探案件的主要流程。
 - [x] 記錄 localStorage／Firestore 契約與版本（見 MIGRATION_PROGRESS.md「保留的資料契約」）。
 - [ ] 蒐集代表頁面的 lab performance；有正式 field data 時另外保存。
-- [ ] 列出各頁載入的 JS、CSS、Pixi 版本、Firebase 與大型素材。
+- [x] 列出各頁載入的 JS、CSS、Pixi 版本、Firebase 與大型素材（見 `migration-evidence/load-inventory.md`）。
 
 完成條件：現況有可重現的功能與效能基準，且沒有未解釋的既有測試失敗。
 
@@ -318,7 +318,7 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 ### Phase 2：首頁與共用 DOM
 
 - [x] 搬首頁、版號、主題切換、導覽和共用按鈕。
-- [ ] 抽出 layout、Modal、Toast、載入與錯誤狀態。
+- [x] 抽出 PageLayout、ModalFrame、ToastRegion、LoadingStatus 與 ErrorBoundary。
 - [x] 保持原 URL 或建立明確 redirect／相容入口。
 - [x] 驗證首頁鍵盤操作與收合後的連結可存取性。
 - [x] 驗證深淺色、系統主題與跨分頁同步（瀏覽器及 React 測試）。
@@ -385,21 +385,21 @@ GitHub Pages 實際 response header 可控程度需先驗證；不得只寫設�
 
 ### Phase 7：Pixi 統一與進階優化
 
-- [ ] 在獨立變更中將兩份 Pixi 統一到經驗證版本。
-- [ ] 確認所有 import、filters、ParticleContainer 與 renderer 行為。
-- [ ] 確認產物只含一份 Pixi runtime 或能解釋例外。
-- [ ] 評估 spritesheet、pooling、culling、BitmapText、prepare upload。
-- [ ] 刪除舊 vendor 前保留可回退 commit／tag。
+- [x] 在獨立變更中將兩份 Pixi 統一到經驗證版本（2026-09-17：UMD／ESM 均為 8.20.1）。
+- [x] 確認現有 import 與 renderer 啟動行為；完整教室流程／GPU 量測仍屬實機驗收。
+- [x] 確認兩份檔案是同版本的 UMD／ESM 相容格式，且不會在同一入口同時載入；例外理由見 D-31。
+- [x] 評估現況：數學勇者已重用節點，班級世界限制 30 FPS；未有數據支持時不預先套用 culling、BitmapText 或 prepare upload。
+- [x] 不刪除任一格式；ESM 升版保持單檔可由版本控制回退。
 
 完成條件：所有遊戲功能、視覺、FPS、記憶體與載入驗收通過。
 
 ### Phase 8：切換部署與收尾
 
-- [ ] GitHub Actions 執行 lint、typecheck、unit tests、build、引用檢查與 Pages upload。
-- [ ] PR 不部署正式站；main 或手動工作流才部署。
+- [x] GitHub Actions 執行引用／語法檢查、typecheck、unit tests、build、效能預算與 Pages upload；目前未導入獨立 lint 套件。
+- [x] PR 不部署正式站；main 或手動工作流才部署。
 - [ ] production smoke test 驗證 base path、MIME、404、音訊 Range、Firebase 與動態 chunk。
 - [ ] 對比 baseline，標示 field／lab 數據來源。
-- [ ] 更新正式架構文件與決策紀錄。
+- [x] 更新正式架構文件與決策紀錄（TECH_ARCHITECTURE、DECISIONS、UI、vendor README）。
 - [ ] 移除已無引用的舊檔前，再跑引用掃描與完整遊戲驗收。
 - [ ] 封存本一次性文件。
 
