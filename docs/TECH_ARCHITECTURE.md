@@ -16,6 +16,7 @@
 - check-build.mjs 驗證全部入口、base 與禁用產物；check-performance-budget.mjs 限首頁功能 JS／CSS 各 12 KB、最大共用 chunk 240 KB，禁止首頁引入目錄資料與功能頁樣式。
 - smoke-url.mjs 檢查全部入口、去重資源、MIME、404 與音訊 Range；本機 Vite fallback 才加 --allow-spa-fallback。
 - tests/fixtures 僅作回歸基準，不發布。正式部署只取 dist；pages/firestore.rules.txt 不會自動發布成 Firebase 規則。
+- Netlify 由根目錄 netlify.toml 設定 pnpm build → dist，base 為 /；GitHub Pages workflow 使用 /knowledge-114/。原始 index.html 的 /src/main.tsx 僅供 Vite，不能直接部署。
 
 ## 介面與資料
 

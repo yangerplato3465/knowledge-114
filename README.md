@@ -19,4 +19,7 @@ Anita 老師的國小互動教學網站，使用 React + Vite + TypeScript。
 - [架構](docs/TECH_ARCHITECTURE.md)、[遊戲規則](docs/GAMEPLAY.md)、[偵探製作](docs/detective-authoring.md)、[待辦](docs/TODO.md)。
 - [本地引擎](assets/vendor/README.md)。數學勇者目前維護中，題庫保留於 src/games/math-rpg/questions.ts；新玩法與介面待討論。
 
-GitHub Actions 驗證後發布 dist 至 GitHub Pages；VITE_BASE_PATH=/knowledge-114/。修改不代表已推送或部署。版本標籤取 config.json，只顯示版號。Firebase 規則另行發布。
+- Netlify：netlify.toml 指定 pnpm build、發布 dist、Node.js 24、VITE_BASE_PATH=/。將設定合併至連接的 main 分支後重新部署；不可直接發布專案根目錄或 src。手動上傳也只上傳建置後的 dist。
+- GitHub Pages：GitHub Actions 驗證後發布 dist；VITE_BASE_PATH=/knowledge-114/。
+
+部署後用 pnpm smoke:url <網站網址> 驗證入口與資源。修改不代表已推送或部署。版本標籤取 config.json，只顯示版號。Firebase 規則另行發布。
