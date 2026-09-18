@@ -1,23 +1,25 @@
-# 技術架構 · 2026-09-17
+# 架構
 
-唯一頁面框架為 React 19 + Vite + TypeScript。首頁是 index.html，其餘 10 個入口在 pages/，所有 HTML 都只掛載 React root。沒有 next/ 雙軌或獨立舊 HTML 回退頁。
+## 程式入口
 
-## 功能邊界
+- index.html 是介紹首頁；pages/activities.html 列學生活動，pages/teacher-tools.html 集中老師入口。各自使用 src/*-main.tsx；Vite 自動收集功能入口。
+- src/lessons：兩個科學教材；src/games/math-rpg：題庫、純規則、戰鬥 session、React 操作與 Pixi renderer。
+- src/features/materials：GitHub Contents API、可取消清單、序列化上傳／刪除；維持 main 分支的 assets/uploads 與 gh_upload_token key。
+- src/features/class-rpg、detective：React DOM 配現役 imperative 模組；尚未全部改為 React hooks。僅以完整頁面切換使用，移除 script 不等於解除模組內部訂閱。
+- assets/js/class-rpg-firebase.js：班級 Firebase；world-data.js 管訂閱，model.js 管成長，wander.js 管移動。
+- assets/js/detective：案件、驗碼、存檔、謎題及 Pixi 引擎。資料契約見 [偵探指南](detective-authoring.md)。
 
-- 首頁：純導覽，建置護欄禁止載入遊戲、Pixi 與 Firebase。
-- 科學教材、數學勇者、素材管理：React 管理介面與互動狀態。
-- 班級管理／世界、兩個偵探案件、偵探後台：React 建立頁面 DOM，assets/js 的現役 imperative 模組負責 Firebase 與遊戲流程；尚非全部 React hooks 狀態管理。
-- Pixi 是繪圖引擎，不是並存的網頁框架；保留本地 UMD／ESM 8.20.1，依遊戲需要載入。
-- 共用 CSS 留在 assets/css；沿用樣式不代表保留舊頁框架。
+## 載入與發布
 
-## 建置
+- 首頁只含介紹／導覽／主題／版本；活動清單、老師工具、教材和遊戲分頁打包。config.json 只存版號，建置時嵌入，無日期或版本 API 請求。數學勇者開戰後才載 Pixi；偵探驗碼後才載 engine。
+- assets/css 由 Vite 打包；copy-static.mjs 只複製現役 runtime、媒體、素材及設定，排除開發文件、概念圖與重複 CSS。素材庫中的使用者檔案保留。
+- check-build.mjs 驗證全部入口、base 與禁用產物；check-performance-budget.mjs 限首頁功能 JS／CSS 各 12 KB、最大共用 chunk 240 KB，禁止首頁引入目錄資料與功能頁樣式。
+- smoke-url.mjs 檢查全部入口、去重資源、MIME、404 與音訊 Range；本機 Vite fallback 才加 --allow-spa-fallback。
+- tests/fixtures 僅作回歸基準，不發布。正式部署只取 dist；pages/firestore.rules.txt 不會自動發布成 Firebase 規則。
 
-pnpm dev 提供開發站；pnpm build 執行型別、Vite、靜態素材複製、入口與效能預算檢查。只發布 dist/。copy-static.mjs 不複製來源 HTML，避免覆蓋 React 建置結果。
+## 介面與資料
 
-所有正式 pages/ 網址不變，根首頁改為 React。next/ 與測試用 Pixi HTML 已移除。教材內容基準與數學規則參考僅放在 tests/fixtures，不進入發布產物。
-
-## 資料契約
-
-偵探 game ID、驗證碼衍生演算法、儲存 key、進度讀取失敗時禁止寫入、切換組別完整 reload、離場先 flush 及班級 owner filter／交易語意均保留。不要把 assets/js/class-rpg* 或 assets/js/detective 當成可刪除的舊網站。
-
-下一階段若要把剩餘 imperative UI 改為 React state，需逐項抽離資料 adapter 和生命週期，並驗證有效帳號、群組存檔、權限失敗及離線路徑。
+- UI 採柔和學習工作室風格：首頁只作介紹與引導；SiteHeader／SiteFooter 共用導覽；src/styles/base.css 是輕量共用樣式，global.css 僅首頁，directory.css 僅目錄，ui.css 僅功能頁，舊頁樣式放入 legacy cascade layer，確保開發與打包後優先序一致。主題取 assets/css/theme.css；局部深色變數需兼顧 data-theme 與 prefers-color-scheme。內容、表單與測試資料使用繁體中文。
+- 班級集合：classes/{classId}/students/{studentId}，ownerId 隔離；批次獎勵與 rewardHistory 同交易，最多 100 人／40 筆紀錄。復原只限本堂獎勵且須全部學生仍符合 after 值。
+- 成長由 model.js 推導 HP／ATK／DEF，固定 expOffset 保留舊生進度；不得每次獎勵重算補值。世界頁唯讀，不把每幀座標寫進 Firestore。
+- 雲端驗證需要實際權限；本機測試只用模擬資料。

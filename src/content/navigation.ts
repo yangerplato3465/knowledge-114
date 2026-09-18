@@ -1,28 +1,17 @@
 export interface Activity { path: string; title: string; description: string }
-interface Category {
-  id: string; title: string; description: string; items?: Activity[];
-  groups?: { id: string; title: string; items: Activity[] }[];
-}
-// 與原首頁入口等價；只保存資料，不載入任何遊戲模組。
-export const categories: Category[] = [
-  { id: 'learning', title: '教學內容', description: '互動課程與闖關遊戲', groups: [
-    { id: 'science', title: '科學小實驗', items: [
-      { path: 'water-acid-base', title: '水與酸鹼的微觀奧秘', description: '探索離子行為與 pH / pOH 的平衡美學' },
-      { path: 'magic-ink', title: '神奇的墨水！原子筆的科學', description: '消失墨水課後實驗' },
-    ] },
-    { id: 'games', title: '互動學習小遊戲', items: [
-      { path: 'math-rpg', title: '數學勇者', description: 'RPG 闖關問答 · 答對攻擊怪獸，答錯就會受傷' },
-    ] },
+export interface ActivityCategory { id: string; title: string; description: string; items: Activity[] }
+
+// 僅活動頁使用；首頁不載入清單或教材／遊戲模組。
+export const categories: ActivityCategory[] = [
+  { id: 'science', title: '科學小實驗', description: '從日常生活出發，一起找出背後的科學。', items: [
+    { path: 'water-acid-base', title: '水與酸鹼的微觀奧秘', description: '探索離子行為，認識 pH 與 pOH。' },
+    { path: 'magic-ink', title: '神奇的墨水！原子筆的科學', description: '觀察墨水的秘密，動手做變色實驗。' },
   ] },
-  { id: 'detective', title: '偵探事件簿', description: '點擊尋找線索 · 推理破案', items: [
+  { id: 'games', title: '互動學習', description: '讓練習變成一場冒險。', items: [
+    { path: 'math-rpg', title: '數學勇者', description: '選擇題庫、挑戰六關，用數學打敗怪獸。' },
+  ] },
+  { id: 'detective', title: '偵探事件簿', description: '跟著老師進入案件，觀察線索、一起推理。', items: [
     { path: 'detective-golden-owl', title: '黃金貓頭鷹雕像失竊事件', description: '校園失竊案 · 密碼與邏輯推理' },
     { path: 'detective-ai-museum', title: 'AI 展覽館的消失記憶', description: '建置中 · 觀察比對與審訊推理' },
-  ] },
-  { id: 'materials', title: '素材', description: '遊戲素材的下載與上傳', items: [
-    { path: 'downloads', title: '素材下載', description: '下載遊戲素材與教學檔案' },
-    { path: 'upload', title: '上傳素材', description: '老師專用 · 需要 GitHub 權杖' },
-  ] },
-  { id: 'class', title: '班級 RPG', description: '班級角色養成 · 經驗值與金幣管理', items: [
-    { path: 'class-rpg', title: '班級冒險者管理', description: '老師專用 · 建立班級、新增學生角色' },
   ] },
 ];

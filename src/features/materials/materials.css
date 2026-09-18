@@ -1,3 +1,4 @@
+@layer legacy {
 .materials { width: 760px; }
 .materials p, .materials strong { overflow-wrap: anywhere; }
 .materials button, .material-action { min-height: 44px; border: 2px solid var(--border-strong); border-radius: 12px; background: var(--surface-2); color: var(--ink); padding: 8px 16px; cursor: pointer; font: inherit; }
@@ -26,3 +27,4 @@
 .material-toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center; }
 .material-toolbar h2 { margin: 0; font-size: 1.15rem; }
 @media (max-width: 600px) { .material-row { padding: 12px; gap: 10px; } .materials button, .material-action { padding: 8px 12px; } }
+}

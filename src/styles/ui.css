@@ -1,0 +1,140 @@
+@import './base.css';
+/* Materials */
+.materials > p { color: var(--ink-soft); }.materials > h1 { margin-bottom: 12px; }
+.materials button, .material-action { border-width: 1px; min-height: 48px; border-radius: 12px; font-size: .9rem; }
+.material-list { gap: 12px; margin-top: 24px; }
+.material-row { padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; }
+.material-row strong { font-size: .95rem; }.material-row small { font-size: .8rem; }
+.materials .material-primary { background: var(--ink); color: var(--surface); border-color: var(--ink); min-height: 52px; }
+.materials .material-drop { padding: 32px 20px !important; background: var(--surface-2); }
+.materials input[type="file"]::file-selector-button { min-height: 44px; margin-right: 12px; padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: 10px; color: var(--ink); background: var(--surface-2); cursor: pointer; font: inherit; }
+.material-field > label { font-weight: 600; }.material-remember { font-weight: 400 !important; }
+.material-manage { border-top-width: 1px; margin-top: 40px; padding-top: 28px; }
+.material-result { border-width: 1px; }.material-result:empty { display: none; }
+/* Teacher workspaces */
+.admin-shell { max-width: 1120px; margin: auto; }
+.admin-shell .site-header { margin-bottom: 36px; }
+.admin-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 24px; }
+.admin-heading .subtitle { color: var(--ink-soft); text-align: left; margin: 12px 0 0; max-width: 46em; font-size: .9rem; }
+.admin-heading .game-link { position: static; margin: 0; flex-shrink: 0; }
+.admin-shell .card { border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 4px 18px var(--shadow); padding: 28px; margin-bottom: 24px; }
+.admin-shell .card h2 { font-size: 1.15rem; gap: 12px; }
+.admin-shell label { color: var(--ink-soft); font-size: .875rem; margin-bottom: 8px; }
+.admin-shell .theme-select { margin: 0; }
+.admin-shell .btn { background: var(--ink); color: var(--surface); min-height: 48px; padding: 10px 20px; border-radius: 12px; font-size: .9rem; }
+.admin-shell .btn-ghost { background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--ink); }
+.admin-shell .btn-danger { color: var(--bad); background: var(--bad-bg); border: 1px solid var(--bad-border); }
+.admin-shell .btn:hover { transform: none; }
+.admin-shell .hint, .admin-shell .who, .admin-shell .whoami, .admin-shell .student-team, .admin-shell .student-lv, .admin-shell .state, .admin-shell .stat .k, .admin-shell #connectionState { color: var(--ink-soft); }
+.admin-shell .auth-bar { border-width: 1px; padding: 12px 20px; flex-wrap: wrap; }
+.admin-shell .auth-bar .who { overflow-wrap: anywhere; min-width: 0; }
+.admin-shell .row { gap: 20px; }.admin-shell .row + .row { margin-top: 20px; }
+.admin-shell .students { grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 16px; }
+.admin-shell .student { border-radius: 16px; background: var(--surface); padding: 20px; }
+.admin-shell .student-actions .btn { flex: 1; }
+.admin-shell .adj { gap: 8px; }.admin-shell .adj button { min-width: 44px; min-height: 44px; }
+.admin-shell .login-screen { min-height: 56vh; padding: 16px 0 48px; }
+.admin-shell .login-card { width: 440px; max-width: 100%; padding: 40px; border: 1px solid var(--border); border-radius: 28px; box-shadow: 0 12px 36px var(--shadow); }
+.admin-shell .login-card .lock { margin-bottom: 20px; font-size: inherit; }
+.admin-shell .login-card .lock svg { box-sizing: content-box; width: 28px; height: 28px; padding: 18px; border-radius: 20px; background: var(--primary-tint); }
+.admin-shell .login-card h2 { font-size: 1.5rem; }.admin-shell .login-card p.hint { margin: 12px 0 28px; font-size: .875rem; }
+.admin-shell .login-card .field { margin-bottom: 20px; }
+.admin-shell #rewardDock { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.admin-shell .fresh, .admin-shell .code-row { border-width: 1px; border-radius: 16px; }
+.admin-shell .setup, .admin-shell details { line-height: 1.8; }
+.admin-shell pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* React root continues the full-height game frame. */
+body:has(.game-shell) { padding: 16px; min-height: 100dvh; }
+.game-shell { min-height: calc(100dvh - 32px); display: flex; flex-direction: column; gap: 16px; }
+.game-shell .game-bar { padding: 12px 20px; border: 1px solid var(--border); background: var(--surface); border-radius: 18px; gap: 20px; }
+.game-shell .game-bar h1 { font-size: 1.2rem; }.game-shell .game-bar .theme-select { margin-left: auto; }
+.game-shell .back-link { min-height: 44px; font-size: .875rem; color: var(--ink-soft); text-decoration: none; }
+.game-shell #gameContainer { flex: 1; min-height: 360px; border: 1px solid var(--border-strong); border-radius: 20px; }
+.game-shell .world-controls { padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; gap: 16px; }
+.game-shell .world-controls label { color: var(--ink-soft); flex: 1; min-width: 160px; }.game-shell .world-controls select { max-width: none; width: 100%; }
+.game-shell .world-controls button { background: var(--surface-2); }
+.game-shell .hint, .game-shell #worldStatus, .game-shell .game-loading { color: var(--ink-soft); }
+.game-shell #characterInfo { border-width: 1px; padding: 16px 20px; border-radius: 16px; }
+.game-shell .gate:not([hidden]) { overflow-y: auto; padding: 32px 20px; background: var(--bg); }
+.game-shell .gate-card { max-width: 480px; padding: 36px 40px 28px; border: 1px solid var(--border); border-radius: 28px; }
+.gate-card .gate-theme { display: flex; justify-content: flex-end; margin-bottom: 24px; }
+.gate-card .gate-icon { display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto 20px; background: var(--primary-tint); border-radius: 24px; }
+.gate-icon .ui-icon { width: 32px; height: 32px; }
+.gate-card .case-label { color: var(--ink-soft); font-size: .85rem; margin: 0 0 12px; }
+.gate-card h2 { font-size: 1.6rem; }.game-shell .gate-hint { color: var(--ink-soft); font-size: .9rem; margin: 12px 0 28px; }
+.gate-card label[for="gateCode"] { display: block; font-size: .8rem; text-align: left; margin-bottom: 8px; color: var(--ink-soft); }
+.game-shell #gateCode { border-width: 1px; background: var(--surface-2); font-size: 1.2rem; min-height: 56px; }
+.game-shell .gate-btn { background: var(--ink); color: var(--surface); min-height: 52px; }
+.game-shell .gate-back { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-soft); font-size: .875rem; }
+.game-shell .gate-forget, .game-shell .gate-groups-title, .game-shell .gate-or { color: var(--ink-soft); }
+.game-shell .group-tag { min-height: 44px; color: var(--ink); border-width: 1px; }
+.game-shell .group-menu button { min-height: 48px; white-space: normal; }
+.game-shell #gameContainer:fullscreen { border: 0; border-radius: 0; }
+/* Math setup and battle controls */
+.mr-card { max-width: 960px; padding: clamp(24px, 4vw, 40px); border: 1px solid var(--border); border-radius: 28px; box-shadow: 0 8px 32px var(--shadow); }
+.mr-card > p { color: var(--ink-soft); margin: 12px 0 24px; }.mr-card > .mr-panel { background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: clamp(20px, 3vw, 32px); }
+.mr-card > .mr-panel h2 { margin-top: 0; }.mr-card > .mr-panel p { color: var(--ink-soft); }
+.mr-card button { border-width: 1px; font-weight: 600; color: var(--ink); }
+.mr-card .mr-start { background: var(--ink); color: var(--surface); min-width: 180px; border-color: var(--ink); }
+.mr-settings { margin: 24px 0; }.mr-settings label { flex: 1; font-size: .9rem; }.mr-settings select { margin-top: 8px; }
+.mr-card details { border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border-strong); padding: 8px 0; }.mr-card summary { padding: 10px 0; font-size: .95rem; }
+.mr-toolbar { padding-bottom: 16px; border-bottom: 1px solid var(--border); }.mr-toolbar > span { font-weight: 600; margin-right: auto; }
+.mr-map { margin: 20px 0; gap: 8px; }.mr-map li { border-width: 1px; padding: 12px 4px; background: var(--surface-2); }.mr-map li[aria-current] { background: var(--primary-tint); border-color: var(--ink); }
+.mr-map span { font-weight: 700; font-size: 1rem; }
+.mr-hud { justify-content: flex-start; gap: 8px; }.mr-hud > span { background: var(--surface-2); padding: 6px 12px; border-radius: 8px; font-size: .8rem; }.mr-trait, .mr-feedback { color: var(--ink-soft); font-size: .9rem; }
+.mr-options button { background: var(--surface); min-height: 64px; }.mr-options button:hover:not(:disabled) { background: var(--primary-tint); }
+.mr-panel [role="timer"] { color: var(--ink-soft); font-size: .9rem; }.mr-options .mr-correct { background: var(--good-bg); }
+/* Reading pages: keep illustrations, simplify the frame. */
+.magic-ink-lesson .wrap, .water-lesson { max-width: 1120px; }
+.magic-ink-lesson .brand-bar { background: transparent; border: 0; padding: 0 4px 20px; box-shadow: none; }
+.magic-ink-lesson .brand-text { color: var(--ink-soft); }.magic-ink-lesson .brand-bar img { height: 40px; }
+.magic-ink-lesson .hero { display: grid; grid-template-columns: 1.15fr 1fr; column-gap: 36px; align-items: center; border: 1px solid var(--border); border-radius: 28px; padding: 32px; text-align: left; box-shadow: 0 8px 32px var(--shadow); margin-bottom: 32px; }
+.magic-ink-lesson .hero .cover { grid-column: 2; grid-row: 1 / 3; width: 100%; max-height: 320px; height: 100%; object-fit: cover; border-radius: 20px; margin: 0; }
+.magic-ink-lesson .hero h1 { grid-column: 1; grid-row: 1; font-size: clamp(1.8rem, 3vw, 2.7rem); line-height: 1.5; margin: 0 0 16px; }
+.magic-ink-lesson .badges { grid-column: 1; justify-content: flex-start; }.magic-ink-lesson .badge { font-size: .8rem; padding: 6px 10px; border-width: 1px; }
+.magic-ink-lesson .section { border: 1px solid var(--border); border-radius: 24px; padding: clamp(24px, 4vw, 44px); box-shadow: none; margin-bottom: 28px; }
+.magic-ink-lesson .sec-head { border-bottom: 1px solid var(--border); padding-bottom: 20px; flex-wrap: wrap; gap: 12px; }.magic-ink-lesson .sec-head h2 { font-size: 1.6rem; font-weight: 700; }.magic-ink-lesson .sec-tag { font-size: .8rem; }
+.magic-ink-lesson .sec-lead { font-size: 1rem; line-height: 1.9; max-width: 56em; margin: 20px 0; }
+.magic-ink-lesson .photo .cap { color: var(--ink-soft); }.magic-ink-lesson .photo { padding: 10px; border: 1px solid var(--border); }
+.water-lesson { gap: 28px; }
+.water-lesson .slide-container { padding: clamp(24px, 4vw, 48px); border: 1px solid var(--border-strong); border-radius: 24px; box-shadow: 0 6px 24px var(--shadow); font-family: var(--ui-font); }
+.water-lesson .slide-container::before { background: radial-gradient(circle, var(--primary-tint), transparent 70%); opacity: .6; }.water-lesson .slide-container::after { background: radial-gradient(circle, var(--surface-3), transparent 70%); }
+.water-lesson .title-slide { min-height: 350px; border-radius: 28px; }.water-lesson .title-layout h1 { font-size: clamp(2rem, 4vw, 3rem); }
+.water-lesson .title-layout .subtitle { font-size: 1rem; line-height: 1.8; }
+.water-lesson .slide-container h2.slide-title { font-size: clamp(1.35rem, 3vw, 1.9rem); border-left-width: 4px; margin-bottom: 24px; }
+.water-lesson .slide-container p, .water-lesson .slide-container li { line-height: 1.85; }.water-lesson .slide-container .option-btn { min-height: 52px; border-radius: 12px; }
+@media (max-width: 680px) {
+  .hub-card, .mr-card { border-radius: 22px; padding: 24px 20px; }.material-row { padding: 16px; gap: 12px; }.materials button, .material-action { padding: 10px 12px; }
+  .admin-heading { align-items: flex-start; flex-direction: column; gap: 16px; }.admin-shell .site-header { margin-bottom: 24px; }.admin-shell .card { padding: 20px; }.admin-shell .login-card { padding: 28px 24px; }.admin-shell .login-screen { padding-bottom: 24px; min-height: 0; }.admin-shell .row { gap: 16px; }.admin-shell .row > div { min-width: min(180px, 100%); }.admin-shell .auth-bar { padding: 16px; }
+  body:has(.game-shell) { padding: 12px; }.game-shell { min-height: calc(100dvh - 24px); gap: 12px; }.game-shell .game-bar { padding: 12px 16px; gap: 8px 16px; }.game-shell .game-bar h1 { font-size: 1.1rem; }.game-shell .world-controls { padding: 16px; }.game-shell .world-controls label { min-width: 120px; }.game-shell #gameContainer { min-height: 300px; }.game-shell .gate-card { padding: 24px; }.gate-card .gate-theme { margin-bottom: 20px; }.game-shell .gate:not([hidden]) { padding: 20px 16px; }
+  .mr-settings { flex-direction: column; }.mr-card .mr-start { width: 100%; }.mr-toolbar { align-items: stretch; }.mr-toolbar > span { flex-basis: 100%; }.mr-toolbar button { flex: 1; padding: 10px; font-size: .85rem; }
+  .magic-ink-lesson .hero { grid-template-columns: 1fr; padding: 24px; gap: 20px; }.magic-ink-lesson .hero .cover { grid-column: 1; grid-row: 2; height: 220px; }.magic-ink-lesson .hero h1 { margin: 0; }.magic-ink-lesson .badges { grid-row: 3; }.magic-ink-lesson .section { padding: 24px 20px; }.magic-ink-lesson .sec-head h2 { font-size: 1.3rem; }.magic-ink-lesson .sec-tag { width: 100%; margin-left: 0; }.magic-ink-lesson .brand-text { font-size: .7rem; }.magic-ink-lesson .brand-text b { font-size: .8rem; }
+  .water-lesson .slide-container { padding: 24px 20px; }.water-lesson .title-slide { min-height: 300px; }.water-lesson .title-layout { padding: 20px 0; }
+}
+@media (max-height: 650px) { .game-shell .gate:not([hidden]) { align-items: flex-start; } }
+/* Keep classroom actions clear of content and small-screen experiments usable. */
+.admin-shell:has(#rewardDock) { padding-bottom: 160px; }
+.admin-shell:has(#rewardDock) :focus-visible { scroll-margin-block: 24px 180px; }
+.admin-shell .login-card p.hint, .admin-shell .fresh-label, .admin-shell .fresh-meta, .admin-shell .code-info .meta, .admin-shell details.setup summary { color: var(--ink-soft); }
+.magic-ink-lesson .cmp-wrap { max-width: 100%; }
+.magic-ink-lesson .cap-lanes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.magic-ink-lesson .cap-lane { min-width: 0; }
+@media (max-width: 600px) {
+  .magic-ink-lesson .cap-game { padding: 20px 12px; }
+  .magic-ink-lesson .cap-lane { padding: 12px 4px; border-width: 2px; }
+  .magic-ink-lesson .cap-stage { width: 100%; height: 180px; }
+  .magic-ink-lesson .cap-beaker { width: calc(100% - 4px); height: 48px; }
+  .magic-ink-lesson .cap-strip { max-width: 65%; }
+  .magic-ink-lesson .cap-label { font-size: .8rem; overflow-wrap: anywhere; }
+}
+.game-shell [hidden] { display: none !important; }
+.game-shell:has(> .gate:not([hidden])) > .game-bar,
+.game-shell:has(> .gate:not([hidden])) > #gameContainer { visibility: hidden; }
+.lesson-nav { max-width: 1120px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 auto 28px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.lesson-nav > span { color: var(--ink-soft); font-size: .8rem; padding-right: 12px; }
+.lesson-nav a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; min-height: 44px; border-radius: 10px; font-size: .85rem; text-decoration: none; }
+.lesson-nav a span { color: var(--ink-soft); font-size: .75rem; }
+.lesson-nav a:hover { background: var(--surface-2); }
+.magic-ink-lesson .section, .water-lesson .slide-container { scroll-margin-top: 24px; }
+.water-lesson .slide-container h3 { color: var(--ink) !important; }
+@media (max-width: 680px) { .lesson-nav { padding: 12px; gap: 4px; }.lesson-nav > span { width: 100%; padding: 0 8px 4px; }.lesson-nav a { padding: 8px; font-size: .8rem; } }

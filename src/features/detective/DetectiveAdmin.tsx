@@ -1,16 +1,17 @@
-import { ThemeSelect } from '../theme/ThemeProvider';
+import { SiteHeader } from '../../components/SiteHeader';
+import { Icon } from '../../components/Icon';
 import { LegacyModule } from '../../components/LegacyModule';
 
 export function DetectiveAdmin() { return <>
-    <div className="wrap"><ThemeSelect />
-        <a href="../index.html" className="back-link">← 回學習主頁</a>
-        <h1>🔑 偵探事件簿 · 驗證碼後台</h1>
-        <p className="subtitle">產生上課用的限時驗證碼。學生沒有碼就打不開案件，避免先偷玩壞了上課體驗。</p>
+    <div className="wrap admin-shell"><SiteHeader /><div className="admin-heading"><div><p className="page-kicker"><Icon name="lock" />老師工作室</p>
+
+        <h1>偵探事件簿 · 驗證碼後台</h1>
+        <p className="subtitle">管理課堂案件與限時驗證碼，讓每一組偵探準備好再出發。</p></div></div>
 
 
         <div id="loginScreen" className="login-screen" style={{"display":"none"}}>
             <div className="login-card">
-                <div className="lock">🔐</div>
+                <div className="lock"><Icon name="lock" /></div>
                 <h2>管理者登入</h2>
                 <p className="hint">只有指定帳號能產生驗證碼</p>
                 <div className="field">
@@ -36,7 +37,7 @@ export function DetectiveAdmin() { return <>
             </div>
 
             <div className="card">
-                <h2>➕ 產生驗證碼</h2>
+                <h2>產生驗證碼</h2>
                 <div className="row" style={{"marginBottom":"12px"}}>
                     <div>
                         <label htmlFor="f_game">案件（關卡）</label>
@@ -88,7 +89,7 @@ export function DetectiveAdmin() { return <>
             </div>
 
             <div className="card">
-                <h2>📋 已發出的驗證碼</h2>
+                <h2>已發出的驗證碼</h2>
                 <div className="row" style={{"marginBottom":"14px"}}>
                     <div>
                         <label htmlFor="filterGame">篩選案件</label>
@@ -102,7 +103,7 @@ export function DetectiveAdmin() { return <>
             </div>
 
             <div className="card">
-                <h2>🛠️ 第一次使用要做的事</h2>
+                <h2>第一次使用要做的事</h2>
                 <details className="setup">
                     <summary>展開設定步驟（做過一次就不用再做）</summary>
                     <ol>

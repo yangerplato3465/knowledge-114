@@ -1,37 +1,30 @@
-import { useState } from 'react';
-import { ThemeSelect } from '../features/theme/ThemeProvider';
-import { categories, type Activity } from '../content/navigation';
-import { Disclosure } from '../components/Disclosure';
-import { VersionLabel } from '../components/VersionLabel';
+import { SiteHeader } from '../components/SiteHeader';
+import { SiteFooter } from '../components/SiteFooter';
+import { Icon } from '../components/Icon';
 
-function ActivityLinks({ items }: { items: Activity[] }) {
-  return <ul className="activity-list">{items.map(item => <li key={item.path}>
-    <a className="activity" href={`${import.meta.env.BASE_URL}pages/${item.path}.html`}>
-      <span><span className="activity-title">{item.title}</span>{' '}<span className="activity-description">{item.description}</span></span>
-      <span aria-hidden="true">→</span>
-    </a>
-  </li>)}</ul>;
-}
 export function App() {
-  const [openCategory, setCategory] = useState<string | null>(null);
-  const [openGroup, setGroup] = useState<string | null>(null);
-  const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-  return <><a className="skip-link" href="#main">跳至主要內容</a>
-    <header className="site-header"><a href={`${import.meta.env.BASE_URL}index.html`}>學習主頁</a><ThemeSelect /></header>
-    <main id="main" tabIndex={-1} className="hub-card">
-      <div className="hub-heading"><img src={`${import.meta.env.BASE_URL}assets/images/logo.webp`} alt="" width="98" height="56" /><h1>大耳狗教學網</h1></div>
-      <p className="subtitle">選擇一個主題開始</p><p className="byline">By Anita 老師</p>
-      <nav aria-label="課程與活動" className="category-list">{categories.map(category =>
-        <Disclosure key={category.id} id={category.id} title={category.title} description={category.description}
-          open={openCategory === category.id} onToggle={() => setCategory(openCategory === category.id ? null : category.id)}>
-          {category.groups ? category.groups.map(group =>
-            <Disclosure key={group.id} id={group.id} title={group.title} nested
-              open={openGroup === group.id} onToggle={() => setGroup(openGroup === group.id ? null : group.id)}>
-              <ActivityLinks items={group.items} />
-            </Disclosure>) : <ActivityLinks items={category.items!} />}
-        </Disclosure>
-      )}</nav>
+  const base = import.meta.env.BASE_URL;
+  return <div className="home-page">
+    <a className="skip-link" href="#main">跳至主要內容</a><SiteHeader home navigation />
+    <main id="main" tabIndex={-1} className="learning-home">
+      <section className="home-hero" aria-labelledby="welcome-title">
+        <div className="hero-copy">
+          <p className="home-eyebrow">Anita 老師的學習工作室</p>
+          <h1 id="welcome-title">把好奇心，<br />帶進今天的課堂。</h1>
+          <p className="hero-description">從一個小問題，開始一場新發現。<br />動手實驗、動腦解謎，讓學習更有趣。</p>
+          <nav className="hero-actions" aria-label="開始學習">
+            <a className="primary-link" href={base + 'pages/downloads.html'}><Icon name="download" />素材下載</a>
+            <a className="secondary-link" href={base + 'pages/activities.html'}>探索學習活動<Icon name="arrow" /></a>
+          </nav>
+        </div>
+        <div className="hero-art" aria-hidden="true">
+          <div className="art-orbit" />
+          <div className="art-notebook"><span>今天的探索筆記</span><Icon name="book" /><i /><i /><i /></div>
+          <div className="art-signature"><img src={base + 'assets/images/logo.webp'} alt="" width="98" height="56" /><span>一起發現，一起長大。</span></div>
+        </div>
+      </section>
+      <p className="home-note">為課堂裡的每一份好奇，準備一點靈感。</p>
     </main>
-    <footer><VersionLabel /></footer>
-  </>;
+    <SiteFooter />
+  </div>;
 }

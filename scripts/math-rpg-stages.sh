@@ -23,10 +23,10 @@
 #   容器高度 / (容器寬 x 帶高/1600) >= 1，縮放比就改由高度決定，
 #   地面線會開始往上漂，角色會浮空。帶高 420 在 1255 寬時撐得住 329px（目前用 309，餘裕 6%）。
 #
-# 用法：bash .claude/math-rpg-stages.sh
+# 用法：bash scripts/math-rpg-stages.sh
 set -e
 
-SRC="${SRC:-C:/Users/nini9/Downloads}"
+SRC="${SRC:?Set SRC to the source image directory}"
 OUT="$(dirname "$0")/../assets/images/math-rpg"
 TMP="$(mktemp -d)"
 H=269

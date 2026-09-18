@@ -1,50 +1,49 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { App } from './App';
+import { Activities } from './Activities';
+import { TeacherTools } from './TeacherTools';
 import { ThemeProvider } from '../features/theme/ThemeProvider';
 import { categories } from '../content/navigation';
+import { teacherTools } from '../content/teacherTools';
+import { version } from '../../config.json';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
-function setup(config: unknown = { version: '2.13.0', lastUpdated: '2026-09-11' }) {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => config }));
-  return render(<ThemeProvider><App /></ThemeProvider>);
-}
-it('活動均有正式 React 入口且清單不含已移除遊戲', () => {
-  const activities = categories.flatMap(c => c.groups ? c.groups.flatMap(g => g.items) : c.items!);
-  expect(activities.map(a => a.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'detective-golden-owl', 'detective-ai-museum', 'downloads', 'upload', 'class-rpg']);
-  for (const activity of activities) expect(readFileSync('pages/' + activity.path + '.html', 'utf8')).toContain('id="root"');
-});
-it('分類互斥展開，收合內容不出現在可操作的連結清單', async () => {
-  setup();
-  expect(screen.queryByRole('link', { name: /數學勇者 RPG/ })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: /教學內容/ }));
-  fireEvent.click(screen.getByRole('button', { name: '互動學習小遊戲' }));
-  expect(screen.getByRole('link', { name: /數學勇者 RPG/ }).getAttribute('href')).toBe('/pages/math-rpg.html');
-  expect(screen.queryByRole('link', { name: /字尾大分流|極速博物館|快問快答/ })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: /偵探事件簿/ }));
-  expect(screen.queryByRole('link', { name: /數學勇者 RPG/ })).toBeNull();
-  expect(screen.getByRole('link', { name: /黃金貓頭鷹雕像/ })).toBeTruthy();
-  expect(await screen.findByText('v2.13.0 · 2026-09-11')).toBeTruthy();
-});
-
-it('素材導覽使用獨立 React 入口', () => {
-  setup();
-  fireEvent.click(screen.getByRole('button', { name: /素材 遊戲素材的下載與上傳/ }));
-  expect(screen.getByRole('link', { name: /素材下載 下載遊戲素材/ }).getAttribute('href')).toBe('/pages/downloads.html');
-  expect(screen.getByRole('link', { name: /上傳素材 老師專用/ }).getAttribute('href')).toBe('/pages/upload.html');
-});
-it('不合法版號不顯示但首頁仍可使用', async () => {
-  setup({ version: '<script>', lastUpdated: 'bad' });
-  await vi.waitFor(() => expect(fetch).toHaveBeenCalled());
-  expect(screen.getByLabelText('網站版本').textContent).toBe('');
-  expect(screen.getByRole('navigation', { name: '課程與活動' })).toBeTruthy();
-});
-it('離線讀取失敗不阻擋導覽', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+it('首頁提供兩個學生入口，老師工具只在頁尾，沒有活動或管理清單', () => {
   render(<ThemeProvider><App /></ThemeProvider>);
-  fireEvent.click(screen.getByRole('button', { name: /素材 遊戲/ }));
-  expect(screen.getByRole('link', { name: /素材下載/ })).toBeTruthy();
-  await vi.waitFor(() => expect(fetch).toHaveBeenCalled());
+  const main = screen.getByRole('main');
+  expect(within(main).getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/pages/downloads.html', '/pages/activities.html']);
+  expect(screen.queryByText('數學勇者')).toBeNull();
+  expect(screen.queryByText('上傳素材')).toBeNull();
+  expect(screen.queryByText('班級 RPG')).toBeNull();
+  expect(within(screen.getByRole('contentinfo')).getByRole('link', { name: '老師工具' }).getAttribute('href')).toBe('/pages/teacher-tools.html');
+});
+it('版本只顯示版號，首頁不再發送版本或清單請求', () => {
+  const fetcher = vi.fn();
+  vi.stubGlobal('fetch', fetcher);
+  render(<ThemeProvider><App /></ThemeProvider>);
+  expect(screen.getByLabelText('網站版本').textContent).toBe('v' + version);
+  expect(fetcher).not.toHaveBeenCalled();
+});
+it('活動頁完整保留五個學生入口，分類捷徑有對應區塊', () => {
+  render(<ThemeProvider><Activities /></ThemeProvider>);
+  const main = screen.getByRole('main');
+  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'detective-golden-owl', 'detective-ai-museum']);
+  for (const category of categories) for (const item of category.items) {
+    expect(within(main).getByRole('link', { name: new RegExp(item.title.replace(/[！]/g, '.')) }).getAttribute('href')).toBe('/pages/' + item.path + '.html');
+    expect(readFileSync('pages/' + item.path + '.html', 'utf8')).toContain('id="root"');
+  }
+  for (const link of within(screen.getByRole('navigation', { name: '活動分類' })).getAllByRole('link')) {
+    expect(document.querySelector(link.getAttribute('href')!)).toBeTruthy();
+  }
+  expect(within(main).queryByText('上傳素材')).toBeNull();
+});
+it('老師工具集中三個受權限保護的入口', () => {
+  render(<ThemeProvider><TeacherTools /></ThemeProvider>);
+  const links = within(screen.getByRole('main')).getAllByRole('link');
+  expect(links.map(link => link.getAttribute('href'))).toEqual(teacherTools.map(item => '/pages/' + item.path + '.html'));
+  expect(links).toHaveLength(3);
+  for (const item of teacherTools) expect(readFileSync('pages/' + item.path + '.html', 'utf8')).toContain('id="root"');
 });

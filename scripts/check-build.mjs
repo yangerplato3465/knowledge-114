@@ -13,7 +13,7 @@ for (const entry of entries) {
     await access(new URL('dist/' + url.slice(base.length), root));
   }
 }
-for (const path of ['next', 'pages/turbo-museum.html', 'pages/word-sort.html', 'pages/quick-quiz.html', 'assets/js/theme.js', 'assets/js/math-rpg.js', 'assets/js/upload.js']) {
+for (const path of ['next', 'pages/turbo-museum.html', 'pages/word-sort.html', 'pages/quick-quiz.html', 'assets/js/theme.js', 'assets/js/math-rpg.js', 'assets/js/upload.js', 'assets/css', 'assets/vendor/README.md', 'assets/images/math-rpg/hero-sword-combo-concept-v3.png']) {
   await assert.rejects(access(new URL('dist/' + path, root)), path + ' 不可再發布');
 }
 for (const path of ['config.json', 'assets/js/class-rpg.js', 'assets/js/detective/gate.js', 'assets/js/detective/admin.js', 'assets/vendor/pixi.esm.min.js', 'pages/firestore.rules.txt']) {

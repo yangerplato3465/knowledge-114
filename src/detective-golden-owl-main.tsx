@@ -5,4 +5,6 @@ import { DetectiveCase } from './features/detective/DetectiveCase';
 import '../assets/css/theme.css';
 import '../assets/css/detective.css';
 
+import './styles/ui.css';
+
 createRoot(document.getElementById('root')!).render(<ErrorBoundary><ThemeProvider><DetectiveCase gameId="owl" caseFile="golden-owl" placeholder="OWL-XXXX-XX" /></ThemeProvider></ErrorBoundary>);

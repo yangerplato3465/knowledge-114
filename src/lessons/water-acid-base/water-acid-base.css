@@ -1,3 +1,4 @@
+@layer legacy {
 body { display: block; }
 #root { width: 100%; }
 .water-lesson { display: grid; gap: 25px; max-width: 1280px; margin: auto; }
@@ -72,4 +73,4 @@ body { display: block; }
 }
 
 @media (max-width: 1320px) { .water-lesson .slide-container { min-height: 0; } .water-lesson .title-slide { min-height: 420px; } }
-
+}

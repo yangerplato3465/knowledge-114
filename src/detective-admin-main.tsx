@@ -6,4 +6,6 @@ import '../assets/css/theme.css';
 import '../assets/css/class-rpg.css';
 import './features/detective/detective-admin.css';
 
+import './styles/ui.css';
+
 createRoot(document.getElementById('root')!).render(<ErrorBoundary><ThemeProvider><DetectiveAdmin /></ThemeProvider></ErrorBoundary>);

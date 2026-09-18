@@ -1,3 +1,4 @@
+@layer legacy {
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
@@ -52,3 +53,4 @@ body {
 #gameContainer { min-height: 240px; }
 #gameContainer canvas { image-rendering: pixelated; }
 @media (max-width: 600px) { body { padding: 8px; height: auto; min-height: 100%; } #gameContainer { flex: none; height: 50vh; } .world-controls label { flex: 1; min-width: 120px; } .world-controls select { width: 100%; } }
+}

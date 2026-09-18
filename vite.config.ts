@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { readdirSync } from 'node:fs';
+
+const pages = readdirSync(new URL('./pages/', import.meta.url)).filter(file => file.endsWith('.html')).sort();
 
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
@@ -13,7 +16,7 @@ export default defineConfig({
         visited.add(fileName);
         const output = bundle[fileName];
         if (!output || output.type !== 'chunk') return;
-        const forbidden = Object.keys(output.modules).filter(id => /(?:pixi|firebase|assets\/js\/|src\/(?:games|lessons)\/)/i.test(id.replaceAll('\\', '/')));
+        const forbidden = Object.keys(output.modules).filter(id => /(?:pixi|firebase|assets\/js\/|src\/(?:games|lessons|content)\/|src\/app\/(?:Activities|TeacherTools))/i.test(id.replaceAll('\\', '/')));
         if (forbidden.length) this.error(`首頁不應包含遊戲模組：${forbidden.join(', ')}`);
         output.imports.forEach(inspect);
       };
@@ -24,6 +27,6 @@ export default defineConfig({
   }],
   build: {
     assetsDir: 'app-assets',
-    rollupOptions: { input: ['index.html', 'pages/class-rpg-game.html', 'pages/class-rpg.html', 'pages/detective-admin.html', 'pages/detective-ai-museum.html', 'pages/detective-golden-owl.html', 'pages/downloads.html', 'pages/magic-ink.html', 'pages/math-rpg.html', 'pages/upload.html', 'pages/water-acid-base.html'] },
+    rollupOptions: { input: ['index.html', ...pages.map(file => `pages/${file}`)] },
   },
 });

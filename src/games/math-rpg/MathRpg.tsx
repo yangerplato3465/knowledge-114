@@ -1,3 +1,4 @@
+import { Icon } from '../../components/Icon';
 import { useEffect, useRef, useState } from 'react';
 import { PageLayout } from '../../components/PageLayout';
 import { traitOf, UPGRADES } from './model';
@@ -5,7 +6,6 @@ import { questionPools, type QuestionPool } from './questions';
 import { useBattle } from './useBattle';
 import { PixiBattle } from './PixiBattle';
 import { BattleControls, BattleDialog, HowTo } from './BattleControls';
-import '../../styles/global.css';
 import './math-rpg.css';
 
 const enemies = ['暗影小獸', '骨翼渡鴉', '提燈幽魂', '骨龍', '黑騎士', '暗黑魔王'];
@@ -79,14 +79,14 @@ export function MathRpg() {
   const start = useRef<HTMLButtonElement>(null);
   const wasPlaying = useRef(false);
   useEffect(() => { if (wasPlaying.current && !playing) start.current?.focus(); wasPlaying.current = playing; }, [playing]);
-  return <PageLayout><div className="mr-card"><h1>數學勇者</h1>
+  return <PageLayout><div className="mr-card"><p className="page-kicker"><Icon name="spark" />互動學習小遊戲</p><h1>數學勇者</h1>
     <p>答題闖關 · 六段冒險旅程。</p>
     {playing ? <Battle pool={questionPools[grade][poolName]} title={`${grade} · ${poolName}`} leave={() => setPlaying(false)} /> :
       <section className="mr-panel"><h2>選擇你的冒險</h2><p>六場戰鬥，每關可選一項強化。支援鍵盤 Tab 與 Enter 作答。</p>
         <details><summary>開始前看看遊戲玩法</summary><HowTo /></details>
         <div className="mr-settings"><label>年級<select value={grade} onChange={e => { setGrade(e.target.value); setPoolName(Object.keys(questionPools[e.target.value])[0]); }}>{Object.keys(questionPools).map(name => <option key={name}>{name}</option>)}</select></label>
           <label>題庫<select value={poolName} onChange={e => setPoolName(e.target.value)}>{Object.keys(questionPools[grade]).map(name => <option key={name}>{name}</option>)}</select></label></div>
-        <button ref={start} onClick={() => setPlaying(true)}>開始冒險</button>
+        <button className="mr-start" ref={start} onClick={() => setPlaying(true)}>開始冒險</button>
       </section>}
   </div></PageLayout>;
 }

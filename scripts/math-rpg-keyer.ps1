@@ -1,3 +1,7 @@
+param(
+    [Parameter(Mandatory=$true)][string]$SourceDirectory,
+    [string]$OutputDirectory = (Join-Path $PSScriptRoot "../.art-output/keyed")
+)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
@@ -309,8 +313,8 @@ public class Keyer {
 
 Add-Type -TypeDefinition $cs -ReferencedAssemblies System.Drawing
 
-$srcDir = 'C:\Users\nini9\Downloads'
-$tmpDir = 'C:\Users\nini9\AppData\Local\Temp\claude\C--Users-Work\a6595137-aa12-4fcc-9f74-1a12a3164bae\scratchpad\keyed'
+$srcDir = $SourceDirectory
+$tmpDir = $OutputDirectory
 if (-not (Test-Path $tmpDir)) { New-Item -ItemType Directory -Path $tmpDir | Out-Null }
 
 # n    = output name

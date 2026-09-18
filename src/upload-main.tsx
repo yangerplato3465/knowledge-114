@@ -4,6 +4,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeProvider } from './features/theme/ThemeProvider';
 import { Upload } from './features/materials/Upload';
 import '../assets/css/theme.css';
-import './styles/global.css';
+
+import './styles/ui.css';
 
 createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><ThemeProvider><Upload /></ThemeProvider></ErrorBoundary></StrictMode>);

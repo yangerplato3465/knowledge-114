@@ -6,4 +6,6 @@ import { ThemeProvider } from './features/theme/ThemeProvider';
 import '../assets/css/theme.css';
 import './styles/global.css';
 
+import './styles/base.css';
+
 createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><ThemeProvider><App /></ThemeProvider></ErrorBoundary></StrictMode>);

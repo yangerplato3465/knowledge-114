@@ -192,7 +192,7 @@ async function boot(session) {
     gate?.remove();
 
     // 讓引擎知道自己是被哪一組碼開的。
-    // 舊的 session、以及 CLAUDE.md 裡那個開發用的 {"exp":…} 捷徑都沒有 codeId，
+    // 舊的 session、以及早期開發用的 {"exp":…} 捷徑都沒有 codeId，
     // 這種情況 saveProgress 直接不做事 —— 遊戲照玩，只是不記進度。
     window.DETECTIVE_SESSION = {
         codeId: session?.codeId || null,

@@ -1,3 +1,4 @@
+@layer legacy {
 
         /* 這一頁專屬的樣式，量不多就不另開檔案 */
         .fresh {
@@ -60,4 +61,4 @@
             .login-card .lock { font-size: 46px; }
             .login-card h2 { font-size: 23px; }
         }
-    
+}

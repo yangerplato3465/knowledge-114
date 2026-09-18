@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
-import { ThemeSelect } from '../features/theme/ThemeProvider';
+import { SiteHeader } from './SiteHeader';
+import { SiteFooter } from './SiteFooter';
 
-export function PageLayout({ children }: { children: ReactNode }) {
+export function PageLayout({ children, current }: { children: ReactNode; current?: 'downloads' }) {
   return <><a className="skip-link" href="#main">跳至主要內容</a>
-    <header className="site-header"><a href={`${import.meta.env.BASE_URL}index.html`}>回到學習主頁</a><ThemeSelect /></header>
+    <SiteHeader navigation current={current} />
     <main id="main" tabIndex={-1}>{children}</main>
+    <SiteFooter />
   </>;
 }

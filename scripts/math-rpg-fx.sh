@@ -18,11 +18,11 @@
 # colorlevels：AI 產的「黑底」帶 3~15/255 灰霧，會變成一片 alpha≈0.05 的霧。
 # FLOOR 把門檻以下壓成純黑。跑完看「背景 alpha 中位數」，>6 就把 FLOOR 調到 0.10。
 #
-# 用法：bash .claude/math-rpg-fx.sh
+# 用法：bash scripts/math-rpg-fx.sh
 
 set -e
 
-SRC="${SRC:-C:/Users/nini9/Downloads}"
+SRC="${SRC:?Set SRC to the source image directory}"
 OUT="$(dirname "$0")/../assets/images/math-rpg"
 TMP="$(mktemp -d)"
 FLOOR="${FLOOR:-0.06}"   # 黑底門檻，看到方框就調高

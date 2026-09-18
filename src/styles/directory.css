@@ -1,0 +1,16 @@
+.directory-page { max-width: 1000px; margin: 48px auto 64px; }
+.directory-intro { margin-bottom: 32px; }.directory-intro .page-lead { margin-bottom: 0; }
+.directory-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 40px; }
+.directory-tabs a { min-height: 44px; padding: 10px 18px; font-size: .9rem; text-decoration: none; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); }
+.directory-tabs a:hover { background: var(--surface-2); }
+.directory-sections { display: grid; gap: 40px; }
+.directory-section { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; scroll-margin-top: 24px; }
+.directory-section h2 { font-size: 1.25rem; margin: 12px 0; }.directory-section p { font-size: .875rem; color: var(--ink-soft); margin: 0; line-height: 1.9; }
+.resource-list { list-style: none; margin: 0; padding: 0 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
+.resource-list li + li { border-top: 1px solid var(--border); }
+.resource-list a { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 0; text-decoration: none; min-height: 96px; }
+.resource-list a > span { min-width: 0; }.resource-list strong { display: block; font-size: 1rem; font-weight: 600; }.resource-list a > span > span { display: block; color: var(--ink-soft); font-size: .875rem; margin-top: 6px; }
+.resource-list a > svg { width: 20px; height: 20px; }.resource-list a:hover strong { text-decoration: underline; text-underline-offset: .25em; }
+.resource-list a:active { background: var(--surface-2); }.resource-list a:focus-visible { outline-offset: 4px; border-radius: 4px; }
+.teacher-directory { max-width: 820px; }
+@media (max-width: 680px) { .directory-page { margin: 32px auto 40px; }.directory-section { grid-template-columns: 1fr; gap: 16px; }.directory-section h2 { margin: 0 0 8px; }.directory-tabs { gap: 8px; margin-bottom: 32px; }.directory-tabs a { padding: 8px 12px; }.directory-sections { gap: 32px; }.resource-list { padding: 0 20px; }.resource-list a { padding: 20px 0; gap: 12px; } }

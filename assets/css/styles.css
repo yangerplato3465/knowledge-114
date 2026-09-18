@@ -1,3 +1,4 @@
+@layer legacy {
 /* ==================== 1. 基本設定與童趣幻燈片規格 ==================== */
 * {
     box-sizing: border-box;
@@ -681,4 +682,5 @@ math {
     /* 實驗室操作鈕與答題選項允許換行／堆疊 */
     #beaker-wrapper + div { flex-wrap: wrap; }
     .option-group { flex-direction: column; }
+}
 }
