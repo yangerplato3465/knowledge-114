@@ -79,7 +79,7 @@ export function MathRpg() {
   const start = useRef<HTMLButtonElement>(null);
   const wasPlaying = useRef(false);
   useEffect(() => { if (wasPlaying.current && !playing) start.current?.focus(); wasPlaying.current = playing; }, [playing]);
-  return <PageLayout><div className="mr-card"><p className="page-kicker"><Icon name="spark" />互動學習小遊戲</p><h1>數學勇者</h1>
+  return <PageLayout activityTitle="數學勇者"><div className="mr-card"><p className="page-kicker"><Icon name="spark" />互動學習小遊戲</p><h1>數學勇者</h1>
     <p>答題闖關 · 六段冒險旅程。</p>
     {playing ? <Battle pool={questionPools[grade][poolName]} title={`${grade} · ${poolName}`} leave={() => setPlaying(false)} /> :
       <section className="mr-panel"><h2>選擇你的冒險</h2><p>六場戰鬥，每關可選一項強化。支援鍵盤 Tab 與 Enter 作答。</p>

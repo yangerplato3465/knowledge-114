@@ -1,6 +1,7 @@
 import { Icon } from '../../components/Icon';
 import { useEffect, useRef, useState } from 'react';
 import { PageLayout } from '../../components/PageLayout';
+import { TeacherHeader } from '../../components/TeacherHeader';
 import { deleteMaterial, errorMessage, formatSize, uploadMaterial, type Material } from './api';
 import { useMaterials } from './useMaterials';
 import './materials.css';
@@ -67,7 +68,7 @@ export function Upload() {
     } catch (reason) { if (!controller.signal.aborted) setError(errorMessage(reason)); }
     finally { finish(controller); }
   }
-  return <PageLayout><section className="hub-card materials" aria-labelledby="upload-title">
+  return <PageLayout header={<TeacherHeader current="upload" />}><section className="hub-card materials" aria-labelledby="upload-title">
     <div className="section-icon"><Icon name="upload" /></div><h1 id="upload-title">上傳素材</h1><p>上傳的檔案會存到網站的素材庫，任何人都能在下載頁取得。</p>
     <div className="material-field"><label htmlFor="token">GitHub 存取權杖（Token）</label>
       <input id="token" type="password" autoComplete="off" value={token} disabled={busy} onChange={e => setToken(e.target.value)} placeholder="ghp_... 或 github_pat_..." />

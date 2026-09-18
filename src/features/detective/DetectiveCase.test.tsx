@@ -1,12 +1,27 @@
 // @vitest-environment jsdom
 import { StrictMode } from 'react';
 import { ThemeProvider } from '../theme/ThemeProvider';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { DetectiveCase } from './DetectiveCase';
 
 
-afterEach(() => { cleanup(); document.querySelectorAll('script[data-test-loader]').forEach(node => node.remove()); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); delete window.DETECTIVE_FLUSH; document.querySelectorAll('script[data-test-loader]').forEach(node => node.remove()); vi.restoreAllMocks(); });
+
+test('返回按鈕防止重複存檔，取消離場後恢復可操作', async () => {
+  let finish!: (saved: boolean) => void;
+  window.DETECTIVE_FLUSH = vi.fn(() => new Promise<boolean>(resolve => { finish = resolve; }));
+  vi.spyOn(window, 'confirm').mockReturnValue(false);
+  render(<ThemeProvider><DetectiveCase gameId="owl" caseFile="golden-owl" placeholder="OWL" /></ThemeProvider>);
+  const link = screen.getByRole('link', { name: '← 回學習活動' });
+  fireEvent.click(link);
+  fireEvent.click(link);
+  expect(window.DETECTIVE_FLUSH).toHaveBeenCalledOnce();
+  expect(link.getAttribute('aria-busy')).toBe('true');
+  await act(async () => { finish(false); });
+  expect(link.getAttribute('aria-busy')).toBe('false');
+  expect(link.textContent).toContain('回學習活動');
+});
 
 test('案件資料完成前不啟動 gate，引擎仍由 gate 驗證後載入', () => {
   render(<StrictMode><ThemeProvider><DetectiveCase gameId="owl" caseFile="golden-owl" placeholder="OWL-XXXX-XX" /></ThemeProvider></StrictMode>);
@@ -19,6 +34,10 @@ test('案件資料完成前不啟動 gate，引擎仍由 gate 驗證後載入', 
   expect(gate.src).toContain('/assets/js/detective/gate.js');
   expect(document.querySelector('script[src*="engine.js"]')).toBeNull();
   expect(screen.getByLabelText('遊戲驗證碼')).toBeTruthy();
+  for (const link of document.querySelectorAll('.back-link, .gate-back')) {
+    expect(link.getAttribute('href')).toBe('/pages/activities.html');
+    expect(link.textContent).toContain('回學習活動');
+  }
 });
 
 test('卸載後資料才載完，不得啟動 gate 或留下 script', () => {

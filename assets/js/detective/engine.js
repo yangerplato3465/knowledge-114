@@ -1988,9 +1988,9 @@ function showEnding() {
             onClick: () => location.reload(),
         }));
         panel.addChild(mkButton({
-            label: '🏠 回學習主頁', x: box.cx + 20, y: btnY, w: 180, h: 44,
+            label: '回學習活動', x: box.cx + 20, y: btnY, w: 180, h: 44,
             color: COL.mint, textColor: 0xffffff,
-            onClick: () => { location.href = '../index.html'; },
+            onClick: () => { document.querySelector('.game-bar .back-link')?.click(); },
         }));
     });
 }

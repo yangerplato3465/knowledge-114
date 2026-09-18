@@ -1,11 +1,11 @@
-import { SiteHeader } from '../../components/SiteHeader';
+import { TeacherHeader } from '../../components/TeacherHeader';
 import { Icon } from '../../components/Icon';
 import { LegacyModule } from '../../components/LegacyModule';
 import { LoadingStatus, ModalFrame, ToastRegion } from '../../components/Feedback';
 
 export function ClassRpgAdmin() {
   return <div className="wrap admin-shell">
-    <SiteHeader /><div className="admin-heading"><div><p className="page-kicker"><Icon name="people" />老師工作室</p><h1>班級 RPG</h1><p className="subtitle">陪伴每一位冒險者成長，讓課堂上的努力被看見。</p></div>
+    <TeacherHeader current="class-rpg" /><div className="admin-heading"><div><p className="page-kicker"><Icon name="people" />老師工作室</p><h1>班級 RPG</h1><p className="subtitle">陪伴每一位冒險者成長，讓課堂上的努力被看見。</p></div>
     <a id="gameLink" href="class-rpg-game.html" target="_blank" rel="noreferrer" className="btn game-link">進入遊戲<Icon name="arrow" /></a></div>
 
     <div id="loginScreen" className="login-screen" style={{display:'none'}}><div className="login-card"><div className="lock" aria-hidden="true"><Icon name="lock" /></div><h2>老師登入</h2><p className="hint">請使用管理員配發的帳號登入</p>
