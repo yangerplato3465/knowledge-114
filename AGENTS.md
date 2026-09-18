@@ -8,7 +8,8 @@
 - 首頁／導覽：src/app、src/content/navigation.ts；教材：src/lessons；數學勇者：src/games/math-rpg。
 - 素材上下載：src/features/materials；共用元件／主題：src/components、src/features/theme。
 - 班級與偵探仍由 React 外殼接 assets/js/class-rpg*、assets/js/detective。它們是現役依賴，不能當廢碼刪除。
-- 只讀任務需要的文件：[架構](docs/TECH_ARCHITECTURE.md)、[遊戲規則](docs/GAMEPLAY.md)、[偵探](docs/detective-authoring.md)、[待辦](docs/TODO.md)、[美術](assets/images/math-rpg/PROMPTS.md)。
+- 只讀任務需要的文件：[架構](docs/TECH_ARCHITECTURE.md)、[遊戲規則](docs/GAMEPLAY.md)、[偵探](docs/detective-authoring.md)、[待辦](docs/TODO.md)。
+- 數學勇者目前維護中，僅保留維護頁與 questions.ts 題庫；新玩法、架構、UI 與美術待使用者討論定案，不恢復舊戰鬥。
 
 ## 工作方式
 

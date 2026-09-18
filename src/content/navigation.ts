@@ -8,7 +8,7 @@ export const categories: ActivityCategory[] = [
     { path: 'magic-ink', title: '神奇的墨水！原子筆的科學', description: '觀察墨水的秘密，動手做變色實驗。' },
   ] },
   { id: 'games', title: '互動學習', description: '讓練習變成一場冒險。', items: [
-    { path: 'math-rpg', title: '數學勇者', description: '選擇題庫、挑戰六關，用數學打敗怪獸。' },
+    { path: 'math-rpg', title: '數學勇者', description: '維護中 · 遊戲玩法與畫面重新設計中。' },
   ] },
   { id: 'detective', title: '偵探事件簿', description: '跟著老師進入案件，觀察線索、一起推理。', items: [
     { path: 'detective-golden-owl', title: '黃金貓頭鷹雕像失竊事件', description: '校園失竊案 · 密碼與邏輯推理' },

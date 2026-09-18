@@ -1,0 +1,7 @@
+.maintenance-page { margin: clamp(24px, 6vh, 72px) auto; }
+.maintenance-page h2 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 8px; }
+.maintenance-page .page-lead { margin-top: 0; }
+.maintenance-link { display: inline-flex; align-items: center; gap: 16px; min-height: 48px; padding: 12px 20px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface-2); text-decoration: none; }
+.maintenance-link:hover { background: var(--primary-tint); }
+.maintenance-link:active { filter: brightness(.94); }
+@media (max-width: 480px) { .maintenance-page { padding: 28px 20px; border-radius: 22px; } }

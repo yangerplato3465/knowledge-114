@@ -17,6 +17,6 @@ Anita 老師的國小互動教學網站，使用 React + Vite + TypeScript。
 
 - [AGENTS.md](AGENTS.md)：工作指引與資料限制。
 - [架構](docs/TECH_ARCHITECTURE.md)、[遊戲規則](docs/GAMEPLAY.md)、[偵探製作](docs/detective-authoring.md)、[待辦](docs/TODO.md)。
-- [美術規格](assets/images/math-rpg/PROMPTS.md)、[本地引擎](assets/vendor/README.md)。
+- [本地引擎](assets/vendor/README.md)。數學勇者目前維護中，題庫保留於 src/games/math-rpg/questions.ts；新玩法與介面待討論。
 
-GitHub Actions 驗證後發布 dist 至 GitHub Pages；VITE_BASE_PATH=/knowledge-114/。修改不代表已推送或部署。版本標籤取 config.json；正式發版時更新版本與日期。Firebase 規則另行發布。
+GitHub Actions 驗證後發布 dist 至 GitHub Pages；VITE_BASE_PATH=/knowledge-114/。修改不代表已推送或部署。版本標籤取 config.json，只顯示版號。Firebase 規則另行發布。

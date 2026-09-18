@@ -33,10 +33,9 @@ test('班級世界資料 adapter 維持 owner filter 與過期訂閱隔離', () 
   assert.match(data, /stopClasses\?\.\(\)/);
 });
 
-test('兩種 Pixi 格式記錄為同一版本且沒有 sourcemap 404', () => {
+test('現役 Pixi ESM 版本有記錄且沒有 sourcemap 404', () => {
   const vendor = read('assets/vendor/README.md');
   const esm = read('assets/vendor/pixi.esm.min.js');
-  assert.match(vendor, /pixi\.min\.js \| 8\.20\.1/);
   assert.match(vendor, /pixi\.esm\.min\.js \| 8\.20\.1/);
   assert.doesNotMatch(esm, /sourceMappingURL/);
 });

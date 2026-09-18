@@ -7,8 +7,7 @@ function publish(source) {
   const path = relative(root, source).split(sep).join('/');
   // 素材庫可能合法包含 Markdown；只排除網站自身的開發素材。
   if (path.startsWith('assets/uploads/')) return !path.endsWith('/.gitkeep');
-  return path !== 'assets/css' && !path.endsWith('.md')
-    && path !== 'assets/images/math-rpg/hero-sword-combo-concept-v3.png';
+  return path !== 'assets/css' && !path.endsWith('.md');
 }
 
 // HTML is produced exclusively by Vite; only runtime/media and config are copied.

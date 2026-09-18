@@ -70,20 +70,6 @@ body:has(.game-shell) { padding: 16px; min-height: 100dvh; }
 .game-shell .group-tag { min-height: 44px; color: var(--ink); border-width: 1px; }
 .game-shell .group-menu button { min-height: 48px; white-space: normal; }
 .game-shell #gameContainer:fullscreen { border: 0; border-radius: 0; }
-/* Math setup and battle controls */
-.mr-card { max-width: 960px; padding: clamp(24px, 4vw, 40px); border: 1px solid var(--border); border-radius: 28px; box-shadow: 0 8px 32px var(--shadow); }
-.mr-card > p { color: var(--ink-soft); margin: 12px 0 24px; }.mr-card > .mr-panel { background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: clamp(20px, 3vw, 32px); }
-.mr-card > .mr-panel h2 { margin-top: 0; }.mr-card > .mr-panel p { color: var(--ink-soft); }
-.mr-card button { border-width: 1px; font-weight: 600; color: var(--ink); }
-.mr-card .mr-start { background: var(--ink); color: var(--surface); min-width: 180px; border-color: var(--ink); }
-.mr-settings { margin: 24px 0; }.mr-settings label { flex: 1; font-size: .9rem; }.mr-settings select { margin-top: 8px; }
-.mr-card details { border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border-strong); padding: 8px 0; }.mr-card summary { padding: 10px 0; font-size: .95rem; }
-.mr-toolbar { padding-bottom: 16px; border-bottom: 1px solid var(--border); }.mr-toolbar > span { font-weight: 600; margin-right: auto; }
-.mr-map { margin: 20px 0; gap: 8px; }.mr-map li { border-width: 1px; padding: 12px 4px; background: var(--surface-2); }.mr-map li[aria-current] { background: var(--primary-tint); border-color: var(--ink); }
-.mr-map span { font-weight: 700; font-size: 1rem; }
-.mr-hud { justify-content: flex-start; gap: 8px; }.mr-hud > span { background: var(--surface-2); padding: 6px 12px; border-radius: 8px; font-size: .8rem; }.mr-trait, .mr-feedback { color: var(--ink-soft); font-size: .9rem; }
-.mr-options button { background: var(--surface); min-height: 64px; }.mr-options button:hover:not(:disabled) { background: var(--primary-tint); }
-.mr-panel [role="timer"] { color: var(--ink-soft); font-size: .9rem; }.mr-options .mr-correct { background: var(--good-bg); }
 /* Reading pages: keep illustrations, simplify the frame. */
 .magic-ink-lesson .wrap, .water-lesson { max-width: 1120px; }
 .magic-ink-lesson .brand-bar { background: transparent; border: 0; padding: 0 4px 20px; box-shadow: none; }
@@ -104,10 +90,9 @@ body:has(.game-shell) { padding: 16px; min-height: 100dvh; }
 .water-lesson .slide-container h2.slide-title { font-size: clamp(1.35rem, 3vw, 1.9rem); border-left-width: 4px; margin-bottom: 24px; }
 .water-lesson .slide-container p, .water-lesson .slide-container li { line-height: 1.85; }.water-lesson .slide-container .option-btn { min-height: 52px; border-radius: 12px; }
 @media (max-width: 680px) {
-  .hub-card, .mr-card { border-radius: 22px; padding: 24px 20px; }.material-row { padding: 16px; gap: 12px; }.materials button, .material-action { padding: 10px 12px; }
+  .hub-card { border-radius: 22px; padding: 24px 20px; }.material-row { padding: 16px; gap: 12px; }.materials button, .material-action { padding: 10px 12px; }
   .admin-heading { align-items: flex-start; flex-direction: column; gap: 16px; }.admin-shell .site-header { margin-bottom: 24px; }.admin-shell .card { padding: 20px; }.admin-shell .login-card { padding: 28px 24px; }.admin-shell .login-screen { padding-bottom: 24px; min-height: 0; }.admin-shell .row { gap: 16px; }.admin-shell .row > div { min-width: min(180px, 100%); }.admin-shell .auth-bar { padding: 16px; }
   body:has(.game-shell) { padding: 12px; }.game-shell { min-height: calc(100dvh - 24px); gap: 12px; }.game-shell .game-bar { padding: 12px 16px; gap: 8px 16px; }.game-shell .game-bar h1 { font-size: 1.1rem; }.game-shell .world-controls { padding: 16px; }.game-shell .world-controls label { min-width: 120px; }.game-shell #gameContainer { min-height: 300px; }.game-shell .gate-card { padding: 24px; }.gate-card .gate-theme { margin-bottom: 20px; }.game-shell .gate:not([hidden]) { padding: 20px 16px; }
-  .mr-settings { flex-direction: column; }.mr-card .mr-start { width: 100%; }.mr-toolbar { align-items: stretch; }.mr-toolbar > span { flex-basis: 100%; }.mr-toolbar button { flex: 1; padding: 10px; font-size: .85rem; }
   .magic-ink-lesson .hero { grid-template-columns: 1fr; padding: 24px; gap: 20px; }.magic-ink-lesson .hero .cover { grid-column: 1; grid-row: 2; height: 220px; }.magic-ink-lesson .hero h1 { margin: 0; }.magic-ink-lesson .badges { grid-row: 3; }.magic-ink-lesson .section { padding: 24px 20px; }.magic-ink-lesson .sec-head h2 { font-size: 1.3rem; }.magic-ink-lesson .sec-tag { width: 100%; margin-left: 0; }.magic-ink-lesson .brand-text { font-size: .7rem; }.magic-ink-lesson .brand-text b { font-size: .8rem; }
   .water-lesson .slide-container { padding: 24px 20px; }.water-lesson .title-slide { min-height: 300px; }.water-lesson .title-layout { padding: 20px 0; }
 }

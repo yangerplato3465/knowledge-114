@@ -16,7 +16,7 @@ const homeCssFiles = [...new Set([...homeHtml.matchAll(/href="[^"]*app-assets\/(
 const homeCss = await Promise.all(homeCssFiles.map(name => readFile(new URL(name, assets), 'utf8')));
 const cssBytes = homeCss.reduce((sum, css) => sum + Buffer.byteLength(css), 0);
 assert.ok(cssBytes <= 12_000, `首頁 CSS 超過 12 KB：${cssBytes} bytes`);
-assert.doesNotMatch(homeCss.join('\n'), /\.(?:admin-shell|mr-card|game-shell|material-row|water-lesson|magic-ink-lesson|resource-list)\b/, '首頁不得載入功能頁或目錄專用樣式');
+assert.doesNotMatch(homeCss.join('\n'), /\.(?:admin-shell|maintenance-page|game-shell|material-row|water-lesson|magic-ink-lesson|resource-list)\b/, '首頁不得載入功能頁或目錄專用樣式');
 // Shared chunk names vary with Rollup's dependency graph; inspect actual preloads.
 const shared = [...homeHtml.matchAll(/rel="modulepreload"[^>]+href="[^"]*app-assets\/([^"/]+\.js)"/g)].map(match => match[1]);
 const shell = shared.sort((a, b) => sizes[b] - sizes[a])[0];
