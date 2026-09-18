@@ -1,59 +1,7 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>上傳素材 · 學習主頁</title>
-    <link rel="icon" type="image/webp" href="../assets/images/favicon.webp">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="../assets/css/theme.css">
-    <link rel="stylesheet" href="../assets/css/files.css">
-</head>
-<body class="page-upload">
-    <div class="card">
-        <a href="../index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> 回學習主頁</a>
-        <h1>📤 上傳素材</h1>
-        <p class="subtitle">上傳的檔案會存到網站的素材庫，任何人都能在下載頁取得。</p>
-
-        <div class="field">
-            <label for="token">GitHub 存取權杖（Token）</label>
-            <input type="password" id="token" placeholder="ghp_... 或 github_pat_..." autocomplete="off">
-            <p class="hint">
-                這是上傳的「鑰匙」，只有你需要。到
-                <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">GitHub 設定</a>
-                建立一個 Fine-grained token，對 <b>knowledge-114</b> 這個 repo 開啟 <b>Contents: Read and write</b> 權限即可。<b>切勿分享給別人。</b>
-            </p>
-            <label class="remember"><input type="checkbox" id="remember"> 記住權杖（僅存在這台裝置的瀏覽器）</label>
-        </div>
-
-        <div class="field">
-            <label>選擇檔案</label>
-            <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="選擇上傳檔案">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <div id="dropText">點這裡選檔，或把檔案拖進來</div>
-            </div>
-            <input type="file" id="fileInput" multiple>
-        </div>
-
-        <button class="btn" id="uploadBtn" disabled>上傳</button>
-
-        <div id="results"></div>
-
-        <div class="manage">
-            <div class="manage-head">
-                <span class="m-title">🗂️ 已上傳的素材</span>
-                <button id="refreshBtn" class="link-btn"><i class="fa-solid fa-rotate"></i> 重新整理</button>
-            </div>
-            <div id="manageList" class="manage-list">
-                <div class="m-state">載入中…</div>
-            </div>
-        </div>
-    </div>
-
-    <script src="../assets/js/upload.js"></script>
-    <script src="../assets/js/theme.js"></script>
-</body>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>上傳素材 · 學習主頁</title><link rel="icon" type="image/webp" href="../assets/images/favicon.webp" />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+</head><body><div id="root"></div><script type="module" src="/src/upload-main.tsx"></script></body>
 </html>

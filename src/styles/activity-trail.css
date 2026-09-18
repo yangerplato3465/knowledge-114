@@ -1,0 +1,6 @@
+.activity-trail { max-width: 1120px; margin: -8px auto 24px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 16px; color: var(--ink-soft); font-size: .875rem; }
+.activity-trail a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: none; }
+.activity-trail a:hover { text-decoration: underline; }
+.activity-trail svg { width: 18px; height: 18px; }
+.activity-trail [aria-current] { overflow-wrap: anywhere; }
+@media (max-width: 480px) { .activity-trail { gap: 4px 12px; }.activity-trail [aria-current] { flex-basis: 100%; }.activity-trail > [aria-hidden] { display: none; } }

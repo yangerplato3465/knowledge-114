@@ -1,0 +1,12 @@
+.teacher-header { width: 100%; max-width: 1120px; margin: 0 auto 28px; }
+.teacher-header .site-header { margin-bottom: 0; }
+.teacher-header-actions { display: flex; align-items: center; gap: 24px; }
+.teacher-header-actions > a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: .8rem; color: var(--ink-soft); text-decoration: none; }
+.teacher-header-actions svg { width: 16px; height: 16px; }
+.teacher-header-actions > a:hover { text-decoration: underline; }
+.teacher-header .theme-select > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.teacher-nav { display: flex; flex-wrap: wrap; gap: 4px 24px; margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border-strong); }
+.teacher-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 0; font-size: .875rem; text-decoration: none; color: var(--ink-soft); border-bottom: 2px solid transparent; }
+.teacher-nav a:hover { color: var(--ink); text-decoration: underline; }
+.teacher-nav a[aria-current="page"] { color: var(--ink); font-weight: 700; border-bottom-color: var(--ink); }
+@media (max-width: 480px) { .teacher-header-actions { width: 100%; justify-content: space-between; gap: 12px; }.teacher-nav { gap: 4px 16px; margin-top: 12px; } }

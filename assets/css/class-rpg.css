@@ -1,3 +1,4 @@
+@layer legacy {
 * { box-sizing: border-box; }
 body {
     background-color: var(--bg);
@@ -173,3 +174,4 @@ summary { cursor: pointer; font-size: 19px; font-weight: 700; min-height: 48px; 
 #rewardDock { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; margin: 0; padding: 12px max(16px, calc((100vw - 1150px) / 2)); background: var(--surface); border-top: 2px solid var(--border); box-shadow: 0 -4px 18px var(--shadow); }
 body { padding-bottom: 160px; }
 .toast { bottom: 110px; }
+}

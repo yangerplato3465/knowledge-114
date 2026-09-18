@@ -1,46 +1,49 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { App } from './App';
+import { Activities } from './Activities';
+import { TeacherTools } from './TeacherTools';
 import { ThemeProvider } from '../features/theme/ThemeProvider';
 import { categories } from '../content/navigation';
+import { teacherTools } from '../content/teacherTools';
+import { version } from '../../config.json';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
-function setup(config: unknown = { version: '2.13.0', lastUpdated: '2026-09-11' }) {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => config }));
-  return render(<ThemeProvider><App /></ThemeProvider>);
-}
-it('新版全部活動的網址、標題、說明與原首頁一致', () => {
-  const legacy = new DOMParser().parseFromString(readFileSync('index.html', 'utf8'), 'text/html');
-  const expected = Array.from(legacy.querySelectorAll('a.page-btn')).map(a => ({
-    path: a.getAttribute('href')!.replace('pages/', '').replace('.html', ''),
-    title: a.querySelector('.btn-title')!.textContent,
-    description: a.querySelector('.btn-desc')!.textContent,
-  }));
-  expect(categories.flatMap(c => c.groups ? c.groups.flatMap(g => g.items) : c.items!)).toEqual(expected);
-});
-it('分類互斥展開，收合內容不出現在可操作的連結清單', async () => {
-  setup();
-  expect(screen.queryByRole('link', { name: /數學勇者 RPG/ })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: /教學內容/ }));
-  fireEvent.click(screen.getByRole('button', { name: '互動學習小遊戲' }));
-  expect(screen.getByRole('link', { name: /數學勇者 RPG/ }).getAttribute('href')).toBe('/pages/math-rpg.html');
-  fireEvent.click(screen.getByRole('button', { name: /偵探事件簿/ }));
-  expect(screen.queryByRole('link', { name: /數學勇者 RPG/ })).toBeNull();
-  expect(screen.getByRole('link', { name: /黃金貓頭鷹雕像/ })).toBeTruthy();
-  expect(await screen.findByText('v2.13.0 · 2026-09-11')).toBeTruthy();
-});
-it('不合法版號不顯示但首頁仍可使用', async () => {
-  setup({ version: '<script>', lastUpdated: 'bad' });
-  await vi.waitFor(() => expect(fetch).toHaveBeenCalled());
-  expect(screen.getByLabelText('網站版本').textContent).toBe('');
-  expect(screen.getByRole('navigation', { name: '課程與活動' })).toBeTruthy();
-});
-it('離線讀取失敗不阻擋導覽', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+it('首頁提供兩個學生入口，老師工具只在頁尾，沒有活動或管理清單', () => {
   render(<ThemeProvider><App /></ThemeProvider>);
-  fireEvent.click(screen.getByRole('button', { name: /素材 遊戲/ }));
-  expect(screen.getByRole('link', { name: /素材下載/ })).toBeTruthy();
-  await vi.waitFor(() => expect(fetch).toHaveBeenCalled());
+  const main = screen.getByRole('main');
+  expect(within(main).getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/pages/downloads.html', '/pages/activities.html']);
+  expect(screen.queryByText('數學勇者')).toBeNull();
+  expect(screen.queryByText('上傳素材')).toBeNull();
+  expect(screen.queryByText('班級 RPG')).toBeNull();
+  expect(within(screen.getByRole('contentinfo')).getByRole('link', { name: '老師工具' }).getAttribute('href')).toBe('/pages/teacher-tools.html');
+});
+it('版本只顯示版號，首頁不再發送版本或清單請求', () => {
+  const fetcher = vi.fn();
+  vi.stubGlobal('fetch', fetcher);
+  render(<ThemeProvider><App /></ThemeProvider>);
+  expect(screen.getByLabelText('網站版本').textContent).toBe('v' + version);
+  expect(fetcher).not.toHaveBeenCalled();
+});
+it('活動頁完整保留五個學生入口，分類捷徑有對應區塊', () => {
+  render(<ThemeProvider><Activities /></ThemeProvider>);
+  const main = screen.getByRole('main');
+  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'detective-golden-owl', 'detective-ai-museum']);
+  for (const category of categories) for (const item of category.items) {
+    expect(within(main).getByRole('link', { name: new RegExp(item.title.replace(/[！]/g, '.')) }).getAttribute('href')).toBe('/pages/' + item.path + '.html');
+    expect(readFileSync('pages/' + item.path + '.html', 'utf8')).toContain('id="root"');
+  }
+  for (const link of within(screen.getByRole('navigation', { name: '活動分類' })).getAllByRole('link')) {
+    expect(document.querySelector(link.getAttribute('href')!)).toBeTruthy();
+  }
+  expect(within(main).queryByText('上傳素材')).toBeNull();
+});
+it('老師工具集中三個受權限保護的入口', () => {
+  render(<ThemeProvider><TeacherTools /></ThemeProvider>);
+  const links = within(screen.getByRole('main')).getAllByRole('link');
+  expect(links.map(link => link.getAttribute('href'))).toEqual(teacherTools.map(item => '/pages/' + item.path + '.html'));
+  expect(links).toHaveLength(3);
+  for (const item of teacherTools) expect(readFileSync('pages/' + item.path + '.html', 'utf8')).toContain('id="root"');
 });

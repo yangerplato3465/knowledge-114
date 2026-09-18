@@ -1,0 +1,30 @@
+@layer legacy {
+.materials { width: 760px; }
+.materials p, .materials strong { overflow-wrap: anywhere; }
+.materials button, .material-action { min-height: 44px; border: 2px solid var(--border-strong); border-radius: 12px; background: var(--surface-2); color: var(--ink); padding: 8px 16px; cursor: pointer; font: inherit; }
+.materials button:hover:not(:disabled), .material-action:hover { border-color: var(--primary); }
+.materials button:disabled { opacity: .55; cursor: not-allowed; }
+.material-list { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
+.material-row { display: flex; align-items: center; gap: 16px; padding: 16px; border: 2px solid var(--border); border-radius: 16px; }
+.material-row > div { min-width: 0; flex: 1; }
+.material-row small { display: block; color: var(--ink-soft); }
+.material-row button, .material-action { flex-shrink: 0; }
+.material-action { text-decoration: none; display: inline-flex; align-items: center; }
+.material-field { margin: 24px 0; }
+.material-field > label { display: block; margin-bottom: 8px; }
+.materials input[type="password"] { width: 100%; min-height: 48px; padding: 12px; border: 2px solid var(--border-strong); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; }
+.material-hint { font-size: .875rem; color: var(--ink-soft); }
+.material-remember { min-height: 44px; display: flex !important; align-items: center; gap: 10px; font-size: .875rem; }
+.material-drop { width: 100%; border-style: dashed !important; padding: 24px !important; }
+.material-drop.dragging { border-color: var(--primary); background: var(--surface-2); }
+.materials input[type="file"] { display: block; width: 100%; margin-top: 12px; font: inherit; }
+.material-selection { font-size: .875rem; }
+.materials .material-primary { width: 100%; min-height: 48px; font-weight: 700; }
+.material-result { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 12px; border: 2px solid var(--border); border-radius: 12px; }
+.material-result.ok { background: var(--good-bg); border-color: var(--good-border); }
+.material-result.error { background: var(--bad-bg); border-color: var(--bad-border); }
+.material-manage { margin-top: 32px; border-top: 2px solid var(--border); padding-top: 20px; }
+.material-toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center; }
+.material-toolbar h2 { margin: 0; font-size: 1.15rem; }
+@media (max-width: 600px) { .material-row { padding: 12px; gap: 10px; } .materials button, .material-action { padding: 8px 12px; } }
+}

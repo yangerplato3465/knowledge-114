@@ -245,7 +245,7 @@ export function LessonContent() { const lab = useLab(); return <><div className=
 </div>
 </div>
 </div>
-<div className="slide-container" id="slide5" style={{"backgroundColor":"#f6f9fc","border":"8px solid #cfd8dc"}}>
+<div className="slide-container" id="slide5" style={{"backgroundColor":"#f6f9fc"}}>
 <h2 className="slide-title" style={{"borderLeftColor":"#ffb74d"}}>{"4. 探索水溶液的化學性質"}</h2>
 <div className="content-area">
 <div className="two-column" style={{"gridTemplateColumns":"1fr 1.15fr","gap":"40px","alignItems":"stretch","height":"100%"}}>

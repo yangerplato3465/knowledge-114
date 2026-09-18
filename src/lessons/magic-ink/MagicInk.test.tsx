@@ -10,18 +10,18 @@ import { knowledgeQuestions } from './questions';
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 const normalized = (value: string | null) => (value || '').replace(/\s+/g, '');
 it('保留全部教材段落、標題、圖片及五題問答', () => {
-  const legacy = new DOMParser().parseFromString(readFileSync('pages/magic-ink.html', 'utf8'), 'text/html');
+  const baseline = JSON.parse(readFileSync('tests/fixtures/magic-ink-content.json', 'utf8'));
   const { container } = render(<ThemeProvider><MagicInk /></ThemeProvider>);
   for (const selector of ['.section h2', '.block-title', '.cap', '.info-box', '.recipe', '.mini-card']) {
-    expect([...container.querySelectorAll(selector)].map(n => normalized(n.textContent))).toEqual([...legacy.querySelectorAll(selector)].map(n => normalized(n.textContent)));
+    expect([...container.querySelectorAll(selector)].map(n => normalized(n.textContent))).toEqual(baseline[selector].map(normalized));
   }
   const photos = [...container.querySelectorAll('.magic-ink-lesson img')];
-  expect(photos.map(n => n.getAttribute('src')?.replace(/^\//, '../'))).toEqual([...legacy.querySelectorAll('img')].map(n => n.getAttribute('src')));
+  expect(photos.map(n => n.getAttribute('src')?.replace(/^\//, '../'))).toEqual(baseline.images);
   expect(photos.every(n => Number(n.getAttribute('width')) > 0 && Number(n.getAttribute('height')) > 0)).toBe(true);
-  [...legacy.querySelectorAll('.quiz')].forEach((quiz, index) => {
-    expect(normalized(knowledgeQuestions[index].question)).toBe(normalized(quiz.querySelector('.q-text')!.textContent));
-    expect(knowledgeQuestions[index].options.map(o => o.correct)).toEqual([...quiz.querySelectorAll('.q-btn')].map(n => n.getAttribute('data-ok') === '1'));
-    expect(normalized(knowledgeQuestions[index].answer)).toBe(normalized(quiz.querySelector('.q-answer')!.textContent));
+  baseline.quizzes.forEach((quiz: { question: string; answer: string; correct: boolean[] }, index: number) => {
+    expect(normalized(knowledgeQuestions[index].question)).toBe(normalized(quiz.question));
+    expect(knowledgeQuestions[index].options.map(o => o.correct)).toEqual(quiz.correct);
+    expect(normalized(knowledgeQuestions[index].answer)).toBe(normalized(quiz.answer));
   });
 });
 it('四題只計分一次，隨堂考不影響冷知識分數', () => {

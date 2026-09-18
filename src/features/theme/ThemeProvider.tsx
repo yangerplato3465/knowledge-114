@@ -27,7 +27,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 export function ThemeSelect() {
   const theme = useContext(ThemeContext)!;
-  return <label>顯示主題 <select value={theme.mode} onChange={e => theme.setMode(e.target.value as Mode)}>
+  return <label className="theme-select"><span>顯示主題</span><select value={theme.mode} onChange={e => theme.setMode(e.target.value as Mode)}>
     <option value="system">跟隨系統</option><option value="light">淺色</option><option value="dark">深色</option>
   </select></label>;
 }

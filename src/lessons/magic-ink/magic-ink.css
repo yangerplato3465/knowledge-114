@@ -1,3 +1,4 @@
+@layer legacy {
 .magic-ink-lesson img { height: auto; }
 .magic-ink-lesson button { font: inherit; min-height: 44px; }
 .magic-ink-lesson .cap-lane { color: var(--ink); }
@@ -8,3 +9,4 @@
 .magic-ink-lesson .sec-tag, .magic-ink-lesson .brand-right { color: var(--ink-soft); }
 @media (max-width: 600px) { .magic-ink-lesson .rb-guess { grid-template-columns: 1fr; } .magic-ink-lesson .cap-lanes { gap: 6px; } }
 @media (prefers-reduced-motion: reduce) { .magic-ink-lesson *, .magic-ink-lesson *::before, .magic-ink-lesson *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+}

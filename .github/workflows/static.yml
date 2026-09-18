@@ -29,13 +29,11 @@ jobs:
       - uses: pnpm/action-setup@v4
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Check site references and script order
-        run: python3 scripts/check_site.py
-      - name: Check JavaScript syntax
-        run: node scripts/check_js.cjs
+      - name: Check site, documentation and JavaScript
+        run: pnpm check
       - name: Test shared features
         run: pnpm test
-      - name: Build and verify compatible output
+      - name: Build and verify React output
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: pnpm build
@@ -53,6 +51,12 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Smoke test deployed site
+        run: node scripts/smoke-url.mjs "${{ steps.deployment.outputs.page_url }}"

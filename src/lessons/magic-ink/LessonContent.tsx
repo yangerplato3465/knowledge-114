@@ -19,7 +19,7 @@ export function LessonContent() { return (<div className="wrap">
 </div>
 </div>
 
-<div className="section">
+<div className="section" id="pen-world">
 <div className="sec-head">
 <div className="sec-icon">{"📜"}</div>
 <h2 >{"原子筆的世界"}</h2>
@@ -142,7 +142,7 @@ export function LessonContent() { return (<div className="wrap">
 <TriviaScore />
 </div>
 
-<div className="section">
+<div className="section" id="ink">
 <div className="sec-head">
 <div className="sec-icon">{"💧"}</div>
 <h2 >{"墨水的奧秘"}</h2>
@@ -253,7 +253,7 @@ export function LessonContent() { return (<div className="wrap">
 <KnowledgeQuiz index={4} />
 </div>
 
-<div className="section">
+<div className="section" id="science">
 <div className="sec-head">
 <div className="sec-icon">{"🔬"}</div>
 <h2 >{"原子筆與墨水的科學"}</h2>
@@ -289,7 +289,7 @@ export function LessonContent() { return (<div className="wrap">
 <b >{"🖤 你知道嗎？"}</b>{"黑色墨水其實是很多種顏色混在一起！比較小、比較「喜歡水」的染料分子跟著水跑得快；比較大、比較「不喜歡水」的跑得慢——顏色就這樣被分開了。科學家還用同樣的方法分析食物色素、檢驗藥物成分呢！\n        "}</div>
 </div>
 
-<div className="section">
+<div className="section" id="story">
 <div className="sec-head">
 <div className="sec-icon">{"✨"}</div>
 <h2 >{"消失的墨水：故事與原理"}</h2>
@@ -322,7 +322,7 @@ export function LessonContent() { return (<div className="wrap">
 <b >{"⚠️ 提醒："}</b>{"加熱步驟（熨斗、吹風機、燈泡）一定要請大人協助，注意燙傷風險。\n        "}</div>
 </div>
 
-<div className="section">
+<div className="section" id="experiment">
 <div className="sec-head">
 <div className="sec-icon">{"🧪"}</div>
 <h2 >{"課後實驗：百里酚酞變色魔法"}</h2>
@@ -410,7 +410,7 @@ export function LessonContent() { return (<div className="wrap">
 <b >{"⚠️ 安全提醒"}</b><br  />{"\n            ・NaOH 具腐蝕性：由老師調配與保管，學生僅用棉花棒沾取，全程配戴護目鏡，避免接觸皮膚與眼睛。"}<br  />{"\n            ・95% 酒精易燃：遠離火源，與加熱步驟分開區域操作。"}<br  />{"\n            ・加熱小蘇打水時使用安全加熱器材，小心蒸氣燙傷。"}<br  />{"\n            ・實驗結束確實洗手，溶液依規定回收。\n        "}</div>
 </div>
 
-<div className="section">
+<div className="section" id="challenge">
 <div className="sec-head">
 <div className="sec-icon">{"🏠"}</div>
 <h2 >{"回家挑戰（延伸思考）"}</h2>

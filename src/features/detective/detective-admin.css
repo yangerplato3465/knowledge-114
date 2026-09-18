@@ -1,0 +1,64 @@
+@layer legacy {
+
+        /* 這一頁專屬的樣式，量不多就不另開檔案 */
+        .fresh {
+            margin-top: 18px; padding: 22px; text-align: center;
+            background: var(--good-bg); border: 2px solid var(--good-border); border-radius: 18px;
+        }
+        .fresh-code {
+            font-size: 34px; font-weight: 700; letter-spacing: 4px;
+            color: var(--ink); margin: 6px 0 4px; word-break: break-all;
+        }
+        .fresh-code + .fresh-code { border-top: 1px dashed var(--good-border); padding-top: 10px; }
+        .fresh-label {
+            display: block; font-size: 14px; font-weight: 600; letter-spacing: 0;
+            color: var(--muted); margin-bottom: 2px;
+        }
+        .fresh-meta { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+        .codes { display: flex; flex-direction: column; gap: 10px; }
+        .code-row {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            padding: 12px 14px; background: var(--surface-2);
+            border: 2px solid var(--border); border-radius: 14px;
+        }
+        .code-row.dead { opacity: 0.55; }
+        .code-val { font-size: 19px; font-weight: 700; letter-spacing: 2px; min-width: 150px; }
+        .code-info { flex: 1; min-width: 180px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+        .code-info b { color: var(--ink-soft); font-weight: 600; }
+        .code-group { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+        .code-prog { font-size: 13px; margin-bottom: 3px; }
+        .code-prog .prog-done { color: var(--good); font-weight: 700; }
+        .code-prog .prog-live { color: var(--ink-soft); font-weight: 600; }
+        .code-prog .prog-none { color: var(--muted-2); }
+        .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .tag.live { background: var(--good-bg); color: var(--good); border: 1px solid var(--good-border); }
+        .tag.dead { background: var(--surface-3); color: var(--muted); border: 1px solid var(--border); }
+        .code-actions { display: flex; gap: 6px; }
+
+        details.setup { margin-top: 10px; }
+        details.setup summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+        details.setup ol { color: var(--ink-soft); font-size: 14px; line-height: 1.9; padding-left: 20px; }
+        details.setup code {
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: 6px; padding: 1px 6px; font-size: 13px;
+        }
+        .whoami { font-size: 12px; color: var(--muted-2); }
+
+        /* 登入卡片放大版（只影響這一頁，班級 RPG 沿用 class-rpg.css 的原尺寸）。
+           置中是靠 .login-screen 的 flex，JS 顯示它時必須設 flex 不能設 block。 */
+        .login-card { width: 440px; padding: 44px 40px; border-radius: 26px; }
+        .login-card .lock { font-size: 56px; margin-bottom: 10px; }
+        .login-card h2 { font-size: 26px; }
+        .login-card p.hint { font-size: 14px; margin-bottom: 26px; }
+        .login-card .field { margin-bottom: 16px; }
+        .login-card label { font-size: 14px; }
+        .login-card input { padding: 13px 15px; font-size: 16px; border-radius: 14px; }
+        .login-card .btn { padding: 14px; font-size: 17px; border-radius: 14px; margin-top: 10px; }
+
+        @media (max-width: 520px) {
+            .login-card { width: 100%; padding: 30px 22px; border-radius: 22px; }
+            .login-card .lock { font-size: 46px; }
+            .login-card h2 { font-size: 23px; }
+        }
+}

@@ -1,9 +1,15 @@
 import type { ReactNode } from 'react';
-import { ThemeSelect } from '../features/theme/ThemeProvider';
+import { SiteHeader } from './SiteHeader';
+import { SiteFooter } from './SiteFooter';
+import { ActivityTrail } from './ActivityTrail';
 
-export function PageLayout({ children }: { children: ReactNode }) {
+export function PageLayout({ children, current, activityTitle, header }: {
+  children: ReactNode; current?: 'downloads'; activityTitle?: string; header?: ReactNode;
+}) {
   return <><a className="skip-link" href="#main">跳至主要內容</a>
-    <header className="site-header"><a href={`${import.meta.env.BASE_URL}next/index.html`}>回到學習主頁</a><ThemeSelect /></header>
+    {header ?? <SiteHeader navigation current={current} />}
+    {activityTitle && <ActivityTrail title={activityTitle} />}
     <main id="main" tabIndex={-1}>{children}</main>
+    <SiteFooter />
   </>;
 }
