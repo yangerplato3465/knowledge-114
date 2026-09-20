@@ -1,8 +1,11 @@
 # 數學勇者美術資產規格
 
+- 全部圖片使用 WebP；遊戲單幀、圖集與小型動畫預覽採無損編碼，大尺寸原稿／參考圖採品質 82 的有損編碼。
+- 轉檔保留原尺寸、透明度、圖集格位與動畫順序；無損圖片另逐像素驗證一致。
+
 ## 女生勇者
 
-- 身分參照：`references/hero-female-style-reference-v1.png`
+- 身分參照：`references/hero-female-style-reference-v1.webp`
 - 風格：16-bit 像素風、硬邊像素塊、有限色盤、透明背景
 - 固定特徵：深棕高馬尾、藍綠短披風、藍／青綠／金／米白輕甲、右向持劍
 - 單幀尺寸：`128×128`
@@ -71,7 +74,7 @@
 
 ## 第一關敵人
 
-- 身分參照：`references/stage-1-enemies-style-reference-v2.png`
+- 身分參照：`references/stage-1-enemies-style-reference-v2.webp`
 - 風格：與女生勇者一致的 16-bit 像素風、硬邊像素塊、有限色盤、透明背景
 - 單幀尺寸：`128×128`；每個動作皆為 1 列 × 3 欄，圖集總尺寸 `384×128`
 - 朝向：左
@@ -94,7 +97,7 @@
 
 ## 第二關敵人
 
-- 身分參照：`references/stage-2-enemies-style-reference-v2.png`
+- 身分參照：`references/stage-2-enemies-style-reference-v2.webp`
 - 風格：沿用既有 16-bit 硬邊像素風、有限色盤與透明背景，危險感高於第一關
 - 單幀尺寸：`128×128`；每個動作皆為 1 列 × 3 欄，圖集總尺寸 `384×128`
 - 朝向：左；安全邊距四邊至少 `8 px`；最大內容範圍 `x = 8..119`、`y = 8..119`
@@ -110,7 +113,7 @@
 
 ## 第三關敵人
 
-- 身分參照：`references/stage-3-enemies-style-reference-v1.png`
+- 身分參照：`references/stage-3-enemies-style-reference-v1.webp`
 - 單幀 `128×128`；每動作 3 幀、1 列 × 3 欄，圖集 `384×128`；朝左；四邊至少 `8 px`
 - 雷紋蜥蜴：兩臂、兩腿、單一緊湊尾巴，固定藍青雷紋；地面基準線 `y = 109`、中心 `x = 64`
 - 鐵甲魔獸：四足、單一短角、固定鐵甲片與紅色披掛；地面基準線 `y = 109`、中心 `x = 64`
@@ -121,7 +124,7 @@
 
 ## 第四關敵人
 
-- 身分參照：`references/stage-4-enemies-style-reference-v1.png`
+- 身分參照：`references/stage-4-enemies-style-reference-v1.webp`
 - 單幀 `128×128`；每動作 3 幀，圖集 `384×128`；朝左；四邊至少 `8 px`；地面線 `y = 109`
 - 暗影刺客：兩臂、兩腿、兩把短刃，固定黑紫輕甲、面罩與短圍巾；影帶、刀尖皆不得越格
 - 咒焰巨像：兩臂、兩腿、胸口核心與固定雙肩火焰；火苗、岩拳與裂隙皆不得越格
@@ -130,7 +133,7 @@
 
 ## 第五關敵人／最終王
 
-- 身分參照：`references/stage-5-bosses-style-reference-v1.png`
+- 身分參照：`references/stage-5-bosses-style-reference-v1.webp`
 - 單幀 `128×128`；每動作 3 幀，圖集 `384×128`；朝左；四邊至少 `8 px`；地面線 `y = 109`
 - 暴風魔龍：翼足型龍體，固定一顆頭、兩翼兼前肢、兩條後腿與一條貼近身體的短捲尾；深藍鱗片、銀灰胸甲、青色雷紋與短後掠角，不得額外生成前腿或離體雷電
 - 虛空魔王：固定一顆角冠頭盔、一個軀幹、兩臂、兩腿與胸甲上的單一虛空核心；黑紫王者重甲、短破披肩、洋紅裂紋與巨型爪手，不使用武器、翅膀或尾巴
@@ -140,7 +143,7 @@
 
 ## 戰鬥基本特效
 
-- 風格參照：`references/battle-effects-style-reference-v1.png`
+- 風格參照：`references/battle-effects-style-reference-v1.webp`
 - 每個特效單幀 `128×128`，動畫 3 幀、1 列 × 3 欄，圖集 `384×128`；透明背景
 - 固定中心錨點 `x = 64`、`y = 64`；四邊至少 `8 px`，最大內容範圍 `x = 8..119`、`y = 8..119`
 - 動畫順序固定為「出現／聚集、最大強度、消散／收束」；不得逐幀改變裁切或以放大造成碰線
