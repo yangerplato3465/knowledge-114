@@ -16,7 +16,7 @@ test('五上合併第 2–3 單元並保留課本編號，六上九單元不變�
   for (const [grade, units] of Object.entries(CURRICULUM)) {
     expect(units.map(u => u.number)).toEqual(grade === '五上' ? [1, 2, 4, 5, 6, 7, 8, 9, 10] : [1, 2, 3, 4, 5, 6, 7, 8, 9]);
     for (const unit of units) {
-      if (grade === '五上' && [1, 2, 4].includes(unit.number)) expect(createQuestionDeck(grade, unit.name, 1)().a.length).toBeGreaterThanOrEqual(3);
+      if (grade === '五上' && [1, 2, 4, 5].includes(unit.number)) expect(createQuestionDeck(grade, unit.name, 1)().a.length).toBeGreaterThanOrEqual(3);
       else {
         expect(isUnitReady(grade, unit.name)).toBe(false);
         expect(() => createQuestionDeck(grade, unit.name, 1)).toThrow('尚未開放');

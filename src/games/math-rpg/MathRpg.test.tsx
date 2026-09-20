@@ -1,3 +1,4 @@
+import { createGeometryDeck, GEOMETRY_UNIT } from './geometry-questions';
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -32,7 +33,7 @@ test('準備頁標示題庫限制、支援年級單元選擇並保留網站導�
   expect(screen.queryByRole('region', { name: '數學勇者遊戲' })).toBeNull();
   fireEvent.change(main.getByRole('combobox', { name: '年級／學期' }), { target: { value: '五上' } });
   expect((main.getByRole('button', { name: '開始五關冒險' }) as HTMLButtonElement).disabled).toBe(false);
-  fireEvent.change(main.getByRole('combobox', { name: '複習單元' }), { target: { value: '多邊形與扇形' } });
+  fireEvent.change(main.getByRole('combobox', { name: '複習單元' }), { target: { value: '異分母分數的加減' } });
   expect((main.getByRole('button', { name: '題庫尚未開放' }) as HTMLButtonElement).disabled).toBe(true);
   expect(screen.getByLabelText('網站版本').textContent).toBe('v' + version);
 });
@@ -173,4 +174,25 @@ test('錯答自動結算一次；暫停保留提示與剩餘回饋時間，離�
   fireEvent.click(screen.getByRole('button', { name: '開始五關冒險' }));
   wait(3000);
   expect(screen.getByText(/第 1 題/)).toBeTruthy();
+});
+
+
+test('第五單元九種題型接續、圖形與難度時間同步', () => {
+  render(<ThemeProvider><MathRpg /></ThemeProvider>);
+  fireEvent.change(screen.getByRole('combobox', { name: '複習單元' }), { target: { value: GEOMETRY_UNIT } });
+  fireEvent.click(screen.getByRole('button', { name: '開始五關冒險' }));
+  const deck = createGeometryDeck(123 ^ 0x12345);
+  let stage = 0;
+  for (let i = 0; i < 9; i++) {
+    const q = deck();
+    expect(document.querySelector('.mr-geometry') !== null).toBe(Boolean(q.diagram));
+    const expected = enemyFor({ ...createBattle(123), stage, questionScale: q.difficulty === 'challenge' ? 1.4 : 1 }).interval;
+    expect(Number(screen.getByRole('progressbar', { name: '敵人蓄力' }).getAttribute('max'))).toBeCloseTo(expected);
+    fireEvent.keyDown(window, { key: String(q.correct + 1) });
+    expect(screen.getByText(/做得好/)).toBeTruthy();
+    wait(1300);
+    if (screen.queryByRole('heading', { name: '選一份力量，繼續前進' })) {
+      fireEvent.click(screen.getByRole('button', { name: /磨利劍鋒/ })); stage++;
+    }
+  }
 });

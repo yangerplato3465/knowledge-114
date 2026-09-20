@@ -23,6 +23,7 @@ export const CARD_INFO = {
 export type Phase = 'battle' | 'feedback' | 'growth' | 'won' | 'lost';
 export interface Battle {
   pace: BattlePace;
+  questionScale?: number;
   phase: Phase; paused: boolean; stage: number; route: number[];
   hp: number; enemyHp: number; charge: number; attack: number; guard: number; retreat: number;
   cards: Card[]; correct: number; answered: number; strikes: number; damageTaken: number;
@@ -34,11 +35,11 @@ export function seededRandom(seed: number) {
   let value = seed >>> 0;
   return () => { value += 0x6D2B79F5; let t = value; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
-export function enemyFor(s: Pick<Battle, 'stage' | 'route'> & Partial<Pick<Battle, 'pace'>>) {
+export function enemyFor(s: Pick<Battle, 'stage' | 'route'> & Partial<Pick<Battle, 'pace' | 'questionScale'>>) {
   const heavy = s.route[s.stage] === 1;
   const names = s.stage === 0 ? ['史萊姆', '哥布林'] : s.stage === 4 ? ['魔王・迅擊型', '魔王・重擊型'] : [`第 ${s.stage + 1} 關・迅擊型`, `第 ${s.stage + 1} 關・重擊型`];
   return { name: names[heavy ? 1 : 0], hp: BALANCE.enemyHp[s.stage],
-    interval: BATTLE_PACING[s.pace ?? 'standard'][s.stage] * (heavy ? BALANCE.heavyMultiplier : 1),
+    interval: BATTLE_PACING[s.pace ?? 'standard'][s.stage] * (s.questionScale ?? 1) * (heavy ? BALANCE.heavyMultiplier : 1),
     damage: BALANCE.damages[s.stage] * (heavy ? BALANCE.heavyMultiplier : 1), heavy };
 }
 export function createBattle(seed: number, route?: number[], pace: BattlePace = 'standard'): Battle {
@@ -48,7 +49,7 @@ export function createBattle(seed: number, route?: number[], pace: BattlePace = 
     cards: [], correct: 0, answered: 0, strikes: 0, damageTaken: 0, stageHits: 0, lastHitDamage: 0, battleSeconds: 0, playSeconds: 0, feedbackSeconds: 0,
     retries: 0, message: '看清題目，再出劍。', lastCorrect: null };
 }
-export type Action = { type: 'tick'; seconds: number } | { type: 'answer'; correct: boolean } | { type: 'continue' } | { type: 'card'; card: Card } | { type: 'pause' } | { type: 'resume' } | { type: 'retry' };
+export type Action = { type: 'tick'; seconds: number } | { type: 'answer'; correct: boolean } | { type: 'continue'; questionScale?: number } | { type: 'card'; card: Card; questionScale?: number } | { type: 'pause' } | { type: 'resume' } | { type: 'retry'; questionScale?: number };
 export const feedbackDuration = (s: Pick<Battle, 'lastCorrect'>) => s.lastCorrect === false ? BALANCE.wrongFeedbackSeconds : BALANCE.feedbackMinimum;
 function escalatingDamage(s: Pick<Battle, 'stageHits' | 'lastHitDamage'>, base: number) {
   return s.stageHits === 0 ? base : Math.max(base, s.lastHitDamage + BALANCE.hitGrowth);
@@ -62,7 +63,7 @@ export function battleReducer(s: Battle, action: Action): Battle {
   if (action.type === 'pause') return { ...s, paused: true };
   if (action.type === 'resume') return { ...s, paused: false };
   if (s.paused) return s;
-  if (action.type === 'retry') return s.phase === 'lost' ? { ...s, phase: 'battle', hp: BALANCE.heroHp, enemyHp: enemyFor(s).hp, charge: 0, stageHits: 0, lastHitDamage: 0, retries: s.retries + 1, lastCorrect: null, message: '已回復 HP，怪物增傷歸零；保留本局成長，重新挑戰這一關。' } : s;
+  if (action.type === 'retry') return s.phase === 'lost' ? { ...s, questionScale: action.questionScale ?? s.questionScale, phase: 'battle', hp: BALANCE.heroHp, enemyHp: enemyFor(s).hp, charge: 0, stageHits: 0, lastHitDamage: 0, retries: s.retries + 1, lastCorrect: null, message: '已回復 HP，怪物增傷歸零；保留本局成長，重新挑戰這一關。' } : s;
   if (action.type === 'tick') {
     if (!Number.isFinite(action.seconds) || action.seconds <= 0 || s.phase === 'won' || s.phase === 'lost') return s;
     if (s.phase !== 'battle') return { ...s, playSeconds: s.playSeconds + action.seconds, feedbackSeconds: s.feedbackSeconds + action.seconds };
@@ -95,14 +96,15 @@ export function battleReducer(s: Battle, action: Action): Battle {
     const damage = Math.min(s.hp, hit);
     return { ...s, hp: s.hp - damage, damageTaken: s.damageTaken + damage,
       stageHits: s.stageHits + Number(hit > 0), lastHitDamage: hit || s.lastHitDamage,
-      charge: s.lastCorrect === false ? 0 : s.charge,
+      questionScale: action.questionScale ?? s.questionScale,
+      charge: s.lastCorrect === false ? 0 : s.charge * (action.questionScale ?? s.questionScale ?? 1) / (s.questionScale ?? 1),
       strikes: s.strikes + Number(damage > 0),
       phase: s.hp - damage <= 0 ? 'lost' : s.enemyHp > 0 ? 'battle' : s.stage === 4 ? 'won' : 'growth', lastCorrect: null,
       message: damage ? `敵人反擊，受到 ${damage} 傷害，蓄力已歸零。繼續挑戰！` : s.message };
   }
   if (action.type === 'card' && s.phase === 'growth' && CARDS.includes(action.card)) {
     const card = action.card;
-    return { ...s, phase: 'battle', stage: s.stage + 1, enemyHp: BALANCE.enemyHp[s.stage + 1], charge: 0, stageHits: 0, lastHitDamage: 0,
+    return { ...s, questionScale: action.questionScale ?? s.questionScale, phase: 'battle', stage: s.stage + 1, enemyHp: BALANCE.enemyHp[s.stage + 1], charge: 0, stageHits: 0, lastHitDamage: 0,
       hp: Math.min(BALANCE.heroHp, s.hp + BALANCE.stageHeal + (card === 'guard' ? BALANCE.guardHeal : card === 'tempo' ? BALANCE.tempoHeal : 0)),
       attack: s.attack + (card === 'attack' ? BALANCE.attackGrowth : 0), guard: s.guard + (card === 'guard' ? BALANCE.guardGrowth : 0),
       retreat: s.retreat + (card === 'tempo' ? BALANCE.tempoGrowth : 0), cards: [...s.cards, card], message: `獲得「${CARD_INFO[card].name}」，進入下一關。` };

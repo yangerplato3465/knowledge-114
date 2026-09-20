@@ -30,3 +30,11 @@
   .mr-panel { padding: 12px 14px 20px; }.mr-field { height: 112px; }.mr-canvas canvas { width: 256px; height: 72px; }.mr-answers, .mr-cards, .mr-selects { grid-template-columns: 1fr; }.mr-cards button { min-height: 120px; }.mr-answers button { min-height: 52px; }
   .mr-answers[data-count="3"] { grid-template-columns: 1fr; }
 }
+.mr-geometry { margin: 12px auto; max-width: 340px; }
+.mr-geometry svg { display: block; width: 100%; overflow: visible; }
+.mr-geometry path { stroke: currentColor; stroke-width: 2; fill: none; }
+.mr-geometry path[fill] { fill: var(--mr-sector-fill, #b8c8df); }
+.mr-geometry path[fill="none"] { fill: none; }
+.mr-geometry text { fill: currentColor; text-anchor: middle; font-size: 15px; font-weight: 700; }
+.mr-geometry figcaption { font-size: .8rem; text-align: center; }
+.mr-geometry .mr-shaded-sector text { fill: #172033; }
