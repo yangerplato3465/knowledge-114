@@ -79,12 +79,15 @@ test('合併單元連續接題不混入小數題，七種題型均可作答', ()
   expect(kinds.size).toBe(7);
 });
 
-test('因數與倍數使用較短蓄力；離場切回小數後恢復原計時', () => {
+test.each([
+  { unit: FACTOR_UNIT, pace: 'quick' as const },
+  { unit: FRACTION_UNIT, pace: 'moderate' as const },
+])('$unit 使用較短蓄力；離場切回小數後恢復原計時', ({ unit, pace }) => {
   render(<ThemeProvider><MathRpg /></ThemeProvider>);
-  fireEvent.change(screen.getByRole('combobox', { name: '複習單元' }), { target: { value: FACTOR_UNIT } });
-  expect(screen.getByText(/此單元採較快戰鬥節奏/)).toBeTruthy();
+  fireEvent.change(screen.getByRole('combobox', { name: '複習單元' }), { target: { value: unit } });
+  expect(screen.getByText(/此單元採.*戰鬥節奏/)).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: '開始五關冒險' }));
-  const quick = enemyFor(createBattle(123, undefined, 'quick'));
+  const quick = enemyFor(createBattle(123, undefined, pace));
   expect(Number(screen.getByRole('progressbar').getAttribute('max'))).toBe(quick.interval);
   wait(Math.ceil(quick.interval * 1000));
   expect(Number(screen.getByRole('meter', { name: '勇者 HP' }).getAttribute('value'))).toBeLessThan(200);

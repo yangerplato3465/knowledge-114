@@ -9,6 +9,7 @@ export const BALANCE = {
 /** 依單元選擇整局節奏；回饋、暫停與成長階段仍凍結蓄力。 */
 export const BATTLE_PACING = {
   standard: BALANCE.intervals,
+  moderate: [22, 21, 20, 19, 18],
   quick: [18, 17, 16, 15, 14],
 } as const;
 export type BattlePace = keyof typeof BATTLE_PACING;

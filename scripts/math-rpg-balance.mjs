@@ -13,6 +13,10 @@ export const profiles = [
   { name: '因倍基準', accuracy: .8, seconds: 10, pace: 'quick' },
   { name: '因倍慢答', accuracy: .9, seconds: 14, pace: 'quick' },
   { name: '因倍快速亂猜', accuracy: .25, seconds: .5, pace: 'quick' },
+  { name: '分數基準', accuracy: .8, seconds: 13, pace: 'moderate' },
+  { name: '分數慢答', accuracy: .9, seconds: 18, pace: 'moderate' },
+  // 比大小只有三個選項，以全部三選一的猜對率作較保守的亂猜上界。
+  { name: '分數快速亂猜', accuracy: 1 / 3, seconds: .5, pace: 'moderate' },
 ];
 export const strategies = ['attack', 'guard', 'tempo', 'mixed', 'adaptive'];
 export function simulate(profile, strategy, seed, route) {
@@ -98,6 +102,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       if (row.profile === '因倍基準') assert.ok(row.win >= 95, `因倍基準通關率過低：${row.strategy}`);
       if (row.profile === '因倍慢答') assert.ok(row.win >= 50, `因倍慢答容錯不足：${row.strategy}`);
       if (row.profile === '因倍快速亂猜') assert.ok(row.win <= 5, `因倍快速亂猜過強：${row.strategy}`);
+      if (row.profile === '分數基準') assert.ok(row.win >= 95, `分數基準通關率過低：${row.strategy}`);
+      if (row.profile === '分數慢答') assert.ok(row.win >= 50, `分數慢答容錯不足：${row.strategy}`);
+      if (row.profile === '分數快速亂猜') assert.ok(row.win <= 5, `分數快速亂猜過強：${row.strategy}`);
       assert.ok(row.routeGap <= 10, `敵人路線差距超標：${row.profile}/${row.strategy}`);
     }
     console.log(`數學勇者平衡檢查通過：${rows.reduce((sum, r) => sum + r.runs, 0)} 局配對模擬；代表策略基準節奏、慢答容錯、亂猜及路線差距均在候選範圍。`);

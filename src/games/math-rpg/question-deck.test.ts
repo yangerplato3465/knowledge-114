@@ -4,6 +4,7 @@ import { CURRICULUM, createQuestionDeck, isUnitReady, battlePaceFor } from './qu
 test('戰鬥節奏依單元切換，不影響小數或六上單元', () => {
   expect(battlePaceFor('五上', '因數與倍數')).toBe('quick');
   expect(battlePaceFor('五上', '多位小數與加減')).toBe('standard');
+  expect(battlePaceFor('五上', '擴分、約分與通分')).toBe('moderate');
   expect(battlePaceFor('六上', '最大公因數與最小公倍數')).toBe('standard');
 });
 

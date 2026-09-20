@@ -22,7 +22,9 @@ export function isUnitReady(grade: string, unit: string) {
 }
 
 export function battlePaceFor(grade: string, unit: string): BattlePace {
-  return grade === '五上' && unit === FACTOR_UNIT ? 'quick' : 'standard';
+  if (grade === '五上' && unit === FACTOR_UNIT) return 'quick';
+  if (grade === '五上' && unit === FRACTION_UNIT) return 'moderate';
+  return 'standard';
 }
 
 /** 未製作的單元禁止開局，不以其他單元題目代替。 */

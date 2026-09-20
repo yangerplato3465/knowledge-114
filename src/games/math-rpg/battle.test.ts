@@ -2,13 +2,14 @@ import { describe, expect, test } from 'vitest';
 import { BALANCE, BATTLE_PACING, battleReducer as step, createBattle, enemyFor, attackDamage, counterDamage, CARDS, type Battle } from './battle';
 const answer = (s: Battle, correct = true) => step(step(step(s, { type: 'answer', correct }), { type: 'tick', seconds: 3 }), { type: 'continue' });
 describe('戰鬥模型', () => {
-  test('快節奏適用五關兩種怪物，顯示週期與實際受擊時間一致，傷害不變', () => {
+  test.each(['quick', 'moderate'] as const)('%s 節奏適用五關兩種怪物，顯示週期與實際受擊時間一致，傷害不變', pace => {
     for (let stage = 0; stage < 5; stage++) for (const variant of [0, 1]) {
       const route = Array(5).fill(variant);
       const standard = { ...createBattle(1, route), stage, enemyHp: BALANCE.enemyHp[stage] };
-      const quick = { ...createBattle(1, route, 'quick'), stage, enemyHp: BALANCE.enemyHp[stage] };
+      const quick = { ...createBattle(1, route, pace), stage, enemyHp: BALANCE.enemyHp[stage] };
       const enemy = enemyFor(quick);
-      expect(enemy.interval).toBe(BATTLE_PACING.quick[stage] * (variant ? BALANCE.heavyMultiplier : 1));
+      expect(enemy.interval).toBe(BATTLE_PACING[pace][stage] * (variant ? BALANCE.heavyMultiplier : 1));
+      expect(BATTLE_PACING.moderate[stage]).toBeGreaterThan(BATTLE_PACING.quick[stage]);
       expect(enemy.interval).toBeLessThan(enemyFor(standard).interval);
       expect(enemy.hp).toBe(enemyFor(standard).hp);
       expect(attackDamage(quick)).toBe(attackDamage(standard));
@@ -21,8 +22,8 @@ describe('戰鬥模型', () => {
     }
   });
 
-  test('快節奏在過關、再戰保持，暫停與回饋仍凍結；新標準局恢復原週期', () => {
-    let state = createBattle(1, [0, 0, 0, 0, 0], 'quick');
+  test.each(['quick', 'moderate'] as const)('%s 節奏在過關、再戰保持，暫停與回饋仍凍結；新標準局恢復原週期', pace => {
+    let state = createBattle(1, [0, 0, 0, 0, 0], pace);
     const paused = step(state, { type: 'pause' });
     expect(step(paused, { type: 'tick', seconds: 100 })).toBe(paused);
     const feedback = step(state, { type: 'answer', correct: true });
@@ -30,11 +31,11 @@ describe('戰鬥模型', () => {
     expect(waiting.hp).toBe(state.hp); expect(waiting.charge).toBe(feedback.charge);
     while (state.phase === 'battle') state = answer(state);
     state = step(state, { type: 'card', card: 'tempo' });
-    expect(state.pace).toBe('quick'); expect(enemyFor(state).interval).toBe(BATTLE_PACING.quick[1]);
+    expect(state.pace).toBe(pace); expect(enemyFor(state).interval).toBe(BATTLE_PACING[pace][1]);
     state = step(state, { type: 'tick', seconds: 10000 });
     state = step(state, { type: 'retry' });
-    expect(state.pace).toBe('quick'); expect(state.phase).toBe('battle'); expect(state.charge).toBe(0);
-    expect(enemyFor(state).interval).toBe(BATTLE_PACING.quick[1]);
+    expect(state.pace).toBe(pace); expect(state.phase).toBe('battle'); expect(state.charge).toBe(0);
+    expect(enemyFor(state).interval).toBe(BATTLE_PACING[pace][1]);
     expect(enemyFor(createBattle(1, [0, 0, 0, 0, 0])).interval).toBe(BALANCE.intervals[0]);
   });
   test('所有路線配對平均輸出相近，護甲同樣作用於重擊', () => {
