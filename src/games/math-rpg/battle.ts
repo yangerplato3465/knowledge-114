@@ -6,6 +6,12 @@ export const BALANCE = {
   enemyHp: [400, 500, 550, 600, 650],
   intervals: [28, 27, 26, 25, 24], damages: [10, 12, 14, 17, 20],
 } as const;
+/** 依單元選擇整局節奏；回饋、暫停與成長階段仍凍結蓄力。 */
+export const BATTLE_PACING = {
+  standard: BALANCE.intervals,
+  quick: [18, 17, 16, 15, 14],
+} as const;
+export type BattlePace = keyof typeof BATTLE_PACING;
 export type Card = 'attack' | 'guard' | 'tempo';
 export const CARDS: readonly Card[] = ['attack', 'guard', 'tempo'];
 export const CARD_INFO = {
@@ -15,6 +21,7 @@ export const CARD_INFO = {
 };
 export type Phase = 'battle' | 'feedback' | 'growth' | 'won' | 'lost';
 export interface Battle {
+  pace: BattlePace;
   phase: Phase; paused: boolean; stage: number; route: number[];
   hp: number; enemyHp: number; charge: number; attack: number; guard: number; retreat: number;
   cards: Card[]; correct: number; answered: number; strikes: number; damageTaken: number;
@@ -26,16 +33,16 @@ export function seededRandom(seed: number) {
   let value = seed >>> 0;
   return () => { value += 0x6D2B79F5; let t = value; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
-export function enemyFor(s: Pick<Battle, 'stage' | 'route'>) {
+export function enemyFor(s: Pick<Battle, 'stage' | 'route'> & Partial<Pick<Battle, 'pace'>>) {
   const heavy = s.route[s.stage] === 1;
   const names = s.stage === 0 ? ['史萊姆', '哥布林'] : s.stage === 4 ? ['魔王・迅擊型', '魔王・重擊型'] : [`第 ${s.stage + 1} 關・迅擊型`, `第 ${s.stage + 1} 關・重擊型`];
   return { name: names[heavy ? 1 : 0], hp: BALANCE.enemyHp[s.stage],
-    interval: BALANCE.intervals[s.stage] * (heavy ? BALANCE.heavyMultiplier : 1),
+    interval: BATTLE_PACING[s.pace ?? 'standard'][s.stage] * (heavy ? BALANCE.heavyMultiplier : 1),
     damage: BALANCE.damages[s.stage] * (heavy ? BALANCE.heavyMultiplier : 1), heavy };
 }
-export function createBattle(seed: number, route?: number[]): Battle {
+export function createBattle(seed: number, route?: number[], pace: BattlePace = 'standard'): Battle {
   const random = seededRandom(seed);
-  return { phase: 'battle', paused: false, stage: 0, route: route ?? Array.from({ length: 5 }, () => random() < .5 ? 0 : 1),
+  return { pace, phase: 'battle', paused: false, stage: 0, route: route ?? Array.from({ length: 5 }, () => random() < .5 ? 0 : 1),
     hp: BALANCE.heroHp, enemyHp: BALANCE.enemyHp[0], charge: 0, attack: BALANCE.attack, guard: 0, retreat: BALANCE.retreat,
     cards: [], correct: 0, answered: 0, strikes: 0, damageTaken: 0, stageHits: 0, lastHitDamage: 0, battleSeconds: 0, playSeconds: 0, feedbackSeconds: 0,
     retries: 0, message: '看清題目，再出劍。', lastCorrect: null };

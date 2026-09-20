@@ -1,8 +1,42 @@
 import { describe, expect, test } from 'vitest';
-import { BALANCE, battleReducer as step, createBattle, enemyFor, attackDamage, counterDamage, CARDS, type Battle } from './battle';
-import { createPrototypeDeck, PROTOTYPE_UNITS } from './prototype-questions';
+import { BALANCE, BATTLE_PACING, battleReducer as step, createBattle, enemyFor, attackDamage, counterDamage, CARDS, type Battle } from './battle';
 const answer = (s: Battle, correct = true) => step(step(step(s, { type: 'answer', correct }), { type: 'tick', seconds: 3 }), { type: 'continue' });
 describe('戰鬥模型', () => {
+  test('快節奏適用五關兩種怪物，顯示週期與實際受擊時間一致，傷害不變', () => {
+    for (let stage = 0; stage < 5; stage++) for (const variant of [0, 1]) {
+      const route = Array(5).fill(variant);
+      const standard = { ...createBattle(1, route), stage, enemyHp: BALANCE.enemyHp[stage] };
+      const quick = { ...createBattle(1, route, 'quick'), stage, enemyHp: BALANCE.enemyHp[stage] };
+      const enemy = enemyFor(quick);
+      expect(enemy.interval).toBe(BATTLE_PACING.quick[stage] * (variant ? BALANCE.heavyMultiplier : 1));
+      expect(enemy.interval).toBeLessThan(enemyFor(standard).interval);
+      expect(enemy.hp).toBe(enemyFor(standard).hp);
+      expect(attackDamage(quick)).toBe(attackDamage(standard));
+      const before = step(quick, { type: 'tick', seconds: enemy.interval - .1 });
+      expect(before.hp).toBe(200);
+      const hit = step(before, { type: 'tick', seconds: .1 });
+      expect(hit.hp).toBe(200 - attackDamage(quick));
+      expect(hit.charge).toBeCloseTo(0);
+      expect(step(standard, { type: 'tick', seconds: enemy.interval }).hp).toBe(200);
+    }
+  });
+
+  test('快節奏在過關、再戰保持，暫停與回饋仍凍結；新標準局恢復原週期', () => {
+    let state = createBattle(1, [0, 0, 0, 0, 0], 'quick');
+    const paused = step(state, { type: 'pause' });
+    expect(step(paused, { type: 'tick', seconds: 100 })).toBe(paused);
+    const feedback = step(state, { type: 'answer', correct: true });
+    const waiting = step(feedback, { type: 'tick', seconds: 100 });
+    expect(waiting.hp).toBe(state.hp); expect(waiting.charge).toBe(feedback.charge);
+    while (state.phase === 'battle') state = answer(state);
+    state = step(state, { type: 'card', card: 'tempo' });
+    expect(state.pace).toBe('quick'); expect(enemyFor(state).interval).toBe(BATTLE_PACING.quick[1]);
+    state = step(state, { type: 'tick', seconds: 10000 });
+    state = step(state, { type: 'retry' });
+    expect(state.pace).toBe('quick'); expect(state.phase).toBe('battle'); expect(state.charge).toBe(0);
+    expect(enemyFor(state).interval).toBe(BATTLE_PACING.quick[1]);
+    expect(enemyFor(createBattle(1, [0, 0, 0, 0, 0])).interval).toBe(BALANCE.intervals[0]);
+  });
   test('所有路線配對平均輸出相近，護甲同樣作用於重擊', () => {
     for (let stage = 0; stage < 5; stage++) {
       const fast = enemyFor({ stage, route: [0, 0, 0, 0, 0] });
@@ -132,16 +166,4 @@ describe('戰鬥模型', () => {
       expect(step(s, { type: 'retry' }).hp).toBe(200);
     }
   });
-});
-test('原型每輪只出同單元現有四題，無連續重題、索引有效、種子可重現', () => {
-  for (const [grade, units] of Object.entries(PROTOTYPE_UNITS)) for (const unit of Object.keys(units)) {
-    const a = createPrototypeDeck(grade, unit, 114), b = createPrototypeDeck(grade, unit, 114);
-    const questions = Array.from({ length: 32 }, () => a());
-    expect(questions).toEqual(Array.from({ length: 32 }, () => b()));
-    for (let i = 0; i < questions.length; i++) {
-      expect(new Set(questions[i].a).size).toBe(4); expect(questions[i].correct).toBeGreaterThanOrEqual(0);
-      if (i) expect(questions[i].q).not.toBe(questions[i - 1].q);
-      if (i % 4 === 0) expect(new Set(questions.slice(i, i + 4).map(q => q.q)).size).toBe(4);
-    }
-  }
 });

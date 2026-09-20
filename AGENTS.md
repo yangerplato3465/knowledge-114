@@ -11,7 +11,7 @@
 ## 修改邊界
 
 - 新功能放 `src`、沿用共用元件；首頁只作介紹／入口，不引入清單資料、功能頁 CSS、教材、Firebase 或 Pixi。
-- 數學勇者為五關操作／平衡原型：保留 `src/games/math-rpg/questions.ts`，遵循 `docs/math-rpg-design.md`；正式題庫、美術與獎勵待使用者定案，不恢復舊戰鬥。
+- 數學勇者為五關操作／平衡原型：遵循 `docs/math-rpg-design.md`；使用五上／六上單元目錄，目前五上第一單元及合併第 2–3 單元有新題庫，不恢復已移除的舊題庫或舊戰鬥；其餘題庫、美術與獎勵待使用者定案。
 - `assets/js/class-rpg*`、`assets/js/detective` 是現役依賴；保留完整頁面切換，移除 script 不等於清除訂閱。
 - 網站路徑使用 `import.meta.env.BASE_URL`，支援 `/` 與 `/knowledge-114/`。只發布 `dist`，不可發布原始 TSX。
 - Effect 清理計時器、監聽、訂閱與請求；過期回呼不可啟動模組或覆蓋新狀態。

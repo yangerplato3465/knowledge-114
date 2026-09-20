@@ -10,11 +10,14 @@ export const profiles = [
   { name: '練習中', accuracy: .65, seconds: 20 },
   { name: '隨機猜答', accuracy: .25, seconds: 16 },
   { name: '快速亂猜', accuracy: .25, seconds: .5 },
+  { name: '因倍基準', accuracy: .8, seconds: 10, pace: 'quick' },
+  { name: '因倍慢答', accuracy: .9, seconds: 14, pace: 'quick' },
+  { name: '因倍快速亂猜', accuracy: .25, seconds: .5, pace: 'quick' },
 ];
 export const strategies = ['attack', 'guard', 'tempo', 'mixed', 'adaptive'];
 export function simulate(profile, strategy, seed, route) {
   const random = seededRandom(seed);
-  let state = createBattle(seed, route);
+  let state = createBattle(seed, route, profile.pace);
   while (state.phase !== 'won' && state.phase !== 'lost') {
     if (state.phase === 'battle') {
       // 相同 seed 共用作答亂數；均勻 ±35% 時間變動，不是固定節拍。
@@ -92,6 +95,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       // 提高怪物逐關傷害後，慢速情境允許需要再戰；保留首次通關至少一半的容錯底線。
       if (row.profile === '慢而準') assert.ok(row.win >= 50, `慢而準玩家容錯不足：${row.strategy}`);
       if (row.profile === '快速亂猜') assert.ok(row.win <= 5, `快速亂猜過強：${row.strategy}`);
+      if (row.profile === '因倍基準') assert.ok(row.win >= 95, `因倍基準通關率過低：${row.strategy}`);
+      if (row.profile === '因倍慢答') assert.ok(row.win >= 50, `因倍慢答容錯不足：${row.strategy}`);
+      if (row.profile === '因倍快速亂猜') assert.ok(row.win <= 5, `因倍快速亂猜過強：${row.strategy}`);
       assert.ok(row.routeGap <= 10, `敵人路線差距超標：${row.profile}/${row.strategy}`);
     }
     console.log(`數學勇者平衡檢查通過：${rows.reduce((sum, r) => sum + r.runs, 0)} 局配對模擬；代表策略基準節奏、慢答容錯、亂猜及路線差距均在候選範圍。`);

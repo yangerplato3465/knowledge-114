@@ -1,8 +1,9 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { PageLayout } from '../../components/PageLayout';
 import { BALANCE, CARDS, CARD_INFO, battleReducer, createBattle, enemyFor, counterDamage, attackDamage, feedbackDuration } from './battle';
-import { createPrototypeDeck, PROTOTYPE_UNITS } from './prototype-questions';
+import { createQuestionDeck, CURRICULUM, isUnitReady, battlePaceFor } from './question-deck';
 import { Battlefield } from './Battlefield';
+import { DECIMAL_UNIT } from './decimal-questions';
 import './math-rpg.css';
 
 interface Session { grade: string; unit: string; seed: number }
@@ -11,9 +12,9 @@ function Hp({ name, hp, max }: { name: string; hp: number; max: number }) {
   return <div className="mr-hp"><strong>{name}</strong><span>{hp} / {max} HP</span><meter aria-label={`${name} HP`} min={0} max={max} value={hp} /></div>;
 }
 function Adventure({ session, onLeave }: { session: Session; onLeave: () => void }) {
-  const [state, dispatch] = useReducer(battleReducer, session.seed, createBattle);
+  const [state, dispatch] = useReducer(battleReducer, session.seed, seed => createBattle(seed, undefined, battlePaceFor(session.grade, session.unit)));
   const [{ deck, first }] = useState(() => {
-    const deck = createPrototypeDeck(session.grade, session.unit, session.seed ^ 0x12345);
+    const deck = createQuestionDeck(session.grade, session.unit, session.seed ^ 0x12345);
     return { deck, first: deck() };
   });
   const [question, setQuestion] = useState(first);
@@ -106,13 +107,14 @@ function Adventure({ session, onLeave }: { session: Session; onLeave: () => void
   </section>;
 }
 export function MathRpg() {
-  const [grade, setGrade] = useState('五年級'); const [unit, setUnit] = useState('比率與百分率'); const [session, setSession] = useState<Session | null>(null);
+  const [grade, setGrade] = useState('五上'); const [unit, setUnit] = useState(DECIMAL_UNIT); const [session, setSession] = useState<Session | null>(null);
+  const ready = isUnitReady(grade, unit);
   return <PageLayout activityTitle="數學勇者">{session ? <Adventure key={session.seed} session={session} onLeave={() => setSession(null)} /> : <section className="mr-shell mr-setup">
     <p className="page-kicker">五關冒險 · 操作與平衡試玩版</p><h1>數學勇者</h1><p className="page-lead">用答案揮出你的劍。<br />每過一關，選一份力量，迎接最後的魔王。</p>
     <ol className="mr-rules"><li><strong>答對，勇者出劍</strong><span>四選一作答，攻擊敵人並壓回蓄力；答錯先看提示，提示結束後結算反擊。同關每挨一次攻擊，下次傷害至少 +{BALANCE.hitGrowth}；過關或再戰歸零。</span></li><li><strong>過關，三選一成長</strong><span>加強攻擊、護甲或節奏，累積四次成長。</span></li><li><strong>連續作答，隨時暫停</strong><span>答對 {BALANCE.feedbackMinimum} 秒、答錯 {BALANCE.wrongFeedbackSeconds} 秒後自動接續。需要討論時按暫停，戰鬥與換題都會停止。</span></li></ol>
-    <form onSubmit={event => { event.preventDefault(); setSession({ grade, unit, seed: crypto.getRandomValues(new Uint32Array(1))[0] }); }}>
-      <div className="mr-selects"><label>年級<select value={grade} onChange={event => { setGrade(event.target.value); setUnit(Object.keys(PROTOTYPE_UNITS[event.target.value])[0]); }}>{Object.keys(PROTOTYPE_UNITS).map(g => <option key={g}>{g}</option>)}</select></label><label>複習單元<select value={unit} onChange={event => setUnit(event.target.value)}>{Object.keys(PROTOTYPE_UNITS[grade]).map(u => <option key={u}>{u}</option>)}</select></label></div>
-      <p className="mr-note">目前每單元使用 4 道現有簡單示範題，會重複練習；正式題目與美術尚未製作。一般答題節奏約 9～12 分鐘，慢慢思考可以更久。</p><button className="mr-primary" type="submit">開始五關冒險</button>
+    <form onSubmit={event => { event.preventDefault(); if (ready) setSession({ grade, unit, seed: crypto.getRandomValues(new Uint32Array(1))[0] }); }}>
+      <div className="mr-selects"><label>年級／學期<select value={grade} onChange={event => { setGrade(event.target.value); setUnit(CURRICULUM[event.target.value][0].name); }}>{Object.keys(CURRICULUM).map(g => <option key={g}>{g}</option>)}</select></label><label>複習單元<select value={unit} onChange={event => setUnit(event.target.value)}>{CURRICULUM[grade].map(u => <option key={u.number} value={u.name}>{u.number}{u.endNumber ? `–${u.endNumber}` : ''}. {u.name}{isUnitReady(grade, u.name) ? '' : '（尚未開放）'}</option>)}</select></label></div>
+      <p className="mr-note" role="status">{ready ? <>{unit === DECIMAL_UNIT ? '五上第九冊第一單元：隨機練習小數加減、四捨五入與比大小。' : '五上第九冊第 2–3 單元：因數與倍數合併練習，包含公因數、最大公因數、公倍數、最小公倍數及 2、5、10 的倍數判斷。此單元採較快戰鬥節奏，五關怪物的蓄力時間較短。'}可準備紙筆計算，需要討論時可暫停；紙筆作答的遊戲時長仍待教室試玩校準。角色與敵人目前仍為佔位美術。</> : '此單元題庫尚未開放。目前可選擇五上的「多位小數與加減」或「因數與倍數」開始冒險。'}</p><button className="mr-primary" type="submit" disabled={!ready}>{ready ? '開始五關冒險' : '題庫尚未開放'}</button>
     </form>
   </section>}</PageLayout>;
 }
