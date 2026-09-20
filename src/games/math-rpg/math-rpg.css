@@ -16,10 +16,17 @@
 .mr-status { min-height: 42px; padding: 8px 24px; color: var(--ink-soft); font-size: .85rem; }.mr-panel { padding: 12px 24px 24px; min-height: 305px; }.mr-panel h2 { font-size: clamp(1.25rem, 2.5vw, 1.7rem); margin: 4px 0 18px; line-height: 1.5; }.mr-eyebrow { color: var(--ink-soft); font-size: .8rem; margin: 0 0 6px; }
 .mr-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }.mr-answers button { text-align: left; display: flex; align-items: center; gap: 14px; min-height: 60px; font-size: 1.1rem; }.mr-answers kbd { font: inherit; font-size: .75rem; border: 1px solid var(--border-strong); min-width: 26px; text-align: center; border-radius: 5px; color: var(--ink-soft); }.mr-answers small { margin-left: auto; font-size: .75rem; }
 .mr-answers [data-result="correct"] { background: var(--good-bg); border-color: var(--good); }.mr-answers [data-result="wrong"] { background: var(--bad-bg); border-color: var(--bad); }.mr-feedback p, .mr-help { margin: 12px 0; font-size: .9rem; }
+.mr-answers[data-count="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mr-fraction { display: inline-block; vertical-align: middle; white-space: nowrap; margin: .12em .16em; font-variant-numeric: tabular-nums; }
+.mr-fraction-visual { display: inline-flex; align-items: center; gap: .16em; }
+.mr-fraction-stack { display: inline-flex; flex-direction: column; align-items: stretch; text-align: center; line-height: 1.15; }
+.mr-fraction-stack > span { padding: .08em .18em; }
+.mr-fraction-stack > span:first-child { border-bottom: 1px solid currentColor; }
 .mr-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }.mr-cards button { text-align: left; display: flex; flex-direction: column; gap: 10px; min-height: 160px; }.mr-cards strong { font-size: 1.1rem; }.mr-cards button > span:last-child { font-size: .85rem; font-weight: 400; }
 .mr-build { display: flex; gap: 12px 24px; flex-wrap: wrap; padding: 12px 24px; border-top: 1px solid var(--border); font-size: .8rem; background: var(--surface-2); }.mr-summary { display: flex; gap: 16px 32px; flex-wrap: wrap; }.mr-summary dt { font-size: .85rem; color: var(--ink-soft); }.mr-summary dd { margin: 0; font-weight: 700; }
 .mr-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }.mr-panel details { margin: 16px 0; border-block: 1px solid var(--border); padding: 8px 0; }
 @media (max-width: 600px) {
   .mr-session, .mr-dashboard, .mr-charge, .mr-status, .mr-build { padding-left: 14px; padding-right: 14px; }.mr-dashboard { gap: 10px; }.mr-hp strong { font-size: .8rem; }.mr-hp span { font-size: .7rem; }
   .mr-panel { padding: 12px 14px 20px; }.mr-field { height: 112px; }.mr-canvas canvas { width: 256px; height: 72px; }.mr-answers, .mr-cards, .mr-selects { grid-template-columns: 1fr; }.mr-cards button { min-height: 120px; }.mr-answers button { min-height: 52px; }
+  .mr-answers[data-count="3"] { grid-template-columns: 1fr; }
 }

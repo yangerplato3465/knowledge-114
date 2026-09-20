@@ -6,6 +6,7 @@ import { ThemeProvider } from '../../features/theme/ThemeProvider';
 import { version } from '../../../config.json';
 import { createDecimalDeck } from './decimal-questions';
 import { createFactorDeck, FACTOR_UNIT } from './factor-questions';
+import { createFractionDeck, FRACTION_UNIT } from './fraction-questions';
 import { createBattle, enemyFor } from './battle';
 
 vi.mock('./Battlefield', () => ({ Battlefield: () => <div data-testid="battlefield" /> }));
@@ -31,9 +32,35 @@ test('準備頁標示題庫限制、支援年級單元選擇並保留網站導�
   expect(screen.queryByRole('region', { name: '數學勇者遊戲' })).toBeNull();
   fireEvent.change(main.getByRole('combobox', { name: '年級／學期' }), { target: { value: '五上' } });
   expect((main.getByRole('button', { name: '開始五關冒險' }) as HTMLButtonElement).disabled).toBe(false);
-  fireEvent.change(main.getByRole('combobox', { name: '複習單元' }), { target: { value: '擴分、約分與通分' } });
+  fireEvent.change(main.getByRole('combobox', { name: '複習單元' }), { target: { value: '多邊形與扇形' } });
   expect((main.getByRole('button', { name: '題庫尚未開放' }) as HTMLButtonElement).disabled).toBe(true);
   expect(screen.getByLabelText('網站版本').textContent).toBe('v' + version);
+});
+
+test('第四單元三選一／四選一接題、分數顯示、暫停回饋與鍵盤範圍', () => {
+  render(<ThemeProvider><MathRpg /></ThemeProvider>);
+  fireEvent.change(screen.getByRole('combobox', { name: '複習單元' }), { target: { value: FRACTION_UNIT } });
+  fireEvent.click(screen.getByRole('button', { name: '開始五關冒險' }));
+  const deck = createFractionDeck(123 ^ 0x12345), kinds = new Set<string>();
+  for (let i = 0; i < 7; i++) {
+    const question = deck(); kinds.add(question.kind);
+    const options = within(document.querySelector('.mr-answers') as HTMLElement).getAllByRole('button');
+    expect(options).toHaveLength(question.a.length);
+    expect(screen.getByText(new RegExp(`按鍵盤 1～${question.a.length}`))).toBeTruthy();
+    if (question.a.length === 3) {
+      fireEvent.keyDown(window, { key: '4' });
+      expect(document.querySelector('.mr-feedback')).toBeNull();
+      expect(options.every(b => !(b as HTMLButtonElement).disabled)).toBe(true);
+    }
+    fireEvent.keyDown(window, { key: String(question.correct + 1) });
+    fireEvent.click(screen.getByRole('button', { name: '暫停' }));
+    expect(screen.getByText(/正確答案：/)).toBeTruthy();
+    expect(document.querySelector('.mr-fraction')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '返回戰鬥' }));
+    wait(1300);
+    if (screen.queryByRole('heading', { name: '選一份力量，繼續前進' })) fireEvent.click(screen.getByRole('button', { name: /磨利劍鋒/ }));
+  }
+  expect(kinds.size).toBe(7);
 });
 
 test('合併單元連續接題不混入小數題，七種題型均可作答', () => {
