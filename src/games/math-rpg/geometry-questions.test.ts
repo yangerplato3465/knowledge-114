@@ -24,7 +24,7 @@ test('九種模板均衡出題，幾何條件與唯一正解一致', () => {
   expect([...counts.values()].every(n => n === 1000)).toBe(true);
 });
 
-test('種子可重現；換題保留蓄力比例，重擊與重試適用難度時間', () => {
+test('種子可重現；換題保留蓄力比例，重擊適用難度時間，戰敗不能重試', () => {
   const a = createGeometryDeck(77), b = createGeometryDeck(77);
   for (let i = 0; i < 100; i++) expect(a()).toEqual(b());
   let state = { ...createBattle(1, [1, 1, 1, 1, 1]), charge: 20, questionScale: 1.4 };
@@ -36,5 +36,5 @@ test('種子可重現；換題保留蓄力比例，重擊與重試適用難度�
   expect(state.charge / enemyFor(state).interval).toBeCloseTo(ratio);
   expect(state.hp).toBe(200);
   const retry = battleReducer({ ...state, phase: 'lost' }, { type: 'retry', questionScale: 1.4 });
-  expect(retry.charge).toBe(0); expect(enemyFor(retry).interval).toBeCloseTo(28 * 1.4 * 1.05);
+  expect(retry.phase).toBe('lost'); expect(retry.questionScale).toBe(state.questionScale);
 });

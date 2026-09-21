@@ -96,7 +96,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     assert.equal(BALANCE.heroHp, 200, '勇者 HP 必須固定為 200');
     for (const row of rows) {
       if (row.profile === '基準') { assert.ok(row.win >= 95, `基準通關率過低：${row.strategy}`); assert.ok(row.minutes >= 9 && row.minutes <= 12, `基準節奏偏離：${row.strategy}`); }
-      // 提高怪物逐關傷害後，慢速情境允許需要再戰；保留首次通關至少一半的容錯底線。
+      // 提高怪物逐關傷害後，慢速情境允許失敗後另開新局；保留首次通關至少一半的容錯底線。
       if (row.profile === '慢而準') assert.ok(row.win >= 50, `慢而準玩家容錯不足：${row.strategy}`);
       if (row.profile === '快速亂猜') assert.ok(row.win <= 5, `快速亂猜過強：${row.strategy}`);
       if (row.profile === '因倍基準') assert.ok(row.win >= 95, `因倍基準通關率過低：${row.strategy}`);

@@ -22,7 +22,7 @@ describe('戰鬥模型', () => {
     }
   });
 
-  test.each(['quick', 'moderate'] as const)('%s 節奏在過關、再戰保持，暫停與回饋仍凍結；新標準局恢復原週期', pace => {
+  test.each(['quick', 'moderate'] as const)('%s 節奏在過關保持，戰敗不能復活，暫停與回饋仍凍結；新標準局恢復原週期', pace => {
     let state = createBattle(1, [0, 0, 0, 0, 0], pace);
     const paused = step(state, { type: 'pause' });
     expect(step(paused, { type: 'tick', seconds: 100 })).toBe(paused);
@@ -34,7 +34,7 @@ describe('戰鬥模型', () => {
     expect(state.pace).toBe(pace); expect(enemyFor(state).interval).toBe(BATTLE_PACING[pace][1]);
     state = step(state, { type: 'tick', seconds: 10000 });
     state = step(state, { type: 'retry' });
-    expect(state.pace).toBe(pace); expect(state.phase).toBe('battle'); expect(state.charge).toBe(0);
+    expect(state.pace).toBe(pace); expect(state.phase).toBe('lost'); expect(state.hp).toBe(0);
     expect(enemyFor(state).interval).toBe(BATTLE_PACING[pace][1]);
     expect(enemyFor(createBattle(1, [0, 0, 0, 0, 0])).interval).toBe(BALANCE.intervals[0]);
   });
@@ -78,7 +78,7 @@ describe('戰鬥模型', () => {
     expect(full.hp).toBe(resolved.hp - attackDamage(resolved));
     expect(full.charge).toBe(0);
   });
-  test('暫停凍結時間與所有遊戲操作，重試保留成長且不重發卡', () => {
+  test('暫停凍結時間與所有遊戲操作，戰敗後不能以重試復活或重發卡', () => {
     const initial = createBattle(1);
     const paused = step(initial, { type: 'pause' });
     for (const event of [{ type: 'tick', seconds: 500 }, { type: 'answer', correct: true }, { type: 'card', card: 'attack' }, { type: 'retry' }] as const) expect(step(paused, event)).toBe(paused);
@@ -90,7 +90,7 @@ describe('戰鬥模型', () => {
     s = step(s, { type: 'tick', seconds: 9999 });
     const retry = step(s, { type: 'retry' });
     expect(retry.stage).toBe(1); expect(retry.cards).toEqual(['guard']); expect(retry.guard).toBe(1);
-    expect(retry.hp).toBe(BALANCE.heroHp); expect(retry.enemyHp).toBe(BALANCE.enemyHp[1]); expect(retry.retries).toBe(1);
+    expect(retry).toBe(s); expect(retry.hp).toBe(0);
     expect(step(retry, { type: 'card', card: 'attack' })).toBe(retry);
   });
   test('32 條敵人路線 × 81 種成長序列都可完成五關且只有四次成長', () => {
@@ -130,7 +130,7 @@ describe('戰鬥模型', () => {
     expect(s.stageHits).toBe(0); expect(s.lastHitDamage).toBe(0);
     s = step(s, { type: 'tick', seconds: 9999 });
     const retry = step(s, { type: 'retry' });
-    expect(retry.stageHits).toBe(0); expect(retry.lastHitDamage).toBe(0);
+    expect(retry).toBe(s);
     expect(retry.strikes).toBe(s.strikes);
   });
   test('前三次選攻擊後，最後改防守不會多出一整題魔王血量', () => {
@@ -154,7 +154,7 @@ describe('戰鬥模型', () => {
       }
     }
   });
-  test('勇者固定 200 HP；怪物至少兩倍血量，治療與再戰不可提高上限', () => {
+  test('勇者固定 200 HP；怪物至少兩倍血量，治療不可提高上限，戰敗不能復活', () => {
     expect(BALANCE.heroHp).toBe(200);
     for (const hp of BALANCE.enemyHp) expect(hp).toBeGreaterThanOrEqual(400);
     for (const card of CARDS) {
@@ -164,7 +164,7 @@ describe('戰鬥模型', () => {
       s = step(s, { type: 'card', card });
       expect(s.hp).toBe(200);
       s = step(s, { type: 'tick', seconds: 9999 });
-      expect(step(s, { type: 'retry' }).hp).toBe(200);
+      expect(step(s, { type: 'retry' })).toBe(s); expect(s.hp).toBe(0);
     }
   });
 });

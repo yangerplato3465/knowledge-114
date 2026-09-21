@@ -1,46 +1,70 @@
 import { useEffect, useRef, useState } from 'react';
-interface Graphic { rect(x: number, y: number, w: number, h: number): Graphic; fill(color: number): Graphic }
-interface App {
-  init(options: Record<string, unknown>): Promise<void>; canvas: HTMLCanvasElement;
-  stage: { addChild(...items: Graphic[]): void }; render(): void;
-  destroy(options: { removeView: boolean }, children: { children: boolean }): void;
-}
-interface Vendor { Application: new () => App; Graphics: new () => Graphic }
-export function Battlefield({ stage, feedback }: { stage: number; feedback: boolean | null }) {
-  const host = useRef<HTMLDivElement>(null);
-  const [failed, setFailed] = useState(false);
+import type { Battle } from './battle';
+import { artUrl, ENEMY_ART, REGIONS, SCENE_SIZE, attackArt, enemyIntent } from './battle-art';
+import { createScene, type Scene } from './battle-scene';
+
+export function Battlefield({ state, onReady }: { state: Battle; onReady: (ready: boolean) => void }) {
+  const host = useRef<HTMLDivElement>(null), scene = useRef<Scene | null>(null);
+  const field = useRef<HTMLDivElement>(null), frame = useRef<HTMLDivElement>(null);
+  const latest = useRef(state); latest.current = state;
+  const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>('loading');
+  const variant = state.route[state.stage];
+  const region = REGIONS[state.stage];
+  const enemy = ENEMY_ART[state.stage][variant === 1 ? 1 : 0];
+  const intent = enemyIntent(state), attack = attackArt(state);
   useEffect(() => {
-    let cancelled = false;
-    let app: App | undefined;
-    let ready = false;
-    const destroy = () => { if (ready) { ready = false; app?.destroy({ removeView: true }, { children: true }); } };
-    const load = async () => {
-      try {
-        const url = `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`;
-        const { Application, Graphics } = await import(/* @vite-ignore */ url) as Vendor;
-        if (cancelled) return;
-        app = new Application();
-        await app.init({ width: 256, height: 72, backgroundAlpha: 0, antialias: false, autoStart: false, preference: 'webgl' });
-        ready = true;
-        if (cancelled) { destroy(); return; }
-        const ground = new Graphics().rect(12, 61, 232, 2).fill(0x799da5);
-        const hero = new Graphics().rect(45, 26, 12, 12).fill(0x6384be).rect(41, 38, 20, 16).fill(0x6384be)
-          .rect(43, 54, 6, 8).fill(0x6384be).rect(53, 54, 6, 8).fill(0x6384be)
-          .rect(65, 27, 3, 25).fill(0x8a9baf).rect(61, 46, 11, 3).fill(0x8a9baf);
-        const enemy = new Graphics().rect(188, 33, 24, 29).fill(0xc18455).rect(184, 41, 32, 16).fill(0xc18455);
-        app.stage.addChild(ground, hero, enemy);
-        host.current?.append(app.canvas);
-        app.render();
-      } catch {
-        destroy();
-        if (!cancelled) setFailed(true);
-      }
+    const resize = () => {
+      const area = field.current, content = frame.current;
+      if (!area || !content || !area.clientWidth || !area.clientHeight) return;
+      const scale = Math.min(area.clientWidth / SCENE_SIZE.width, area.clientHeight / SCENE_SIZE.height);
+      content.style.width = `${SCENE_SIZE.width * scale}px`; content.style.height = `${SCENE_SIZE.height * scale}px`;
+      const ground = (area.clientHeight - SCENE_SIZE.height * scale) / 2 + SCENE_SIZE.ground * scale;
+      area.style.background = `linear-gradient(#${region.sky.toString(16)} ${ground}px, #${region.ground.toString(16)} ${ground}px)`;
     };
-    void load();
-    return () => { cancelled = true; destroy(); };
-  }, []);
-  return <div className="mr-field" aria-hidden="true" data-feedback={feedback === null ? '' : feedback ? 'correct' : 'wrong'}>
-    <span className="mr-field-label">{stage === 4 ? '最後的試煉' : `第 ${stage + 1} 關試煉`} · 角色佔位</span>
-    <div ref={host} className="mr-canvas">{failed && <span>勇者 ───────── 敵人</span>}</div>
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
+    if (field.current) observer?.observe(field.current);
+    window.addEventListener('resize', resize); resize();
+    return () => { observer?.disconnect(); window.removeEventListener('resize', resize); };
+  }, [region]);
+  useEffect(() => {
+    const controller = new AbortController();
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setStatus('loading'); onReady(false);
+    const motion = () => scene.current?.motion(media.matches);
+    const visibility = () => scene.current?.update(latest.current);
+    media.addEventListener('change', motion);
+    document.addEventListener('visibilitychange', visibility);
+    // A slow renderer must not prevent the accessible DOM game from starting.
+    const timeout = window.setTimeout(() => { controller.abort(); scene.current?.destroy(); scene.current = null; setStatus('fallback'); onReady(true); }, 12000);
+    void createScene(host.current!, latest.current, controller.signal).then(value => {
+      if (controller.signal.aborted) { value.destroy(); return; }
+      window.clearTimeout(timeout); scene.current = value;
+      value.motion(media.matches); value.update(latest.current); setStatus('ready'); onReady(true);
+    }).catch(() => {
+      if (controller.signal.aborted) return;
+      window.clearTimeout(timeout); setStatus('fallback'); onReady(true);
+    });
+    return () => {
+      controller.abort(); window.clearTimeout(timeout);
+      media.removeEventListener('change', motion); document.removeEventListener('visibilitychange', visibility);
+      scene.current?.destroy(); scene.current = null;
+    };
+  }, [state.stage, variant, onReady]);
+  useEffect(() => { scene.current?.update(state); }, [state]);
+  return <div ref={field} className="mr-field" data-stage={state.stage} data-paused={state.paused}>
+    <div className="mr-field-caption"><span>{REGIONS[state.stage].name}</span><span>{state.paused ? '冒險暫停中' : REGIONS[state.stage].subtitle}</span></div>
+    <div ref={frame} className="mr-scene-frame">
+    <div ref={host} className="mr-canvas" aria-hidden="true" />
+    {status !== 'ready' && <div className="mr-field-fallback" aria-hidden="true">
+      <img src={artUrl('hero/frames/hero-idle-01-v1')} alt="" />
+      <img src={artUrl(`enemies/stage-${state.stage + 1}/${enemy.id}/frames/${enemy.id}-idle-01-v1`)} alt="" />
+    </div>}
+    <div className="mr-actor-hud mr-hero-hud" role="group" aria-label="勇者能力"><span>攻擊 <b>{state.attack}</b></span><span>護甲 <b>{state.guard}</b></span></div>
+    <div className="mr-actor-hud mr-enemy-hud" role="group" aria-label="怪物攻擊提示" data-danger={!state.paused && !intent.ended && (intent.counter || intent.seconds <= 3)}>
+      <strong>{status === 'loading' ? '準備中' : intent.label}{!intent.ended && status !== 'loading' && <b>{intent.seconds}<small> 秒</small></b>}</strong>
+      {!intent.ended && <span>{intent.counter ? '答錯反擊' : attack.label} · 傷害 <b>{intent.damage}</b></span>}
+    </div>
+    </div>
+    <span className="mr-render-status" role="status">{status === 'loading' ? '正在準備冒險場景…' : status === 'fallback' ? '簡易畫面模式 · 可以正常作答' : ''}</span>
   </div>;
 }

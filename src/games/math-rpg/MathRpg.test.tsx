@@ -9,8 +9,12 @@ import { createDecimalDeck } from './decimal-questions';
 import { createFactorDeck, FACTOR_UNIT } from './factor-questions';
 import { createFractionDeck, FRACTION_UNIT } from './fraction-questions';
 import { createBattle, enemyFor } from './battle';
+import { useEffect } from 'react';
 
-vi.mock('./Battlefield', () => ({ Battlefield: () => <div data-testid="battlefield" /> }));
+vi.mock('./Battlefield', () => ({ Battlefield: ({ onReady }: { onReady: (ready: boolean) => void }) => {
+  useEffect(() => { onReady(true); }, [onReady]);
+  return <div data-testid="battlefield" />;
+} }));
 beforeEach(() => {
   vi.useFakeTimers(); Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
   vi.spyOn(crypto, 'getRandomValues').mockImplementation(array => { if (array instanceof Uint32Array) array[0] = 123; return array; });
@@ -148,8 +152,26 @@ test('五關全流程可經過四次成長到勝利回顧', () => {
     expect(screen.queryByRole('button', { name: '下一題' })).toBeNull();
   }
   expect(cards).toBe(4); expect(screen.getByRole('heading', { name: '五關完成，勇者凱旋！' })).toBeTruthy();
-  expect(screen.getByText(/本次不發放獎品/)).toBeTruthy();
+  expect(screen.getByRole('button', { name: '轉動獎勵轉盤' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '再玩同一單元' })).toBeTruthy();
+  fireEvent.keyDown(window, { key: 'Escape' });
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+  fireEvent(document, new Event('visibilitychange'));
+  expect(screen.getByRole('button', { name: '轉動獎勵轉盤' })).toBeTruthy();
+  Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+  fireEvent.click(screen.getByRole('button', { name: '再玩同一單元' }));
+  expect(screen.getByText(/第 1 題/)).toBeTruthy();
+  expect(screen.queryByRole('button', { name: '轉動獎勵轉盤' })).toBeNull();
+}, 15000); // Full five-stage DOM flow needs headroom on shared CI runners.
+test('戰敗只可回到準備，不提供本關復活', () => {
+  start(); wait(600000);
+  expect(screen.getByRole('heading', { name: '本次冒險結束' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: /再戰|再挑戰|再玩/ })).toBeNull();
+  expect(screen.queryByText('再戰次數')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: '回到準備' }));
+  expect(screen.getByRole('button', { name: '開始五關冒險' })).toBeTruthy();
 });
+
 test('錯答自動結算一次；暫停保留提示與剩餘回饋時間，離場不觸發舊局換題', () => {
   start();
   const question = createDecimalDeck(123 ^ 0x12345)();
@@ -164,8 +186,8 @@ test('錯答自動結算一次；暫停保留提示與剩餘回饋時間，離�
   wait(10000);
   expect(Number(screen.getByRole('meter', { name: '勇者 HP' }).getAttribute('value'))).toBe(hp);
   fireEvent.click(screen.getByRole('button', { name: '返回戰鬥' }));
-  wait(1000); expect(screen.getByText(/第 1 題/)).toBeTruthy();
-  wait(400); expect(screen.getByText(/第 2 題/)).toBeTruthy();
+  wait(800); expect(screen.getByText(/第 1 題/)).toBeTruthy();
+  wait(200); expect(screen.getByText(/第 2 題/)).toBeTruthy();
   expect(Number(screen.getByRole('meter', { name: '勇者 HP' }).getAttribute('value'))).toBe(hp - 12);
   expect(screen.getByRole('progressbar').getAttribute('value')).toBe('0');
   fireEvent.keyDown(window, { key: '1' });

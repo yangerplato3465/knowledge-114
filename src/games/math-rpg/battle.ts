@@ -2,7 +2,7 @@
 export const BALANCE = {
   heroHp: 200, attack: 100, retreat: 8, warning: 3, heavyMultiplier: 1.05, hitGrowth: 1,
   stageHeal: 30, attackGrowth: 15, guardGrowth: 1, guardHeal: 16,
-  tempoGrowth: 2, tempoHeal: 14, feedbackMinimum: 1.2, wrongFeedbackSeconds: 2.4, counterDamage: [12, 14, 16, 19, 22], counterMinimum: 6,
+  tempoGrowth: 2, tempoHeal: 14, feedbackMinimum: 1.2, wrongFeedbackSeconds: 2, counterDamage: [12, 14, 16, 19, 22], counterMinimum: 6,
   enemyHp: [400, 500, 550, 600, 650],
   intervals: [28, 27, 26, 25, 24], damages: [10, 12, 14, 17, 20],
 } as const;
@@ -62,8 +62,7 @@ export function attackDamage(s: Pick<Battle, 'stage' | 'route' | 'guard' | 'stag
 export function battleReducer(s: Battle, action: Action): Battle {
   if (action.type === 'pause') return { ...s, paused: true };
   if (action.type === 'resume') return { ...s, paused: false };
-  if (s.paused) return s;
-  if (action.type === 'retry') return s.phase === 'lost' ? { ...s, questionScale: action.questionScale ?? s.questionScale, phase: 'battle', hp: BALANCE.heroHp, enemyHp: enemyFor(s).hp, charge: 0, stageHits: 0, lastHitDamage: 0, retries: s.retries + 1, lastCorrect: null, message: '已回復 HP，怪物增傷歸零；保留本局成長，重新挑戰這一關。' } : s;
+  if (s.paused || action.type === 'retry') return s; // Retired action cannot revive a completed run.
   if (action.type === 'tick') {
     if (!Number.isFinite(action.seconds) || action.seconds <= 0 || s.phase === 'won' || s.phase === 'lost') return s;
     if (s.phase !== 'battle') return { ...s, playSeconds: s.playSeconds + action.seconds, feedbackSeconds: s.feedbackSeconds + action.seconds };
