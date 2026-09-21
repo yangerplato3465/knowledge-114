@@ -2,7 +2,7 @@
 
 | 檔案 | 版本 | 用途 |
 |---|---|---|
-| pixi.esm.min.js | 8.20.1 | ESM；偵探與班級世界 |
+| pixi.esm.min.js | 8.20.1 | ESM；偵探、班級世界與數學勇者動作戰場 |
 
 僅保留現役 ESM 引擎。教室可能斷網，不改成 CDN runtime。
 升版從 pixi.js 官方套件取得完整 dist，保留授權註解；不要手改壓縮內容。未附 map 時移除 sourceMappingURL，避免偵錯工具 404。

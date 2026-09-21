@@ -1,38 +1,28 @@
 # 專案工作指引
 
-適用整個 repository。以繁體中文溝通；先完成修改與驗證，再回報結果。
+適用全專案；使用繁體中文。先完成修改與驗證，再回報。
 
-## 快速定位
+## 開始工作
 
-- React + Vite + TypeScript 多頁網站；index.html 是正式首頁，pages/*.html 都掛載 React。不要恢復舊頁或 next/ 副本。
-- 首頁／導覽：src/app、src/content/navigation.ts；教材：src/lessons；數學勇者：src/games/math-rpg。
-- 素材上下載：src/features/materials；共用元件／主題：src/components、src/features/theme。
-- 班級與偵探仍由 React 外殼接 assets/js/class-rpg*、assets/js/detective。它們是現役依賴，不能當廢碼刪除。
-- 只讀任務需要的文件：[架構](docs/TECH_ARCHITECTURE.md)、[遊戲規則](docs/GAMEPLAY.md)、[偵探](docs/detective-authoring.md)、[待辦](docs/TODO.md)。
-- 數學勇者目前維護中，僅保留維護頁與 questions.ts 題庫；新玩法、架構、UI 與美術待使用者討論定案，不恢復舊戰鬥。
+- 先看 `git status`、保留既有修改；用 `rg` 找相關程式／測試，只改本次範圍。
+- 本站是 React＋Vite＋TypeScript 多頁網站；`index.html`／`pages/*.html` 各有入口，不恢復舊頁或 `next/`。
+- 按需查閱：[架構／模組定位](docs/TECH_ARCHITECTURE.md)、[玩法](docs/GAMEPLAY.md)、[偵探](docs/detective-authoring.md)、[待辦](docs/TODO.md)、[啟動／部署](README.md)。
 
-## 工作方式
+## 修改邊界
 
-- 先看 git status 與相關程式／測試，保留使用者既有修改；用 rg 精準搜尋，不預先通讀整個專案。
-- 新功能優先放 src，沿用現有元件和樣式；只修有證據的問題，不順帶改玩法、升級套件或重寫框架。
-- 首頁維持介紹與入口；活動清單、老師工具、功能頁 CSS、教材、Firebase、Pixi 不可進首頁依賴圖。
-- 使用 import.meta.env.BASE_URL 組網站資源／首頁路徑，需支援 / 與 /knowledge-114/。
-- Effect 的計時器、監聽、訂閱、請求都要清理；過期非同步回呼不能啟動模組或覆蓋新狀態。
-- 主題色取 assets/css/theme.css；檢查明／暗／跟隨系統模式。保留觸控按鈕、標籤與鍵盤操作。
-- Pixi 只管繪圖，DOM 管題目與操作。使用本地 vendor，不手改 minified 檔；動畫降級不能改遊戲規則。
-
-## 不可破壞的資料契約
-
-- 偵探 ID owl／ai-museum、code.js 的 PEPPER／PBKDF2／正規化與 localStorage keys 不可隨意改。
-- 維持驗碼 → 讀取進度 → engine；讀取失敗禁止存檔，離場先 flush，切組完整 reload。改存檔格式須規劃相容／遷移。
-- 班級維持 ownerId 篩選、訂閱世代隔離、Firestore 原子交易與復原衝突檢查；成長公式唯一來源為 class-rpg-model.js。
-- 不寫真實學生資料、不將權杖放入測試／文件；不要以 UI 隱藏代替 Firestore 權限。
+- 新功能放 `src`、沿用共用元件；首頁只作介紹／入口，不引入清單資料、功能頁 CSS、教材、Firebase 或 Pixi。
+- 產圖必須先定義每幀像素尺寸、排列、錨點與安全留白；角色、武器、衣物、陰影、光暈及全部特效都須完整留在各自格內，禁止碰線、跨格或切斷。放不下時統一調整規格，不能硬切；原圖及每個切出幀都須驗收，透明外框不代表沒有鄰幀殘片。
+- 數學勇者為五關操作／平衡原型：遵循 `docs/math-rpg-design.md`；使用五上／六上單元目錄，目前五上第一單元、合併第 2–3 單元、第 4 與第 5 單元有新題庫，不恢復已移除的舊題庫或舊戰鬥；其餘題庫、美術與獎勵待使用者定案。
+- `assets/js/class-rpg*`、`assets/js/detective` 是現役依賴；保留完整頁面切換，移除 script 不等於清除訂閱。
+- 網站路徑使用 `import.meta.env.BASE_URL`，支援 `/` 與 `/knowledge-114/`。只發布 `dist`，不可發布原始 TSX。
+- Effect 清理計時器、監聽、訂閱與請求；過期回呼不可啟動模組或覆蓋新狀態。
+- 沿用 `assets/css/theme.css`，支援明／暗／系統、鍵盤與觸控。新遊戲以 DOM 承載題目／操作，Pixi 繪圖；用本地 vendor，不手改壓縮檔，動畫降級不改玩法。
+- 偵探：保留 ID／驗碼參數／儲存 keys；驗碼 → 讀進度 → engine，讀取失敗禁止寫入，離場先 flush，切組 reload；改存檔格式須相容遷移。
+- 班級：保留 `ownerId` 篩選、訂閱世代隔離、原子交易與復原衝突檢查；成長公式只在 `class-rpg-model.js`。
+- 不放真實學生資料或權杖於測試／文件；UI 隱藏不能替代 Firestore 權限。推送、部署、規則發布須經使用者授權。
 
 ## 驗證與交付
 
-- Node.js 24、pnpm 11；pnpm dev 開發，pnpm preview 預覽 dist，不能直接靜態提供 TSX 原始碼。
-- pnpm check：引用／文件／JS 語法；pnpm test：回歸；pnpm build：型別、建置、產物與效能預算。
-- 先跑相關測試，再完成上述檢查；改路由或資源時另驗證 VITE_BASE_PATH=/knowledge-114/ 建置。
-- UI 或載入流程有變更時做瀏覽器驗證；涉及雲端權限／存檔時說明未驗證範圍，不把模擬測試當實機驗收。
-- 僅部署 dist；推送、部署及 Firebase 規則發布須有使用者授權。
-- 文件只留現況、原因與必要限制，不新增逐次工作日誌或重複規格；數值與欄位優先連到程式來源。
+- 純文件：`pnpm check`、`git diff --check`。程式修改：先相關測試，再 `pnpm check`、`pnpm test`、`pnpm build`。
+- 路由／資源／部署修改另驗證 `VITE_BASE_PATH=/knowledge-114/` 建置；UI／載入修改做瀏覽器驗證；雲端模擬測試不等於實機驗收。
+- 文件只留現況與必要限制，數值連回程式，不加重複規格／日誌。回報變更、驗證及未驗證範圍。

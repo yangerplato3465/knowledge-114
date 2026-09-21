@@ -10,7 +10,8 @@
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "check": "node scripts/check-site.mjs && node scripts/check_js.cjs",
-    "test": "node --test tests/*.test.cjs && vitest run src --maxWorkers=4",
+    "test": "node --test tests/*.test.cjs && vitest run src --maxWorkers=4 && node --experimental-strip-types scripts/math-rpg-balance.mjs --check",
+    "balance:math-rpg": "node --experimental-strip-types scripts/math-rpg-balance.mjs",
     "build": "pnpm typecheck && vite build && node scripts/copy-static.mjs && node scripts/check-build.mjs && node scripts/check-performance-budget.mjs",
     "smoke:url": "node scripts/smoke-url.mjs",
     "preview": "vite preview --host 127.0.0.1"
