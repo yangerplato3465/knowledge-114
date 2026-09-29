@@ -1,0 +1,85 @@
+{
+  "toolMode": "builtin image_gen",
+  "status": "選用素材已接入魔法工坊；版位、腳底錨點與角色比例以 src/games/magic-workshop/art.ts 為準。保留完整原圖，未作裁切或逐幀動畫；原圖透明外框殘點仍保留。",
+  "requestedFrame": {
+    "width": 1024,
+    "height": 1024,
+    "rows": 1,
+    "columns": 1,
+    "transparent": true,
+    "minSafePaddingPx": 128
+  },
+  "actualFrame": {
+    "width": 1254,
+    "height": 1254
+  },
+  "assets": [
+    {
+      "file": "visitor-rabbit-dew-v2.png",
+      "role": "兔子露珠採集者",
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "requestedSize": [
+        1254,
+        1254
+      ],
+      "safePaddingTargetPx": 180,
+      "prompt": "Create a standalone original adorable anthropomorphic rabbit dew collector for a dreamy fairytale magic workshop game. Reference image is STYLE ONLY: match polished painterly 3D animated-film quality, warm soft light and appealing animal-person proportions; do not copy deer identity, clothes or pose. Rabbit stands upright on two large fluffy rabbit feet, two forepaws, round cream-white face, small pink nose, long soft ears curving gently inward, round cotton tail. Distinct outfit: pale sky-blue gardening overalls with a tiny embroidered water-drop symbol, peach short-sleeve blouse, small soft lemon-yellow brimmed sunhat nestled between ears. Holding a small clear round dew collection jar in one paw and a single broad green leaf angled over jar in the other, no water stream. Bright curious smile. Sweet compact round body, clearly rabbit, full body three-quarter front. One complete single frame1x1, requested1254x1254 transparent PNG. All ears hat leaf jar tail paws and feet inside x200..1054 y200..1054, at least180 pixels clear transparent safety margin every edge. Feet anchor627,1040. Subject occupies about65percent height; preserve full canvas, no cropping. Genuine alpha background, no scene, no floating effects, no text, no watermark, no additional characters.",
+      "paddingPrompt": "Only adjust padding of this exact rabbit dew collector image. Preserve rabbit identity, expression, ears, hat, overalls, peach blouse, leaf, glass jar, tail, paws, pose, lighting and colors. Uniformly scale the ENTIRE subject to75percent its current size centered in unchanged1254x1254 transparent canvas. 1x1 single frame; all visible pixels of ears hat props body and feet must be inside x200..1054,y200..1054, minimum180px empty alpha0 safety border on every side. Feet baseline1040, center627. No crop, no added content, no background, no redesign. Remove stray near-transparent pixels outside complete silhouette. Genuine transparent PNG.",
+      "inspection": "1254×1254；alpha≥16可見範圍為[416,265,927,1034]，耳朵、帽子、葉片、罐子、尾巴與雙腳完整。外180px最高alpha=1/255，仍有極淡殘點，未通過完全透明外框驗收。"
+    },
+    {
+      "file": "visitor-deer-post-v4.png",
+      "paddingPrompt": "Padding-only edit. Preserve this EXACT adorable biped deer mail carrier, identity, face, proportions, red cap, ivory waistcoat, satchel, envelope and two bare hooves. Do not redesign. Uniformly reduce whole character to85percent of current size and center within unchanged1254x1254 canvas. Single1x1 transparent frame. Full visible subject within x180..1074,y180..1074, feet baseline1060 center627. At least160px completely transparent alpha0 margin ALL edges. Every ear, hoof, tail, bag and envelope intact. No new elements, no crop, no background. Erase stray near-transparent background noise.",
+      "role": "小鹿郵差；取代前兩版小鹿造型",
+      "anchor": [
+        0.5,
+        0.83
+      ],
+      "prompt": "Create ONE original adorable ANTHROPOMORPHIC deer mail carrier guest for a magical workshop game. Cute rounded short chubby animal-person proportions, big expressive kind brown eyes, polished painterly 3D animated family movie aesthetic matching charming teddy bear artisan and owl keeper. MUST stand UPRIGHT on EXACTLY TWO short hind legs, TWO forelimbs serving as arms, natural coherent biped animal cartoon anatomy. Two dark small cloven hooves fully visible, NO footwear or boots. Not quadrupedal. Recognizable DEER with elongated gentle cream muzzle, small dark nose, large long leaf-shaped ears, cinnamon-tan fine short fur, small cream forehead spots, tiny deer tail, no antlers, no fluffy fox cheeks or bushy tail. DISTINCTIVE outfit: small rounded berry-red postal cap between ears, ivory buttoned waistcoat over muted mustard shirt, berry-red small mail satchel at hip filled with closed cream envelopes. One hand holds one sealed envelope with a simple gold leaf wax seal, other hand holds satchel strap. No words or lettering. Charming cheerful face, relaxed three-quarter front pose. Warm upper-left amber light, soft refined materials. FULL BODY single1x1 frame, target1024x1024 transparent PNG. Feet anchor512,820. Entire ears cap hands envelope bag tail and hooves inside x176..848,y160..848; at least128px fully transparent safety padding all edges. Character SMALL about65percent canvas height, centered, no cropping, no surrounding scenery or particles, no extra limbs, no human feet, no text watermark. This is a separate character, not a fox costume variation."
+    },
+    {
+      "file": "visitor-bear-artisan-v2.png",
+      "paddingPrompt": "Padding-only edit. Preserve EXACT bear artisan character, identity, expression, pose, goggles, apron, lamp, wrench, scarf and all details. Uniformly shrink complete subject to80percent current size and center on unchanged1254x1254 transparent canvas, one1x1 frame. Subject entirety within x190..1064 y190..1064, feet baseline1060 centered627. Outer160px on every edge completely empty alpha0. No crop, no redesign, no new objects, no background, no noise or stray pixels. Complete ears and feet and lamp.",
+      "role": "小熊火光修理師",
+      "anchor": [
+        0.5,
+        0.84
+      ],
+      "prompt": "Use case: stylized-concept. Production standalone cutout for children's Magic Workshop game. Match the referenced fox ONLY as STYLE reference, create a DIFFERENT original character. Cute dreamy Disney animated feature inspired painterly 3D rendering, expressive kind eyes, rounded appealing proportions, warm upper-left amber light, lavender/teal accents, same quality and world as fox. Single full-body character, three-quarter front, friendly welcoming smile. SPEC: target1024x1024, ONE frame 1x1, genuine transparent alpha. Feet anchor (512,840). Entire character, ears/antlers, costume, props and contained shadow inside x160..864 y144..864, minimum128px EMPTY transparent border ALL sides. Occupy about68percent canvas height. No crop, no frame, no scenery, no text/numbers/logos, no detached sparkles or trails. Subject: small honey-brown teddy bear firelight repair artisan, unmistakable rounded bear ears and broad cream muzzle, teal work shirt, plum scarf and tan leather work apron with brass button, round goggles resting on forehead. Holding a small closed brass magical lamp with a warm ember glow safely inside, compact wrench tucked in apron pocket. Warm friendly reassuring smile. Full round paws and feet. SMALL centered character with 18percent empty margin on all sides."
+    },
+    {
+      "file": "visitor-owl-keeper-v1.png",
+      "role": "貓頭鷹燈塔看守人",
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "prompt": "Use case: stylized-concept. Production standalone cutout for children's Magic Workshop game. Match the referenced fox ONLY as STYLE reference, create a DIFFERENT original character. Cute dreamy Disney animated feature inspired painterly 3D rendering, expressive kind eyes, rounded appealing proportions, warm upper-left amber light, lavender/teal accents, same quality and world as fox. Single full-body character, three-quarter front, friendly welcoming smile. SPEC: target1024x1024, ONE frame 1x1, genuine transparent alpha. Feet anchor (512,840). Entire character, ears/antlers, costume, props and contained shadow inside x160..864 y144..864, minimum128px EMPTY transparent border ALL sides. Occupy about68percent canvas height. No crop, no frame, no scenery, no text/numbers/logos, no detached sparkles or trails. Subject: small round owl lighthouse keeper, unmistakably OWL with round facial disk, cream and warm brown feathers, small golden beak, bright friendly eyes, tiny brass round spectacles. Wearing navy-teal short coat lavender scarf, holding a small enclosed brass lantern with gentle amber light tucked close against body. Folded wings, two little bird feet visible. Keep head and lantern compact, no spread wings. Make character SMALL centered with generous 18 percent padding all sides."
+    },
+    {
+      "file": "bottle-empty-v1.png",
+      "role": "共用空瓶外觀；瓶心半透明，水量由程式绘製，尚未驗證疊合效果",
+      "anchor": [
+        0.5,
+        0.83
+      ],
+      "prompt": "Create one empty glass potion bottle asset for a cute dreamy fairytale magic workshop puzzle game. Polished painterly animated film aesthetic, warm honey gold and soft teal highlights. Front view upright symmetrical bottle: wide straight-sided cylindrical chamber with gently rounded bottom corners, short open neck and thick rolled glass lip, thin antique-gold trim only around lip and base. No cork. Clear transparent EMPTY interior, sparse edge reflections, keep broad central chamber unobstructed for software-rendered liquid. No labels, scale, numbers, letters or decorations across chamber. Single object on genuine transparent alpha background. Target1024x1024 canvas, one frame1x1. Bottom center anchor(512,832); entire bottle and any soft shadow inside x256..768 y160..848. At least128px transparent margin every edge. Nothing clipped, no surrounding items, no particles, no background, no watermark. Render entire original canvas, never crop."
+    },
+    {
+      "file": "potion-gift-v2.png",
+      "role": "完成委託的藥水禮物",
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "prompt": "One completed magical potion gift for a children's fairytale workshop game, cute dreamy polished painterly 3D animated film style. Single rounded teardrop glass bottle filled with luminous turquoise potion, small gold star ornament on a lavender ribbon neatly tied around neck, rounded natural cork with gold cap. Warm amber upper-left key light, subtle magical glow contained INSIDE glass. No detached particles, no letters or numbers, no label, no environment. Genuine transparent background. Production specification:1024x1024 single1x1 frame, center anchor(512,512), bottom baseline832. Entire bottle, cork, ribbon and all lighting effects within x224..800,y160..848 with at least128px empty transparent border on ALL sides. Full complete silhouette, no cropping. One object only. This is the celebratory delivery illustration, no capacity markings.",
+      "paddingPrompt": "Adjust ONLY framing of this completed potion gift. Preserve exact bottle design, turquoise potion, ribbon, cork, star, colors and rendering. Uniformly reduce entire object to 75percent of its current size, center it in the SAME full square canvas. One1x1 transparent frame target1254x1254. Center anchor627,627. Complete object including ribbon and all effects must stay within x190..1064,y190..1064; outer160px on EVERY edge must be completely empty alpha0. No clipping, no new content, no background. Keep genuine transparent PNG, no hard crop."
+    }
+  ],
+  "pending": [],
+  "validation": "全部完整單格，未裁切，沒有切出動畫幀；實際尺寸不同於目標，整張等比使用。錨點為視覺估計，接入時校準。",
+  "alphaAudit": "六張選用圖片外框仍有 alpha=1/255 殘點，未通過完全透明外框驗收。兔子外180px、小鹿v4與小熊v2外160px、其餘三張外128px最高alpha均為1。原圖完整，未裁切。"
+}

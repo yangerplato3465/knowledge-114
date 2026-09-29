@@ -1,0 +1,68 @@
+{
+  "generation": "Built-in image_gen",
+  "status": "選用素材已接入魔法工坊；版位、腳底錨點與角色比例以 src/games/magic-workshop/art.ts 為準。保留完整原圖，未作裁切或逐幀動畫；原圖透明外框殘點仍保留。",
+  "style": "迪士尼動畫電影式的可愛夢幻風；原創工坊與角色，暖金、淡紫、青綠。",
+  "assets": [
+    {
+      "file": "workshop-panorama-v1.png",
+      "size": [
+        2172,
+        724
+      ],
+      "layout": {
+        "rows": 1,
+        "columns": 1
+      },
+      "alpha": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "display": "完整呈現 3:1 全景，不以現有狹長頁首裁切",
+      "prompt": "Use case: stylized-concept. Production game environment asset for a cute magic liquid measuring puzzle game called Magic Workshop. Disney animated feature film inspired, adorable dreamy storybook animation, original environment, premium painterly 3D animation aesthetic, soft rounded handcrafted forms, warm amber sunlight and cool turquoise and lavender magical accents, gentle volumetric light, inviting and charming for children. OUTPUT SPEC: single opaque panoramic frame, target 1536 x 512 pixels (3:1 aspect), anchor center (768,256), intended to display the complete frame with contain, not cropped. Keep distinctive architecture and all important decorative props within an interior 64px safe margin; background wall and floor may bleed to the edges. Scene: interior of a cozy fantasy apothecary workshop, curved honey-colored wood beams, one large arched window looking out at a dreamy enchanted forest and distant floating lights, small shelves of round potion bottles, hanging herbs, delicate star motifs, warm lamps, a broad welcoming curved wooden work counter along the lower foreground. Clear balanced composition with a calm low-detail center and richer decoration toward the sides, wide readable silhouettes. This is a background, not a screenshot or UI. No people, no mascots, no bottle labels, no letters, numbers, logos, watermark, panels or buttons. No harsh contrast, no spooky skulls, no photorealism. All props complete and coherent; do not put important objects against image borders."
+    },
+    {
+      "file": "apprentice-v2.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "layout": {
+        "rows": 1,
+        "columns": 1
+      },
+      "alpha": true,
+      "anchor": [
+        0.5,
+        0.87
+      ],
+      "facing": "三分之四正面",
+      "safePaddingTargetPx": 96,
+      "inspection": "帽子、披風、手指、玻璃瓶與鞋子完整。外框有 alpha=1 殘點；未作裁切。",
+      "prompt": "Use case: stylized-concept. A single production character cutout for the Magic Workshop children's potion measuring puzzle game. Disney animated feature film inspired: adorable expressive face, large kind hazel eyes, rounded stylized proportions, polished painterly 3D animated film rendering, soft warm amber key light from upper left, delicate teal and lavender rim light. ORIGINAL character: a cheerful young apprentice magician with short chestnut curls, a rounded oversized lavender wizard hat with a little gold star pin, a teal tunic, plum cape, small tan boots, small belt pouch. Gentle welcoming smile, one hand open in a welcoming gesture, the other holding one small round EMPTY translucent magical flask with a simple cork, no scale or markings. Full body, standing, three-quarter front view facing slightly toward the viewer's left, clearly readable silhouette. No other characters or scenery. OUTPUT SPEC: one frame only, single square 1024x1024 canvas, genuine transparent alpha background. Anchor centered at x512 with feet baseline y860; character including hat, cape, fingers, flask and tiny soft ground shadow must fit ENTIRELY inside x112..912 and y96..896. At least 96 pixels fully transparent safety margin on ALL edges. Keep body occupy about 72 percent canvas height; do not crop or tightly trim. No floating sparkles or extended trails, no separate accessories outside silhouette, no border, no letters, numbers, logos or watermark. Match a dreamy honey-wood fantasy apothecary world, warm and inviting, never spooky. 1 row x1 column, full untouched canvas for later game placement.",
+      "cleanupPrompt": "Edit ONLY the transparent background of this apprentice game character. Keep character identity, pose, costume, color, facial features and all props exactly. Strictly erase ALL stray pixels, near-transparent noise and stray color from the background outside the character silhouette, especially the canvas edges. The entire outer 96 pixel frame must have ALPHA EXACTLY ZERO, no residual speckles whatsoever. Preserve full body and soft contained foot shadow. Keep the character at its current scale, with complete hat, cape, bottle, fingers, shoes, and no clipping. One square transparent PNG cutout, no added elements. Genuine transparent alpha, not black background."
+    },
+    {
+      "file": "forest-visitor-v3.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "layout": {
+        "rows": 1,
+        "columns": 1
+      },
+      "alpha": true,
+      "anchor": [
+        0.5,
+        0.82
+      ],
+      "facing": "三分之四正面",
+      "safePaddingTargetPx": 160,
+      "inspection": "耳朵、尾巴、提籃、玻璃瓶與腳掌完整。已增加角色留白，外框仍需處理極淡透明殘點。",
+      "prompt": "Use case: stylized-concept. Single production visitor character cutout for the Magic Workshop children's potion measuring puzzle game. Disney animated feature film inspired: adorable expressive face, large gentle eyes, rounded stylized proportions, sophisticated painterly 3D animated movie rendering, soft warm amber key light from upper left and delicate cool rim light. ORIGINAL fantasy forest herbalist visitor: a cute small upright fox with soft warm russet and cream fur, large fluffy tail, leaf-green short hooded travelling cape, simple lavender scarf, tan satchel, holding a small woven basket of herbs and one empty round glass potion bottle. Warm grateful smile, bright friendly amber eyes, three-quarter front view facing slightly viewer right. Full body standing, paws and complete curved tail fully visible; tail tucked closely beside body. Match dreamy honey-wood apothecary world, warm and welcoming. No other characters or scenery. OUTPUT SPEC: single square 1024x1024 transparent PNG, 1 row x1 column, one complete frame. Feet anchor x512 y860. Entire subject including ears, cape, basket, bottle, tail, whiskers and soft ground shadow MUST stay within x112..912, y96..896; at least96 pixels completely transparent padding on all four sides, aim for generous 14percent padding and 70percent canvas-height occupancy. Do not tightly trim or crop. Genuine transparent alpha, no background or checkerboard painted into image. No text, numbers, logos, watermark, frame, floor, detached sparkles, particles or trails. Consistent premium animated film look, NOT flat vector, NOT photograph.",
+      "paddingPrompt": "Edit this existing forest fox visitor cutout for production padding only. Preserve EXACT character identity, face, costume, pose, bottle, basket, fur, tail, colors, rendering and transparent background. Keep square full canvas. Reduce the COMPLETE character uniformly to about 75 percent of its current height and center it, with feet baseline at 84 percent canvas height. All visible pixels including ears, whiskers, tail, shadow, bottle and basket must fit inside the central 72 percent of the canvas width AND height. Target canvas 1254x1254, minimum completely transparent safe border 160 pixels on EVERY edge. This is ONE standalone full-body frame, 1x1; no cropping, no new objects, no grid, no text. Maintain genuine alpha transparency, not black or checkerboard.",
+      "cleanupPrompt": "Clean ONLY alpha/background of this existing fox herbalist game sprite. Preserve the exact fox, expression, clothing, tail, basket, bottle, pose and current generous framing. One square transparent image, no new content. Remove ALL stray nonzero-alpha pixels and near-invisible noise beyond character and its small contained ground shadow. Outer 160 pixels on every edge MUST have alpha exactly 0. Keep all ears, fur, whiskers, tail and feet intact, no crop, no rescale, no style change. Transparent background, no black or checkerboard image content."
+    }
+  ]
+}

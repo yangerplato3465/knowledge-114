@@ -7,6 +7,10 @@ function publish(source) {
   const path = relative(root, source).split(sep).join('/');
   // 素材庫可能合法包含 Markdown；只排除網站自身的開發素材。
   if (path.startsWith('assets/uploads/')) return !path.endsWith('/.gitkeep');
+  // Workshop runtime uses display WebP only; retain authoring originals in Git.
+  if (path.startsWith('assets/images/magic-workshop/')) {
+    return path === 'assets/images/magic-workshop/display' || path.endsWith('.webp');
+  }
   return path !== 'assets/css' && !path.endsWith('.md');
 }
 

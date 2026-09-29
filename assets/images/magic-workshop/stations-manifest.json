@@ -1,0 +1,33 @@
+{
+  "toolMode": "builtin image_gen",
+  "status": "選用素材已接入魔法工坊；版位、腳底錨點與角色比例以 src/games/magic-workshop/art.ts 為準。保留完整原圖，未作裁切或逐幀動畫；原圖透明外框殘點仍保留。",
+  "frame": {
+    "width": 1254,
+    "height": 1254,
+    "rows": 1,
+    "columns": 1,
+    "transparent": true,
+    "safePaddingTargetPx": 200
+  },
+  "assets": [
+    {
+      "file": "magic-spring-v1.png",
+      "role": "魔力泉：補滿",
+      "anchor": [
+        0.5,
+        0.85
+      ],
+      "prompt": "Create ONE magical spring refill station game asset. Reference potion is STYLE AND MATERIAL reference only: same cute dreamy polished painterly 3D animated fairytale world, honey gold trim, turquoise magical water, lavender accents. A compact tabletop fountain with a rounded ivory stone basin on a short warm gold pedestal. Behind the basin rises a small crescent-moon-shaped pale turquoise crystal arch. A short golden curved spout emerges from the crescent base directed down into basin; a small contained stream of blue water flows into shallow luminous cyan pool. Friendly rounded proportions, unmistakable water source, simple readable silhouette at small size. Three-quarter front view from slightly above, warm upper-left light. Single object no people, no UI, no text numbers arrows logos. No detached particles or long glows; every water drop inside basin silhouette. SPEC one1x1 frame1254x1254 transparent PNG, entire station including moon tips spout basin pedestal shadow and effects inside x240..1014,y240..1014. Subject occupies60percent canvas height MAXIMUM, generous empty margin minimum200px ALL edges. Bottom center anchor627,1000. Genuine alpha0 outside object, no floor or background, never crop."
+    },
+    {
+      "file": "recycling-cauldron-v1.png",
+      "role": "回收釜：倒空",
+      "anchor": [
+        0.5,
+        0.79
+      ],
+      "prompt": "One cute magical recycling cauldron station for the same fairytale workshop as reference potion. Reference used for painterly 3D animated-film rendering and refined warm gold materials only. Round plump WARM COPPER cauldron, very wide OPEN oval mouth visibly accessible for pouring liquid into it, thick gold rim, dark plum inner basin with subtle gentle lavender sheen, no contents overflowing. Two compact round loop handles, three short rounded feet, one simple gold star emblem centered on front, small lavender enamel accents near feet. Inviting rounded silhouette, slightly whimsical, no face. NO lid, no fire, no skulls, no smoke, no bubbles or floating particles. Clear contrast to turquoise moon fountain: copper squat pot, readable at small size. Three-quarter front view from slightly above so opening is clear, upper-left warm light. Entire single object on transparent alpha0 background, no text arrows labels logos. SPEC1254x1254 canvas1x1 frame, all handles feet rims shadows contained within x240..1014,y260..994, centered627,627, bottom anchor627,994. Maximum60percent canvas occupancy, at least200px completely transparent border every edge; no hard crop. Full complete object."
+    }
+  ],
+  "validation": "實際兩張均為1254×1254，完整靜態單格、未裁切。魔力泉alpha≥16範圍[383,274,911,1081]，底部約172px留白，未達200px目標；外128px最高alpha=1/255。透明殘點及遊戲疊合尚待處理，非完全透明外框驗收通過。造型待使用者確認。"
+}

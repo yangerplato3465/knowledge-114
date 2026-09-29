@@ -25,4 +25,15 @@ for (const file of await readdir(new URL('assets/images/math-rpg/', root), { rec
   const path = 'assets/images/math-rpg/' + file.replaceAll('\\', '/');
   assert.deepEqual(await readFile(new URL(path, root)), await readFile(new URL('dist/' + path, root)), path);
 }
+const workshop = 'assets/images/magic-workshop/';
+const displayManifest = JSON.parse(await readFile(new URL(workshop + 'display/manifest.json', root), 'utf8'));
+for (const { file } of displayManifest.assets) {
+  const path = workshop + 'display/' + file;
+  assert.deepEqual(await readFile(new URL(path, root)), await readFile(new URL('dist/' + path, root)), path);
+}
+for (const file of await readdir(new URL('dist/' + workshop, root), { recursive: true })) {
+  assert.ok(file === 'display' || file.endsWith('.webp'), '工坊只發布顯示素材：' + file);
+}
+const music = 'assets/audio/magic-workshop/bgm.mp3';
+assert.deepEqual(await readFile(new URL(music, root)), await readFile(new URL('dist/' + music, root)), music);
 console.log(entries.length + ' 個 React 正式入口、base 與移除舊站檢查通過。');

@@ -11,6 +11,7 @@ React＋Vite 多頁網站，瀏覽器直連 GitHub／Firebase，無前端 Router
 | 科學教材 | `src/lessons` | React 內容與互動，各教材獨立入口 |
 | 素材上下載 | `src/features/materials` | GitHub Contents API；清單可取消，寫入依序執行 |
 | 數學勇者 | `src/games/math-rpg` | 五關冒險已開放；`battle.ts` 純函式戰鬥／數值、React 操作、本地 Pixi 像素動畫戰場；`question-deck.ts` 管理五上／六上單元，五上小數、因數與倍數、擴約分與通分、多邊形與扇形動態題庫開放 |
+| 魔法工坊 | `src/games/magic-workshop` | 獨立五關量取遊戲；`rules.ts` 管理補滿、倒空、互倒與最短解，`puzzles.ts` 管理已驗證候選題與可重現抽題；DOM 承載操作與液量，本地 Pixi 繪製動態工坊場景 |
 | 班級／偵探 | `src/features/class-rpg`、`src/features/detective` | React 外殼接 `assets/js/class-rpg*`／`assets/js/detective`；仍有直接操作 DOM 的模組 |
 
 ## 載入與樣式
@@ -20,6 +21,7 @@ React＋Vite 多頁網站，瀏覽器直連 GitHub／Firebase，無前端 Router
 - 配色在 `assets/css/theme.css`；`src/styles` 內 `base.css` 共用、`global.css` 首頁、`directory.css` 目錄、`ui.css` 功能覆寫；舊樣式置於 `legacy` layer。
 - 班級／偵探使用本地 [Pixi ESM](../assets/vendor/README.md)，Firebase SDK 仍需 CDN／網路。
 - Vite 產生 HTML／JS／CSS，[copy-static](../scripts/copy-static.mjs) 補入現役資源與素材；[check-build](../scripts/check-build.mjs) 檢查入口與禁用產物。發布方式見 [README](../README.md#部署)。
+- 魔法工坊只發布 `display/*.webp` 與壓縮背景音樂，原始 PNG／製作清單留在原始碼供維護；拖曳預覽每畫面幀最多更新一次，放開時仍使用即時位置判定。
 
 ## 資料契約
 
