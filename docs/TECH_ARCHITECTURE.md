@@ -11,6 +11,7 @@ React＋Vite 多頁網站，瀏覽器直連 GitHub／Firebase，無前端 Router
 | 科學教材 | `src/lessons` | React 內容與互動，各教材獨立入口 |
 | 素材上下載 | `src/features/materials` | GitHub Contents API；清單可取消，寫入依序執行 |
 | 數學勇者 | `src/games/math-rpg` | 五關冒險已開放；`battle.ts` 純函式戰鬥／數值、React 操作、本地 Pixi 像素動畫戰場；`question-deck.ts` 管理五上／六上單元，五上小數、因數與倍數、擴約分與通分、多邊形與扇形動態題庫開放 |
+| 魔法工坊 | `src/games/magic-workshop` | 獨立五關量取遊戲；`rules.ts` 管理補滿、倒空、互倒與最短解，`puzzles.ts` 管理已驗證候選題與可重現抽題；DOM 承載操作與液量，本地 Pixi 繪製動態工坊場景 |
 | 班級／偵探 | `src/features/class-rpg`、`src/features/detective` | React 外殼接 `assets/js/class-rpg*`／`assets/js/detective`；仍有直接操作 DOM 的模組 |
 
 ## 載入與樣式

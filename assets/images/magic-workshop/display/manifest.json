@@ -1,0 +1,365 @@
+{
+  "processing": "Full canvas resized uniformly; no crop or alpha cleanup.",
+  "assets": [
+    {
+      "source": "apprentice-celebrate-v1.png",
+      "file": "apprentice-celebrate-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        210,
+        71,
+        572,
+        683
+      ],
+      "sourceBytes": 901506,
+      "bytes": 69606
+    },
+    {
+      "source": "apprentice-v2.png",
+      "file": "apprentice-v2.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        210,
+        71,
+        571,
+        687
+      ],
+      "sourceBytes": 920030,
+      "bytes": 72012
+    },
+    {
+      "source": "bottle-empty-v1.png",
+      "file": "bottle-empty-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        211,
+        130,
+        554,
+        651
+      ],
+      "sourceBytes": 668015,
+      "bytes": 67394
+    },
+    {
+      "source": "bottle-magic-ring-v1.png",
+      "file": "bottle-magic-ring-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        79,
+        196,
+        696,
+        559
+      ],
+      "sourceBytes": 911983,
+      "bytes": 111004
+    },
+    {
+      "source": "forest-visitor-v3.png",
+      "file": "forest-visitor-v3.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        218,
+        142,
+        545,
+        640
+      ],
+      "sourceBytes": 632847,
+      "bytes": 55730
+    },
+    {
+      "source": "magic-spring-v1.png",
+      "file": "magic-spring-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        235,
+        168,
+        559,
+        663
+      ],
+      "sourceBytes": 647767,
+      "bytes": 63810
+    },
+    {
+      "source": "potion-gift-v2.png",
+      "file": "potion-gift-v2.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        232,
+        139,
+        536,
+        635
+      ],
+      "sourceBytes": 618675,
+      "bytes": 53410
+    },
+    {
+      "source": "recycling-cauldron-v1.png",
+      "file": "recycling-cauldron-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        129,
+        196,
+        651,
+        609
+      ],
+      "sourceBytes": 952633,
+      "bytes": 74678
+    },
+    {
+      "source": "visitor-bear-artisan-v2.png",
+      "file": "visitor-bear-artisan-v2.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        272,
+        149,
+        538,
+        645
+      ],
+      "sourceBytes": 641444,
+      "bytes": 56556
+    },
+    {
+      "source": "visitor-bear-happy-v1.png",
+      "file": "visitor-bear-happy-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        259,
+        137,
+        553,
+        667
+      ],
+      "sourceBytes": 685194,
+      "bytes": 57324
+    },
+    {
+      "source": "visitor-deer-happy-v1.png",
+      "file": "visitor-deer-happy-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        225,
+        104,
+        556,
+        685
+      ],
+      "sourceBytes": 630246,
+      "bytes": 55128
+    },
+    {
+      "source": "visitor-deer-post-v4.png",
+      "file": "visitor-deer-post-v4.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        237,
+        129,
+        533,
+        642
+      ],
+      "sourceBytes": 488804,
+      "bytes": 43732
+    },
+    {
+      "source": "visitor-fox-happy-v1.png",
+      "file": "visitor-fox-happy-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        183,
+        101,
+        570,
+        690
+      ],
+      "sourceBytes": 836591,
+      "bytes": 70512
+    },
+    {
+      "source": "visitor-owl-happy-v1.png",
+      "file": "visitor-owl-happy-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        191,
+        145,
+        551,
+        669
+      ],
+      "sourceBytes": 778255,
+      "bytes": 64212
+    },
+    {
+      "source": "visitor-owl-keeper-v1.png",
+      "file": "visitor-owl-keeper-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        211,
+        179,
+        544,
+        644
+      ],
+      "sourceBytes": 681218,
+      "bytes": 59764
+    },
+    {
+      "source": "visitor-rabbit-dew-v2.png",
+      "file": "visitor-rabbit-dew-v2.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        255,
+        162,
+        568,
+        634
+      ],
+      "sourceBytes": 476456,
+      "bytes": 44080
+    },
+    {
+      "source": "visitor-rabbit-happy-v1.png",
+      "file": "visitor-rabbit-happy-v1.webp",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "size": [
+        768,
+        768
+      ],
+      "visibleBoundsAlpha16": [
+        270,
+        157,
+        576,
+        642
+      ],
+      "sourceBytes": 485811,
+      "bytes": 43916
+    },
+    {
+      "source": "workshop-panorama-v1.png",
+      "file": "workshop-panorama-v1.webp",
+      "sourceSize": [
+        2172,
+        724
+      ],
+      "size": [
+        1536,
+        512
+      ],
+      "visibleBoundsAlpha16": [
+        0,
+        0,
+        1536,
+        512
+      ],
+      "sourceBytes": 2364687,
+      "bytes": 183822
+    }
+  ]
+}

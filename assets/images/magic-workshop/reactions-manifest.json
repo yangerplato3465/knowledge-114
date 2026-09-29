@@ -1,0 +1,289 @@
+{
+  "status": "六張反應圖已接入；按獨立可見範圍等比配置，共用角色身高及腳底基準，使用淡入切換，非逐幀動畫。",
+  "spec": {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "layout": "1x1，單張靜態反應姿勢",
+    "safeMargin": 96,
+    "anchor": "以各參考原圖腳底為目標；實際產出需重新校正",
+    "processing": "保留生成原圖，不裁切、不修透明邊緣"
+  },
+  "assets": [
+    {
+      "character": "rabbit",
+      "file": "visitor-rabbit-happy-v1.png",
+      "reference": "visitor-rabbit-dew-v2.png",
+      "prompt": "Edit this exact existing Magic Workshop character to create ONE delighted thank-you reaction pose. Preserve identity, face structure, fur, costume, accessories, body proportions, painterly 3D animated film rendering, colors and lighting. SINGLE frame only,1x1 transparent PNG1254x1254, same source canvas and same character scale and foot placement. Full subject, ears, tail, clothing and props stay complete with at least96px fully transparent margin on every edge. No crop or tight trim. No added background, text, particles or external glow. This is an alternate static pose for a game, not a sheet; do not change the character's age or design. RABBIT: preserve yellow flower sunhat, peach blouse, sky-blue overalls, leaf, jar and both fluffy feet. Change expression to delighted squinting eyes and a warm open smile. Draw a small amount of turquoise magical liquid INSIDE its existing jar. Bring jar just slightly closer to chest in a grateful gesture, keep leaf intact in other paw. Keep ears in same position. Feet baseline y1035, body horizontal position unchanged; full silhouette stays within x320..1000,y200..1060. Do not enlarge.",
+      "audit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          440,
+          256,
+          941,
+          1048
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 206,
+        "allAlphaBounds": [
+          33,
+          21,
+          1222,
+          1236
+        ],
+        "fullyTransparentMargin": 18
+      },
+      "referenceAudit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          416,
+          265,
+          928,
+          1035
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 219
+      },
+      "referenceHeightOverPoseHeight": 0.9722,
+      "acceptance": "完整單張姿勢，無切斷；可見主體留白通過。已依 art.ts 個別配置與原姿勢等高、共用腳底；未修改原圖低透明度殘點。"
+    },
+    {
+      "character": "deer",
+      "file": "visitor-deer-happy-v1.png",
+      "reference": "visitor-deer-post-v4.png",
+      "prompt": "Edit this exact existing Magic Workshop character to create ONE delighted thank-you reaction pose. Preserve identity, face structure, fur, costume, accessories, body proportions, painterly 3D animated film rendering, colors and lighting. SINGLE frame only,1x1 transparent PNG1254x1254, same source canvas and same character scale and foot placement. Full subject, ears, tail, clothing and props stay complete with at least96px fully transparent margin on every edge. No crop or tight trim. No added background, text, particles or external glow. This is an alternate static pose for a game, not a sheet; do not change the character's age or design. DEER MAIL CARRIER: keep berry-red cap, ivory waistcoat, mustard shirt, mail satchel, envelope, short tail and TWO BARE CLOVEN HOOVES exactly. Warm wide smile with bright happy open eyes. Give a small friendly thank-you salute by raising the hand that previously held the satchel strap to the brim of postal cap; other hand still holds envelope close beside torso. Both legs stay exactly planted, no jump or lean. Keep ear tips at original height, foot baseline y1048, horizontal center same as source. Complete silhouette within x300..1000 y180..1080. Do not enlarge head or shrink torso.",
+      "audit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          368,
+          170,
+          909,
+          1118
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 136,
+        "allAlphaBounds": [
+          41,
+          21,
+          1232,
+          1230
+        ],
+        "fullyTransparentMargin": 21
+      },
+      "referenceAudit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          387,
+          211,
+          870,
+          1048
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 206
+      },
+      "referenceHeightOverPoseHeight": 0.8829,
+      "acceptance": "完整單張姿勢，無切斷；可見主體留白通過。已依 art.ts 個別配置與原姿勢等高、共用腳底；未修改原圖低透明度殘點。"
+    },
+    {
+      "character": "owl",
+      "file": "visitor-owl-happy-v1.png",
+      "reference": "visitor-owl-keeper-v1.png",
+      "prompt": "Edit this exact existing Magic Workshop character to create ONE delighted thank-you reaction pose. Preserve identity, face structure, fur, costume, accessories, body proportions, painterly 3D animated film rendering, colors and lighting. SINGLE frame only,1x1 transparent PNG1254x1254, same source canvas and same character scale and foot placement. Full subject, ears, tail, clothing and props stay complete with at least96px fully transparent margin on every edge. No crop or tight trim. No added background, text, particles or external glow. This is an alternate static pose for a game, not a sheet; do not change the character's age or design. OWL KEEPER: retain round spectacles, teal naval coat, lavender scarf, brass lantern, small feet and exact feather pattern. Express quiet warm gratitude with softly closed happy crescent eyes and a tiny smiling open beak. Bring folded wings around lantern in a cozy hug, lantern stays upright, no spread wings. Maintain original silhouette dimensions and unchanged foot positions at baseline1052, upper head292, body centered same as source. No extra accessories. Keep all feathers and scarf within x280..1000,y240..1080.",
+      "audit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          312,
+          236,
+          900,
+          1092
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 162,
+        "allAlphaBounds": [
+          57,
+          21,
+          1199,
+          1230
+        ],
+        "fullyTransparentMargin": 21
+      },
+      "referenceAudit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          344,
+          292,
+          889,
+          1052
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 202
+      },
+      "referenceHeightOverPoseHeight": 0.8879,
+      "acceptance": "完整單張姿勢，無切斷；可見主體留白通過。已依 art.ts 個別配置與原姿勢等高、共用腳底；未修改原圖低透明度殘點。"
+    },
+    {
+      "character": "fox",
+      "file": "visitor-fox-happy-v1.png",
+      "reference": "forest-visitor-v3.png",
+      "prompt": "Edit this exact existing Magic Workshop character to create ONE delighted thank-you reaction pose. Preserve identity, face structure, fur, costume, accessories, body proportions, painterly 3D animated film rendering, colors and lighting. SINGLE frame only,1x1 transparent PNG1254x1254, same source canvas and same character scale and foot placement. Full subject, ears, tail, clothing and props stay complete with at least96px fully transparent margin on every edge. No crop or tight trim. No added background, text, particles or external glow. This is an alternate static pose for a game, not a sheet; do not change the character's age or design. FOX HERBALIST: preserve leaf green cape, lavender scarf, basket of herbs in one paw, small corked round flask in other paw, full fluffy curved tail. Change expression to broad delighted smile with eyes curved happily, head tilted only3degrees in gratitude. Existing flask now contains turquoise magic potion, lift it only slightly at chest level in a gentle thank-you toast. Basket, planted feet and tail remain at original positions. Foot baseline1044; original head/ear top232; whole subject within x280..1000 y180..1080. No jump, no extra hands, no enlarging character.",
+      "audit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          299,
+          165,
+          930,
+          1127
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 127,
+        "allAlphaBounds": [
+          41,
+          21,
+          1200,
+          1230
+        ],
+        "fullyTransparentMargin": 21
+      },
+      "referenceAudit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          356,
+          232,
+          889,
+          1044
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 210
+      },
+      "referenceHeightOverPoseHeight": 0.8441,
+      "acceptance": "完整單張姿勢，無切斷；可見主體留白通過。已依 art.ts 個別配置與原姿勢等高、共用腳底；未修改原圖低透明度殘點。"
+    },
+    {
+      "character": "bear",
+      "file": "visitor-bear-happy-v1.png",
+      "reference": "visitor-bear-artisan-v2.png",
+      "prompt": "Edit this exact existing Magic Workshop character to create ONE delighted thank-you reaction pose. Preserve identity, face structure, fur, costume, accessories, body proportions, painterly 3D animated film rendering, colors and lighting. SINGLE frame only,1x1 transparent PNG1254x1254, same source canvas and same character scale and foot placement. Full subject, ears, tail, clothing and props stay complete with at least96px fully transparent margin on every edge. No crop or tight trim. No added background, text, particles or external glow. This is an alternate static pose for a game, not a sheet; do not change the character's age or design. BEAR ARTISAN: preserve exact honey-brown bear, round goggles on forehead, teal shirt, plum scarf, leather apron, pocket wrench and little brass star lantern. Change to delighted laughing expression, happy crescent eyes and warm smile. Cradle lantern with both paws slightly closer to chest, elbows relaxed and close to body, feet firmly planted exactly in original positions. Keep all fingers coherent, two arms only. Maintain same original head size, head top244 and foot baseline1053. Entire complete subject within x340..980 y200..1080. No jumping, no raised hands, no new props, no extra fire.",
+      "audit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          423,
+          224,
+          902,
+          1089
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 165,
+        "allAlphaBounds": [
+          41,
+          21,
+          1192,
+          1205
+        ],
+        "fullyTransparentMargin": 21
+      },
+      "referenceAudit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          445,
+          244,
+          879,
+          1053
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 201
+      },
+      "referenceHeightOverPoseHeight": 0.9353,
+      "acceptance": "完整單張姿勢，無切斷；可見主體留白通過。已依 art.ts 個別配置與原姿勢等高、共用腳底；未修改原圖低透明度殘點。"
+    },
+    {
+      "character": "apprentice",
+      "file": "apprentice-celebrate-v1.png",
+      "reference": "apprentice-v2.png",
+      "prompt": "Edit this exact existing Magic Workshop character to create ONE delighted thank-you reaction pose. Preserve identity, face structure, fur, costume, accessories, body proportions, painterly 3D animated film rendering, colors and lighting. SINGLE frame only,1x1 transparent PNG1254x1254, same source canvas and same character scale and foot placement. Full subject, ears, tail, clothing and props stay complete with at least96px fully transparent margin on every edge. No crop or tight trim. No added background, text, particles or external glow. This is an alternate static pose for a game, not a sheet; do not change the character's age or design. APPRENTICE FINAL CELEBRATION: retain exact child magician identity, chestnut curls, gold star lavender hat, teal tunic, plum embroidered cape, belt pouch, brown trousers and tan boots. Cheerful proud open smile and sparkling happy eyes, raise the empty free hand into a small celebratory fist beside shoulder, below hat brim. Other hand still holds the same small flask, now filled with turquoise potion. Both feet stay planted, no jumping, no stretched limbs. Preserve exact original character scale, head-to-body ratio, hat top y116 and foot baseline1122, body centered same as input. ALL content must stay within x200..1054,y100..1140, at least96px fully transparent margin all edges. No external magic effects; add no new props. Entire hat, cape and fingers complete.",
+      "audit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          343,
+          117,
+          934,
+          1115
+        ],
+        "edgeAlphaMax": 0,
+        "visibleMargin": 117,
+        "allAlphaBounds": [
+          37,
+          48,
+          1226,
+          1230
+        ],
+        "fullyTransparentMargin": 24
+      },
+      "referenceAudit": {
+        "size": [
+          1254,
+          1254
+        ],
+        "mode": "RGBA",
+        "visibleBoundsAlpha16": [
+          343,
+          116,
+          932,
+          1122
+        ],
+        "edgeAlphaMax": 1,
+        "visibleMargin": 116
+      },
+      "referenceHeightOverPoseHeight": 1.008,
+      "acceptance": "完整單張姿勢，無切斷；可見主體留白通過。已依 art.ts 個別配置與原姿勢等高、共用腳底；未修改原圖低透明度殘點。"
+    }
+  ],
+  "limitations": [
+    "可見主體的安全留白均超過 96px；低透明度殘點使完全透明留白只有 18–24px，未通過 96px 全透明安全框。",
+    "原圖為獨立靜態反應姿勢，採淡入切換，不宣稱為連續動作幀。"
+  ]
+}

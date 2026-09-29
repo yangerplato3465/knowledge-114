@@ -1,0 +1,43 @@
+{
+  "file": "bottle-magic-ring-v1.png",
+  "tool": "builtin image_gen",
+  "prompt": "Create a single polished magical potion activation effect asset for a cute dreamy animated-film fantasy workshop game. One elegant turquoise and warm gold elliptical magic ring seen at slight top-down angle, delicate curling liquid-light wisps and a few small golden four-point stars around its rim. Center mostly empty and transparent so a game bottle and liquid measurements stay readable. Soft painterly 3D animation finish, friendly, refined, not explosive, no runes or text, no bottle, no objects, no background or floor. Production spec: transparent PNG 1254x1254, exactly ONE complete effect in a 1x1 frame; anchor canvas center (627,627); all ring, stars, trails, glow and shadows entirely within x190..1064,y300..954; at least160px fully transparent safe padding at each outer edge. Broad horizontal ellipse, balanced composition, no clipping, no sheet. Full glow must fade completely to transparent inside safety bounds.",
+  "requested": {
+    "size": [
+      1254,
+      1254
+    ],
+    "layout": "1x1",
+    "anchor": [
+      627,
+      627
+    ],
+    "transparent": true,
+    "safePadding": 160
+  },
+  "usage": "瓶子底部裝飾，完整原圖等比呈現；選取及可接收液體時增亮。未裁切。",
+  "actual": {
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "visibleBoundsAlpha16": [
+      130,
+      320,
+      1137,
+      913
+    ],
+    "allAlphaBounds": [
+      24,
+      19,
+      1238,
+      1230
+    ],
+    "anchor": [
+      627,
+      627
+    ]
+  },
+  "validation": "完整单張效果，主體與光暈無切斷，保留全圖使用。可見留白最小 117px，未達原要求 160px；極淡殘點使全透明留白只有 16px，未通過完全透明安全框。非切片或逐幀素材。"
+}
