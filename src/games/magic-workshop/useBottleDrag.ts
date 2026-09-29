@@ -12,6 +12,11 @@ export function useBottleDrag(game: GameState, dispatch: React.Dispatch<GameEven
   const [drag, setDrag] = useState<Drag | null>(null);
   const suppressClick = useRef(false);
   const rebound = useRef<Animation | null>(null);
+  const frame = useRef<number | null>(null);
+  const cancelFrame = () => {
+    if (frame.current !== null) cancelAnimationFrame(frame.current);
+    frame.current = null;
+  };
   const cancelRebound = () => { rebound.current?.cancel(); rebound.current = null; };
   const actionFor = (from: number, target: string): Action => target === 'spring' ? { kind: 'fill', from }
     : target === 'recycler' ? { kind: 'empty', from } : { kind: 'pour', from, to: Number(target) };
@@ -26,6 +31,7 @@ export function useBottleDrag(game: GameState, dispatch: React.Dispatch<GameEven
     return null;
   };
   const clear = () => {
+    cancelFrame();
     const old = current.current;
     current.current = null;
     setDrag(null);
@@ -50,6 +56,7 @@ export function useBottleDrag(game: GameState, dispatch: React.Dispatch<GameEven
       media.removeEventListener('change', motion);
       const old = current.current;
       cancelRebound();
+      cancelFrame();
       current.current = null;
       if (old?.element.hasPointerCapture?.(old.pointer)) old.element.releasePointerCapture(old.pointer);
     };
@@ -76,7 +83,11 @@ export function useBottleDrag(game: GameState, dispatch: React.Dispatch<GameEven
       event.preventDefault();
       const next = { ...old, active, x: event.clientX, y: event.clientY, target: targetAt(event.clientX, event.clientY, from) };
       current.current = next;
-      setDrag(next);
+      // Input remains immediate; paint only the latest position once per frame.
+      if (frame.current === null) frame.current = requestAnimationFrame(() => {
+        frame.current = null;
+        setDrag(current.current);
+      });
     },
     onPointerUp: (event: PointerEvent<HTMLButtonElement>) => {
       const old = current.current;

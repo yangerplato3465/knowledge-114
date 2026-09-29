@@ -21,6 +21,7 @@ React＋Vite 多頁網站，瀏覽器直連 GitHub／Firebase，無前端 Router
 - 配色在 `assets/css/theme.css`；`src/styles` 內 `base.css` 共用、`global.css` 首頁、`directory.css` 目錄、`ui.css` 功能覆寫；舊樣式置於 `legacy` layer。
 - 班級／偵探使用本地 [Pixi ESM](../assets/vendor/README.md)，Firebase SDK 仍需 CDN／網路。
 - Vite 產生 HTML／JS／CSS，[copy-static](../scripts/copy-static.mjs) 補入現役資源與素材；[check-build](../scripts/check-build.mjs) 檢查入口與禁用產物。發布方式見 [README](../README.md#部署)。
+- 魔法工坊只發布 `display/*.webp` 與壓縮背景音樂，原始 PNG／製作清單留在原始碼供維護；拖曳預覽每畫面幀最多更新一次，放開時仍使用即時位置判定。
 
 ## 資料契約
 
