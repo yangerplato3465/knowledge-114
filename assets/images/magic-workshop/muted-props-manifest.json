@@ -1,0 +1,65 @@
+{
+  "generator": "Built-in image_gen",
+  "prompts": [
+    "Single transparent game prop, 1024x1024 one frame 1x1, center anchor(512,512), baseline850, all object/shadow/glow within x128..896 y128..880. Complete silhouette, minimum128 transparent safe padding, no crop. Match reference screenshot background painterly fantasy workshop, moderate low-saturation MIDTONES, softly lit warm upper left, diffuse matte highlights, NOT bright cream or shiny gold, not black or grimy, no photorealism, no vector/pixel art. Replace the left water urn with a SMALL OPEN SACRED SPRING POOL. Broad shallow oval carved warm grey sandstone basin on low solid stone foot. One short natural rock ledge rises at rear LEFT, small trickle flows gently from ledge into open pool. Main silhouette wide shallow pool with little rear rock, NOT a jar, NOT a kettle, no enclosed vessel body, no glass window, no faucet, no handles, no brass. Quiet blue-green water with very subtle magic shimmer, tiny incised crescent in stone edge, restrained moss at rear rock. A short stone pouring notch at RIGHT rim allows gameplay water to leave right edge. No enormous glow, no jewel, no foliage outside bounds. Keep all water within basin except gameplay stream added later. Moderate contrast matching wooden room, not the overbright existing props. Render only this new fountain isolated.",
+    "Single transparent game prop, 1024x1024 one frame 1x1, center anchor(512,512), baseline850, all object/shadow/glow within x128..896 y128..880. Complete silhouette, minimum128 transparent safe padding, no crop. Match reference screenshot background painterly fantasy workshop, moderate low-saturation MIDTONES, softly lit warm upper left, diffuse matte highlights, NOT bright cream or shiny gold, not black or grimy, no photorealism, no vector/pixel art. Repaint ONLY the recycling cauldron as a muted satin aged copper-brown cauldron. Preserve round squat shape, two side handles, three short feet, modest engraved crescent, broad open rim and purple liquid. Replace intense gold shine with broad soft brown copper midtones and small muted highlights; rim is tarnished bronze, not gold. Purple surface is translucent plum with faint lavender center, no white-hot light, no sparks. No rope, no dirt or heavy rust, no black cast iron. Match ambient brightness of background wooden furniture. Render only this isolated cauldron."
+  ],
+  "sources": [
+    "spring-stone-v4.png",
+    "recycler-muted-v4.png"
+  ],
+  "requested": {
+    "frame": [
+      1024,
+      1024
+    ],
+    "grid": [
+      1,
+      1
+    ],
+    "anchor": [
+      512,
+      512
+    ],
+    "padding": 128
+  },
+  "actual": {
+    "frame": [
+      1254,
+      1254
+    ],
+    "note": "完整單幀，原圖保留，整張縮至78%置中補透明邊，不裁切。"
+  },
+  "preparation": "scripts/prepare-workshop-rustic.py",
+  "validation": "原圖與两張執行 WebP 均已檢視，完整物件及陰影無切斷；場景補水操作正常。",
+  "runtime": {
+    "spring": {
+      "file": "display/spring-stone-v4.webp",
+      "frame": [
+        384,
+        384
+      ],
+      "alpha8Bounds": [
+        55,
+        120,
+        333,
+        281
+      ],
+      "bytes": 17380
+    },
+    "recycler": {
+      "file": "display/recycler-muted-v4.webp",
+      "frame": [
+        320,
+        320
+      ],
+      "alpha8Bounds": [
+        56,
+        95,
+        264,
+        238
+      ],
+      "bytes": 13392
+    }
+  }
+}

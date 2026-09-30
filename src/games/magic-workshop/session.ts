@@ -11,7 +11,7 @@ export interface Result { puzzleId: string; steps: number; minimumSteps: number 
 export const TWO_STAR_ALLOWANCE = 2;
 // Rate only completed puzzles. Undo/restart and hints keep their existing rules.
 export function performanceStars(steps: number, minimumSteps: number): 1 | 2 | 3 {
-  if (steps === minimumSteps) return 3;
+  if (steps <= minimumSteps) return 3;
   return steps <= minimumSteps + TWO_STAR_ALLOWANCE ? 2 : 1;
 }
 export interface Move { before: number[]; action: Action }

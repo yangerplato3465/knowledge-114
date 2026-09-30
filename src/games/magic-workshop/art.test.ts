@@ -1,30 +1,24 @@
+import { existsSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { ART, REACTIONS, GUESTS, fitArt } from './art';
+import { ART, GUESTS, REACTIONS } from './art';
 
-it('全部素材等比放置，完整可見範圍保有動作留白且腳底對齊', () => {
+it('現役角色與反應圖的界限有效，展示素材及客人步態齊全', () => {
+  const image = (file: string) => new URL('../../../assets/images/magic-workshop/display/' + file, import.meta.url);
   for (const spec of Object.values(ART)) {
-    const fit = fitArt(spec, 240, 260);
     const [left, top, right, bottom] = spec.bounds;
-    expect(fit.x + left * fit.scale).toBeGreaterThanOrEqual(15.99);
-    expect(fit.x + right * fit.scale).toBeLessThanOrEqual(224.01);
-    expect(fit.y + top * fit.scale).toBeGreaterThanOrEqual(15.99);
-    expect(fit.y + bottom * fit.scale).toBeCloseTo(244);
-    // Full image keeps its original square aspect; alpha padding is never used as character size.
-    expect(fit.size).toBeCloseTo(1254 * fit.scale);
+    expect(left).toBeGreaterThan(0);
+    expect(top).toBeGreaterThan(0);
+    expect(right).toBeGreaterThan(left);
+    expect(bottom).toBeGreaterThan(top);
+    expect(right).toBeLessThan(1254);
+    expect(bottom).toBeLessThan(1254);
+    expect(existsSync(image(spec.file.replace('.png', '.webp'))), spec.file).toBe(true);
   }
   expect(new Set(GUESTS.map(guest => guest.art)).size).toBe(5);
-  const visibleHeight = (key: keyof typeof ART) => {
-    const spec = ART[key]; return (spec.bounds[3] - spec.bounds[1]) * fitArt(spec, 240, 260).scale;
-  };
-  expect(visibleHeight('owl')).toBeLessThan(visibleHeight('deer'));
-});
-
-it('六張反應圖各自校正：與原姿勢可見高度相同且腳底一致', () => {
-  expect(Object.keys(REACTIONS)).toHaveLength(6);
-  for (const [base, pose] of Object.entries(REACTIONS)) {
-    const neutral = ART[base as keyof typeof ART], happy = ART[pose];
-    const a = fitArt(neutral, 240, 260), b = fitArt(happy, 240, 260);
-    expect(a.baseline).toBe(b.baseline);
-    expect((neutral.bounds[3] - neutral.bounds[1]) * a.scale).toBeCloseTo((happy.bounds[3] - happy.bounds[1]) * b.scale);
+  for (const guest of GUESTS) {
+    expect(REACTIONS[guest.art]).toBeDefined();
+    for (let frame = 0; frame < 6; frame++) {
+      expect(existsSync(image('guest-' + guest.art + '-walk-v1-' + frame + '.webp'))).toBe(true);
+    }
   }
 });

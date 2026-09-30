@@ -1,141 +1,126 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { MagicWorkshop } from './MagicWorkshop';
 import { ThemeProvider } from '../../features/theme/ThemeProvider';
-import { createDeck, DIFFICULTY_SETTINGS } from './puzzles';
-import { GUIDE, GUESTS } from './art';
-import { shortestSolution, type Action } from './rules';
+import { currentPuzzle } from './session';
+import { shortestSolution } from './rules';
+import type { SceneModel } from './scene-model';
 
-vi.mock('./WorkshopBackdrop', () => ({ WorkshopBackdrop: () => <div aria-hidden="true" /> }));
-vi.mock('./workshop-music', () => ({ createWorkshopMusic: () => ({ start: vi.fn(), resume: vi.fn(), stop: vi.fn(), visibility: vi.fn(), destroy: vi.fn() }) }));
-vi.mock('./WorkbenchEffects', () => ({ WorkbenchEffects: () => <div aria-hidden="true" /> }));
-vi.mock('./CharacterPortrait', () => ({ CharacterPortrait: ({ art }: { art: string }) => <div data-character={art} aria-hidden="true" /> }));
-afterEach(() => { document.body.innerHTML = ''; vi.restoreAllMocks(); vi.unstubAllGlobals(); });
-beforeEach(() => { vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} })); });
-
-it('拖曳支援補滿、互倒與倒空；空處、取消、重複 click 都不多計步', () => {
-  class TestPointerEvent extends MouseEvent {
-    pointerId: number;
-    constructor(type: string, init: PointerEventInit) { super(type, init); this.pointerId = init.pointerId ?? 1; }
-  }
-  vi.stubGlobal('PointerEvent', TestPointerEvent);
-  render(<ThemeProvider><MagicWorkshop /></ThemeProvider>);
-  fireEvent.click(screen.getByRole('button', { name: '開始五關委託' }));
-  const bottles = screen.getAllByRole('button', { name: /第 \d 瓶，容量/ });
-  const spring = screen.getByRole('button', { name: /魔力泉/ });
-  const recycler = screen.getByRole('button', { name: /回收釜/ });
-  [bottles[0], bottles[1], spring, recycler].forEach((element, index) => {
-    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({ left: index * 100, right: index * 100 + 80, top: 0, bottom: 100, width: 80, height: 100, x: index * 100, y: 0, toJSON() {} });
+const bridge = vi.hoisted(() => ({ create: vi.fn(), audio: vi.fn() }));
+vi.mock('./play-scene', () => ({ createPlayScene: bridge.create }));
+vi.mock('./useWorkshopAudio', () => ({ useWorkshopAudio: () => bridge.audio }));
+let model: SceneModel;
+let activate: (id: string) => void;
+let destroy: ReturnType<typeof vi.fn>;
+let signal: AbortSignal;
+beforeEach(() => {
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+  bridge.create.mockReset(); bridge.audio.mockReset(); destroy = vi.fn();
+  bridge.create.mockImplementation(async (_host, initial, abort, hooks) => {
+    model = initial; activate = hooks.activate; signal = abort;
+    const update = (next: SceneModel) => {
+      model = next;
+      hooks.controls([{ id: 'start', label: '開始五關委託', x: 0, y: 0, w: 100, h: 50 }]);
+    };
+    return { update, focus: vi.fn(), activate: hooks.activate, cancel: vi.fn(), motion: vi.fn(), destroy };
   });
-  const move = (from: number, x: number, cancel = false) => {
-    fireEvent.pointerDown(bottles[from], { pointerId: 1, button: 0, clientX: from * 100 + 30, clientY: 30 });
-    fireEvent.pointerMove(bottles[from], { pointerId: 1, clientX: x, clientY: 30 });
-    if (cancel) fireEvent.pointerCancel(bottles[from], { pointerId: 1 });
-    else fireEvent.pointerUp(bottles[from], { pointerId: 1, clientX: x, clientY: 30 });
-    fireEvent.click(bottles[from], { detail: 1 });
-  };
-  move(0, 230);
-  expect(screen.getByText('查看操作紀錄（1 步）')).toBeTruthy();
-  expect(bottles[0].getAttribute('aria-pressed')).toBe('false');
-  move(0, 130);
-  expect(screen.getByText('查看操作紀錄（2 步）')).toBeTruthy();
-  move(1, 330);
-  expect(screen.getByText('查看操作紀錄（3 步）')).toBeTruthy();
-  move(0, 900);
-  move(0, 230, true);
-  move(0, 130); // Empty bottle cannot pour.
-  fireEvent.pointerDown(bottles[0], { pointerId: 2, button: 0, clientX: 30, clientY: 30 });
-  fireEvent.pointerMove(bottles[0], { pointerId: 2, clientX: 230, clientY: 30 });
-  fireEvent.keyDown(window, { key: 'Escape' });
-  fireEvent.pointerUp(bottles[0], { pointerId: 2, clientX: 230, clientY: 30 });
-  fireEvent.pointerDown(bottles[0], { pointerId: 3, button: 0, clientX: 30, clientY: 30 });
-  fireEvent.pointerMove(bottles[0], { pointerId: 3, clientX: 230, clientY: 30 });
-  fireEvent.blur(window);
-  fireEvent.pointerUp(bottles[0], { pointerId: 3, clientX: 230, clientY: 30 });
-  expect(screen.getByText('查看操作紀錄（3 步）')).toBeTruthy();
-  expect(document.querySelector('.mw-drag-preview')).toBeNull();
 });
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+async function mount() {
+  const view = render(<ThemeProvider><MagicWorkshop /></ThemeProvider>);
+  await screen.findByRole('button', { name: '開始五關委託' });
+  return view;
+}
+function command(id: string) { act(() => activate(id)); }
 
-it('工坊是獨立遊戲，操作練習可補滿、復原並交付', () => {
-  render(<ThemeProvider><MagicWorkshop /></ThemeProvider>);
-  expect(screen.getByRole('heading', { name: /量得剛剛好/ })).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: '先做操作練習' }));
-  expect(screen.getByText(GUIDE.name)).toBeTruthy();
-  expect(screen.queryByRole('button', { name: /靜音/ })).toBeNull();
-  const spring = screen.getByRole('button', { name: /魔力泉/ });
-  expect(spring.hasAttribute('disabled')).toBe(true);
-  fireEvent.click(screen.getByRole('button', { name: /第 1 瓶，容量 2 單位/ }));
-  expect(spring.hasAttribute('disabled')).toBe(false);
-  fireEvent.click(spring);
-  expect(screen.getByText('委託完成，準備交付！')).toBeTruthy();
-  expect(screen.getByRole('button', { name: '完成練習' })).toBeTruthy();
-  expect(screen.queryByLabelText(/通關表現/)).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: '復原一步' }));
-  expect(screen.queryByText('委託完成，準備交付！')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: '想一想提示' }));
-  expect(screen.getByText(/觀察哪些瓶子還能補滿/)).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: /第 1 瓶，容量 2 單位/ }));
-  fireEvent.click(screen.getByRole('button', { name: /魔力泉/ }));
-  fireEvent.click(screen.getByRole('button', { name: '完成練習' }));
-  expect(screen.getByRole('heading', { name: '練習完成，準備接委託！' })).toBeTruthy();
-});
-
-it('完成才公布最短步數與表現星數；五關成果保留各關評價', () => {
-  render(<ThemeProvider><MagicWorkshop /></ThemeProvider>);
-  fireEvent.click(screen.getByText('我有重玩代碼'));
-  fireEvent.change(screen.getByRole('spinbutton', { name: /重玩代碼/ }), { target: { value: '27' } });
+it('載入一個場景，沒有舊的 DOM 卡片、瓶子或分頁；保留可及性操作', async () => {
+  await mount();
+  expect(document.querySelectorAll('.mw-pixi-host')).toHaveLength(1);
+  expect(document.querySelector('.mw-workbench, .mw-progress, .mw-commission, .mw-home')).toBeNull();
+  expect(screen.getByRole('button', { name: '開始五關委託' }).closest('.mw-accessibility')).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: '開始五關委託' }));
-  const perform = (action: Action) => {
-    fireEvent.click(screen.getByRole('button', { name: new RegExp(`第 ${action.from + 1} 瓶，容量`) }));
-    fireEvent.click(screen.getByRole('button', { name: action.kind === 'fill' ? /魔力泉/ : action.kind === 'empty' ? /回收釜/ : new RegExp(`第 ${action.to! + 1} 瓶，容量`) }));
-  };
-  const ratings = [3, 2, 1, 3, 3];
-  for (const [index, puzzle] of createDeck(27, 3).entries()) {
-    expect(screen.getByText(GUESTS[index].name)).toBeTruthy();
-    expect(screen.getByText(GUESTS[index].title)).toBeTruthy();
-    expect(screen.getByText(GUESTS[index].dialogue.request)).toBeTruthy();
-    expect(screen.queryByLabelText(/通關表現/)).toBeNull();
-    expect(screen.queryByText(new RegExp(`最短 ${puzzle.minimumSteps} 步`))).toBeNull();
-    for (let detour = 0; detour < (index === 1 ? 1 : index === 2 ? 2 : 0); detour++) {
-      perform({ kind: 'fill', from: 0 }); perform({ kind: 'empty', from: 0 });
-    }
-    const path = shortestSolution(puzzle)!;
-    for (const action of path) perform(action);
-    expect(screen.getByLabelText(`通關表現 ${ratings[index]} 星，共 3 星`)).toBeTruthy();
-    expect(screen.getByText(new RegExp(`最短 ${puzzle.minimumSteps} 步`))).toBeTruthy();
-    expect(screen.getByText(GUESTS[index].dialogue.ready)).toBeTruthy();
-    if (index === 0) {
-      fireEvent.click(screen.getByRole('button', { name: '復原一步' }));
-      expect(screen.queryByLabelText(/通關表現/)).toBeNull();
-      perform(path.at(-1)!);
-    }
-    fireEvent.click(screen.getByRole('button', { name: index === 4 ? '交付並看成果' : '交付，前往下一關' }));
-    expect(screen.getByText(`${GUESTS[index].name}收到了！`)).toBeTruthy();
-    expect(screen.getByText(GUESTS[index].dialogue.thanks)).toBeTruthy();
-    if (index < 4) {
-      expect(screen.getByText(`${DIFFICULTY_SETTINGS[3].name}委託 · 第 ${index + 2} / 5 關`)).toBeTruthy();
-      expect(screen.getByRole('button', { name: /第 1 瓶，容量/ }).hasAttribute('disabled')).toBe(false);
-    }
+  expect(model.game.screen).toBe('playing');
+});
+
+it('場景的點選、拖曳、無效操作、復原、提示、交付共用原規則', async () => {
+  await mount(); command('practice'); command('bottle:0'); command('spring');
+  expect(model.game.screen).toBe('ready'); expect(model.game.history).toHaveLength(1);
+  command('undo'); expect(model.game.amounts).toEqual([0,0]);
+  command('drop:0:recycler'); expect(model.game.history).toHaveLength(0);
+  command('hint'); expect(model.game.hintLevel).toBe(1);
+  command('drop:1:spring'); expect(model.game.amounts).toEqual([0,3]);
+  command('drop:1:bottle:0'); expect(model.game.amounts).toEqual([2,1]);
+  command('deliver'); expect(model.game.screen).toBe('practice-done');
+});
+
+it.each([2,3,4,5])('%i 星重玩代碼與完整五關結果維持一致', async difficulty => {
+  await mount();command(`difficulty:${difficulty}`);command('code');command('key:2');command('key:7');command('code-start');
+  expect(model.game.seed).toBe(27);expect(model.game.difficulty).toBe(difficulty);
+  const ids=model.game.deck.map(p=>p.id);
+  for(let i=0;i<5;i++) {
+    const p=currentPuzzle(model.game);
+    for(const action of shortestSolution(p)!) command(`drop:${action.from}:${action.kind==='fill'?'spring':action.kind==='empty'?'recycler':`bottle:${action.to}`}`);
+    expect(model.game.screen).toBe('ready');expect(model.game.history).toHaveLength(p.minimumSteps);
+    command('deliver');
   }
-  const rows = screen.getAllByRole('listitem');
-  expect(rows).toHaveLength(5);
-  rows.forEach((row, index) => expect(within(row).getByLabelText(`通關表現 ${ratings[index]} 星，共 3 星`)).toBeTruthy());
-  expect(document.querySelectorAll('.mw-rating-star')).toHaveLength(15);
-  expect(document.querySelectorAll('.mw-rating-star[data-earned="true"]')).toHaveLength(12);
-  expect(document.querySelector('.mw-ending-guide [data-character="guide"]')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: '再挑戰一次' }));
-  expect(screen.queryByLabelText('交付回饋')).toBeNull();
+  expect(model.game.screen).toBe('finished');expect(model.game.results).toHaveLength(5);
+  command('replay');expect(model.game.deck.map(p=>p.id)).toEqual(ids);
 });
 
-it.each([3, 4, 5] as const)('可選擇 %i 星與題組代碼，五關皆維持所選星級', difficulty => {
+it('重玩代碼拒絕超過 uint32 的數值並可刪除修正', async () => {
+  await mount();command('code');for(let i=0;i<10;i++)command('key:9');command('code-start');
+  expect(model.game.screen).toBe('home');command('key:清除');command('key:2');command('key:7');command('key:⌫');
+  expect(model.seed).toBe('2');command('code-start');expect(model.game.seed).toBe(2);
+});
+
+it('離頁中止載入、銷毀場景；晚到的場景也立即銷毀', async () => {
+  const mounted=await mount();mounted.unmount();expect(signal.aborted).toBe(true);expect(destroy).toHaveBeenCalledOnce();
+  let resolve!: (value: unknown)=>void;
+  bridge.create.mockImplementationOnce((_host,_initial,abort) => { signal=abort;return new Promise(r=>{resolve=r;}); });
+  const second=render(<ThemeProvider><MagicWorkshop /></ThemeProvider>);second.unmount();
+  const lateDestroy=vi.fn();await act(async()=>resolve({destroy:lateDestroy}));
+  expect(signal.aborted).toBe(true);expect(lateDestroy).toHaveBeenCalledOnce();
+});
+
+it('載入失敗提供可重試入口', async () => {
+  bridge.create.mockRejectedValueOnce(new Error('WebGL unavailable'));
   render(<ThemeProvider><MagicWorkshop /></ThemeProvider>);
-  fireEvent.click(screen.getAllByRole('radio')[difficulty - 3]);
-  fireEvent.click(screen.getByText('我有重玩代碼'));
-  fireEvent.change(screen.getByRole('spinbutton', { name: /重玩代碼/ }), { target: { value: '27' } });
-  fireEvent.click(screen.getByRole('button', { name: '開始五關委託' }));
-  expect(screen.getByText(`${DIFFICULTY_SETTINGS[difficulty].name}委託 · 第 1 / 5 關`)).toBeTruthy();
-  expect(screen.queryByText(/題組 27/)).toBeNull();
-  expect(screen.getByRole('list', { name: '五關進度' }).children).toHaveLength(5);
-  expect(screen.getByLabelText(`${difficulty} 星難度`)).toBeTruthy();
+  fireEvent.click(await screen.findByRole('button',{name:'重新開啟工坊'}));
+  await waitFor(()=>expect(screen.getByRole('button',{name:'開始五關委託'})).toBeTruthy());
+});
+
+it('無原生全螢幕時填滿遊戲模式；場景出口與 Escape 恢復捲動', async () => {
+  const view=await mount();
+  fireEvent.click(screen.getByRole('button',{name:'全螢幕'}));
+  expect(document.querySelector('.mw-immersive')).toBeTruthy();expect(model.fullscreen).toBe(true);
+  expect(document.body.style.overflow).toBe('hidden');
+  command('fullscreen');expect(document.querySelector('.mw-immersive')).toBeNull();
+  expect(document.body.style.overflow).toBe('');
+  fireEvent.click(screen.getByRole('button',{name:'全螢幕'}));
+  fireEvent.keyDown(window,{key:'Escape'});expect(model.fullscreen).toBe(false);
+  fireEvent.click(screen.getByRole('button',{name:'全螢幕'}));
+  view.unmount();expect(document.body.style.overflow).toBe('');
+});
+
+it('原生全螢幕失敗保留遊戲模式，過期失敗不會重新進入', async () => {
+  await mount();let reject!: (reason: Error)=>void;
+  const shell=document.querySelector('.mw-game') as HTMLElement;
+  shell.requestFullscreen=vi.fn(()=>new Promise<void>((_,fail)=>{reject=fail;}));
+  fireEvent.click(screen.getByRole('button',{name:'全螢幕'}));
+  await act(async()=>reject(new Error('unsupported')));expect(model.fullscreen).toBe(true);
+  command('fullscreen');
+  fireEvent.click(screen.getByRole('button',{name:'全螢幕'}));
+  fireEvent.keyDown(window,{key:'Escape'});
+  await act(async()=>reject(new Error('late')));expect(model.fullscreen).toBe(false);
+});
+
+it('載入途中進入全螢幕，晚到的場景仍收到出口狀態', async () => {
+  let finish!: ()=>void;
+  const original=bridge.create.getMockImplementation()!;
+  bridge.create.mockImplementationOnce((...args)=>new Promise(resolve=>{finish=()=>resolve(original(...args));}));
+  render(<ThemeProvider><MagicWorkshop /></ThemeProvider>);
+  fireEvent.click(screen.getByRole('button',{name:'全螢幕'}));
+  await act(async()=>finish());
+  expect(model.fullscreen).toBe(true);
 });

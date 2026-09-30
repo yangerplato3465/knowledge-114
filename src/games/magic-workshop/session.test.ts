@@ -1,16 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import { currentPuzzle, gameReducer, initialGame, performanceStars } from './session';
 import { shortestSolution } from './rules';
+import { sceneAnnouncement } from './scene-model';
 
 describe('工坊一局流程', () => {
+  it('開局公告結晶全亮標準，越界降星；復原、重試重新亮星，提示不扣星', () => {
+    let game=gameReducer(initialGame,{type:'start',seed:27,difficulty:3});
+    const minimum=currentPuzzle(game).minimumSteps;
+    expect(sceneAnnouncement(game)).toContain(`結晶全亮標準 ${minimum} 步內，目前 3 枚魔力結晶`);
+    for(let step=0;step<minimum+1;step++)game=gameReducer(game,{type:'operate',action:{kind:step%2?'empty':'fill',from:0}});
+    expect(sceneAnnouncement(game)).toContain('目前 2 枚魔力結晶');
+    game=gameReducer(game,{type:'hint'});expect(sceneAnnouncement(game)).toContain('目前 2 枚魔力結晶');
+    game=gameReducer(game,{type:'undo'});expect(sceneAnnouncement(game)).toContain('目前 3 枚魔力結晶');
+    game=gameReducer(game,{type:'restart'});expect(game.history).toHaveLength(0);expect(sceneAnnouncement(game)).toContain('目前 3 枚魔力結晶');
+    game=gameReducer(game,{type:'practice'});expect(sceneAnnouncement(game)).not.toContain('結晶全亮標準');
+  });
   it.each([5, 6, 7, 8, 9, 10])('最短 %i 步：最短解三星、多一或兩步兩星、再多也有完成一星', minimum => {
+    expect(performanceStars(0, minimum)).toBe(3);
+    expect(performanceStars(minimum - 1, minimum)).toBe(3);
     expect(performanceStars(minimum, minimum)).toBe(3);
     expect(performanceStars(minimum + 1, minimum)).toBe(2);
     expect(performanceStars(minimum + 2, minimum)).toBe(2);
     expect(performanceStars(minimum + 3, minimum)).toBe(1);
     expect(performanceStars(minimum + 100, minimum)).toBe(1);
   });
-  it.each([3, 4, 5] as const)('%i 星完整交付五關，保留所選難度與實際步數', difficulty => {
+  it.each([2, 3, 4, 5] as const)('%i 星完整交付五關，保留所選難度與實際步數', difficulty => {
     let game = gameReducer(initialGame, { type: 'start', seed: 27, difficulty });
     for (let stage = 0; stage < 5; stage++) {
       const puzzle = currentPuzzle(game);
