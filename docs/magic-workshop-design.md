@@ -71,6 +71,8 @@
 
 ## 一局流程與回饋
 
+故事由 [story.ts](../src/games/magic-workshop/story.ts) 管理：月光茶會、迷路星星、雨天音樂會與種子等春天，每條旅程串接原有五位客人的委託、達標、道別與結局。故事由重玩代碼決定，不消耗抽題亂數、不改變題目、評價或儲存格式；有效操作交替帶出量取觀念與角色彩蛋，提示優先，復原／重試回到對應進度。文案使用既有兩行泡泡，每行最多十字；沿用版面、字級、動畫及操作，手機成果沿用標題位置呈現故事收尾。文案與即時狀態同步提供螢幕閱讀器。
+
 一局暫定五關：開局先選見習生、學徒、魔法師或大魔導師，五道正式題均維持所選星級，並從題庫抽選。三星固定二瓶，採累積與騰空兩類交替，不強求五種解題結構；目前候選題最短解均為 6 步。同星級五關維持相近難度，以解法變化提供進展感，後關可略有挑戰；不要求最短步數或搜尋指標逐關增加，第五關也不可超過所選星級的最短解範圍。首次遊玩可先用 1～2 步教學題示範操作；若不需教學，可直接進入五道正式題。實際關數、時長與難度體感以教室試玩結果調整。每關先顯示顧客委託與目標量，讓全班預測下一步，再由代表操作。成功時交付藥劑、讓顧客或工坊裝置出現簡短回饋，隨即進入下一關。
 
 只要達標即可通關。每關訂單一開始顯示三枚發亮的魔力結晶與「全亮：N 步內」，N 為該題最短解。超過標準時第三枚結晶散出微光、失去光澤；超過下一個門檻再熄滅第二枚。計算共用 [`TWO_STAR_ALLOWANCE` 與 `performanceStars`](../src/games/magic-workshop/session.ts)，成果也採同一評分。評價與題目難度分開標示，復原可重新點亮結晶、重試回到全亮，提示不扣評價，練習不評價。保留復原、重試與兩層情境提示，不以計時或整局歸零懲罰試錯。
@@ -90,6 +92,8 @@
 沿用原有米洛、五位客人的正面與反應姿勢、玻璃瓶、魔力泉、回收釜與禮物素材。客人六幀步態、轉身的規格及產圖提示見 [guest-animation-manifest.json](../assets/images/magic-workshop/guest-animation-manifest.json)，動線狀態機見 [guest-motion.ts](../src/games/magic-workshop/guest-motion.ts)，獨立於瓶子重繪；背景分頁或減少動態直接收斂至最新客人。新工作台背景的尺寸、提示、留白與驗收見 [workbench-manifest.json](../assets/images/magic-workshop/workbench-manifest.json)；原圖留在專案，執行時載入完整 WebP。瓶內液體沿圓底、瓶肩及瓶頸的內部輪廓裁切，份量以內部面積對應；滿瓶抵達瓶頸下緣、少量保留圓底薄層，傾倒時依重力保持水平液面，前方疊加玻璃反光。連續水流採新增的 `water-stream-v2.webp`，規格與提示詞見 [水流素材紀錄](../assets/images/magic-workshop/water-stream-manifest.json)，不再排列水滴；抬瓶、傾倒與歸位時序及水位計算見 [liquid-geometry.ts](../src/games/magic-workshop/liquid-geometry.ts)。標題和數字使用本地的 [Workshop Rounded 字體子集](../assets/fonts/workshop/README.md)，來源為開源粉圓，附完整授權；載入失敗時回退系統繁體字體。
 
 場景透過 `import.meta.env.BASE_URL` 按需載入本地 Pixi、字體及圖片。載入逾時或 WebGL 不可用顯示可重試入口；場景離開時中止載入、移除監聽、釋放自有紋理和渲染器，不啟動晚到的場景。
+
+現役入口為 `MagicWorkshop.tsx` → `play-scene.ts`，圖片載入與取消集中在 [image-loader.ts](../src/games/magic-workshop/image-loader.ts)。舊版獨立背景、角色卡、收據、DOM 拖曳及特效場景已移除；保留現役素材、製作原圖／清單、題庫產生器與字體重建腳本。
 
 保留 [workshop-audio.ts](../src/games/magic-workshop/workshop-audio.ts) 的合成補滿、互倒、倒空、過關與交付音效，以及 [workshop-music.ts](../src/games/magic-workshop/workshop-music.ts) 的低音量循環 BGM。`MagicWorkshop` 的 `sounds` 可接收 Howler 的 `Howl` 實例，掛點為 `pickup`、`pour`、`full`、`success`；未提供音檔時使用既有合成音效，掛點本身不載入 howler.js。音訊由使用者操作啟動，背景暫停，離場釋放；音訊被阻擋不影響規則。
 

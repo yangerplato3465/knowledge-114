@@ -6,9 +6,10 @@ import { OrderEntrance } from './order-entrance';
 import { bottlePourAngle, liquidGeometry, POUR_DURATION, pourTiming } from './liquid-geometry';
 import { GuestMotion } from './guest-motion';
 import { portraitFrame } from './portrait-framing';
-import { loadCharacterImage } from './character-scene';
+import { loadCharacterImage } from './image-loader';
 import { applyAction } from './rules';
 import { currentPuzzle, performanceStars } from './session';
+import { storyFor, visitFor } from './story';
 import { difficultyTitle, isSession, sceneDialogue, targetAction, type SceneControl, type SceneModel, type SceneSound } from './scene-model';
 import type { Graphic, Label, Node, Pixi, Sprite, Texture } from './scene-types';
 
@@ -241,7 +242,7 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       const {x,y}=layout.milo;
       milo=art(happy?'guideHappy':'guide',x,y,layout.milo.width,layout.milo.height,hero); miloY=y;
       text('米洛',x,layout.tableY+6,19,C.paper,foreground,undefined,true);
-      bubble(layout.dialogue.x,layout.dialogue.y,layout.dialogue.width,pendingDelivery?`${GUESTS[model.game.index].name}要出發了。\n下一份心意，也一起加油！`:sceneDialogue(model.game),true,layout.dialogue.fontSize);
+      bubble(layout.dialogue.x,layout.dialogue.y,layout.dialogue.width,pendingDelivery?visitFor(model.game).thanks:sceneDialogue(model.game),true,layout.dialogue.fontSize);
     };
     const drawGuest = () => {
       const index=guestMotion.index, pose=guestMotion.pose();
@@ -297,7 +298,7 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
     };
     const drawEnding = () => {
       const g=model.game, portrait=layout.portrait, practice=g.screen==='practice-done';
-      text(practice?'第一束魔法，亮了！':'森林因你而閃耀',W/2,portrait?90:105,portrait?42:55,C.paper,foreground,undefined,true);
+      text(practice?'第一束魔法，亮了！':storyFor(g.seed).title,W/2,portrait?90:105,portrait?42:55,C.paper,foreground,undefined,true);
       drawProgress(portrait?155:172);
       const {x:cx,y:cy}=layout.ending;
       paper(cx,cy,portrait?455:610,practice?270:400);
@@ -313,7 +314,7 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
         text(`重玩代碼  ${g.seed}  ·  ${difficultyTitle(g.difficulty)}`,cx,cy+153,19,0x665044);
       }
       milo=art('guideHappy',W-layout.edge-(portrait?65:165),H*(portrait?.71:.8),portrait?144:230,portrait?220:340); miloY=H*(portrait?.71:.8);
-      if(!portrait) bubble(W-layout.edge-190,miloY-340-75,310,'五份心意，都送到了！\n謝謝你的魔法。');
+      if(!portrait) bubble(W-layout.edge-190,miloY-340-75,310,sceneDialogue(g));
       const y=H-(portrait?200:87);
       woodSign('start',practice?'開始五關委託':'接新委託',portrait?W/2:W/2+130,y,250);
       if(!practice) woodSign('replay','再挑戰一次',portrait?W/2:W/2-170,portrait?H-111:y,250);

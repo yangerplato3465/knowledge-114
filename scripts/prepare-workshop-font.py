@@ -9,7 +9,7 @@ from fontTools.ttLib import TTFont
 
 root = Path(__file__).resolve().parent.parent
 font = TTFont(sys.argv[1])
-text = ''.join(path.read_text(encoding='utf-8-sig') for path in (root / 'src/games/magic-workshop').glob('*.ts*'))
+text = ''.join(path.read_text(encoding='utf-8-sig') for path in (root / 'src/games/magic-workshop').glob('*.ts*') if '.test.' not in path.name)
 text += ''.join(chr(i) for i in range(32, 127)) + '★☆✦✧↶↻⌫—'
 options = subset.Options()
 options.name_IDs = ['*']
