@@ -1,0 +1,17 @@
+{
+  "file": "workbench-twilight-v1.png",
+  "display": "display/workbench-twilight-v1.webp",
+  "generator": "built-in image_gen",
+  "width": 1536,
+  "height": 1024,
+  "frames": 1,
+  "rows": 1,
+  "columns": 1,
+  "anchor": "center",
+  "background": "opaque",
+  "safePadding": 64,
+  "composition": "Upper 55% continuous workshop, lower 45% empty wooden tabletop. Foreground characters, bottles, orders and stations rendered separately.",
+  "reference": "display/workshop-panorama-v1.webp",
+  "prompt": "Single opaque 1536x1024 storybook magical apothecary at twilight, matching the existing panorama painting style. Deep indigo-purple shadows, honey oak, gold lanterns, teal light from the left. Arched window with violet forest dusk. Calm uncluttered upper center and upper right. Lower 45 percent a large continuous empty wooden tabletop with curved front edge at 85 percent height. No text, UI, characters, foreground bottles, fountains or cauldrons. Important props inset 64px. Warm natural light and subtle vignette.",
+  "inspection": "Inspected full 1536x1024 single image and in-game composition. No frame slicing. Desk has unobstructed central interaction space. Peripheral foliage is decorative and may be cropped in portrait; all gameplay objects are independent and remain within responsive layout."
+}

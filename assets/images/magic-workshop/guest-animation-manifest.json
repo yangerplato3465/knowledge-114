@@ -1,0 +1,62 @@
+{
+  "generator": "Built-in image_gen",
+  "frameSize": [
+    512,
+    512
+  ],
+  "grid": [
+    3,
+    2
+  ],
+  "anchor": [
+    256,
+    448
+  ],
+  "safePadding": 48,
+  "frameOrder": [
+    "left-contact-a",
+    "left-pass-a",
+    "left-contact-b",
+    "left-pass-b",
+    "turn-three-quarter",
+    "front"
+  ],
+  "normalization": "Every complete 512px source cell is uniformly resized to 369px, then registered by measured torso centre and planted foot to (256,448) without content cropping. Registration coordinates are in scripts/prepare-workshop-guests.py; all frames retain 48px safe padding.",
+  "guests": [
+    {
+      "key": "rabbit",
+      "file": "visitor-rabbit-dew-v2.webp",
+      "prompt": "Use case: identity-preserve. Make a production transparent animation sprite sheet for the SAME character in reference image 1, preserving costume, colors, face, species, accessories and proportions. Soft painterly storybook game rendering, gentle warm upper-left light, matte textures. EXACT canvas 1536x1024, 3 columns and 2 rows, six equal 512x512 cells. NO visible grid, NO text, NO floor or background, genuine alpha transparency. In EACH cell exactly one complete character, same scale, feet baseline y=448 relative to that cell, anchor x=256. Keep ALL ears, hats, tails, props and shadows inside x=48..464,y=48..464 of its own cell. Subject height at most 380 pixels. Never cross or touch cell edges. Frame order left-to-right top-to-bottom: 1 pure left side profile walking left contact pose left foot forward; 2 pure left profile walking passing pose feet closer; 3 pure left profile walking opposite contact right foot forward; 4 pure left profile opposite passing pose; 5 standing still turned three-quarter toward viewer from left profile; 6 standing facing directly toward viewer. First four frames MUST look LEFT with clear side silhouette, NOT look at viewer. Natural gentle arm/leg gait and stable held props, no motion trails, no detached parts. Last two frames must preserve same body size and foot anchor as first four. Reference character: beige rabbit, straw flower hat, blue overalls, peach shirt, glass dew jar and leaf",
+      "source": "guest-rabbit-walk-v1.png",
+      "generationId": "8547baab-54ef-4fd0-b179-394281e9f447"
+    },
+    {
+      "key": "deer",
+      "file": "visitor-deer-post-v4.webp",
+      "prompt": "Use case: identity-preserve. Make a production transparent animation sprite sheet for the SAME character in reference image 1, preserving costume, colors, face, species, accessories and proportions. Soft painterly storybook game rendering, gentle warm upper-left light, matte textures. EXACT canvas 1536x1024, 3 columns and 2 rows, six equal 512x512 cells. NO visible grid, NO text, NO floor or background, genuine alpha transparency. In EACH cell exactly one complete character, same scale, feet baseline y=448 relative to that cell, anchor x=256. Keep ALL ears, hats, tails, props and shadows inside x=48..464,y=48..464 of its own cell. Subject height at most 380 pixels. Never cross or touch cell edges. Frame order left-to-right top-to-bottom: 1 pure left side profile walking left contact pose left foot forward; 2 pure left profile walking passing pose feet closer; 3 pure left profile walking opposite contact right foot forward; 4 pure left profile opposite passing pose; 5 standing still turned three-quarter toward viewer from left profile; 6 standing facing directly toward viewer. First four frames MUST look LEFT with clear side silhouette, NOT look at viewer. Natural gentle arm/leg gait and stable held props, no motion trails, no detached parts. Last two frames must preserve same body size and foot anchor as first four. Reference character: young deer without antlers, red post cap, mustard shirt, cream vest, red mail satchel and sealed envelope",
+      "source": "guest-deer-walk-v1.png",
+      "generationId": "44cab3ca-5f75-4603-87aa-2caab666eee7"
+    },
+    {
+      "key": "owl",
+      "file": "visitor-owl-keeper-v1.webp",
+      "prompt": "Use case: identity-preserve. Make a production transparent animation sprite sheet for the SAME character in reference image 1, preserving costume, colors, face, species, accessories and proportions. Soft painterly storybook game rendering, gentle warm upper-left light, matte textures. EXACT canvas 1536x1024, 3 columns and 2 rows, six equal 512x512 cells. NO visible grid, NO text, NO floor or background, genuine alpha transparency. In EACH cell exactly one complete character, same scale, feet baseline y=448 relative to that cell, anchor x=256. Keep ALL ears, hats, tails, props and shadows inside x=48..464,y=48..464 of its own cell. Subject height at most 380 pixels. Never cross or touch cell edges. Frame order left-to-right top-to-bottom: 1 pure left side profile walking left contact pose left foot forward; 2 pure left profile walking passing pose feet closer; 3 pure left profile walking opposite contact right foot forward; 4 pure left profile opposite passing pose; 5 standing still turned three-quarter toward viewer from left profile; 6 standing facing directly toward viewer. First four frames MUST look LEFT with clear side silhouette, NOT look at viewer. Natural gentle arm/leg gait and stable held props, no motion trails, no detached parts. Last two frames must preserve same body size and foot anchor as first four. Reference character: brown and cream owl, round glasses, plum scarf, teal coat, brass lantern",
+      "source": "guest-owl-walk-v1.png",
+      "generationId": "acc8801b-95ba-4044-83aa-79df57b95771"
+    },
+    {
+      "key": "fox",
+      "file": "forest-visitor-v3.webp",
+      "prompt": "Use case: identity-preserve. Make a production transparent animation sprite sheet for the SAME character in reference image 1, preserving costume, colors, face, species, accessories and proportions. Soft painterly storybook game rendering, gentle warm upper-left light, matte textures. EXACT canvas 1536x1024, 3 columns and 2 rows, six equal 512x512 cells. NO visible grid, NO text, NO floor or background, genuine alpha transparency. In EACH cell exactly one complete character, same scale, feet baseline y=448 relative to that cell, anchor x=256. Keep ALL ears, hats, tails, props and shadows inside x=48..464,y=48..464 of its own cell. Subject height at most 380 pixels. Never cross or touch cell edges. Frame order left-to-right top-to-bottom: 1 pure left side profile walking left contact pose left foot forward; 2 pure left profile walking passing pose feet closer; 3 pure left profile walking opposite contact right foot forward; 4 pure left profile opposite passing pose; 5 standing still turned three-quarter toward viewer from left profile; 6 standing facing directly toward viewer. First four frames MUST look LEFT with clear side silhouette, NOT look at viewer. Natural gentle arm/leg gait and stable held props, no motion trails, no detached parts. Last two frames must preserve same body size and foot anchor as first four. Reference character: orange fox with white tail tip, green leaf cloak, plum scarf, herb basket and brown satchel",
+      "source": "guest-fox-walk-v1.png",
+      "generationId": "d4a6c183-e41c-4dcb-9193-27d94babf71a"
+    },
+    {
+      "key": "bear",
+      "file": "visitor-bear-artisan-v2.webp",
+      "prompt": "Use case: identity-preserve. Make a production transparent animation sprite sheet for the SAME character in reference image 1, preserving costume, colors, face, species, accessories and proportions. Soft painterly storybook game rendering, gentle warm upper-left light, matte textures. EXACT canvas 1536x1024, 3 columns and 2 rows, six equal 512x512 cells. NO visible grid, NO text, NO floor or background, genuine alpha transparency. In EACH cell exactly one complete character, same scale, feet baseline y=448 relative to that cell, anchor x=256. Keep ALL ears, hats, tails, props and shadows inside x=48..464,y=48..464 of its own cell. Subject height at most 380 pixels. Never cross or touch cell edges. Frame order left-to-right top-to-bottom: 1 pure left side profile walking left contact pose left foot forward; 2 pure left profile walking passing pose feet closer; 3 pure left profile walking opposite contact right foot forward; 4 pure left profile opposite passing pose; 5 standing still turned three-quarter toward viewer from left profile; 6 standing facing directly toward viewer. First four frames MUST look LEFT with clear side silhouette, NOT look at viewer. Natural gentle arm/leg gait and stable held props, no motion trails, no detached parts. Last two frames must preserve same body size and foot anchor as first four. Reference character: brown bear, goggles on forehead, teal shirt, plum scarf, leather tool apron, warm lantern",
+      "source": "guest-bear-walk-v1.png",
+      "generationId": "692b8094-24d6-4208-a282-c69017e72ad4"
+    }
+  ]
+}
