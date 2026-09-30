@@ -1,12 +1,14 @@
 import { shortestSolution, type PuzzleRule } from './rules';
 import { BANK_ROWS } from './generated-bank';
+import { NOVICE_ROWS } from './novice-bank';
 
-export type Difficulty = 3 | 4 | 5;
-export type Family = 'cycle' | 'relay' | 'space' | 'switch' | 'compare';
+export type Difficulty = 2 | 3 | 4 | 5;
+export type Family = 'cycle' | 'relay' | 'space' | 'switch' | 'compare' | 'accumulate' | 'remainder' | 'subtract';
 export type Stage = 1 | 2 | 3 | 4 | 5;
 
 // Star tiers bound the entire session; later stages never raise the step ceiling.
 export const DIFFICULTY_SETTINGS = {
+  2: { name: '見習生', minimumSteps: [4, 4], bottlesByStage: [2, 2, 2, 2, 2], description: '翻開嫩綠筆記，用四步發現第一道魔法。' },
   3: { name: '學徒', minimumSteps: [5, 6], bottlesByStage: [2, 2, 2, 2, 2], description: '循著螢光走進森林，展開溫柔的魔法初試。' },
   4: { name: '魔法師', minimumSteps: [7, 8], bottlesByStage: [2, 2, 2, 3, 3], description: '穿越迷霧與古老符文，用巧思解開工坊的祕密。' },
   5: { name: '大魔導師', minimumSteps: [9, 10], bottlesByStage: [3, 3, 3, 3, 3], description: '踏入星光深處的祕境，迎接大魔導師的試煉。' },
@@ -24,12 +26,17 @@ export interface Puzzle extends PuzzleRule {
 
 // Families describe properties found in shortest solutions, not unique psychological difficulties.
 export const STAGE_FAMILIES: Record<Difficulty, readonly Family[]> = {
+  2: ['accumulate','subtract','remainder','accumulate','compare'],
   3: ['cycle', 'space', 'cycle', 'space', 'cycle'],
   4: ['cycle', 'space', 'cycle', 'relay', 'switch'],
   5: ['cycle', 'compare', 'space', 'relay', 'switch'],
 };
-export const PUZZLES: readonly Puzzle[] = ([3, 4, 5] as const).flatMap(difficulty =>
-  ([1, 2, 3, 4, 5] as const).flatMap(stage => {
+export const PUZZLES: readonly Puzzle[] = ([2, 3, 4, 5] as const).flatMap(difficulty =>
+  ([1, 2, 3, 4, 5] as const).flatMap((stage):Puzzle[] => {
+    if(difficulty===2)return NOVICE_ROWS.map(([capacities,target,family])=>({
+      id:`mw-${capacities.join('-')}-t${target}`,capacities,target,minimumSteps:4,
+      difficulty,stage,family,signature:`novice-${family}`,visitor:'工坊客人',
+    }));
     const settings = DIFFICULTY_SETTINGS[difficulty];
     const family = STAGE_FAMILIES[difficulty][stage - 1];
     return BANK_ROWS.filter(([capacities, , steps, families]) =>

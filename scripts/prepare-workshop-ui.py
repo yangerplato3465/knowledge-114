@@ -26,5 +26,15 @@ for group, entries in groups.items():
   assert bounds, key
   specs[key]={'file':target.name,'bounds':[round(v/size,5) for v in bounds],'size':size}
   disk+=target.stat().st_size;pixels+=size*size
-(root/'src/games/magic-workshop/ui-art.ts').write_text('/** Generated illustration metadata; rebuild with scripts/prepare-workshop-ui.py. */\nexport const UI_ART = '+json.dumps(specs,indent=2)+' as const;\nexport type UiArtKey = keyof typeof UI_ART;\n',encoding='utf-8')
+# Single-frame stream: preserve the complete master and add the same safe outer gutter.
+stream=Image.open(assets/'water-stream-v2.png').convert('RGBA')
+stream.thumbnail((210,210),Image.Resampling.LANCZOS)
+output=Image.new('RGBA',(256,256))
+output.alpha_composite(stream,((256-stream.width)//2,(256-stream.height)//2))
+target=assets/'display'/'water-stream-v2.webp';output.save(target,quality=88,method=6)
+bounds=output.getchannel('A').point(lambda v:255 if v>=8 else 0).getbbox()
+assert bounds and min(bounds[:2])>=21 and max(bounds[2:])<=235
+specs['stream']={'file':target.name,'bounds':[round(v/256,5) for v in bounds],'size':256}
+disk+=target.stat().st_size;pixels+=256*256
+(root/'src/games/magic-workshop/ui-art.ts').write_text('/** Generated illustration metadata; rebuild with scripts/prepare-workshop-ui.py. */\nimport { RUSTIC_ART } from "./rustic-art";\nexport const UI_ART = { ...RUSTIC_ART, ...'+json.dumps(specs,indent=2)+' } as const;\nexport type UiArtKey = keyof typeof UI_ART;\n',encoding='utf-8')
 print(f'Runtime: {disk} bytes WebP, {pixels*4} bytes RGBA before GPU overhead; sources are not loaded.')

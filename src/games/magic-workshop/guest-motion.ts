@@ -6,6 +6,7 @@ export class GuestMotion {
   desired: number | null = null;
   phase: GuestPhase = 'absent';
   elapsed = 0;
+  clear() { this.desired=null;this.settle(); }
   request(index: number | null, immediate = false) {
     this.desired = index;
     if (immediate) { this.settle(); return; }

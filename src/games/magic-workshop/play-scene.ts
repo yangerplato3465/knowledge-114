@@ -1,11 +1,15 @@
 import { ART, GUESTS, REACTIONS, artUrl, type ArtKey } from './art';
 import { UI_ART, type UiArtKey } from './ui-art';
 import { createPaintLayer, placeIllustration, type PaintLayer } from './sprite-paint';
+import { bottleDimensions, workshopLayout } from './scene-layout';
+import { OrderEntrance } from './order-entrance';
+import { bottlePourAngle, liquidGeometry, POUR_DURATION, pourTiming } from './liquid-geometry';
 import { GuestMotion } from './guest-motion';
+import { portraitFrame } from './portrait-framing';
 import { loadCharacterImage } from './character-scene';
 import { applyAction } from './rules';
 import { currentPuzzle, performanceStars } from './session';
-import { isSession, sceneDialogue, targetAction, type SceneControl, type SceneModel, type SceneSound } from './scene-model';
+import { difficultyTitle, isSession, sceneDialogue, targetAction, type SceneControl, type SceneModel, type SceneSound } from './scene-model';
 import type { Graphic, Label, Node, Pixi, Sprite, Texture } from './scene-types';
 
 export interface PlayScene {
@@ -15,7 +19,7 @@ export interface PlayScene {
 interface Hooks {
   activate(id: string): void; controls(controls: SceneControl[]): void; sound(cue: SceneSound): void;
 }
-interface Bottle { node: Node; liquid: Sprite; surface: Sprite; liquidMask: Graphic; number: Label; x: number; y: number; w: number; h: number; amount: number; capacity: number }
+interface Bottle { node: Node; labels: Node; liquid: Sprite; surface: Sprite; liquidMask: Graphic; number: Label; x: number; y: number; w: number; h: number; amount: number; capacity: number }
 interface Tween { elapsed: number; duration: number; step(t: number): void }
 const C = { ink: 0x30233e, paper: 0xf4dda8, gold: 0xffd66b, teal: 0x65e0d0, lavender: 0xb79af4 };
 const INTRO_KEY = 'knowledge114-workshop-demonstrated-v1';
@@ -36,6 +40,7 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
   let initialized = false, disposed = false;
   let model = initial, reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let controls: SceneControl[] = [], bottles: Bottle[] = [], tweens: Tween[] = [];
+  let layout=workshopLayout(1200,800);
   let time = 0, W = 1200, H = 800, scale = 1, offsetX = 0, offsetY = 0;
   let focused: string | null = null, hovered: string | null = null;
   let drag: { index: number; pointer: number; startX: number; startY: number; moved: boolean } | null = null;
@@ -44,6 +49,9 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
   let milo: Node | null = null, miloY = 0, celebration = 3;
   let font: FontFace | null = null;
   const guestMotion = new GuestMotion();
+  const orderEntrance=new OrderEntrance();
+  let orderNode:Node|null=null;
+  const guestEntering=()=>guestMotion.phase==='enter'||guestMotion.phase==='turn';
   let stars: Node[] = [], starDust: PaintLayer;
   let starChange: { from: number; to: number; elapsed: number } | null = null;
   let pendingDelivery = false;
@@ -94,13 +102,22 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
     const actors = world.addChild(new P.Container());
     const visitor = actors.addChild(new P.Sprite(textures.get('rabbit:5')!));
     const visitorFront = actors.addChild(new P.Sprite(textures.get('rabbit:5')!));
-    const hero = actors.addChild(new P.Container());
+    const hero = world.addChild(new P.Container());
+    const visitorMask=world.addChild(new P.Graphics());actors.mask=visitorMask;
+    const heroMask=world.addChild(new P.Graphics());hero.mask=heroMask;
     visitor.anchor.set(.5, 448/512); visitorFront.anchor.set(.5, 448/512);
-    const tabletop = world.addChild(new P.Sprite(textures.get('background')!));
-    const tableMask = world.addChild(new P.Graphics()); tabletop.mask = tableMask;
     foreground = world.addChild(new P.Container());
     glow = world.addChild(createPaintLayer(P,textures));
     effects = world.addChild(createPaintLayer(P,textures));
+    // One continuous generated water texture follows the pouring path; never a chain of droplets.
+    const streamVertices=new Float32Array(37*4),streamUVs=new Float32Array(37*4),streamIndices:number[]=[];
+    const [streamL,streamT,streamR,streamB]=UI_ART.stream.bounds;
+    for(let i=0;i<=36;i++){
+      const u=streamL+i/36*(streamR-streamL);streamUVs.set([u,streamT-.006,u,streamB+.006],i*4);
+      if(i<36){const j=i*2;streamIndices.push(j,j+1,j+2,j+1,j+3,j+2);}
+    }
+    const stream=world.addChild(new P.MeshSimple({texture:textures.get('ui:stream')!,vertices:streamVertices,uvs:streamUVs,indices:new Uint32Array(streamIndices)}));
+    stream.visible=false;
     focusRing = world.addChild(createPaintLayer(P,textures));
 
     const illustration=(key:UiArtKey,x:number,y:number,w:number,h:number,parent=foreground,stretch=false)=>
@@ -124,14 +141,12 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       sprite.position.set(x, y); return sprite;
     };
     const portraitArt = (key: ArtKey, x: number, y: number) => {
-      const node=group(x,y), texture=textures.get(key)!, [l,t,r,b]=ART[key].bounds;
-      illustration('bloom',0,0,95,95,node).alpha=.3;
+      const node=group(x,y), texture=textures.get(key)!, frame=portraitFrame(key);
+      illustration('bloom',0,0,70,70,node).alpha=.2;
       const sprite=node.addChild(new P.Sprite(texture));
-      const face=key.startsWith('rabbit')?.4:key.startsWith('guide')?.36:.3;
-      const centre=key.startsWith('rabbit')?.4:key.startsWith('fox')?.44:.5;
-      sprite.anchor.set((l+(r-l)*centre)/1254,(t+(b-t)*face)/1254);
-      sprite.scale.set(125/(r-l)*1254/texture.width);
-      const mask=graphic(node).circle(0,0,40).fill(0xffffff);sprite.mask=mask;
+      sprite.anchor.set(frame.x,frame.y);
+      sprite.scale.set(64/(frame.diameter*texture.width));
+      const mask=graphic(node).circle(0,0,32).fill(0xffffff);sprite.mask=mask;
     };
     const shadow = (x:number,y:number,radius:number) => { illustration('shadow',x+8,y+1,radius*2.2,24,foreground,true).alpha=.75; };
     const paper = (x:number,y:number,w:number,h:number,parent=foreground) => illustration('parchment',x,y,w,h,parent,true);
@@ -158,22 +173,29 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       const node = group(x,y,parent);
       // Existing glass artwork sits behind the measured liquid; its opaque center cannot hide the level.
       const glass=art('bottle',0,0,w,h,node);glass.alpha=.9;glass.tint=0xead8bd;
-      const liquid=illustration('liquid',0,-h*.36,w*1.35,h*.9,node,true);
-      const liquidMask=graphic(node);liquid.mask=liquidMask;
-      const surface=illustration('surface',0,-h*.2,w*.83,12,node,true);
-      const number = text(String(amount),0,-h*.4,48,0xf8fff5,node,undefined,true);
-      text(`/ ${capacity}`,0,-h*.2,23,C.paper,node,undefined,true);
-      return {node,liquid,surface,liquidMask,number,x,y,w,h,amount,capacity};
+      const water=group(0,0,node);
+      const liquid=illustration('liquid',0,-h*.48,w*1.4,h*1.22,water,true);liquid.alpha=.78;
+      const liquidMask=graphic(node);water.mask=liquidMask;
+      const surface=illustration('surface',0,-h*.2,w*.83,8,water,true);surface.alpha=.72;
+      // The original glass remains visible over the water as a restrained reflective glaze.
+      art('bottle',0,0,w,h,node).alpha=.19;
+      const labels=group(0,-h*.4,node);
+      const number = text(String(amount),0,0,Math.max(32,48*h/206),0xf8fff5,labels,undefined,true);
+      text(`/ ${capacity}`,0,h*.2,Math.max(19,23*h/206),C.paper,labels,undefined,true);
+      return {node,labels,liquid,surface,liquidMask,number,x,y,w,h,amount,capacity};
     };
     const liquidDraw = (b: Bottle, amount: number, phase = 0) => {
       b.liquidMask.clear();b.liquid.visible=b.surface.visible=amount>.001;if(amount<=.001)return;
-      const fraction=Math.min(1,amount/b.capacity),bottom=-b.h*.085;
-      const top=bottom-fraction*b.h*.55,half=b.w*.425;
-      // Geometry only clips the generated liquid illustration; it never paints visible icons/effects.
-      b.liquidMask.rect(-half,top,half*2,bottom-top).fill(0xffffff);
-      b.surface.y=top+Math.sin(phase)*1.5;b.surface.rotation=Math.sin(phase)*.015;
+      const tilt=b.node.rotation+Math.sin(phase)*.008;
+      const shape=liquidGeometry(b.w,b.h,amount/b.capacity,tilt);
+      // Invisible geometry follows the rounded base, shoulders and neck; it paints no artwork.
+      b.liquidMask.poly(shape.points.flatMap(p=>[p.x,p.y])).fill(0xffffff);
+      if(shape.surface){const [a,c]=shape.surface;
+        placeIllustration(b.surface,'surface',textures,(a.x+c.x)/2,(a.y+c.y)/2,Math.hypot(c.x-a.x,c.y-a.y),Math.min(9,b.h*.04),true);
+        b.surface.rotation=-tilt;b.surface.alpha=.72;
+      }
     };
-    const clearForeground = () => { foreground.removeChildren().forEach(n=>n.destroy({children:true})); hero.removeChildren().forEach(n=>n.destroy({children:true})); stars=[];bottles=[]; controls=[]; tweens=[]; glow.clear(); effects.clear(); focusRing.clear(); milo=null; demoBottle=null; tutorial=false; };
+    const clearForeground = () => { stream.visible=false;foreground.removeChildren().forEach(n=>n.destroy({children:true})); hero.removeChildren().forEach(n=>n.destroy({children:true})); orderNode=null;stars=[];bottles=[]; controls=[]; tweens=[]; glow.clear(); effects.clear(); focusRing.clear(); milo=null; demoBottle=null; tutorial=false; };
     const stopTutorial = () => {
       if (!tutorial) return;
       tutorial = false; tweens=[]; demoBottle?.destroy({children:true}); demoBottle=null; effects.clear();effects.alpha=1;
@@ -207,28 +229,31 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
         const bottle=art('gift',x,y+28,39,57);bottle.alpha=lit||current?1:.4;bottle.tint=lit||current?0xffffff:0xa99dac;
       }
     };
-    const bubble = (x: number,y: number,width: number,value: string) => {
-      const lines=value.split('\n').length, height=Math.max(96,lines*35+28);
-      illustration('speech',x,y+8,width+30,height+52,foreground,true);
-      text(value,x,y-6,24,C.ink,foreground,width-35);
+    const bubble = (x: number,y: number,width: number,value: string,tailLeft=false,fontSize=24) => {
+      const lines=value.split('\n').length, height=Math.max(fontSize*4,lines*fontSize*1.45+28);
+      const speech=illustration('speech',x,y+8,width+30,height+52,foreground,true);
+      if(tailLeft)speech.scale.x*=-1;
+      text(value,x,y-6,fontSize,C.ink,foreground,width-35);
     };
     const drawMilo = () => {
       const happy=['ready','finished','practice-done'].includes(model.game.screen);
-      const portrait=W===600;
-      const x=portrait?494:939, y=portrait?606:553;
-      milo=art(happy?'guideHappy':'guide',x,y,portrait?146:198,portrait?255:330,hero); miloY=y;
-      text('米洛',x,portrait?557:450,19,C.paper,foreground,undefined,true);
-      bubble(portrait?423:929,portrait?209:143,portrait?290:320,pendingDelivery?`${GUESTS[model.game.index].name}要出發了。\n下一份心意，也一起加油！`:sceneDialogue(model.game));
+      const portrait=layout.portrait;
+      const {x,y}=layout.milo;
+      milo=art(happy?'guideHappy':'guide',x,y,layout.milo.width,layout.milo.height,hero); miloY=y;
+      text('米洛',x,layout.tableY+6,19,C.paper,foreground,undefined,true);
+      bubble(layout.dialogue.x,layout.dialogue.y,layout.dialogue.width,pendingDelivery?`${GUESTS[model.game.index].name}要出發了。\n下一份心意，也一起加油！`:sceneDialogue(model.game),true,layout.dialogue.fontSize);
     };
     const drawGuest = () => {
-      const index=guestMotion.index, pose=guestMotion.pose(), portrait=W===600;
+      const index=guestMotion.index, pose=guestMotion.pose();
       visitor.visible=visitorFront.visible=index!==null;
       if(index===null)return;
-      const key=GUESTS[index].art, size=portrait?.8:1.055;
-      const y=(portrait?623:551)+pose.bob;
+      const key=GUESTS[index].art, size=layout.guest.scale;
+      const y=layout.guest.y+pose.bob;
+      const travel=Math.max(0,Math.min(1,(pose.x-.5)/.68));
+      const x=layout.guest.seatX+(layout.guest.entryX-layout.guest.seatX)*travel;
       visitor.texture=textures.get(`${key}:${pose.frame}`)!;
       visitorFront.texture=textures.get(`${key}:5`)!;
-      [visitor,visitorFront].forEach((sprite: Sprite)=>{sprite.position.set(W*pose.x,y);sprite.scale.set(size*pose.facing,size);});
+      [visitor,visitorFront].forEach((sprite: Sprite)=>{sprite.position.set(x,y);sprite.scale.set(size*pose.facing,size);});
       visitorFront.scale.x=size;
       visitor.alpha=pose.alpha*(1-pose.turnMix);visitorFront.alpha=pose.alpha*pose.turnMix;
       // Front-facing idle has a restrained breathing motion, with feet staying planted.
@@ -249,102 +274,112 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       });
     };
     const drawHome = () => {
-      const portrait=W===600;
-      text('暮光',W/2,portrait?76:90,25,C.gold,foreground,undefined,true);
-      text('魔法工坊',W/2,portrait?130:152,portrait?62:78,C.paper,foreground,undefined,true);
-      text('每一份剛剛好，都是小小的魔法',W/2,portrait?194:224,portrait?23:25,C.paper,foreground,undefined,true);
+      const portrait=layout.portrait,cx=layout.home.x;
+      text('暮光',cx,portrait?76:90,25,C.gold,foreground,undefined,true);
+      text('魔法工坊',cx,portrait?130:152,portrait?62:78,C.paper,foreground,undefined,true);
+      text('每一份剛剛好，都是小小的魔法',cx,portrait?194:224,portrait?23:25,C.paper,foreground,undefined,true);
       // Illustrated spellbooks distinguish difficulty from the three performance crystals.
-      const cy=portrait?623:526, paperW=portrait?530:560;
-      paper(W/2,cy,paperW,portrait?414:390);
-      text('今晚的委託',W/2,cy-139,32,C.ink);
-      [3,4,5].forEach((level,i)=>{
-        const x=W/2+(i-1)*(portrait?151:157), selected=model.difficulty===level;
-        if(selected)illustration('halo',x,cy-37,122,45);
-        illustration((['book-beginner','book-advanced','book-master'] as const)[i],x,cy-62,100,96);
-        text(['初階','進階','大師'][i],x,cy+2,24,C.ink);
-        addControl(`difficulty:${level}`,`${['初階','進階','大師'][i]}委託`,x,cy-52,136,124,false,selected);
+      const cy=layout.home.y, paperW=portrait?530:640;
+      paper(cx,cy,paperW,430);
+      text('今晚的委託',cx,cy-120,30,C.ink);
+      ([2,3,4,5] as const).forEach((level,i)=>{
+        const x=cx+(i-1.5)*(portrait?116:138), selected=model.difficulty===level;
+        if(selected)illustration('halo',x,cy-17,105,35);
+        illustration((['book-novice','book-beginner','book-advanced','book-master'] as const)[i],x,cy-48,portrait?82:94,88);
+        text(difficultyTitle(level),x,cy+13,portrait?20:23,C.ink);
+        addControl(`difficulty:${level}`,`${difficultyTitle(level)}委託`,x,cy-17,portrait?110:132,150,false,selected);
       });
-      woodSign('start','開始五關委託',W/2,cy+72,300);
-      text('操作練習',W/2-113,cy+141,23,0x544030); addControl('practice','先做操作練習',W/2-113,cy+141,174,76);
-      text('重玩代碼',W/2+113,cy+141,23,0x544030); addControl('code','輸入重玩代碼',W/2+113,cy+141,174,76);
-      if(!portrait) { shadow(963,670,90); milo=art('guide',963,670,215,320); miloY=670; bubble(900,300,310,'我是米洛。\n今晚，也讓魔法發光吧！'); }
-      else { milo=art('guide',454,426,130,185); miloY=426; }
+      woodSign('start','開始五關委託',cx,cy+99,300);
+      text('操作練習',cx-113,cy+166,21,0x544030); addControl('practice','先做操作練習',cx-113,cy+166,174,52);
+      text('重玩代碼',cx+113,cy+166,21,0x544030); addControl('code','輸入重玩代碼',cx+113,cy+166,174,52);
+      if(!portrait) { shadow(layout.home.miloX,H*.84,90); milo=art('guide',layout.home.miloX,H*.84,250,375); miloY=H*.84; bubble(layout.home.miloX-30,miloY-375-75,330,'我是米洛。\n今晚，也讓魔法發光吧！'); }
+      else { milo=art('guide',layout.home.miloX,cy-197,130,185); miloY=cy-197; }
     };
     const drawEnding = () => {
-      const g=model.game, portrait=W===600, practice=g.screen==='practice-done';
+      const g=model.game, portrait=layout.portrait, practice=g.screen==='practice-done';
       text(practice?'第一束魔法，亮了！':'森林因你而閃耀',W/2,portrait?90:105,portrait?42:55,C.paper,foreground,undefined,true);
       drawProgress(portrait?155:172);
-      const cy=portrait?477:464;
-      paper(portrait?260:495,cy,portrait?455:610,practice?270:400);
-      if(practice) text('練習完成\n準備迎接第一位客人吧',portrait?260:495,cy-30,32,C.ink);
+      const {x:cx,y:cy}=layout.ending;
+      paper(cx,cy,portrait?455:610,practice?270:400);
+      if(practice) text('練習完成\n準備迎接第一位客人吧',cx,cy-30,32,C.ink);
       else {
-        text('今日的魔力結晶',portrait?260:495,cy-150,32,C.ink);
+        text('今日的魔力結晶',cx,cy-112,30,C.ink);
         g.results.forEach((r,i)=>{
-          const cx=portrait?260:495,y=cy-88+i*47;
+          const y=cy-56+i*42;
           text(`第 ${i+1} 份`,cx-165,y,22,C.ink);
           for(let j=0;j<3;j++)illustration(j<performanceStars(r.steps,r.minimumSteps)?'crystal-lit':'crystal-dim',cx-85+j*31,y,26,36);
           text(`${r.steps} 步 · 最短 ${r.minimumSteps}`,cx+95,y,portrait?19:23,C.ink);
         });
-        text(`重玩代碼  ${g.seed}  ·  ${['初階','進階','大師'][g.difficulty-3]}`,portrait?260:495,cy+159,21,0x665044);
+        text(`重玩代碼  ${g.seed}  ·  ${difficultyTitle(g.difficulty)}`,cx,cy+153,19,0x665044);
       }
-      milo=art('guideHappy',portrait?495:973,portrait?710:640,portrait?144:230,portrait?220:340); miloY=portrait?710:640;
-      if(!portrait) bubble(940,275,310,'五份心意，都送到了！\n謝謝你的魔法。');
-      const y=portrait?800:713;
+      milo=art('guideHappy',W-layout.edge-(portrait?65:165),H*(portrait?.71:.8),portrait?144:230,portrait?220:340); miloY=H*(portrait?.71:.8);
+      if(!portrait) bubble(W-layout.edge-190,miloY-340-75,310,'五份心意，都送到了！\n謝謝你的魔法。');
+      const y=H-(portrait?200:87);
       woodSign('start',practice?'開始五關委託':'接新委託',portrait?W/2:W/2+130,y,250);
-      if(!practice) woodSign('replay','再挑戰一次',portrait?W/2:W/2-170,portrait?889:y,250);
-      text('回到工坊',W/2,portrait?965:775,22,C.paper,foreground,undefined,true);addControl('home','回到工坊首頁',W/2,portrait?955:768,190,64);
+      if(!practice) woodSign('replay','再挑戰一次',portrait?W/2:W/2-170,portrait?H-111:y,250);
+      text('回到工坊',W/2,H-25,22,C.paper,foreground,undefined,true);addControl('home','回到工坊首頁',W/2,H-32,190,64);
+    };
+    const stationGeometry = () => {
+      const aspect=(key:'spring-rustic'|'recycler-rustic')=>{
+        const [l,t,r,b]=UI_ART[key].bounds;return (b-t)/(r-l);
+      };
+      const sw=layout.station.springWidth,rw=layout.station.recyclerWidth;
+      return {sw,sh:sw*aspect('spring-rustic'),rw,rh:rw*aspect('recycler-rustic')};
     };
     const drawSession = (animate: boolean) => {
-      const g=model.game, p=currentPuzzle(g), portrait=W===600;
-      text('魔法工坊',portrait?110:155,portrait?44:49,portrait?26:32,C.paper,foreground,undefined,true);
+      const g=model.game, p=currentPuzzle(g), portrait=layout.portrait;
+      text('魔法工坊',layout.edge+(portrait?100:115),portrait?44:49,portrait?26:32,C.paper,foreground,undefined,true);
       drawProgress(portrait?97:60);
-      const px=portrait?135:226, py=portrait?319:266, pw=portrait?232:260;
-      paper(px,py,pw,298);
+      const {x:px,y:py,width:pw}=layout.order;
+      const sceneLayer=foreground;orderNode=group();orderNode.pivot.set(px,py);foreground=orderNode;
+      paper(px,py,pw,264);
       const guest=g.practice?null:GUESTS[g.index];
-      text(guest?`${guest.name}的訂單`:'米洛的小委託',px,py-112,23,C.ink);
+      text(guest?`${guest.name}的訂單`:'米洛的小委託',px,py-74,20,C.ink);
+      text(g.practice?'練習':`${difficultyTitle(g.difficulty)}委託`,px,py-46,14,0x795842);
       const portraitKey=guest?.art??'guide';
-      portraitArt(g.screen==='ready'?(REACTIONS[portraitKey]??portraitKey):portraitKey,px-65,py-30);
-      text(String(p.target),px+31,py-28,78,C.paper,foreground,undefined,true);
-      text('單位魔力液',px+27,py+27,20,0x5c443c);
-      text(g.practice?'練習':`${['初階','進階','大師'][g.difficulty-3]}委託`,px,py+59,17,0x795842);
+      portraitArt(g.screen==='ready'?(REACTIONS[portraitKey]??portraitKey):portraitKey,px-51,py+2);
+      text(String(p.target),px+31,py+2,54,C.paper,foreground,undefined,true);
+      text('單位魔力液',px+26,py+48,16,0x5c443c);
       if(!g.practice){
         for(let i=0;i<3;i++){
-          const x=px+(i-1)*43,y=py+92;
-          illustration('crystal-dim',x,y,30,40);
-          const crystal=group(x,y);illustration('crystal-lit',0,0,30,40,crystal);stars.push(crystal);
+          const x=px+(i-1)*36,y=py+79;
+          illustration('crystal-dim',x,y,23,30);
+          const crystal=group(x,y);illustration('crystal-lit',0,0,23,30,crystal);stars.push(crystal);
         }
-        starDust=foreground.addChild(createPaintLayer(P,textures));text(`全亮：${p.minimumSteps} 步內`,px,py+127,20,0x624934);
+        starDust=foreground.addChild(createPaintLayer(P,textures));text(`全亮：${p.minimumSteps} 步內`,px,py+110,16,0x624934);
         paintStars();
       }
+      foreground=sceneLayer;
       drawMilo();
-      const by=portrait?801:635, count=p.capacities.length;
-      const bw=portrait?(count===4?92:110):(count===4?110:130), bh=portrait?(count===4?184:205):206;
-      const span=portrait?430:610;
-      const sx=portrait?82:139, rx=portrait?514:1061, sy=portrait?652:605;
+      const by=layout.bottles.y, count=p.capacities.length;
+      const span=layout.bottles.span;
+      const {left:sx,right:rx,y:sy}=layout.station;
       shadow(sx,sy,portrait?40:59); shadow(rx,sy,portrait?53:77);
-      const spring=art('spring',sx,sy,portrait?115:155,portrait?176:229);spring.tint=0xd5d6bd;
-      const recycler=art('recycler',rx,sy,portrait?145:198,portrait?118:161);recycler.tint=0xd2beb2;
-      addControl('spring','魔力泉，補滿選取的瓶子',sx,sy-(portrait?88:114),portrait?130:175,portrait?192:246,g.screen!=='playing');
-      addControl('recycler','回收釜，倒空選取的瓶子',rx,sy-(portrait?57:78),portrait?157:214,portrait?140:185,g.screen!=='playing');
+      const {sh,sw,rw,rh}=stationGeometry();
+      illustration('spring-rustic',sx,sy-sh/2,sw,sh);
+      illustration('recycler-rustic',rx,sy-rh/2,rw,rh);
+      addControl('spring','魔力泉，補滿選取的瓶子',sx,sy-sh/2,sw+14,sh+16,g.screen!=='playing');
+      addControl('recycler','回收釜，倒空選取的瓶子',rx,sy-rh/2,rw+14,rh+16,g.screen!=='playing');
       p.capacities.forEach((capacity,i)=>{
-        const x=W/2+(i-(count-1)/2)*Math.min(span/count,portrait?172:231);
+        const {w:bw,h:bh}=bottleDimensions(capacity,portrait);
+        const x=W/2+(i-(count-1)/2)*Math.min(span/count,portrait?192:310);
         shadow(x,by,bw*.52);
         const b=makeBottle(x,by,bw,bh,g.amounts[i],capacity);bottles.push(b);
         text(`${i+1}`,x,by+27,20,C.paper,foreground,undefined,true);
         addControl(`bottle:${i}`,`第 ${i+1} 瓶，容量 ${capacity} 單位，目前 ${g.amounts[i]} 單位`,x,by-b.h/2,b.w+18,b.h+16,g.screen!=='playing',g.selected===i);
         const before=animate?g.history.at(-1)?.before[i]:undefined;
-        if(before!==undefined && before!==g.amounts[i]) tween(550,t=>{ b.amount=before+(g.amounts[i]-before)*ease(t);liquidDraw(b,b.amount,t*14); });
-        else liquidDraw(b,b.amount);
+        if(before!==undefined)b.amount=before;
+        liquidDraw(b,b.amount);
         if(g.selected===i)tween(180,t=>{b.node.scale.set(1+.04*Math.sin(t*Math.PI),1-.04*Math.sin(t*Math.PI));});
       });
-      const bottom=portrait?910:743;
-      text(`${g.history.length} 步`,portrait?80:168,portrait?853:699,26,0xf3e8d0);
-      woodSign('undo','復原',portrait?100:180,bottom,portrait?151:173,false,!g.history.length);
-      woodSign('restart','重試',portrait?300:405,bottom,portrait?151:173,false,!g.history.length);
-      woodSign('hint','靈感',portrait?500:630,bottom,portrait?151:173,false,g.screen!=='playing'||g.hintLevel===2);
-      text('回到工坊',portrait?450:1031,portrait?975:748,21,C.paper,foreground,undefined,true);addControl('home','回到工坊首頁',portrait?450:1031,portrait?964:747,165,65);
+      const bottom=layout.footer.y;
+      text(`${g.history.length} 步`,layout.edge+80,bottom-49,26,0xf3e8d0);
+      woodSign('undo','復原',layout.edge+(portrait?76:90),bottom,portrait?151:173,false,!g.history.length);
+      woodSign('restart','重試',portrait?W/2:layout.edge+305,bottom,portrait?151:173,false,!g.history.length);
+      woodSign('hint','靈感',portrait?W-layout.edge-76:layout.edge+520,bottom,portrait?151:173,false,g.screen!=='playing'||g.hintLevel===2);
+      text('回到工坊',layout.footer.homeX,layout.footer.homeY,21,C.paper,foreground,undefined,true);addControl('home','回到工坊首頁',layout.footer.homeX,layout.footer.homeY,165,65);
       if(g.screen==='ready') {
-        const x=portrait?300:857, y=portrait?508:681;
+        const x=portrait?W/2:W-layout.edge-210, y=portrait?layout.tableY-47:H-119;
         art('gift',x-100,y+22,48,68);
         woodSign('deliver',pendingDelivery?'客人正在道別…':g.practice?'完成練習':g.index===4?'交付 · 看成果':'交付這份魔法',x+12,y,portrait?271:258,true,pendingDelivery);
       }
@@ -353,26 +388,34 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       foreground.removeChildren().forEach(n=>n.destroy({children:true})); controls=[];bottles=[];tweens=[];milo=null;
       const veil=foreground.addChild(new P.Sprite(textures.get('background')!));veil.width=W;veil.height=H;veil.tint=0x30233e;veil.alpha=.92;
       const cy=H/2;paper(W/2,cy,Math.min(540,W-30),700);
-      text('重逢的魔法密碼',W/2,cy-285,32,C.ink);
-      text(model.seed||'—',W/2,cy-210,40,C.ink);
-      const startY=cy-116;
+      text('重逢的魔法密碼',W/2,cy-196,30,C.ink);
+      text(model.seed||'—',W/2,cy-145,32,C.ink);
+      const startY=cy-75;
       ['1','2','3','4','5','6','7','8','9','⌫','0','清除'].forEach((value,i)=>{
-        const x=W/2+(i%3-1)*140,y=startY+Math.floor(i/3)*82;
+        const x=W/2+(i%3-1)*140,y=startY+Math.floor(i/3)*70;
         illustration('wood',x,y,92,65,foreground,true);text(value==='⌫'?'刪除':value,x,y,27,C.paper);
-        addControl(`key:${value}`,value==='⌫'?'刪除一位':value,x,y,100,76);
+        addControl(`key:${value}`,value==='⌫'?'刪除一位':value,x,y,100,66);
       });
-      woodSign('code-start','開啟相同委託',W/2,cy+238,310,false,model.seed===''||Number(model.seed)>4294967295);
+      woodSign('code-start','開啟相同委託',W/2,cy+225,310,false,model.seed===''||Number(model.seed)>4294967295);
       text('返回',W/2,cy+310,23,C.ink);addControl('code','返回工坊',W/2,cy+310,180,64);
+    };
+    const poseOrder=()=>{
+      if(!orderNode)return;
+      const {dock,scale:zoom}=orderEntrance.pose(),{x,y}=layout.order;
+      orderNode.position.set(W/2+(x-W/2)*dock,H*.35+(y-H*.35)*dock);
+      orderNode.scale.set(zoom*(1-.12*dock));
     };
     const rebuild = (animate = false) => {
       clearForeground();
-      // The painting covers the physical viewport; only interactive composition uses a safe fit.
-      tabletop.scale.set(background.scale.x/scale);tabletop.position.set((background.x-offsetX)/scale,(background.y-offsetY)/scale);
-      tableMask.clear().rect(0,H*.555,W,H*.445).fill(0xffffff);
+      // The painting covers the physical viewport; interactive anchors use the entire logical viewport.
+      // Clip the actors themselves. A second background layer causes seams at the viewport edge.
+      visitorMask.clear().rect(layout.guest.laneLeft,0,W-layout.edge-layout.guest.laneLeft,layout.tableY).fill(0xffffff);
+      heroMask.clear().rect(0,0,layout.guest.laneLeft,layout.tableY).fill(0xffffff);
       if(model.game.screen==='home')drawHome();else if(isSession(model.game))drawSession(animate);else drawEnding();
       if(model.codeOpen)drawCode();
-      if(pendingDelivery)controls=controls.map(c=>({...c,disabled:c.id!=='home'}));
-      if(model.fullscreen){illustration('door',W-44,44,40,52);addControl('fullscreen','退出全螢幕',W-44,44,72,76);}
+      if(pendingDelivery||orderEntrance.active||guestEntering())controls=controls.map(c=>({...c,disabled:c.id!=='home'}));
+      if(orderNode){foreground.addChild(orderNode);poseOrder();}
+      if(model.fullscreen){illustration('exit-fullscreen',W-54,48,60,60);addControl('fullscreen','退出全螢幕',W-54,48,76,76);}
       drawGuest();highlight();hooks.controls(controls);app.render();
     };
     const cancel = () => {
@@ -436,13 +479,13 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
     const resize = () => {
       if(disposed)return;cancel();
       const width=host.clientWidth||1200,height=host.clientHeight||800;
-      W=width/height<.85?600:1200;H=W===600?1000:800;
-      scale=Math.min(width/W,height/H);offsetX=(width-W*scale)/2;offsetY=(height-H*scale)/2;
+      layout=workshopLayout(width,height);W=layout.width;H=layout.height;
+      scale=layout.scale;offsetX=0;offsetY=0;
       app.renderer.resize(width,height,Math.min(devicePixelRatio||1,2));world.scale.set(scale);world.position.set(offsetX,offsetY);
       background.scale.set(Math.max(width/background.texture.width,height/background.texture.height));background.position.set((width-background.width)/2,(height-background.height)/2);rebuild();
     };
     const startTutorial = () => {
-      if(tutorialSeen||!isSession(model.game)||reduced||document.hidden||model.game.history.length)return;
+      if(tutorialSeen||orderEntrance.active||guestEntering()||!isSession(model.game)||reduced||document.hidden||model.game.history.length)return;
       tutorialSeen=true;tutorial=true;
       try{localStorage.setItem(INTRO_KEY,'1');}catch{/* In-memory fallback. */}
       const b=bottles[0], target=controls.find(c=>c.id==='spring')!;
@@ -465,26 +508,54 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       const b=bottles[a.from];if(!b)return;
       const dest=a.kind==='pour'?bottles[a.to!]:null;
       const station=controls.find(c=>c.id===(a.kind==='fill'?'spring':'recycler'));
-      const start=a.kind==='fill'?{x:station!.x+station!.w/2,y:station!.y+station!.h*.27}:{x:b.x,y:b.y-b.h*.93};
-      const end=dest?{x:dest.x,y:dest.y-dest.h*.93}:a.kind==='fill'?{x:b.x,y:b.y-b.h*.93}:{x:station!.x+station!.w/2,y:station!.y+station!.h*.35};
+      const before=g.history.at(-1)!.before;
+      const filling=a.kind==='fill';
+      const {sw,sh,rh}=stationGeometry();
+      const spout={x:layout.station.left+sw*.47,y:layout.station.y-sh*.36};
+      const end=dest?{x:dest.x,y:dest.y-dest.h*.955}:{x:layout.station.right,y:layout.station.y-rh*.80};
+      const direction=end.x>b.x?1:-1,heldScale=filling?.72:1;
+      const heldMouth=filling?{x:spout.x+8,y:spout.y+25}:{x:end.x-direction*28,y:end.y-55};
+      const lip={x:filling?0:direction*b.w*.19,y:-b.h*.945};
+      const settledControls=controls;
+      controls=controls.map(c=>({...c,disabled:c.id!=='home'&&c.id!=='fullscreen'}));hooks.controls(controls);
+      foreground.addChild(b.node);
       hooks.sound('pour');
-      tween(620,t=>{
-        effects.clear();if(t===1){b.node.rotation=0;b.node.scale.set(1);return;}
-        const alpha=Math.sin(t*Math.PI),midX=(start.x+end.x)/2,midY=Math.min(start.y,end.y)-90;
-        if(a.kind!=='fill')b.node.rotation=Math.sin(t*Math.PI)*(end.x>start.x?.14:-.14);
-        b.node.scale.set(1+.035*alpha,1-.035*alpha);
-        for(let i=0;i<30;i++){
-          const u=(i/30+t*.25)%1,v=1-u,x=v*v*start.x+2*v*u*midX+u*u*end.x,y=v*v*start.y+2*v*u*midY+u*u*end.y;
-          const drop=effects.paint('drop',x,y,9,22,alpha,true);
-          drop.rotation=Math.atan2(2*v*(midY-start.y)+2*u*(end.y-midY),2*v*(midX-start.x)+2*u*(end.x-midX))-Math.PI/2;
+      tween(POUR_DURATION,t=>{
+        const {pose,flow,wet}=pourTiming(t);
+        const remaining=before[a.from]+(g.amounts[a.from]-before[a.from])*flow;
+        const angle=filling?0:direction*bottlePourAngle(remaining/b.capacity);
+        const held={x:heldMouth.x-(Math.cos(angle)*lip.x-Math.sin(angle)*lip.y)*heldScale,y:heldMouth.y-(Math.sin(angle)*lip.x+Math.cos(angle)*lip.y)*heldScale};
+        effects.clear();stream.visible=wet;
+        b.node.rotation=angle*pose;
+        b.labels.rotation=-b.node.rotation;b.labels.alpha=1-pose*.25;
+        const size=1+(heldScale-1)*pose;
+        b.node.scale.set(size);b.node.position.set(b.x+(held.x-b.x)*pose,b.y+(held.y-b.y)*pose-Math.sin(pose*Math.PI)*24);
+        bottles.forEach((bottle,i)=>{
+          bottle.amount=before[i]+(g.amounts[i]-before[i])*flow;
+          bottle.number.text=String(Math.round(bottle.amount));liquidDraw(bottle,bottle.amount,t*16);
+        });
+        if(t===1){b.node.rotation=0;b.node.scale.set(1);b.node.position.set(b.x,b.y);controls=settledControls;hooks.controls(controls);return;}
+        if(!wet)return;
+        const mouth={x:b.node.x+(Math.cos(b.node.rotation)*lip.x-Math.sin(b.node.rotation)*lip.y)*size,y:b.node.y+(Math.sin(b.node.rotation)*lip.x+Math.cos(b.node.rotation)*lip.y)*size};
+        const start=filling?spout:mouth,landing=filling?mouth:end;
+        const mid={x:start.x+(landing.x-start.x)*.62,y:start.y+6};
+        const fade=Math.min(1,(t-.28)/.055,(.79-t)/.055);
+        stream.alpha=fade*.9;
+        for(let i=0;i<=36;i++){
+          const u=i/36,v=1-u;
+          const x=v*v*start.x+2*v*u*mid.x+u*u*landing.x,y=v*v*start.y+2*v*u*mid.y+u*u*landing.y;
+          const dx=2*v*(mid.x-start.x)+2*u*(landing.x-mid.x),dy=2*v*(mid.y-start.y)+2*u*(landing.y-mid.y),length=Math.hypot(dx,dy)||1;
+          const radius=(filling?4.4:5.2)*(1-u*.22)*(1+Math.sin(u*18-t*32)*.08);
+          streamVertices.set([x-dy/length*radius,y+dx/length*radius,x+dy/length*radius,y-dx/length*radius],i*4);
         }
-        for(let i=0;i<10;i++){const phase=(t*2+i*.17)%1;effects.paint('drop',end.x+Math.sin(i*2.4)*phase*34,end.y-phase*45+phase*phase*50,6+i%3,10+i%3,(1-phase)*alpha);}
+        effects.paint('surface',landing.x,landing.y+2,22+Math.sin(t*32)*3,7,fade*.7,true);
+        for(let i=0;i<5;i++){const phase=(t*3+i*.19)%1;const drop=effects.paint('drop',landing.x+Math.sin(i*2.4)*phase*18,landing.y-phase*22+phase*phase*27,2.5+i%2,4+i%2,(1-phase)*fade*.65);drop.rotation=Math.sin(i*2.4)*.6;}
       });
       if(g.amounts.some((n,i)=>n===currentPuzzle(g).capacities[i]&&g.history.at(-1)?.before[i]!==n))hooks.sound('full');
     };
     const keydown = (e: KeyboardEvent) => {if(e.key==='Escape')cancel();};
     const finishDelivery=()=>{if(pendingDelivery&&!disposed){pendingDelivery=false;hooks.activate('deliver');}};
-    const visibility=()=>{cancel();tweens.forEach(t=>t.step(1));tweens=[];effects.clear();celebration=3;guestMotion.settle();drawGuest();starChange=null;paintStars();finishDelivery();app.render();if(document.hidden)app.stop();else if(!reduced)app.start();};
+    const visibility=()=>{const wasOpening=orderEntrance.active||guestEntering();orderEntrance.finish();cancel();tweens.forEach(t=>t.step(1));tweens=[];effects.clear();celebration=3;guestMotion.settle();drawGuest();starChange=null;paintStars();finishDelivery();if(wasOpening)rebuild();app.render();if(document.hidden)app.stop();else if(!reduced)app.start();};
     app.canvas.setAttribute('aria-hidden','true');app.canvas.style.touchAction='none';host.append(app.canvas);
     const listen = <K extends keyof HTMLElementEventMap>(name: K, fn: (event: HTMLElementEventMap[K])=>void) => {
       app.canvas.addEventListener(name,fn);releases.push(()=>app.canvas.removeEventListener(name,fn));
@@ -498,7 +569,8 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
     const sparkle=world.addChild(createPaintLayer(P,textures));
     app.ticker.add(({deltaMS})=>{
       const dt=Math.min(deltaMS,50);time+=dt/1000;celebration+=dt/1000;glow.alpha=.88+Math.sin(time*1.8)*.12;
-      guestMotion.advance(dt);drawGuest();
+      const wasEntering=guestEntering();guestMotion.advance(dt);drawGuest();
+      if(orderEntrance.advance(dt)||(wasEntering&&!guestEntering())){rebuild();startTutorial();}else poseOrder();
       if(guestMotion.index===null)finishDelivery();
       if(starChange){starChange.elapsed+=dt;paintStars();if(starChange.elapsed>=700)starChange=null;}
       const running=tweens;tweens=[];
@@ -510,11 +582,14 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       else for(let i=0;i<14;i++)sparkle.paint('mote',30+(i*83)%W+Math.sin(time+i)*8,H*.12+(i*47)%(H*.5)+Math.sin(time*.6+i)*13,10,10,.18+Math.sin(time+i)*.12);
     });
     guestMotion.request(isSession(model.game)&&!model.game.practice?model.game.index:null,reduced||document.hidden);
+    if(isSession(model.game)&&model.game.history.length===0)orderEntrance.begin(reduced||document.hidden);
     resize();if(!reduced&&!document.hidden)app.start();
     return {
       update(next){if(disposed)return;const prior=model;cancel();model=next;
         if(pendingDelivery&&(next.game.screen!=='ready'||next.game.index!==prior.game.index))pendingDelivery=false;
-        guestMotion.request(!pendingDelivery&&isSession(next.game)&&!next.game.practice?next.game.index:null,reduced||document.hidden);
+        if(!isSession(next.game)){guestMotion.clear();orderEntrance.finish();}
+        else if(!isSession(prior.game)||next.game.index!==prior.game.index||next.game.seed!==prior.game.seed||next.game.practice!==prior.game.practice||currentPuzzle(next.game).id!==currentPuzzle(prior.game).id)orderEntrance.begin(reduced||document.hidden);
+        guestMotion.request(!pendingDelivery&&isSession(next.game)&&!next.game.practice?next.game.index:null,!isSession(next.game)||reduced||document.hidden);
         if(isSession(next.game)&&isSession(prior.game)&&!next.game.practice&&currentPuzzle(next.game).id===currentPuzzle(prior.game).id){
           const from=performanceStars(prior.game.history.length,currentPuzzle(prior.game).minimumSteps),to=performanceStars(next.game.history.length,currentPuzzle(next.game).minimumSteps);
           if(from!==to)starChange=reduced||document.hidden?null:{from,to,elapsed:0};
@@ -528,7 +603,7 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
         if(reduced){tweens=[];bottles.forEach(b=>liquidDraw(b,b.amount));app.render();}
       },
       focus(id){focused=id;highlight();app.render();},activate,cancel,
-      motion(value){reduced=value;cancel();tweens.forEach(t=>t.step(1));tweens=[];effects.clear();effects.alpha=1;sparkle.clear();celebration=3;guestMotion.settle();drawGuest();starChange=null;paintStars();finishDelivery();if(milo){milo.y=miloY;milo.rotation=0;}app.render();if(value||document.hidden)app.stop();else app.start();},
+      motion(value){reduced=value;const wasOpening=orderEntrance.active||guestEntering();if(value)orderEntrance.finish();cancel();tweens.forEach(t=>t.step(1));tweens=[];effects.clear();effects.alpha=1;sparkle.clear();celebration=3;if(value)guestMotion.settle();drawGuest();starChange=null;paintStars();finishDelivery();if(value&&wasOpening)rebuild();if(milo){milo.y=miloY;milo.rotation=0;}app.render();if(value||document.hidden)app.stop();else app.start();},
       destroy,
     };
   } catch(error){destroy();throw error;}

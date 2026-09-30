@@ -13,7 +13,7 @@ it('每一星級與關次都有經驗解的實際題目，不把重玩代碼當�
   }
 });
 
-it.each([3, 4, 5] as const)('%i 星連開 50 局各關避開最近六題，同一代碼仍固定重播', difficulty => {
+it.each([2, 3, 4, 5] as const)('%i 星連開 50 局各關避開最近六題，同一代碼仍固定重播', difficulty => {
   let state = 41;
   const random = () => (state = (Math.imul(state, 1664525) + 1013904223) >>> 0);
   let recent: string[][] = Array.from({ length: 5 }, () => []);

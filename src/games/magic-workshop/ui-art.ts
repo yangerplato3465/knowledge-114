@@ -1,5 +1,8 @@
 /** Generated illustration metadata; rebuild with scripts/prepare-workshop-ui.py. */
+import { RUSTIC_ART } from './rustic-art';
 export const UI_ART = {
+  ...RUSTIC_ART,
+  "stream": { "file": "water-stream-v2.webp", "bounds": [0.14844, 0.47656, 0.86719, 0.54297], "size": 256 },
   "book-beginner": {
     "file": "ui-book-beginner.webp",
     "bounds": [

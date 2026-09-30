@@ -31,6 +31,7 @@ export interface App {
 export interface Pixi {
   Application: new () => App; Container: new () => Node; Graphics: new () => Graphic;
   Sprite: new (texture: Texture) => Sprite;
+  MeshSimple: new (options: { texture: Texture; vertices: Float32Array; uvs: Float32Array; indices: Uint32Array }) => Node;
   Text: new (options: { text: string; style: Record<string, unknown> }) => Label;
   Texture: { from(source: HTMLImageElement | HTMLCanvasElement): Texture };
 }

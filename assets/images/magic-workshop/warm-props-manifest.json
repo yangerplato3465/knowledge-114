@@ -1,0 +1,67 @@
+{
+  "generator": "Built-in image_gen",
+  "prompts": [
+    "Create ONE isolated production game prop, transparent background, 1024x1024 single frame 1x1, anchor center512,512, baseline y850, minimum128px clear padding every edge including shadows/glow. Full object within x128..896 y128..860, no cropping. Match the attached screenshot's BACKGROUND and friendly character illustration style: polished softly painted storybook fantasy, warm golden honey light from upper left, luminous midtones and soft lavender ambient shadows, smooth rounded volumes and subtle brushwork, slightly elevated frontal 3/4 camera with visible oval top matching the wooden tabletop. Not photorealistic, no grunge, no black weathering, no vector, no pixel art. Screenshot is style reference only; do not reproduce scene or text. A generous magical holy-water fountain dispenser: rounded pale ivory glazed ceramic reservoir, broad seafoam green bands, a tiny understated crescent impressed into the ceramic, wide open oval upper lip showing luminous clear turquoise water. Modest warm satin brass tap on RIGHT side with downward-facing tip at approximately x800,y580. Short rounded cream ceramic foot, no tall wooden legs, enough clear room below faucet. Friendly substantial silhouette. No gems, no ornate filigree, no bow, no large stars, no flowing water. Gentle cyan light shines through a small inset round glass window. Bright warm highlights, grounded small soft contact shadow.",
+    "Create ONE isolated production game prop, transparent background, 1024x1024 single frame 1x1, anchor center512,512, baseline y850, minimum128px clear padding every edge including shadows/glow. Full object within x128..896 y128..860, no cropping. Match the attached screenshot's BACKGROUND and friendly character illustration style: polished softly painted storybook fantasy, warm golden honey light from upper left, luminous midtones and soft lavender ambient shadows, smooth rounded volumes and subtle brushwork, slightly elevated frontal 3/4 camera with visible oval top matching the wooden tabletop. Not photorealistic, no grunge, no black weathering, no vector, no pixel art. Screenshot is style reference only; do not reproduce scene or text. A generous squat magical recycling cauldron: warm peachy COPPER body with softly painted amber highlights, broad rolled warm brass rim and two simple round side handles, three short rounded feet. Open elliptical mouth with gentle luminous lavender potion and subtle lavender light softly reflected inside rim. Body visibly bright copper, never black or grimy. One modest engraved crescent, no gems, no rope, no ornate filigree, no big star, no dense texture. Harmonious honey copper palette like the screenshot's wooden workshop. Grounded small soft contact shadow."
+  ],
+  "sources": [
+    "spring-warm-v3.png",
+    "recycler-warm-v3.png"
+  ],
+  "requested": {
+    "frame": [
+      1024,
+      1024
+    ],
+    "grid": [
+      1,
+      1
+    ],
+    "anchor": [
+      512,
+      512
+    ],
+    "safePadding": 128
+  },
+  "actual": {
+    "frame": [
+      1254,
+      1254
+    ],
+    "grid": [
+      1,
+      1
+    ],
+    "note": "完整透明單幀保留，工具未依指定尺寸輸出；整張縮小78%置中，未裁切。"
+  },
+  "runtime": {
+    "spring": {
+      "frame": [
+        384,
+        384
+      ],
+      "bounds": [
+        77,
+        83,
+        324,
+        313
+      ],
+      "bytes": 19860
+    },
+    "recycler": {
+      "frame": [
+        320,
+        320
+      ],
+      "bounds": [
+        54,
+        99,
+        267,
+        253
+      ],
+      "bytes": 16822
+    }
+  },
+  "validation": "原圖與兩張WebP皆已檢視；物件、陰影完整，沒有鄰格或裁切。",
+  "preparation": "scripts/prepare-workshop-rustic.py"
+}

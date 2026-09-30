@@ -1,0 +1,94 @@
+{
+  "generator": "Built-in image_gen",
+  "source": "rustic-workshop-v2.png",
+  "exitSource": "exit-fullscreen-v2.png",
+  "requested": {
+    "sheet": [
+      1536,
+      1536
+    ],
+    "grid": [
+      2,
+      2
+    ],
+    "cell": [
+      768,
+      768
+    ],
+    "anchor": [
+      384,
+      384
+    ],
+    "safeMargin": 96,
+    "exitFrame": [
+      1024,
+      1024
+    ],
+    "exitAnchor": [
+      512,
+      512
+    ],
+    "exitSafeMargin": 192
+  },
+  "actual": {
+    "sheet": [
+      1254,
+      1254
+    ],
+    "cell": [
+      627,
+      627
+    ],
+    "exitFrame": [
+      1254,
+      1254
+    ],
+    "note": "工具回傳不同解析度，完整保留原圖；使用精確格線切出前三格，整格縮小置中，不依物件硬切。第四格箭頭不符需求，未使用；出口另外產生白色叉號。"
+  },
+  "artDirection": "溫暖手繪奇幻工坊，上左暖光，鼠尾草綠陶罐、舊黃銅龍頭、暗木架；樸素繩圈鐵釜、淡紫內光；嫩綠幼芽月牙見習筆記；深木底象牙白叉號。透明背景，非向量、非像素風，不加華麗寶石。",
+  "preparation": "scripts/prepare-workshop-rustic.py",
+  "runtime": {
+    "spring-rustic": {
+      "file": "spring-rustic-v2.webp",
+      "bounds": [
+        0.25,
+        0.17188,
+        0.83333,
+        0.85938
+      ],
+      "size": 384
+    },
+    "recycler-rustic": {
+      "file": "recycler-rustic-v2.webp",
+      "bounds": [
+        0.16875,
+        0.32188,
+        0.82812,
+        0.85
+      ],
+      "size": 320
+    },
+    "book-novice": {
+      "file": "book-novice-v2.webp",
+      "bounds": [
+        0.23438,
+        0.16406,
+        0.83594,
+        0.80469
+      ],
+      "size": 128
+    },
+    "exit-fullscreen": {
+      "file": "exit-fullscreen-v2.webp",
+      "bounds": [
+        0.29167,
+        0.30208,
+        0.69792,
+        0.6875
+      ],
+      "size": 96
+    }
+  },
+  "validation": "已檢視原圖及四個執行用完整幀，無切斷物件或鄰格殘片；整格縮至輸出尺寸的 78%，保留外部透明留白。",
+  "runtimeTotalBytes": 45464
+}

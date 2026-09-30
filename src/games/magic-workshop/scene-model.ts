@@ -9,6 +9,7 @@ export type SceneSound = 'pickup' | 'pour' | 'full' | 'success';
 /** A Howl instance can be attached for each cue without coupling game rules to audio. */
 export type WorkshopSoundBank = Partial<Record<SceneSound, { play(): unknown; stop(): unknown }>>;
 export const isSession = (g: GameState) => g.screen === 'playing' || g.screen === 'ready';
+export const difficultyTitle = (level: Difficulty) => ({2:'見習生',3:'學徒',4:'魔法師',5:'大魔導師'} as const)[level];
 export function targetAction(from: number, id: string): Action | null {
   if (id === 'spring') return { kind: 'fill', from };
   if (id === 'recycler') return { kind: 'empty', from };
@@ -29,9 +30,9 @@ export function sceneDialogue(g: GameState): string {
   return g.practice ? '我們一起試試吧！\n先量出這個份量。' : `${GUESTS[g.index].name}的委託來了。\n${['把露珠的魔法留住吧！', '讓好消息帶著光出發！', '為晚歸的人留一盞燈。', '草藥與魔法，最合拍了。', '再添一點溫暖的魔法吧！'][g.index]}`;
 }
 export function sceneAnnouncement(g: GameState): string {
-  if (g.screen === 'finished') return `${sceneDialogue(g).replaceAll('\n', '')}${g.results.map((r, i) => `第 ${i + 1} 關 ${r.steps} 步，最短 ${r.minimumSteps} 步，通關表現 ${performanceStars(r.steps, r.minimumSteps )} 枚魔力結晶。`).join('')}重玩代碼 ${g.seed}，${['初階','進階','大師'][g.difficulty-3]}委託。`;
+  if (g.screen === 'finished') return `${sceneDialogue(g).replaceAll('\n', '')}${g.results.map((r, i) => `第 ${i + 1} 關 ${r.steps} 步，最短 ${r.minimumSteps} 步，通關表現 ${performanceStars(r.steps, r.minimumSteps )} 枚魔力結晶。`).join('')}重玩代碼 ${g.seed}，${difficultyTitle(g.difficulty)}委託。`;
   if (!isSession(g)) return sceneDialogue(g).replaceAll('\n', '');
   const p = currentPuzzle(g);
   const rating = g.practice ? '' : `結晶全亮標準 ${p.minimumSteps} 步內，目前 ${performanceStars(g.history.length, p.minimumSteps )} 枚魔力結晶。`;
-  return `${g.practice ? '操作練習。' : `第 ${g.index + 1} 關，共五關。${GUESTS[g.index].name}的訂單，${['初階','進階','大師'][g.difficulty-3]}委託。`}${rating}目標 ${p.target} 單位。已用 ${g.history.length} 步。${g.amounts.map((n, i) => `第 ${i + 1} 瓶 ${n}/${p.capacities[i]}`).join('，')}。${g.screen === 'ready' ? `委託完成。${g.practice ? '' : `通關表現 ${performanceStars(g.history.length, p.minimumSteps )} 枚魔力結晶，最短 ${p.minimumSteps} 步。`}` : ''}${g.hintLevel ? sceneDialogue(g) : ''}`;
+  return `${g.practice ? '操作練習。' : `第 ${g.index + 1} 關，共五關。${GUESTS[g.index].name}的訂單，${difficultyTitle(g.difficulty)}委託。`}${rating}目標 ${p.target} 單位。已用 ${g.history.length} 步。${g.amounts.map((n, i) => `第 ${i + 1} 瓶 ${n}/${p.capacities[i]}`).join('，')}。${g.screen === 'ready' ? `委託完成。${g.practice ? '' : `通關表現 ${performanceStars(g.history.length, p.minimumSteps )} 枚魔力結晶，最短 ${p.minimumSteps} 步。`}` : ''}${g.hintLevel ? sceneDialogue(g) : ''}`;
 }

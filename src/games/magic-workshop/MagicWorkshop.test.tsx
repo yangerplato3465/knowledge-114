@@ -54,7 +54,7 @@ it('場景的點選、拖曳、無效操作、復原、提示、交付共用原�
   command('deliver'); expect(model.game.screen).toBe('practice-done');
 });
 
-it.each([3,4,5])('%i 星重玩代碼與完整五關結果維持一致', async difficulty => {
+it.each([2,3,4,5])('%i 星重玩代碼與完整五關結果維持一致', async difficulty => {
   await mount();command(`difficulty:${difficulty}`);command('code');command('key:2');command('key:7');command('code-start');
   expect(model.game.seed).toBe(27);expect(model.game.difficulty).toBe(difficulty);
   const ids=model.game.deck.map(p=>p.id);

@@ -24,7 +24,7 @@ describe('工坊一局流程', () => {
     expect(performanceStars(minimum + 3, minimum)).toBe(1);
     expect(performanceStars(minimum + 100, minimum)).toBe(1);
   });
-  it.each([3, 4, 5] as const)('%i 星完整交付五關，保留所選難度與實際步數', difficulty => {
+  it.each([2, 3, 4, 5] as const)('%i 星完整交付五關，保留所選難度與實際步數', difficulty => {
     let game = gameReducer(initialGame, { type: 'start', seed: 27, difficulty });
     for (let stage = 0; stage < 5; stage++) {
       const puzzle = currentPuzzle(game);

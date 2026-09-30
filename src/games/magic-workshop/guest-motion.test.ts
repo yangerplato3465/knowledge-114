@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { GuestMotion } from './guest-motion';
 describe('客人動線', () => {
+  it.each([0,400,2200,2900])('回工坊立即清除客人與待切換目標（%i ms）',elapsed=>{
+    const motion=new GuestMotion();motion.request(0);motion.advance(elapsed);motion.request(1);
+    motion.clear();expect(motion.index).toBeNull();expect(motion.desired).toBeNull();expect(motion.phase).toBe('absent');
+    motion.advance(10000);expect(motion.index).toBeNull();
+    motion.request(3);expect(motion.index).toBe(3);expect(motion.phase).toBe('enter');
+  });
   it('側身步行到中央才轉向玩家，操作重繪不重啟入場', () => {
     const motion = new GuestMotion(); motion.request(0); motion.advance(400);
     expect(motion.pose().frame).toBeLessThan(4); expect(motion.pose().x).toBeGreaterThan(.5);

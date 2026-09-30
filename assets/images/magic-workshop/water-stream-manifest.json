@@ -1,0 +1,10 @@
+{
+  "generator": "Built-in image_gen",
+  "source": "water-stream-v2.png",
+  "runtime": "display/water-stream-v2.webp",
+  "prompt": "Create one production game VFX texture, matching a richly hand-painted cozy fantasy potion workshop with brass-rimmed glass bottles, soft turquoise water and warm golden lighting. NOT pixel art, NOT vector. A SINGLE thin continuous horizontal strand of translucent flowing aqua liquid, traveling left to right, with delicate elongated silky cyan and ivory highlights, softly irregular wet edges, subtle pale gold reflected light. Smooth coherent fluid ribbon, NOT separate droplets, NOT beads, NOT crystal shards, no large bubbles or stars, no splash, no bottle, no background. Canvas exactly 1024 x 1024, one frame only (1 column x 1 row), anchor center (512,512). The entire stream including glow occupies x=96..928 and y=466..558; at least 96px horizontal and 440px vertical transparent safety margin. Straight across horizontally, nearly even thin thickness, tapered soft rounded ends. Genuine transparent alpha around the stream. The center should be translucent cyan, with a few elegant longitudinal water streaks for movement. Render as a detailed painted game asset, legible when reduced to a 256x32 texture. Save output for use in a Pixi textured flowing mesh.",
+  "requested": {"frame": [1024,1024], "grid": [1,1], "anchor": [512,512], "bounds": [96,466,928,558], "transparent": true},
+  "actual": {"frame": [1254,1254], "grid": [1,1], "transparent": true, "note": "工具回傳不同解析度；原圖完整保留，未硬切。單一完整水流，無鄰格或其他物品。"},
+  "runtimeSpec": {"frame": [256,256], "anchor": [128,128], "innerSize": [210,210], "alpha8Bounds": [38,122,222,139], "bytes": 4608, "decodedRgbaBytes": 262144},
+  "preparation": "scripts/prepare-workshop-ui.py：整張縮小置中，保留透明安全邊，不裁切原圖。已查看原圖及執行貼圖。Pixi MeshSimple 變形同一張水流圖片，落點沿用小水花及波紋插畫。"
+}
