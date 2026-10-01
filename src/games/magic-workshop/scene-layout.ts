@@ -27,16 +27,19 @@ export function workshopLayout(viewWidth: number, viewHeight: number) {
   const miloX=portrait?edge+150:edge+285;
   const guestHalf=212*guestScale; // All authored frames retain at least 48 px padding in a 512 px cell.
   const laneLeft=miloX+(portrait?78:116);
-  // Keep the tallest bottle and both station hit areas in separate rows, even on short phones.
-  const bottleY=portrait?Math.max(height*.76,tableY+95+24+170):height*.735;
+  // The front lip under the central bottle row is at least y=810 on the source painting.
+  const tableFrontY=background.y+810*backgroundScale;
+  // Fit both rows inside the painted tabletop when browser chrome leaves less vertical space.
+  const bottleY=portrait?Math.min(Math.max(height*.76,tableY+95+24+170),tableFrontY-12):height*.735;
+  const vesselScale=portrait?Math.min(1,(bottleY-tableY-24)/(95+170)):1;
   return {
-    portrait,scale,width,height,edge,tableY,tableEdge,background,
+    portrait,scale,width,height,edge,tableY,tableFrontY,tableEdge,background,
     order:{x:portrait?width-edge-109:edge+109,y:portrait?244:210,width:218},
     milo:{x:miloX,y:counterY(tableEdge,miloX)+(portrait?68:94),width:portrait?116:160,height:portrait?170:250},
     dialogue:{x:miloX+88,y:tableY-(portrait?162:231),width:portrait?240:280,fontSize:portrait?20:23},
     guest:{scale:guestScale,half:guestHalf,seatX:Math.max(width/2,laneLeft+guestHalf+(portrait?36:16)),entryX:width-edge-guestHalf,laneLeft,y:tableY+(portrait?68:107)},
-    station:{left:edge+(portrait?108:156),right:width-edge-(portrait?70:125),y:portrait?bottleY-170-24:height*.765,springHeight:portrait?170:230,springWidth:portrait?212:310,recyclerWidth:portrait?185:270},
-    bottles:{y:bottleY,span:portrait?width-230:Math.min(1000,width*.48)},
+    station:{left:edge+(portrait?108:156),right:width-edge-(portrait?70:125),y:portrait?bottleY-170*vesselScale-4:height*.765,springHeight:(portrait?170:230)*vesselScale,springWidth:(portrait?212:310)*vesselScale,recyclerWidth:(portrait?185:270)*vesselScale},
+    bottles:{y:bottleY,span:portrait?width-230:Math.min(1000,width*.48),sizeScale:vesselScale},
     footer:{y:height-(portrait?90:55),homeX:width-edge-95,homeY:height-(portrait?35:55)},
     home:{x:portrait?width/2:width*.35,y:height*(portrait?.623:.65),miloX:portrait?width-edge-122:width*.78},
     ending:{x:portrait?width/2-40:width*.35,y:height*(portrait?.477:.58)},
@@ -44,8 +47,8 @@ export function workshopLayout(viewWidth: number, viewHeight: number) {
 }
 
 /** Capacity controls the physical vessel size; current amount controls only the liquid. */
-export function bottleDimensions(capacity: number, portrait: boolean) {
+export function bottleDimensions(capacity: number, portrait: boolean, sizeScale=1) {
   const size=capacity<=4?'small':capacity<=8?'medium':'large';
   const factor=size==='small'?.72:size==='medium'?.86:1;
-  return {size,w:(portrait?96:130)*factor,h:(portrait?170:206)*factor};
+  return {size,w:(portrait?96:130)*factor*sizeScale,h:(portrait?170:206)*factor*sizeScale};
 }

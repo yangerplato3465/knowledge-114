@@ -359,15 +359,16 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       const {sh,sw,rw,rh}=stationGeometry();
       illustration('spring-rustic',sx,sy-sh/2,sw,sh);
       illustration('recycler-rustic',rx,sy-rh/2,rw,rh);
-      addControl('spring','魔力泉，補滿選取的瓶子',sx,sy-sh/2,sw+14,sh+16,g.screen!=='playing');
-      addControl('recycler','回收釜，倒空選取的瓶子',rx,sy-rh/2,rw+14,rh+16,g.screen!=='playing');
+      const hitPadding=portrait?4:16;
+      addControl('spring','魔力泉，補滿選取的瓶子',sx,sy-sh/2,sw+14,sh+hitPadding,g.screen!=='playing');
+      addControl('recycler','回收釜，倒空選取的瓶子',rx,sy-rh/2,rw+14,rh+hitPadding,g.screen!=='playing');
       p.capacities.forEach((capacity,i)=>{
-        const {w:bw,h:bh}=bottleDimensions(capacity,portrait);
+        const {w:bw,h:bh}=bottleDimensions(capacity,portrait,layout.bottles.sizeScale);
         const x=W/2+(i-(count-1)/2)*Math.min(span/count,portrait?192:310);
         shadow(x,by,bw*.52);
         const b=makeBottle(x,by,bw,bh,g.amounts[i],capacity);bottles.push(b);
         text(`${i+1}`,x,by+27,20,C.paper,foreground,undefined,true);
-        addControl(`bottle:${i}`,`第 ${i+1} 瓶，容量 ${capacity} 單位，目前 ${g.amounts[i]} 單位`,x,by-b.h/2,b.w+18,b.h+16,g.screen!=='playing',g.selected===i);
+        addControl(`bottle:${i}`,`第 ${i+1} 瓶，容量 ${capacity} 單位，目前 ${g.amounts[i]} 單位`,x,by-b.h/2,Math.max(b.w+18,44/scale),b.h+hitPadding,g.screen!=='playing',g.selected===i);
         const before=animate?g.history.at(-1)?.before[i]:undefined;
         if(before!==undefined)b.amount=before;
         liquidDraw(b,b.amount);
