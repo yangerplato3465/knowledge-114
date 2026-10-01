@@ -1,7 +1,7 @@
 import { ART, GUESTS, REACTIONS, artUrl, type ArtKey } from './art';
 import { UI_ART, type UiArtKey } from './ui-art';
 import { createPaintLayer, placeIllustration, type PaintLayer } from './sprite-paint';
-import { bottleDimensions, workshopLayout } from './scene-layout';
+import { bottleDimensions, counterMask, counterY, workshopLayout } from './scene-layout';
 import { OrderEntrance } from './order-entrance';
 import { bottlePourAngle, liquidGeometry, POUR_DURATION, pourTiming } from './liquid-geometry';
 import { GuestMotion } from './guest-motion';
@@ -249,9 +249,9 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       visitor.visible=visitorFront.visible=index!==null;
       if(index===null)return;
       const key=GUESTS[index].art, size=layout.guest.scale;
-      const y=layout.guest.y+pose.bob;
       const travel=Math.max(0,Math.min(1,(pose.x-.5)/.68));
       const x=layout.guest.seatX+(layout.guest.entryX-layout.guest.seatX)*travel;
+      const y=counterY(layout.tableEdge,x)+(layout.guest.y-layout.tableY)+pose.bob;
       visitor.texture=textures.get(`${key}:${pose.frame}`)!;
       visitorFront.texture=textures.get(`${key}:5`)!;
       [visitor,visitorFront].forEach((sprite: Sprite)=>{sprite.position.set(x,y);sprite.scale.set(size*pose.facing,size);});
@@ -410,8 +410,8 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       clearForeground();
       // The painting covers the physical viewport; interactive anchors use the entire logical viewport.
       // Clip the actors themselves. A second background layer causes seams at the viewport edge.
-      visitorMask.clear().rect(layout.guest.laneLeft,0,W-layout.edge-layout.guest.laneLeft,layout.tableY).fill(0xffffff);
-      heroMask.clear().rect(0,0,layout.guest.laneLeft,layout.tableY).fill(0xffffff);
+      visitorMask.clear().poly(counterMask(layout.tableEdge,layout.guest.laneLeft,W-layout.edge)).fill(0xffffff);
+      heroMask.clear().poly(counterMask(layout.tableEdge,0,layout.guest.laneLeft)).fill(0xffffff);
       if(model.game.screen==='home')drawHome();else if(isSession(model.game))drawSession(animate);else drawEnding();
       if(model.codeOpen)drawCode();
       if(pendingDelivery||orderEntrance.active||guestEntering())controls=controls.map(c=>({...c,disabled:c.id!=='home'}));
@@ -483,7 +483,8 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       layout=workshopLayout(width,height);W=layout.width;H=layout.height;
       scale=layout.scale;offsetX=0;offsetY=0;
       app.renderer.resize(width,height,Math.min(devicePixelRatio||1,2));world.scale.set(scale);world.position.set(offsetX,offsetY);
-      background.scale.set(Math.max(width/background.texture.width,height/background.texture.height));background.position.set((width-background.width)/2,(height-background.height)/2);rebuild();
+      background.width=layout.background.width*scale;background.height=layout.background.height*scale;
+      background.position.set(layout.background.x*scale,layout.background.y*scale);rebuild();
     };
     const startTutorial = () => {
       if(tutorialSeen||orderEntrance.active||guestEntering()||!isSession(model.game)||reduced||document.hidden||model.game.history.length)return;

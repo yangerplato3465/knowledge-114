@@ -6,6 +6,7 @@
 
 - 先看 `git status`、保留既有修改；用 `rg` 找相關程式／測試，只改本次範圍。
 - 本站是 React＋Vite＋TypeScript 多頁網站；`index.html`／`pages/*.html` 各有入口，不恢復舊頁或 `next/`。
+- **每款遊戲開工前必讀 [共用世界觀與遊戲設計準則](docs/GAME_WORLD.md)**，包含新增遊戲、玩法／劇情／角色／美術／介面修改。新遊戲預設沿用暮光森林 IP，先寫清六項開工要點；既有遊戲只更新受影響的設計，不因這條規則自動改版。
 - 按需查閱：[架構／模組定位](docs/TECH_ARCHITECTURE.md)、[玩法](docs/GAMEPLAY.md)、[偵探](docs/detective-authoring.md)、[待辦](docs/TODO.md)、[啟動／部署](README.md)。
 
 ## 修改邊界
@@ -16,7 +17,7 @@
 - `assets/js/class-rpg*`、`assets/js/detective` 是現役依賴；保留完整頁面切換，移除 script 不等於清除訂閱。
 - 網站路徑使用 `import.meta.env.BASE_URL`，支援 `/` 與 `/knowledge-114/`。只發布 `dist`，不可發布原始 TSX。
 - Effect 清理計時器、監聽、訂閱與請求；過期回呼不可啟動模組或覆蓋新狀態。
-- 沿用 `assets/css/theme.css`，支援明／暗／系統、鍵盤與觸控。新遊戲以 DOM 承載題目／操作，Pixi 繪圖；用本地 vendor，不手改壓縮檔，動畫降級不改玩法。
+- 沿用 `assets/css/theme.css`，支援明／暗／系統、鍵盤與觸控。新遊戲以 Pixi 呈現可玩的場景，DOM 保留題目／操作語意與無障礙支援，不以可見網頁面板拼成主遊玩區；用本地 vendor，不手改壓縮檔，動畫降級不改玩法。
 - 偵探：保留 ID／驗碼參數／儲存 keys；驗碼 → 讀進度 → engine，讀取失敗禁止寫入，離場先 flush，切組 reload；改存檔格式須相容遷移。
 - 班級：保留 `ownerId` 篩選、訂閱世代隔離、原子交易與復原衝突檢查；成長公式只在 `class-rpg-model.js`。
 - 不放真實學生資料或權杖於測試／文件；UI 隱藏不能替代 Firestore 權限。推送、部署、規則發布須經使用者授權。
