@@ -6,14 +6,15 @@
 
 - 先看 `git status`、保留既有修改；用 `rg` 找相關程式／測試，只改本次範圍。
 - 本站是 React＋Vite＋TypeScript 多頁網站；`index.html`／`pages/*.html` 各有入口，不恢復舊頁或 `next/`。
-- **每款遊戲開工前必讀 [共用世界觀與遊戲設計準則](docs/GAME_WORLD.md)**，包含新增遊戲、玩法／劇情／角色／美術／介面修改。新遊戲預設沿用暮光森林 IP，先寫清六項開工要點；既有遊戲只更新受影響的設計，不因這條規則自動改版。
-- 按需查閱：[架構／模組定位](docs/TECH_ARCHITECTURE.md)、[玩法](docs/GAMEPLAY.md)、[偵探](docs/detective-authoring.md)、[待辦](docs/TODO.md)、[啟動／部署](README.md)。
+- **每款遊戲開工前必讀 [共用世界觀與遊戲設計準則](docs/world/README.md)**，包含新增遊戲、玩法／劇情／角色／美術／介面修改。新遊戲預設沿用暮光森林 IP，先寫清六項開工要點；既有遊戲只更新受影響的設計，不因這條規則自動改版。
+- 文件與素材分類先看 [專案導覽](docs/README.md)；共用角色原圖與個性只在 `docs/world/` 維護，各遊戲只記差異。
+- 按需查閱：[架構／模組定位](docs/project/architecture.md)、[玩法](docs/games/README.md)、[偵探](docs/games/detective/authoring.md)、[待辦](docs/project/todo.md)、[啟動／部署](README.md)。
 
 ## 修改邊界
 
 - 新功能放 `src`、沿用共用元件；首頁只作介紹／入口，不引入清單資料、功能頁 CSS、教材、Firebase 或 Pixi。
 - 產圖必須先定義每幀像素尺寸、排列、錨點與安全留白；角色、武器、衣物、陰影、光暈及全部特效都須完整留在各自格內，禁止碰線、跨格或切斷。放不下時統一調整規格，不能硬切；原圖及每個切出幀都須驗收，透明外框不代表沒有鄰幀殘片。
-- 數學勇者為五關操作／平衡原型：遵循 `docs/math-rpg-design.md`；使用五上／六上單元目錄，目前五上第一單元、合併第 2–3 單元、第 4 與第 5 單元有新題庫，不恢復已移除的舊題庫或舊戰鬥；其餘題庫、美術與獎勵待使用者定案。
+- 數學勇者為五關操作／平衡原型：遵循 `docs/games/math-rpg/design.md`；使用五上／六上單元目錄，目前五上第一單元、合併第 2–3 單元、第 4 與第 5 單元有新題庫，不恢復已移除的舊題庫或舊戰鬥；其餘題庫、美術與獎勵待使用者定案。
 - `assets/js/class-rpg*`、`assets/js/detective` 是現役依賴；保留完整頁面切換，移除 script 不等於清除訂閱。
 - 網站路徑使用 `import.meta.env.BASE_URL`，支援 `/` 與 `/knowledge-114/`。只發布 `dist`，不可發布原始 TSX。
 - Effect 清理計時器、監聽、訂閱與請求；過期回呼不可啟動模組或覆蓋新狀態。

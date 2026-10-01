@@ -4,14 +4,14 @@ from pathlib import Path
 from PIL import Image
 
 root = Path(__file__).resolve().parent.parent
-assets = root / 'assets/images/magic-workshop'
-manifest = json.loads((assets / 'guest-gaze-manifest.json').read_text(encoding='utf-8'))
+from workshop_art_paths import source as art_source, DISPLAY, MANIFESTS
+manifest = json.loads((MANIFESTS / 'guest-gaze-manifest.json').read_text(encoding='utf-8'))
 width, height = manifest['frameSize']
 padding = manifest['safePadding']
 assert manifest['grid'] == [1, 1]
 
 for frame in manifest['frames']:
-    source = assets / frame['source']
+    source = art_source(frame['source'])
     image = Image.open(source).convert('RGBA')
     assert image.size == (width, height), (source, image.size)
     alpha = image.getchannel('A').point(lambda value: 255 if value >= 16 else 0)
@@ -19,7 +19,7 @@ for frame in manifest['frames']:
     assert bounds, source
     left, top, right, bottom = bounds
     assert left >= padding and top >= padding and right <= width-padding and bottom <= height-padding, (source, bounds)
-    display = assets / 'display' / frame['display']
+    display = DISPLAY / frame['display']
     image.save(display, quality=90, method=4)
     encoded = Image.open(display).convert('RGBA')
     assert encoded.size == image.size, display

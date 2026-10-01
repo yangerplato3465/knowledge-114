@@ -4,8 +4,8 @@ from pathlib import Path
 from PIL import Image
 
 root = Path(__file__).resolve().parent.parent
-assets = root / 'assets/images/magic-workshop'
-manifest = json.loads((assets / 'guest-animation-manifest.json').read_text(encoding='utf-8'))
+from workshop_art_paths import source, DISPLAY, MANIFESTS
+manifest = json.loads((MANIFESTS / 'guest-animation-manifest.json').read_text(encoding='utf-8'))
 # Registration measured against the initial 410px previews: torso centre and planted foot.
 # Translating a complete cell keeps the same camera scale and never crops to visible bounds.
 registration = {
@@ -16,7 +16,7 @@ registration = {
     'bear': [(265,433),(236,435),(232,433),(276,431),(266,428),(248,425)],
 }
 for guest in manifest['guests']:
-    sheet = Image.open(assets / guest['source']).convert('RGBA')
+    sheet = Image.open(source(guest['source'])).convert('RGBA')
     assert sheet.size == (1536, 1024), (guest['key'], sheet.size)
     for frame in range(6):
         x, y = (frame % 3) * 512, (frame // 3) * 512
@@ -27,7 +27,7 @@ for guest in manifest['guests']:
         anchor_x, anchor_y = registration[guest['key']][frame]
         offset = (round(256-(anchor_x-51)*.9), round(448-(anchor_y-51)*.9))
         output.paste(cell.resize((369, 369), Image.Resampling.LANCZOS), offset)
-        output.save(assets / 'display' / f"guest-{guest['key']}-walk-v1-{frame}.webp", quality=90, method=4)
+        output.save(DISPLAY / f"guest-{guest['key']}-walk-v1-{frame}.webp", quality=90, method=4)
         final_bounds = output.getchannel('A').point(lambda v: 255 if v >= 16 else 0).getbbox()
         assert final_bounds[0] >= 48 and final_bounds[1] >= 48 and final_bounds[2] <= 464 and final_bounds[3] <= 464
         print(guest['key'], frame, final_bounds)

@@ -5,14 +5,14 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSETS = ROOT / 'assets/images/magic-workshop'
+from workshop_art_paths import source as art_source, DISPLAY, MANIFESTS
 FILES = sorted(set(re.findall(r"file: '([^']+)'", (ROOT / 'src/games/magic-workshop/art.ts').read_text(encoding='utf-8')))
                | {'bottle-magic-ring-v1.png', 'workshop-panorama-v1.png'})
-out = ASSETS / 'display'
+out = DISPLAY
 out.mkdir(exist_ok=True)
 entries = []
 for name in FILES:
-    with Image.open(ASSETS / name) as source:
+    with Image.open(art_source(name)) as source:
         image = source.convert('RGBA')
         original_size = image.size
         # Whole canvas scales together: no crop, no per-pose trimming, no alpha edits.
@@ -25,6 +25,6 @@ for name in FILES:
             visible = alpha.point(lambda a: 255 if a >= 16 else 0).getbbox()
         entries.append({'source': name, 'file': target.name, 'sourceSize': original_size,
                         'size': image.size, 'visibleBoundsAlpha16': visible,
-                        'sourceBytes': (ASSETS / name).stat().st_size, 'bytes': target.stat().st_size})
-(out / 'manifest.json').write_text(json.dumps({'processing': 'Full canvas resized uniformly; no crop or alpha cleanup.', 'assets': entries}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+                        'sourceBytes': (art_source(name)).stat().st_size, 'bytes': target.stat().st_size})
+(MANIFESTS / 'display-manifest.json').write_text(json.dumps({'processing': 'Full canvas resized uniformly; no crop or alpha cleanup.', 'assets': entries}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 print(f'{len(entries)} assets: {sum(e["sourceBytes"] for e in entries)} -> {sum(e["bytes"] for e in entries)} bytes')
