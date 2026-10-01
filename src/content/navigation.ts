@@ -14,6 +14,6 @@ export const categories: ActivityCategory[] = [
   { id: 'detective', title: '偵探事件簿', description: '跟著老師進入案件，觀察線索、一起推理。', items: [
     { path: 'detective-golden-owl', title: '黃金貓頭鷹雕像失竊事件', description: '校園失竊案 · 密碼與邏輯推理' },
     { path: 'detective-ai-museum', title: 'AI 展覽館的消失記憶', description: '建置中 · 觀察比對與審訊推理' },
-    { path: 'detective-starlight', title: '星燈小徑的錯位燈火', description: '暮光森林 · 重建時間、燈光與郵路' },
+    { path: 'detective-starlight', title: '星燈小徑燈光偏移事件', description: '暮光森林 · 重建時間、燈光與郵路' },
   ] },
 ];

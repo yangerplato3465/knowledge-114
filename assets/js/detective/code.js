@@ -25,7 +25,7 @@ const PBKDF2_ITERATIONS = 150000;
 export const DETECTIVE_GAMES = [
     { id: 'owl', prefix: 'OWL', name: '黃金貓頭鷹雕像失竊事件' },
     { id: 'ai-museum', prefix: 'AIM', name: 'AI 展覽館的消失記憶' },
-    { id: 'starlight', prefix: 'STR', name: '星燈小徑的錯位燈火' },
+    { id: 'starlight', prefix: 'STR', name: '星燈小徑燈光偏移事件' },
 ];
 
 // 把使用者輸入洗乾淨：轉大寫、丟掉空白與連字號。

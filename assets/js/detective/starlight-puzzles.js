@@ -171,8 +171,8 @@ export function starlight(ctx, panel, box, cfg, onSolve) {
                 g.circle(lx, ly, 12).fill({ color: 0xffd77a });
                 work.addChild(g);
             });
-            work.addChild(mkButton({ label: `第二盞：${lampAngles[angles[0]]} ↻`, x: box.x + 65, y: box.y + 352, w: 262, h: 40, onClick: () => turn(0) }));
-            work.addChild(mkButton({ label: `第三盞：${lampAngles[angles[1]]} ↻`, x: box.x + 352, y: box.y + 352, w: 262, h: 40, onClick: () => turn(1) }));
+            work.addChild(mkButton({ label: `第二盞：${lampAngles[angles[0]]}`, icon: '↻', iconSide: 'right', x: box.x + 65, y: box.y + 352, w: 262, h: 40, onClick: () => turn(0) }));
+            work.addChild(mkButton({ label: `第三盞：${lampAngles[angles[1]]}`, icon: '↻', iconSide: 'right', x: box.x + 352, y: box.y + 352, w: 262, h: 40, onClick: () => turn(1) }));
             work.addChild(mkButton({ label: '比較昨夜光痕', x: box.cx - 91, y: box.y + box.h - 58, w: 182, h: 35, onClick: check }));
         };
         renderAccess = body => {

@@ -14,6 +14,7 @@ function loadCase() {
 
 test('左右支路、小物件與八條必要線索串起五題，最後才確認動機', () => {
     const c = loadCase();
+    assert.equal(c.title, '星燈小徑燈光偏移事件');
     const puzzles = Object.values(c.scenes).flatMap(scene => scene.hotspots.filter(h => h.puzzle));
     assert.deepEqual(Object.keys(c.scenes), ['trail', 'hut', 'flower', 'bridge']);
     assert.equal(c.scenes.trail.hotspots.find(h => h.id === 'toFlower').goto, 'flower');

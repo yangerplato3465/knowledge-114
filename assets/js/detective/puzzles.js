@@ -770,7 +770,7 @@ function deduce(ctx, panel, box, cfg, onSolve) {
 
     // 按鈕坐在紙下緣那條撕紙條上
     panel.addChild(mkButton({
-        label: '🔍 檢查推理', x: box.cx - 100, y: box.y + 512, w: 200, h: 42,
+        label: '檢查推理', icon: '🔍', x: box.cx - 100, y: box.y + 512, w: 200, h: 42,
         onClick: () => {
             // 沒解鎖的欄位不算進來 —— 那幾格本來就填不了。
             // ★ 錯的地方刻意只記「有沒有」而不記「幾格」：講出數字的話，

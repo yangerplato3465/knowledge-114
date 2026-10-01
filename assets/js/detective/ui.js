@@ -50,7 +50,7 @@ export function mkText(str, size, color, opt = {}) {
     });
 }
 
-export function mkButton({ label, x, y, w, h, color = COL.gold, textColor = COL.bar, size = 16, onClick }) {
+export function mkButton({ label, icon = '', iconSide = 'left', x, y, w, h, color = COL.gold, textColor = COL.bar, size = 16, onClick }) {
     const c = new Container();
     c.position.set(x, y);
     if (WORKSHOP_SKIN && hasTexture(window.DETECTIVE_CASE?.skinAssets?.wood)) {
@@ -68,35 +68,50 @@ export function mkButton({ label, x, y, w, h, color = COL.gold, textColor = COL.
     // 不用 tint 是因為 tint 只能把顏色乘暗，做不出「變亮」；
     // 也不用縮放整顆鈕 —— 容器的原點在左上角，放大會往右下歪掉，
     // 而改 pivot 會動到所有呼叫端算好的 x/y。
-    const gloss = new Graphics().roundRect(4, 3, w - 8, h - 6, WORKSHOP_SKIN ? 8 : h / 2).fill({ color: WORKSHOP_SKIN ? COL.mint : 0xffffff });
+    const gloss = new Graphics().roundRect(4, 3, w - 8, h - 6, WORKSHOP_SKIN ? 8 : h / 2).fill({ color: 0xffffff });
     gloss.alpha = 0;
     gloss.eventMode = 'none';
     c.addChild(gloss);
-    const t = mkText(label, size, WORKSHOP_SKIN ? 0xf4dda8 : textColor, { weight: '700' });
+    const labelColor = WORKSHOP_SKIN ? 0xf4dda8 : textColor;
+    const t = mkText(label, size, labelColor, { weight: '700', align: 'center', lineHeight: size });
+    const iconText = icon ? mkText(icon, size, labelColor, { weight: '700', align: 'center', lineHeight: size }) : null;
     const fitLabel = () => {
         if (!WORKSHOP_SKIN) return;
         t.style.fontSize = size;
         while ((t.width > w - 20 || t.height > h - 8) && t.style.fontSize > 12) t.style.fontSize -= 1;
     };
     fitLabel();
-    t.anchor.set(0.5);
-    t.position.set(w / 2, h / 2);
+    const centerLabel = () => {
+        t.anchor.set(0.5);
+        t.position.set(w / 2, h / 2);
+        if (iconText) {
+            iconText.anchor.set(0.5);
+            const offset = t.width / 2 + iconText.width / 2 + 6;
+            iconText.position.set(w / 2 + (iconSide === 'right' ? offset : -offset), h / 2);
+        }
+    };
+    centerLabel();
+    if (iconText) c.addChild(iconText);
     c.addChild(t);
     c.eventMode = 'static';
     c.cursor = 'pointer';
     // 按下去整顆往下沉 2px、亮片收掉，放開再浮回來 —— 實體按鍵的手感
     const lift = dy => c.position.set(x, y + dy);
-    c.on('pointerover', () => { if (!c.locked) { c.alpha = 0.94; gloss.alpha = 0.20; } });
-    c.on('pointerout', () => { c.alpha = c.locked ? 0.45 : 1; gloss.alpha = 0; lift(0); });
-    c.on('pointerdown', () => { if (!c.locked) { gloss.alpha = 0.06; lift(2); } });
-    c.on('pointerup', () => { if (!c.locked) { gloss.alpha = 0.20; lift(0); } });
+    let pointerHovered = false;
+    c.on('pointerover', () => {
+        pointerHovered = true;
+        if (!c.locked && !WORKSHOP_SKIN) { c.alpha = 0.94; gloss.alpha = 0.20; }
+    });
+    c.on('pointerout', () => { pointerHovered = false; c.alpha = c.locked ? 0.45 : 1; gloss.alpha = 0; lift(0); });
+    c.on('pointerdown', () => { if (!c.locked) { if (!WORKSHOP_SKIN) gloss.alpha = 0.06; lift(2); } });
+    c.on('pointerup', () => { if (!c.locked) { if (!WORKSHOP_SKIN) gloss.alpha = 0.20; lift(0); } });
     c.on('pointerupoutside', () => { gloss.alpha = 0; lift(0); });
     c.on('pointertap', () => { if (!c.locked && onClick) onClick(); });
-    c.setLabel = s => { t.text = s; fitLabel(); };
+    c.setLabel = s => { t.text = s; fitLabel(); centerLabel(); };
     // 讓外面（引擎）可以借這層亮片做「數字跳動了」的閃光。
     // 動畫本身交給呼叫端的 tween 驅動 —— ui.js 沒有 app/ticker，
     // 在這裡自己開一支 requestAnimationFrame 會變成第二套時間軸。
-    c.setGloss = v => { gloss.alpha = v; };
+    c.setGloss = v => { if (!WORKSHOP_SKIN || !pointerHovered) gloss.alpha = v; };
     c.setLocked = v => {
         c.locked = v;
         c.alpha = v ? 0.45 : 1;
@@ -139,6 +154,7 @@ export function panelBase(panel, { x = 140, y = 64, w = 680, h = 472, title, bg,
 export function drawProps(list, layer) {
     for (const p of list) {
         let node;
+        let decoration = null;
         switch (p.t) {
             case 'rect': {
                 const g = new Graphics();
@@ -172,10 +188,28 @@ export function drawProps(list, layer) {
                 if (p.a != null) node.alpha = p.a;
                 break;
             case 'text':
-                node = mkText(p.s, p.size, p.c, { weight: p.weight, wrap: p.wrap, spacing: p.spacing });
+                node = mkText(p.s, p.size, p.c, {
+                    weight: p.weight, wrap: p.wrap, spacing: p.spacing,
+                    lineHeight: p.lineHeight || (p.ax === 0.5 && p.ay === 0.5 ? p.size : undefined),
+                });
                 node.anchor.set(p.ax ?? 0, p.ay ?? 0);
                 node.position.set(p.x, p.y);
                 if (p.rot) node.rotation = p.rot;
+                if (p.icon) {
+                    const icon = mkText(p.icon, p.size, p.c, {
+                        weight: p.weight || '700', align: 'center', lineHeight: p.size,
+                    });
+                    const anchorX = p.ax ?? 0;
+                    const anchorY = p.ay ?? 0;
+                    const textCenterX = p.x + (0.5 - anchorX) * node.width;
+                    const textCenterY = p.y + (0.5 - anchorY) * node.height;
+                    const iconGap = p.iconGap ?? 5;
+                    const offset = node.width / 2 + icon.width / 2 + iconGap;
+                    icon.anchor.set(0.5);
+                    icon.position.set(textCenterX + (p.iconSide === 'right' ? offset : -offset), textCenterY);
+                    icon.eventMode = 'none';
+                    decoration = icon;
+                }
                 break;
             case 'img': {
                 // 正式素材用；圖還沒放進來時就跳過，不會壞掉
@@ -193,6 +227,7 @@ export function drawProps(list, layer) {
                 break;
             }
         }
+        if (decoration) layer.addChild(decoration);
         if (node) layer.addChild(node);
     }
 }

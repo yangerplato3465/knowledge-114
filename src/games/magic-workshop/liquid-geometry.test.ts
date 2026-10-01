@@ -13,6 +13,14 @@ it('滿瓶進入瓶頸，七分之一留在瓶底且有可見厚度',()=>{
   expect(-198*.067-low.level).toBeGreaterThan(14);
   expect(bottleInterior(130,198).some(p=>p.x===0&&Math.abs(p.y+198*.067)<.01)).toBe(true);
 });
+it('瓶頸液體保持在玻璃內緣，左右上肩不形成方角',()=>{
+  const outline=bottleInterior(130,198);
+  expect(outline[0].x).toBeLessThan(130*.2);
+  expect(outline[1].x).toBeGreaterThan(outline[0].x);
+  expect(outline[1].x).toBeLessThan(130*.2);
+  const full=liquidGeometry(130,198,1);
+  expect(Math.max(...full.points.filter(p=>p.y< -198*.89).map(p=>Math.abs(p.x)))).toBeLessThan(130*.2);
+});
 it.each([-1.78,-.6,0,.6,1.78])('傾斜 %f 時維持份量，液面沿世界水平',angle=>{
   const shape=liquidGeometry(130,198,.35,angle);
   expect(polygonArea(shape.points)/polygonArea(bottleInterior(130,198))).toBeCloseTo(.35,5);

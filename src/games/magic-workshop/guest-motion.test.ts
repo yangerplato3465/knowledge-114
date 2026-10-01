@@ -13,10 +13,13 @@ describe('客人動線', () => {
     motion.request(0); expect(motion.elapsed).toBe(400);
     motion.advance(1700); expect(motion.phase).toBe('turn'); expect(motion.pose().x).toBe(.5);
     motion.advance(480); expect(motion.phase).toBe('idle'); expect(motion.pose().frame).toBe(5);
+    expect(motion.pose().turnMix).toBe(1);
   });
   it('前客致意、轉身走出後才讓下一位進場，快速切換只保留最新客人', () => {
     const motion = new GuestMotion(); motion.request(0, true); motion.request(1);
-    expect(motion.phase).toBe('thanks'); motion.advance(600); expect(motion.phase).toBe('leave-turn');
+    expect(motion.phase).toBe('thanks');expect(motion.pose().turnMix).toBe(1);
+    motion.advance(300);expect(motion.pose().bob).toBeLessThan(0);
+    motion.advance(300); expect(motion.phase).toBe('leave-turn');
     motion.advance(400); expect(motion.pose().facing).toBe(-1);
     motion.request(3); motion.advance(1700); expect(motion.index).toBe(3); expect(motion.phase).toBe('enter');
   });

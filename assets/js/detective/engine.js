@@ -288,13 +288,22 @@ for (const sc of Object.values(CASE.scenes)) {
 // ============================================================
 // HUD
 // ============================================================
-if (workshopSkin) hudLayer.addChild(new Graphics().roundRect(12, 4, 326, 47, 11)
-    .fill({ color: 0x352538, alpha: 0.94 }).stroke({ width: 2, color: 0xb88f56 }));
-else hudLayer.addChild(new Graphics().rect(0, 0, W, 54).fill({ color: COL.bar, alpha: 0.92 }));
-
-const titleText = mkText(workshopSkin ? '暮光森林 · 偵探筆記' : `🔍 ${CASE.title}`, 19, workshopSkin ? 0xf4dda8 : 0xfff6e9, { weight: '700' });
-titleText.anchor.set(0, 0.5);
-titleText.position.set(22, 27);
+const titleText = mkText(workshopSkin ? CASE.title : `🔍 ${CASE.title}`, 19, workshopSkin ? 0xf4dda8 : 0xfff6e9, { weight: '700' });
+if (workshopSkin) {
+    const titleBox = { x: 12, y: 4, h: 47, paddingX: 16, maxW: 620 };
+    while (titleText.width > titleBox.maxW - titleBox.paddingX * 2 && titleText.style.fontSize > 15) {
+        titleText.style.fontSize -= 1;
+    }
+    const titleBoxW = Math.ceil(Math.min(titleBox.maxW, titleText.width + titleBox.paddingX * 2));
+    hudLayer.addChild(new Graphics().roundRect(titleBox.x, titleBox.y, titleBoxW, titleBox.h, 11)
+        .fill({ color: 0x352538, alpha: 0.94 }).stroke({ width: 2, color: 0xb88f56 }));
+    titleText.anchor.set(0.5);
+    titleText.position.set(titleBox.x + titleBoxW / 2, titleBox.y + titleBox.h / 2);
+} else {
+    hudLayer.addChild(new Graphics().rect(0, 0, W, 54).fill({ color: COL.bar, alpha: 0.92 }));
+    titleText.anchor.set(0, 0.5);
+    titleText.position.set(22, 27);
+}
 hudLayer.addChild(titleText);
 
 // ============================================================
@@ -476,12 +485,21 @@ function renderTray() {
     trayFirstRender = false;
 }
 
+const HUD_BUTTON_W = 138;
+const HUD_BUTTON_H = 34;
+const HUD_BUTTON_Y = 10;
+const HUD_BUTTON_GAP = 12;
+const HUD_BUTTON_RIGHT = 20;
+const resolveButtonX = W - HUD_BUTTON_RIGHT - HUD_BUTTON_W;
+const clueButtonX = resolveButtonX - HUD_BUTTON_GAP - HUD_BUTTON_W;
 const clueBtn = mkButton({
-    label: '', x: 656, y: 10, w: 134, h: 34,
+    label: '', icon: '🔎', x: clueButtonX, y: HUD_BUTTON_Y, w: HUD_BUTTON_W, h: HUD_BUTTON_H,
     color: 0x574c42, textColor: 0xfff6e9, onClick: showNotebook,
 });
 const accuseBtn = mkButton({
-    label: CASE.resolveLabel || '🕵️ 指認犯人', x: 802, y: 10, w: 138, h: 34, onClick: showAccuse,
+    label: CASE.resolveLabel || '指認犯人', icon: CASE.resolveLabel ? '' : '🕵️',
+    x: resolveButtonX, y: HUD_BUTTON_Y,
+    w: HUD_BUTTON_W, h: HUD_BUTTON_H, onClick: showAccuse,
 });
 hudLayer.addChild(clueBtn, accuseBtn);
 
@@ -489,8 +507,7 @@ hudLayer.addChild(clueBtn, accuseBtn);
 const sceneTag = new Container();
 const sceneTagBg = new Graphics();
 const sceneTagText = mkText('', 15, COL.ink, { weight: '700' });
-sceneTagText.anchor.set(0, 0.5);
-sceneTagText.position.set(16, 17);
+sceneTagText.anchor.set(0.5);
 sceneTag.addChild(sceneTagBg, sceneTagText);
 hudLayer.addChild(sceneTag);
 
@@ -564,7 +581,7 @@ function mkRoundBtn(x, y, rad, label, size, onClick) {
         new Graphics().circle(0, 0, rad)
             .fill({ color: workshopSkin ? 0x352538 : COL.panel }).stroke({ width: 3, color: workshopSkin ? COL.gold : COL.border })
     );
-    const t = mkText(label, size, workshopSkin ? 0xf4dda8 : COL.ink, { weight: '700' });
+    const t = mkText(label, size, workshopSkin ? 0xf4dda8 : COL.ink, { weight: '700', lineHeight: size });
     t.anchor.set(0.5);
     c.addChild(t);
     c.eventMode = 'static';
@@ -581,7 +598,7 @@ function mkRoundBtn(x, y, rad, label, size, onClick) {
             c.scale.set(s0 + (target - s0) * e);
         });
     };
-    c.on('pointerover', () => { c.alpha = 0.88; popTo(1.12, 220, easeBack); });
+    c.on('pointerover', () => { if (!workshopSkin) c.alpha = 0.88; popTo(1.12, 220, easeBack); });
     c.on('pointerout', () => { c.alpha = 1; popTo(1, 180, easeOut); });
     c.on('pointerdown', () => { popTo(0.92, 90, easeOut); });
     c.on('pointerup', () => { popTo(1.12, 240, easeBack); });
@@ -726,7 +743,7 @@ const say = text => {
 let zoomCfg = null;
 
 const zoomBtn = mkButton({
-    label: '🔍 放大看', x: 760, y: 410, w: 170, h: 34,
+    label: '放大看', icon: '🔍', x: 760, y: 410, w: 170, h: 34,
     onClick: () => {
         if (zoomCfg && !overlayLayer.children.length) showZoom(zoomCfg);
     },
@@ -741,7 +758,7 @@ function syncZoomBtn() {
 
 function setZoom(cfg) {
     zoomCfg = cfg || null;
-    if (cfg) zoomBtn.setLabel(cfg.btn || '🔍 放大看');
+    if (cfg) zoomBtn.setLabel(cfg.btn || '放大看');
     syncZoomBtn();
 }
 
@@ -755,13 +772,14 @@ function setSceneTag(name) {
         .fill({ color: workshopSkin ? 0x352538 : COL.panel, alpha: 0.92 })
         .stroke({ width: 3, color: workshopSkin ? COL.gold : COL.border });
     sceneTagText.style.fill = workshopSkin ? 0xf4dda8 : COL.ink;
+    sceneTagText.position.set(w / 2, 17);
     sceneTag.position.set(480 - w / 2, 10);       // 頂欄置中
 }
 
 let lastClueCount = 0;
 
 function refreshHud() {
-    clueBtn.setLabel(`🔎 線索 ${state.clues.length}/${CASE.clues.length}`);
+    clueBtn.setLabel(`線索 ${state.clues.length}/${CASE.clues.length}`);
     // 線索數往上跳時讓按鈕亮一下。這是震動拿掉之後補回「進度前進了」的訊號，
     // 而且完全不移動任何東西，不會有暈的問題。
     if (state.clues.length > lastClueCount) {
@@ -1254,6 +1272,31 @@ function fadeOut(node, ms) {
     tween(ms, k => { node.alpha = a0 * (1 - easeIn(k)); }, () => node.destroy());
 }
 
+function makePillLabel(text, icon = '') {
+    const labelText = mkText(text, 16, COL.ink, { weight: '700', align: 'center', lineHeight: 16 });
+    const labelIcon = icon ? mkText(icon, 16, COL.ink, { weight: '700', align: 'center', lineHeight: 16 }) : null;
+    const paddingX = labelIcon ? 22 : 14;
+    const paddingY = 4;
+    const iconGap = 6;
+    const width = Math.ceil(labelText.width + paddingX * 2 + (labelIcon ? labelIcon.width + iconGap : 0));
+    const height = Math.ceil(Math.max(34, labelText.height + paddingY * 2));
+    labelText.anchor.set(0.5);
+    labelText.position.set(width / 2, height / 2);
+    if (labelIcon) {
+        labelIcon.anchor.set(0.5);
+        labelIcon.position.set(width / 2 + labelText.width / 2 + iconGap + labelIcon.width / 2, height / 2);
+        labelIcon.eventMode = 'none';
+    }
+
+    const label = new Container();
+    label.addChild(new Graphics().roundRect(0, 0, width, height, height / 2)
+        .fill({ color: COL.panel }).stroke({ width: 3, color: COL.border }));
+    if (labelIcon) label.addChild(labelIcon);
+    label.addChild(labelText);
+    label.eventMode = 'none';
+    return { label, width, height };
+}
+
 const objPositions = {};                       // 玩家拖過的位置記在這，重畫也不會跑回去
 const pickOrder = [];                          // 玩家拿起過的物件 id，越後面＝疊得越上層（見 renderInteractives）
 let drag = null;                               // { o, node }
@@ -1278,14 +1321,7 @@ function makeObject(o) {
     c.art = art;
 
     // 滑過去只出現名牌，不畫外框（外框太搶眼，會蓋掉美術）
-    const lt = mkText(o.draggable ? `${o.name} ✋` : o.name, 16, COL.ink, { weight: '700' });
-    lt.position.set(14, 7);
-    const label = new Container();
-    label.addChild(
-        new Graphics().roundRect(0, 0, lt.width + 28, 34, 17)
-            .fill({ color: COL.panel }).stroke({ width: 3, color: COL.border }),
-        lt
-    );
+    const { label, width: labelW, height: labelH } = makePillLabel(o.name, o.draggable ? '✋' : '');
     label.alpha = 0;
     label.eventMode = 'none';                  // 同 makeHotspot：名牌不能參與 hit-test
     labelLayer.addChild(label);                // 放獨立圖層，座標改成畫面絕對座標
@@ -1294,8 +1330,8 @@ function makeObject(o) {
     // riseOff 是名牌淡入時的上浮位移，疊在算好的座標上（見 labelShow）
     label.riseOff = 6;
     c.placeLabel = () => label.position.set(
-        c.x + o.w / 2 - (lt.width + 28) / 2,
-        (c.y - 44 < 58 ? c.y + o.h + 10 : c.y - 44) + (label.riseOff || 0)
+        c.x + o.w / 2 - labelW / 2,
+        (c.y - labelH - 10 < 58 ? c.y + o.h + 10 : c.y - labelH - 10) + (label.riseOff || 0)
     );
     c.placeLabel();
 
@@ -1497,21 +1533,14 @@ function makeHotspot(h) {
     c.hitArea = new Rectangle(h.x, h.y, h.w, h.h);
 
     // 滑過去只出現名牌，不畫外框（外框太搶眼，會蓋掉背景美術）
-    const lt = mkText(h.name, 16, COL.ink, { weight: '700' });
-    lt.position.set(14, 7);
-    const label = new Container();
-    label.addChild(
-        new Graphics().roundRect(0, 0, lt.width + 28, 34, 17)
-            .fill({ color: COL.panel }).stroke({ width: 3, color: COL.border }),
-        lt
-    );
+    const { label, width: labelW, height: labelH } = makePillLabel(h.name);
     // 名牌掛在熱點上方；太靠近畫面頂端就貼齊頂欄下緣（y=58），不要鑽到頂欄底下。
     // 少數又矮又貼頂的熱點（例如掛鐘），貼齊後還是會蓋住自己，
     // 那種在資料裡加 labelBelow: true 改掛到下面。
     // ★ 別把「放不下就一律翻到下面」寫成通則 —— 高的熱點（書櫃）翻下去會壓到
     //   擺在它裡面的東西（展示座）。
-    const labelX = Math.min(Math.max(h.x + h.w / 2 - (lt.width + 28) / 2, 8), W - lt.width - 36);
-    const labelY = h.labelBelow ? h.y + h.h + 10 : Math.max(h.y - 44, 58);
+    const labelX = Math.min(Math.max(h.x + h.w / 2 - labelW / 2, 8), W - labelW - 8);
+    const labelY = h.labelBelow ? h.y + h.h + 10 : Math.max(h.y - labelH - 10, 58);
     label.alpha = 0;
     label.riseOff = 6;                         // 淡入時往上浮的位移（見 labelShow）
     // ★ 名牌純粹是裝飾，一定要退出 hit-test。

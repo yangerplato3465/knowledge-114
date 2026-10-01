@@ -39,8 +39,8 @@ export class GuestMotion {
     const frame = walking ? Math.floor(this.elapsed / 145) % 4 : this.phase === 'turn' || this.phase === 'leave-turn' ? 4 : 5;
     const x = this.phase === 'enter' ? 1.18 - .68 * (1 - (1-t) ** 1.3) : this.phase === 'leave' ? .5 + .68*t : .5;
     return { frame, x, facing: this.phase === 'leave' || this.phase === 'leave-turn' ? -1 : 1,
-      bob: walking ? Math.sin(this.elapsed / 145 * Math.PI) * 2 : this.phase === 'thanks' ? Math.sin(t * Math.PI) * 6 : 0,
-      turnMix: this.phase === 'turn' ? Math.max(0, (t-.35)/.65) : this.phase === 'leave-turn' ? Math.max(0, 1-t*2) : 0,
+      bob: walking ? Math.sin(this.elapsed / 145 * Math.PI) * 2 : this.phase === 'thanks' ? -Math.sin(t * Math.PI) * 12 : 0,
+      turnMix: this.phase === 'turn' ? Math.max(0, (t-.35)/.65) : this.phase === 'leave-turn' ? Math.max(0, 1-t*2) : this.phase === 'idle' || this.phase === 'thanks' ? 1 : 0,
       alpha: this.phase === 'enter' ? Math.min(1,t*6) : this.phase === 'leave' ? Math.min(1,(1-t)*6) : 1 };
   }
 }

@@ -3,11 +3,12 @@ const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /** Inner glass contour measured against bottle-empty-v1, excluding the brass rim. */
 export function bottleInterior(w:number,h:number):LiquidPoint[] {
-  const right:LiquidPoint[]=[{x:.255*w,y:-.913*h},{x:.255*w,y:-.817*h}];
+  // The glass narrows inside the brass lip. Keep the fill away from its outer neck edge.
+  const right:LiquidPoint[]=[{x:.18*w,y:-.913*h},{x:.19*w,y:-.895*h},{x:.19*w,y:-.817*h}];
   const curve=(x0:number,y0:number,x1:number,y1:number,x2:number,y2:number,x3:number,y3:number)=>{
     for(let i=1;i<=12;i++){const t=i/12,s=1-t;right.push({x:(s*s*s*x0+3*s*s*t*x1+3*s*t*t*x2+t*t*t*x3)*w,y:(s*s*s*y0+3*s*s*t*y1+3*s*t*t*y2+t*t*t*y3)*h});}
   };
-  curve(.255,-.817,.255,-.762,.435,-.774,.442,-.681);
+  curve(.19,-.817,.19,-.762,.435,-.774,.442,-.681);
   right.push({x:.442*w,y:-.177*h});
   curve(.442,-.177,.442,-.092,.40,-.067,0,-.067);
   return [...right,...right.slice(0,-1).reverse().map(p=>({x:-p.x,y:p.y}))];

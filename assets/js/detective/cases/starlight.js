@@ -5,7 +5,7 @@ const WORKSHOP = new URL('../../../images/magic-workshop/display/', document.cur
 const paper = 0xf3dfb2;
 
 window.DETECTIVE_CASE = {
-    title: '星燈小徑的錯位燈火',
+    title: '星燈小徑燈光偏移事件',
     brief: '「燈明明亮著，信怎麼到了舊榛樹郵箱？」奧利把退回的信放到桌上。\n諾爾輕聲說：「昨晚沒有一盞燈熄掉。只是光落下來的地方，和以前不一樣。」\n\n跟米洛走進小徑左右兩條路，查看夜花坡、石橋郵路與守燈亭，找出燈光、時間和郵路之間的關係。',
     startScene: 'trail',
     skin: 'workshop',
@@ -72,11 +72,11 @@ window.DETECTIVE_CASE = {
             introBack: '左右兩條路都可回訪；路標、星燈與郵箱也能再次查看。',
             props: [
                 { t: 'img', src: WORKSHOP + 'ui-wood.webp', x: 766, y: 54, w: 174, h: 86 },
-                { t: 'text', s: '← 守燈亭', x: 853, y: 96, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '守燈亭', icon: '←', x: 853, y: 96, size: 18, c: paper, ax: 0.5, ay: 0.5 },
                 { t: 'rect', x: 182, y: 386, w: 160, h: 38, r: 10, c: 0x352538, a: 0.92, s: 0xc89c61, sw: 2 },
-                { t: 'text', s: '← 夜花坡', x: 262, y: 405, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '夜花坡', icon: '←', x: 262, y: 405, size: 18, c: paper, ax: 0.5, ay: 0.5 },
                 { t: 'rect', x: 690, y: 386, w: 170, h: 38, r: 10, c: 0x352538, a: 0.92, s: 0xc89c61, sw: 2 },
-                { t: 'text', s: '石橋郵路 →', x: 775, y: 405, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '石橋郵路', icon: '→', iconSide: 'right', x: 775, y: 405, size: 18, c: paper, ax: 0.5, ay: 0.5 },
             ],
             objects: [], hotspots: [
                 { id: 'trailSign', x: 425, y: 198, w: 92, h: 125, name: '岔路路標', look: '觀察：地面舊星形記號在主路；今晚的光斑卻落在岔路邊。諾爾確認三盞燈昨夜都沒有熄掉。', gives: ['mark'], after: '已確認：舊路標的位置沒變，改變的是光照方向。' },
@@ -95,7 +95,7 @@ window.DETECTIVE_CASE = {
             introBack: '你回到守燈亭。值勤板、工具與奧利的信都能再查看。',
             props: [
                 { t: 'img', src: WORKSHOP + 'ui-wood.webp', x: 12, y: 58, w: 170, h: 86 },
-                { t: 'text', s: '← 返回小徑', x: 97, y: 100, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '返回小徑', icon: '←', x: 97, y: 100, size: 18, c: paper, ax: 0.5, ay: 0.5 },
                 { t: 'img', src: WORKSHOP + 'visitor-owl-keeper-v1.webp', x: -65, y: 145, w: 345, h: 345 },
             ],
             objects: [
@@ -122,7 +122,7 @@ window.DETECTIVE_CASE = {
             introBack: '夜花仍在夜色裡開著。花叢、布簾與小工作桌都可再次查看。',
             props: [
                 { t: 'rect', x: 704, y: 385, w: 184, h: 38, r: 10, c: 0x352538, a: 0.92, s: 0xc89c61, sw: 2 },
-                { t: 'text', s: '返回岔路 →', x: 796, y: 404, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '返回岔路', icon: '→', iconSide: 'right', x: 796, y: 404, size: 18, c: paper, ax: 0.5, ay: 0.5 },
                 { t: 'img', src: WORKSHOP + 'ui-wood.webp', x: 605, y: 58, w: 216, h: 86 },
                 { t: 'text', s: '重現燈光方向', x: 713, y: 100, size: 18, c: paper, ax: 0.5, ay: 0.5 },
             ],
@@ -142,7 +142,7 @@ window.DETECTIVE_CASE = {
             introBack: '你回到石橋。舊郵箱和橋頭路標仍可比對。',
             props: [
                 { t: 'rect', x: 290, y: 387, w: 190, h: 38, r: 10, c: 0x352538, a: 0.92, s: 0xc89c61, sw: 2 },
-                { t: 'text', s: '← 返回岔路', x: 385, y: 406, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '返回岔路', icon: '←', x: 385, y: 406, size: 18, c: paper, ax: 0.5, ay: 0.5 },
             ],
             objects: [
                 { id: 'routeRubbing', name: '郵路印記拓片', x: 286, y: 247, w: 96, h: 98, draggable: true, icon: '🗺️', hiddenUntil: 'bridgeMarks', art: [{ t: 'img', src: IMG + 'route-rubbing.webp', x: 0, y: 0, w: 96, h: 98 }], look: '紙上拓有橋頭岔路和停用郵戳。把拓片拖進物品欄，才能和奧利的信比對。', after: '拓片可把舊路印記與橋頭位置放回郵路順序。' },
