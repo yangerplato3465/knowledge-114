@@ -30,7 +30,7 @@ it('版本只顯示版號，首頁不再發送版本或清單請求', () => {
 it('活動頁包含獨立的魔法工坊入口，分類捷徑有對應區塊', () => {
   render(<ThemeProvider><Activities /></ThemeProvider>);
   const main = screen.getByRole('main');
-  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'magic-workshop', 'detective-golden-owl', 'detective-ai-museum']);
+  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'magic-workshop', 'detective-golden-owl', 'detective-ai-museum', 'detective-starlight']);
   for (const category of categories) for (const item of category.items) {
     expect(within(main).getByRole('link', { name: new RegExp(item.title.replace(/[！]/g, '.')) }).getAttribute('href')).toBe('/pages/' + item.path + '.html');
     expect(readFileSync('pages/' + item.path + '.html', 'utf8')).toContain('id="root"');

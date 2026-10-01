@@ -1,5 +1,5 @@
 import {
-    Assets, Container, Graphics, Sprite, Text
+    Assets, Container, Graphics, Rectangle, Sprite, Text
 } from '../../vendor/pixi.esm.min.js';
 
 // ============================================================
@@ -9,7 +9,8 @@ import {
 // ============================================================
 
 export const W = 960, H = 600;                 // 設計尺寸（所有座標都以此為準）
-export const FONT = "'Noto Sans TC', 'Fredoka', sans-serif";
+const WORKSHOP_SKIN = window.DETECTIVE_CASE?.skin === 'workshop';
+export const FONT = WORKSHOP_SKIN ? "'Workshop Rounded', 'Microsoft JhengHei', sans-serif" : "'Noto Sans TC', 'Fredoka', sans-serif";
 
 export const COL = {
     panel: 0xfffdf9,
@@ -25,6 +26,11 @@ export const COL = {
     blue: 0x2f5bd0,
     ok: 0x3f9c62,
 };
+if (WORKSHOP_SKIN) Object.assign(COL, {
+    panel: 0xf4dda8, panel2: 0xf8e9c8, border: 0xa88259, ink: 0x30233e,
+    muted: 0x685765, bar: 0x25213f, gold: 0xffd66b, mint: 0x65e0d0,
+    hint: 0xffd66b, red: 0xd46a5a, blue: 0x5685a7, ok: 0x51987d,
+});
 
 export function mkText(str, size, color, opt = {}) {
     return new Text({
@@ -47,16 +53,32 @@ export function mkText(str, size, color, opt = {}) {
 export function mkButton({ label, x, y, w, h, color = COL.gold, textColor = COL.bar, size = 16, onClick }) {
     const c = new Container();
     c.position.set(x, y);
-    c.addChild(new Graphics().roundRect(0, 0, w, h, h / 2).fill({ color }));
+    if (WORKSHOP_SKIN && hasTexture(window.DETECTIVE_CASE?.skinAssets?.wood)) {
+        if (color === COL.mint) c.addChild(new Graphics().roundRect(4, 1, w - 8, h - 2, 9).stroke({ width: 4, color: COL.mint }));
+        const wood = new Sprite(Assets.get(window.DETECTIVE_CASE.skinAssets.wood));
+        // 共用木牌素材保有透明留白；依實際可見木面縮放，點擊仍只落在按鈕矩形內。
+        wood.width = w / 0.8125;
+        wood.height = h / 0.305;
+        wood.position.set(-wood.width * 24 / 256, -wood.height * 88 / 256);
+        wood.eventMode = 'none';
+        c.addChild(wood);
+        c.hitArea = new Rectangle(0, 0, w, h);
+    } else c.addChild(new Graphics().roundRect(0, 0, w, h, h / 2).fill({ color }));
     // 滑過去的亮片：疊一層白色圓角蓋在鈕面上，用 alpha 控制亮度。
     // 不用 tint 是因為 tint 只能把顏色乘暗，做不出「變亮」；
     // 也不用縮放整顆鈕 —— 容器的原點在左上角，放大會往右下歪掉，
     // 而改 pivot 會動到所有呼叫端算好的 x/y。
-    const gloss = new Graphics().roundRect(0, 0, w, h, h / 2).fill({ color: 0xffffff });
+    const gloss = new Graphics().roundRect(4, 3, w - 8, h - 6, WORKSHOP_SKIN ? 8 : h / 2).fill({ color: WORKSHOP_SKIN ? COL.mint : 0xffffff });
     gloss.alpha = 0;
     gloss.eventMode = 'none';
     c.addChild(gloss);
-    const t = mkText(label, size, textColor, { weight: '700' });
+    const t = mkText(label, size, WORKSHOP_SKIN ? 0xf4dda8 : textColor, { weight: '700' });
+    const fitLabel = () => {
+        if (!WORKSHOP_SKIN) return;
+        t.style.fontSize = size;
+        while ((t.width > w - 20 || t.height > h - 8) && t.style.fontSize > 12) t.style.fontSize -= 1;
+    };
+    fitLabel();
     t.anchor.set(0.5);
     t.position.set(w / 2, h / 2);
     c.addChild(t);
@@ -70,7 +92,7 @@ export function mkButton({ label, x, y, w, h, color = COL.gold, textColor = COL.
     c.on('pointerup', () => { if (!c.locked) { gloss.alpha = 0.20; lift(0); } });
     c.on('pointerupoutside', () => { gloss.alpha = 0; lift(0); });
     c.on('pointertap', () => { if (!c.locked && onClick) onClick(); });
-    c.setLabel = s => { t.text = s; };
+    c.setLabel = s => { t.text = s; fitLabel(); };
     // 讓外面（引擎）可以借這層亮片做「數字跳動了」的閃光。
     // 動畫本身交給呼叫端的 tween 驅動 —— ui.js 沒有 app/ticker，
     // 在這裡自己開一支 requestAnimationFrame 會變成第二套時間軸。
@@ -90,8 +112,9 @@ export function mkButton({ label, x, y, w, h, color = COL.gold, textColor = COL.
 // 撕邊、圖釘那些都畫在圖裡，所以不再另外描白卡片的圓角框。缺圖時自動退回白卡片。
 // titleY 是標題離面板上緣的距離，底圖上緣有東西（推理板那顆圖釘）時往下讓一點
 export function panelBase(panel, { x = 140, y = 64, w = 680, h = 472, title, bg, titleY = 22 }) {
-    if (hasTexture(bg)) {
-        drawProps([{ t: 'img', src: bg, x, y, w, h }], panel);
+    const skinBoard = WORKSHOP_SKIN && window.DETECTIVE_CASE?.skinAssets?.board;
+    if (hasTexture(bg || skinBoard)) {
+        drawProps([{ t: 'img', src: bg || skinBoard, x, y, w, h }], panel);
     } else {
         panel.addChild(
             new Graphics().roundRect(x, y, w, h, 28)
@@ -99,8 +122,11 @@ export function panelBase(panel, { x = 140, y = 64, w = 680, h = 472, title, bg,
         );
     }
     const t = mkText(title, 25, COL.ink, { weight: '700' });
-    t.anchor.set(0.5, 0);
-    t.position.set(x + w / 2, y + titleY);
+    if (WORKSHOP_SKIN) {
+        while (t.width > w - 154 && t.style.fontSize > 18) t.style.fontSize -= 1;
+    }
+    t.anchor.set(WORKSHOP_SKIN ? 0 : 0.5, 0);
+    t.position.set(WORKSHOP_SKIN ? x + 78 : x + w / 2, y + (WORKSHOP_SKIN && titleY === 22 ? 35 : titleY));
     panel.addChild(t);
     return { x, y, w, h, cx: x + w / 2 };
 }
@@ -200,6 +226,7 @@ export function collectImages(caseData) {
     };
 
     add(global, caseData.assistantImg);            // 對話框左邊的助手立繪，一開場就會出現
+    for (const [key, src] of Object.entries(caseData.skinAssets || {})) if (key !== 'font') add(global, src);
     for (const [id, sc] of Object.entries(caseData.scenes)) {
         const set = byScene[id] = new Set();
         add(set, sc.bg);

@@ -14,7 +14,8 @@
 - snapshotState 須涵蓋 state、visitedScenes、dropPlayed、objPositions、pickOrder、misjudge、closed、flags；謎題進度寫 ctx.flags，再呼叫 ctx.save。
 - 還原視為不可信資料：未知 ID 丟棄，格式驗證；改 SAVE_VERSION 要處理舊存檔，不能默默丟失課堂進度。
 - Firestore 規則限制 progress 最多 28 個頂層欄位；list 僅 owner，過期以 request.time 判斷。改 UI 不等於改權限。
-- 本機開發可用 detective.dev.<id>，不驗碼、不讀寫正式存檔；不得把開發流程當權限驗收。
+- localhost、127.0.0.1 與本機 IPv6 位址自動進入不存檔的試玩模式；正式網址仍須驗碼。舊版 `detective.dev.<id>` 旗標不能在正式網址旁路驗證。
+- 新發驗證碼為案件三碼英文加四碼數字（例：`STR-0042`）；舊碼繼續依原始字串驗證，不能截短，避免既有組別與進度失效。
 
 ## 設計與視覺
 

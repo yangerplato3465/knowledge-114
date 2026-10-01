@@ -66,6 +66,20 @@ function fmtLeft(ms) {
 
 // ---- 產碼 ----
 
+async function unusedCode(game) {
+    // 四位數空間較小；重抽已發過的碼，避免覆寫舊組別與進度。
+    for (let attempt = 0; attempt < 32; attempt++) {
+        const code = randomCode(game.prefix);
+        const codeId = await deriveCodeId(game.id, code);
+        const [live, admin] = await Promise.all([
+            getDoc(doc(db, 'unlockCodes', codeId)),
+            getDoc(doc(db, 'unlockCodesAdmin', codeId)),
+        ]);
+        if (!live.exists() && !admin.exists()) return { code, codeId };
+    }
+    throw new Error('暫時找不到未使用的四位數驗證碼，請稍後再試');
+}
+
 async function generate() {
     const gameId = $('f_game').value;
     const game = DETECTIVE_GAMES.find(g => g.id === gameId);
@@ -83,8 +97,7 @@ async function generate() {
     try {
         const made = [];
         for (let i = 0; i < count; i++) {
-            const code = randomCode(game.prefix);
-            const codeId = await deriveCodeId(gameId, code);
+            const { code, codeId } = await unusedCode(game);
             // 一次產多組時自動編號，省得四組碼發下去分不出誰是誰。
             // 只產一組就用原字串，你想手動打「A班第3組」也不會被加料。
             const label = count > 1 ? `${baseName}第${i + 1}組` : baseName;

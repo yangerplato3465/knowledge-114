@@ -6,22 +6,17 @@
 // 所以這段刻意抽成共用檔，不要在兩邊各寫一份。
 // ============================================================
 
-// Crockford Base32：拿掉 I L O U，避免小孩把 0/O、1/I 抄錯唸錯
-const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-
 // 推導雜湊時混進去的固定字串。它擋不住看得到原始碼的人（這是靜態站，
 // 前端沒有秘密可言），作用是萬一 Firestore 資料被匯出，那堆雜湊也不能
 // 直接拿去別的地方套用。真正的防線是安全規則裡的 list:false。
 const PEPPER = 'knowledge-114/detective/unlock/v1';
 
-// 刻意用 PBKDF2 而不是單純 SHA-256：6 碼 Base32 只有十億種組合，
-// 單純雜湊在離線環境幾秒就能全部算完；15 萬次迭代讓每一次嘗試要
-// 花上約 0.1 秒，暴力枚舉就變成好幾年。使用者只有解鎖時算一次，無感。
+// 延續既有雜湊設定，已發出的舊碼及其進度才能繼續使用。
 const PBKDF2_ITERATIONS = 150000;
 
 // 目前有哪些偵探關卡。以後新增關卡就在這裡加一行，
 // 後台頁的下拉選單、驗證碼前綴都會自動跟著長出來。
-// 碼的長度只由 prefix 決定（PREFIX-XXXX-XX），跟 id 多長完全無關 ——
+// 新碼格式由 prefix 決定（PREFIX-0000），跟 id 多長完全無關 ——
 // id 學生永遠看不到，它只進 PBKDF2 的金鑰。所以 id 可以取得清楚一點，
 // prefix 維持三個字母，碼就一樣短好抄。
 //
@@ -30,20 +25,27 @@ const PBKDF2_ITERATIONS = 150000;
 export const DETECTIVE_GAMES = [
     { id: 'owl', prefix: 'OWL', name: '黃金貓頭鷹雕像失竊事件' },
     { id: 'ai-museum', prefix: 'AIM', name: 'AI 展覽館的消失記憶' },
+    { id: 'starlight', prefix: 'STR', name: '星燈小徑的錯位燈火' },
 ];
 
 // 把使用者輸入洗乾淨：轉大寫、丟掉空白與連字號。
-// 這樣 "owl-7k3m-92"、"OWL 7K3M 92"、"OWL7K3M92" 都算同一組碼。
+// 舊碼如 "OWL-7K3M-92" 仍照原樣驗證，不截短或重新計算既有文件 ID。
 export function normalizeCode(raw) {
     return String(raw || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
 }
 
-// 產生一組新的碼，格式 PREFIX-XXXX-XX（例：OWL-7K3M-92）。
-// 256 剛好是 32 的整數倍，所以 b % 32 的分布是均勻的，沒有偏差。
+// 新碼為三個案件字母 + 四位數字（例：OWL-0042）。
+// 先排除 60000 以上的 16-bit 值，讓 0000–9999 的抽取機率相同。
 export function randomCode(prefix) {
-    const bytes = crypto.getRandomValues(new Uint8Array(6));
-    const body = Array.from(bytes, b => ALPHABET[b % 32]).join('');
-    return `${prefix}-${body.slice(0, 4)}-${body.slice(4)}`;
+    if (!/^[A-Z]{3}$/.test(prefix)) throw new Error('INVALID_PREFIX');
+    const sample = new Uint16Array(1);
+    do { crypto.getRandomValues(sample); } while (sample[0] >= 60000);
+    return `${prefix}-${String(sample[0] % 10000).padStart(4, '0')}`;
+}
+
+export function isLocalPreview(hostname) {
+    return hostname === 'localhost' || hostname === '127.0.0.1'
+        || hostname === '[::1]' || hostname === '::1';
 }
 
 // 由「關卡 + 碼」推出 Firestore 的文件 ID。

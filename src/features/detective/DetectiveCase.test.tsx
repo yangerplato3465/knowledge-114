@@ -24,7 +24,7 @@ test('返回按鈕防止重複存檔，取消離場後恢復可操作', async ()
 });
 
 test('案件資料完成前不啟動 gate，引擎仍由 gate 驗證後載入', () => {
-  render(<StrictMode><ThemeProvider><DetectiveCase gameId="owl" caseFile="golden-owl" placeholder="OWL-XXXX-XX" /></ThemeProvider></StrictMode>);
+  render(<StrictMode><ThemeProvider><DetectiveCase gameId="owl" caseFile="golden-owl" placeholder="OWL-0000" /></ThemeProvider></StrictMode>);
   expect(window.DETECTIVE_GAME_ID).toBe('owl');
   const data = document.querySelector('script[src*="cases/golden-owl.js"]') as HTMLScriptElement;
   expect(data.src).toContain('/assets/js/detective/cases/golden-owl.js');

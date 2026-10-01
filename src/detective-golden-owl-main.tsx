@@ -7,4 +7,4 @@ import '../assets/css/detective.css';
 
 import './styles/ui.css';
 
-createRoot(document.getElementById('root')!).render(<ErrorBoundary><ThemeProvider><DetectiveCase gameId="owl" caseFile="golden-owl" placeholder="OWL-XXXX-XX" /></ThemeProvider></ErrorBoundary>);
+createRoot(document.getElementById('root')!).render(<ErrorBoundary><ThemeProvider><DetectiveCase gameId="owl" caseFile="golden-owl" placeholder="OWL-0000" /></ThemeProvider></ErrorBoundary>);

@@ -4,7 +4,6 @@ import { ThemeProvider } from './features/theme/ThemeProvider';
 import { DetectiveCase } from './features/detective/DetectiveCase';
 import '../assets/css/theme.css';
 import '../assets/css/detective.css';
-
 import './styles/ui.css';
 
-createRoot(document.getElementById('root')!).render(<ErrorBoundary><ThemeProvider><DetectiveCase gameId="ai-museum" caseFile="ai-museum" placeholder="AIM-0000" /></ThemeProvider></ErrorBoundary>);
+createRoot(document.getElementById('root')!).render(<ErrorBoundary><ThemeProvider><DetectiveCase gameId="starlight" caseFile="starlight" placeholder="STR-0000" /></ThemeProvider></ErrorBoundary>);

@@ -66,6 +66,23 @@ body.fs-fallback #gameContainer {
     display: flex; align-items: center; justify-content: center;
     color: var(--muted); font-size: 15px;
 }
+.detective-live { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.detective-access { position: absolute; top: 8px; left: 8px; z-index: 12; max-height: calc(100% - 16px); width: min(370px, calc(100% - 16px)); overflow: auto; border-radius: 12px; border: 2px solid #e9bb69; background: #fff9ee; color: #302b2b; font: 15px/1.5 'Noto Sans TC', sans-serif; box-shadow: 0 8px 22px #0006; }
+.detective-access summary { cursor: pointer; padding: 8px 12px; font-weight: 700; }
+.detective-access > div { padding: 4px 12px 12px; }
+.detective-access h2 { font-size: 17px; margin: 4px 0; }
+.detective-access p { margin: 4px 0 8px; }
+.detective-access button, .detective-access select { font: inherit; margin: 3px; padding: 5px 7px; border: 1px solid #8a7b6d; border-radius: 7px; background: #fff; color: #302b2b; cursor: pointer; }
+.detective-access button:focus-visible, .detective-access select:focus-visible, .detective-access summary:focus-visible { outline: 3px solid #2f5bd0; outline-offset: 2px; }
+.detective-access button:disabled { opacity: 0.5; cursor: default; }
+.detective-access label { display: block; margin: 7px 0; }
+.detective-access.scene-access { top: auto; left: auto; right: 8px; bottom: 8px; }
+.detective-access h3 { font-size: 15px; margin: 10px 0 4px; }
+.detective-access ul { padding-left: 23px; margin: 4px 0; }
+.detective-access .detective-ending-story { white-space: pre-line; }
+.detective-starlight .detective-access { background: #f4dda8; color: #30233e; border-color: #79513b; }
+.detective-starlight .detective-access button, .detective-starlight .detective-access select { background: #f7e8c8; border-color: #79513b; color: #30233e; }
+@media (max-width: 650px) { .detective-starlight .game-bar { gap: 8px; } .detective-starlight .game-bar h1 { display: none; } }
 
 /* ---- 上課驗證碼門檻（見 assets/js/detective-gate.js）---- */
 
@@ -99,6 +116,9 @@ body.fs-fallback #gameContainer {
 /* 連不上進度伺服器：整顆轉成警示色，讓老師走過去就看得到 */
 .group-tag.offline { border-color: var(--bad); color: var(--bad); }
 .group-tag.offline:hover { background: var(--bad); color: var(--surface); }
+.group-tag.preview { cursor: default; }
+.group-tag.preview:hover { background: var(--surface); color: var(--primary); }
+.group-tag.preview::after { content: none; }
 
 /* 下拉選單。z-index 要壓過遊戲畫布。 */
 .group-menu:not([hidden]) {
@@ -266,3 +286,13 @@ body.fs-fallback #gameContainer {
     .group-menu:not([hidden]) { min-width: 200px; }
 }
 }
+
+/* 工坊案件採滿版舞台；共用 ui.css 未分層，這組版面覆寫需留在 layer 外。 */
+body:has(.game-shell.detective-starlight) { padding: 0; min-height: 100dvh; background: #21182d; }
+.game-shell.detective-starlight { min-height: 0; height: 100dvh; gap: 0; overflow: hidden; }
+.game-shell.detective-starlight .game-bar { flex: 0 0 52px; min-height: 52px; padding: 4px 16px; border: 0; border-bottom: 2px solid #79513b; border-radius: 0; background: #25213f; color: #f4dda8; }
+.game-shell.detective-starlight .game-bar h1 { font-size: 16px; font-weight: 600; color: #f4dda8; opacity: .82; }
+.game-shell.detective-starlight .game-bar .back-link { color: #f4dda8; }
+.game-shell.detective-starlight #gameContainer { min-height: 0; border: 0; border-radius: 0; box-shadow: none; background: radial-gradient(ellipse at center, #3a314a, #21182d); }
+.game-shell.detective-starlight .scene-access:not([open]) { width: 190px; }
+@media (max-width: 650px) { .game-shell.detective-starlight .game-bar h1 { display: none; } }

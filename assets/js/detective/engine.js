@@ -1,5 +1,5 @@
 import {
-    Application, Assets, Container, Graphics, Rectangle
+    Application, Assets, Container, Graphics, Rectangle, Sprite
 } from '../../vendor/pixi.esm.min.js';
 import {
     W, H, COL, mkText, mkButton, panelBase, drawProps,
@@ -16,7 +16,16 @@ import { PUZZLES } from './puzzles.js';
 // ============================================================
 
 const CASE = window.DETECTIVE_CASE;
+const workshopSkin = CASE.skin === 'workshop';
 const container = document.getElementById('gameContainer');
+const sceneAccess = CASE.resolveLabel ? document.createElement('details') : null;
+if (sceneAccess) {
+    sceneAccess.className = 'detective-access scene-access';
+    const summary = document.createElement('summary');
+    summary.textContent = '⌨ 場景物件與筆記';
+    sceneAccess.append(summary);
+    container.append(sceneAccess);
+}
 
 // ---- 建立 Pixi 應用 ----
 const app = new Application();
@@ -39,7 +48,15 @@ const savedScene = window.DETECTIVE_SESSION?.progress?.scene;
 const bootScene = (savedScene && CASE.scenes[savedScene]) ? savedScene : CASE.startScene;
 
 await Promise.all([
-    document.fonts.ready,
+    (async () => {
+        if (workshopSkin && CASE.skinAssets?.font) {
+            try {
+                const font = new FontFace('Workshop Rounded', `url(${CASE.skinAssets.font})`);
+                document.fonts.add(await font.load());
+            } catch { /* 字型失敗時仍保留系統繁中字型 */ }
+        }
+        await document.fonts.ready;
+    })(),
     preloadImages(CASE, bootScene),
 ]);
 document.getElementById('gameLoading')?.remove();
@@ -271,9 +288,11 @@ for (const sc of Object.values(CASE.scenes)) {
 // ============================================================
 // HUD
 // ============================================================
-hudLayer.addChild(new Graphics().rect(0, 0, W, 54).fill({ color: COL.bar, alpha: 0.92 }));
+if (workshopSkin) hudLayer.addChild(new Graphics().roundRect(12, 4, 326, 47, 11)
+    .fill({ color: 0x352538, alpha: 0.94 }).stroke({ width: 2, color: 0xb88f56 }));
+else hudLayer.addChild(new Graphics().rect(0, 0, W, 54).fill({ color: COL.bar, alpha: 0.92 }));
 
-const titleText = mkText(`🔍 ${CASE.title}`, 19, 0xfff6e9, { weight: '700' });
+const titleText = mkText(workshopSkin ? '暮光森林 · 偵探筆記' : `🔍 ${CASE.title}`, 19, workshopSkin ? 0xf4dda8 : 0xfff6e9, { weight: '700' });
 titleText.anchor.set(0, 0.5);
 titleText.position.set(22, 27);
 hudLayer.addChild(titleText);
@@ -284,29 +303,34 @@ hudLayer.addChild(titleText);
 // ============================================================
 // 整條通到底的橫幅（和頂欄同樣是滿版），順便蓋掉背景圖最下面補出來的那條地板。
 // 要調高低就改 TRAY_TOP，圖示會跟著置中。
-const TRAY_TOP = 514;
+const TRAY_TOP = workshopSkin ? 532 : 514;
 const trayBar = new Container();
 hudLayer.addChild(trayBar);
 trayBar.addChild(
-    new Graphics().rect(0, TRAY_TOP, W, H - TRAY_TOP).fill({ color: COL.bar, alpha: 0.95 })
+    new Graphics().rect(0, TRAY_TOP, W, H - TRAY_TOP)
+        .fill({ color: workshopSkin ? 0x25213f : COL.bar, alpha: 0.96 })
+        .stroke({ width: workshopSkin ? 3 : 0, color: workshopSkin ? 0x79513b : COL.bar })
 );
 const TRAY_MID = TRAY_TOP + (H - TRAY_TOP) / 2;
-const trayLabel = mkText('道具', 19, 0xfff6e9, { weight: '700' });
+const trayLabel = mkText(workshopSkin ? '物品欄' : '道具', 19, workshopSkin ? 0xf4dda8 : 0xfff6e9, { weight: '700' });
 trayLabel.anchor.set(0.5);
-trayLabel.position.set(46, TRAY_MID);
+trayLabel.position.set(workshopSkin ? 83 : 46, TRAY_MID);
 trayBar.addChild(trayLabel);
 
 // 格子：先畫一整排空格當底，撿到東西再把「有東西的格子」疊上去。
 // 想調格數／大小就改這三個常數，位置會自己算。
-const SLOT_N = 12, SLOT_SIZE = 60, SLOT_PITCH = 71, SLOT_X0 = 84;
+const SLOT_N = workshopSkin ? 8 : 12;
+const SLOT_SIZE = workshopSkin ? 48 : 60;
+const SLOT_PITCH = workshopSkin ? 64 : 71;
+const SLOT_X0 = workshopSkin ? 152 : 84;
 const slotY = TRAY_MID - SLOT_SIZE / 2;
 const slotCX = i => SLOT_X0 + i * SLOT_PITCH + SLOT_SIZE / 2;
 const emptySlots = new Graphics();
 for (let i = 0; i < SLOT_N; i++) {
     emptySlots
         .roundRect(SLOT_X0 + i * SLOT_PITCH, slotY, SLOT_SIZE, SLOT_SIZE, 12)
-        .fill({ color: 0x2b241e, alpha: 0.5 })
-        .stroke({ width: 2, color: 0x6b5b4d });
+        .fill({ color: workshopSkin ? 0x352538 : 0x2b241e, alpha: 0.8 })
+        .stroke({ width: 2, color: workshopSkin ? 0x9a7448 : 0x6b5b4d });
 }
 trayBar.addChild(emptySlots);
 
@@ -392,15 +416,24 @@ function renderTray() {
         chip.addChild(
             new Graphics()
                 .roundRect(-SLOT_SIZE / 2, -SLOT_SIZE / 2, SLOT_SIZE, SLOT_SIZE, 12)
-                .fill({ color: 0x574c42 })
+                .fill({ color: workshopSkin ? 0x58413d : 0x574c42 })
                 .stroke({ width: 2, color: COL.gold })
         );
         const icon = en.kind === 'obj'
             ? (OBJ_INDEX[en.id].icon || '📦')
             : itemById(en.id).icon;
-        const t = mkText(icon, 30, 0xffffff);
-        t.anchor.set(0.5);
-        chip.addChild(t);
+        const artSrc = en.kind === 'obj' ? OBJ_INDEX[en.id].art?.find(p => p.t === 'img')?.src : null;
+        if (workshopSkin && hasTexture(artSrc)) {
+            const thumbnail = new Sprite(Assets.get(artSrc));
+            thumbnail.anchor.set(0.5);
+            thumbnail.width = 56;
+            thumbnail.height = 56;
+            chip.addChild(thumbnail);
+        } else {
+            const t = mkText(icon, workshopSkin ? 25 : 30, 0xffffff);
+            t.anchor.set(0.5);
+            chip.addChild(t);
+        }
         if (en.kind === 'obj' && !state.examined.has(en.id)) {
             // 圓心畫在 (0,0)、再用 position 移到格子右上角 ——
             // 這樣呼吸動畫縮放時是以光點自己為中心，不會繞著格子左上角甩。
@@ -448,7 +481,7 @@ const clueBtn = mkButton({
     color: 0x574c42, textColor: 0xfff6e9, onClick: showNotebook,
 });
 const accuseBtn = mkButton({
-    label: '🕵️ 指認犯人', x: 802, y: 10, w: 138, h: 34, onClick: showAccuse,
+    label: CASE.resolveLabel || '🕵️ 指認犯人', x: 802, y: 10, w: 138, h: 34, onClick: showAccuse,
 });
 hudLayer.addChild(clueBtn, accuseBtn);
 
@@ -468,29 +501,43 @@ hudLayer.addChild(dlgBox);
 // 對話框底板。設成可點是為了「點一下跳到全文」（見 finishTyping）——
 // 這塊區域本來就在 HUD 最上層蓋著，物件也被限制不能拖到 y>446，
 // 所以讓它吃點擊不會擋到任何原本點得到的東西。
-const dlgBg = new Graphics().roundRect(30, 452, 900, 84, 18)
+const dlgBg = workshopSkin ? new Container() : new Graphics().roundRect(30, 452, 900, 84, 18)
     .fill({ color: COL.panel }).stroke({ width: 4, color: COL.border });
+if (workshopSkin) {
+    const scroll = new Sprite(Assets.get(CASE.skinAssets.speech));
+    // 透明原圖保留完整紙卷；對齊實際紙張範圍，讓邊角不被切斷。
+    scroll.position.set(208, 343);
+    scroll.width = 723;
+    scroll.height = 259;
+    scroll.eventMode = 'none';
+    dlgBg.addChild(scroll);
+    dlgBg.hitArea = new Rectangle(210, 407, 720, 140);
+}
 dlgBg.eventMode = 'static';
 dlgBox.addChild(dlgBg);
 // 喜拿只住在對話框裡：點頭像＝跟助手求提示（場景中不再出現）
 // 圓底 → 頭像 → 圓框，三層疊出標準頭像；缺圖時退回 🐶 emoji，版面不會垮。
 // 半徑 26：頭像 34–86，對話文字從 x=98 開始，連 hover 放大 1.1 倍都碰不到。
 const catBtn = new Container();
-catBtn.position.set(60, 486);
+catBtn.position.set(workshopSkin ? 0 : 60, workshopSkin ? 0 : 486);
 const AVATAR_R = 26;
 const ASSIST = CASE.assistantImg;
-catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R).fill({ color: COL.panel2 }));
-if (hasTexture(ASSIST)) {
-    drawProps([{ t: 'img', src: ASSIST, x: -AVATAR_R, y: -AVATAR_R, w: AVATAR_R * 2, h: AVATAR_R * 2 }], catBtn);
+if (workshopSkin && hasTexture(ASSIST)) {
+    drawProps([{ t: 'img', src: ASSIST, x: -57, y: 278, w: 300, h: 300 }], catBtn);
+    catBtn.hitArea = new Rectangle(15, 303, 174, 247);
 } else {
-    const fallback = mkText('🐶', 26, 0xffffff);
-    fallback.anchor.set(0.5);
-    catBtn.addChild(fallback);
+    catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R).fill({ color: COL.panel2 }));
+    if (hasTexture(ASSIST)) drawProps([{ t: 'img', src: ASSIST, x: -AVATAR_R, y: -AVATAR_R, w: AVATAR_R * 2, h: AVATAR_R * 2 }], catBtn);
+    else {
+        const fallback = mkText('🐶', 26, 0xffffff);
+        fallback.anchor.set(0.5);
+        catBtn.addChild(fallback);
+    }
+    catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R).stroke({ width: 3, color: COL.border }));
 }
-catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R).stroke({ width: 3, color: COL.border }));
-const catTip = mkText('提示', 9, COL.muted, { weight: '700' });
+const catTip = mkText(workshopSkin ? '問米洛 ✦' : '提示', workshopSkin ? 16 : 9, workshopSkin ? 0xf4dda8 : COL.muted, { weight: '700' });
 catTip.anchor.set(0.5);
-catTip.position.set(0, 36);      // 頭像圓框底在 +26，這裡再讓 3px 才不會貼著
+catTip.position.set(workshopSkin ? 105 : 0, workshopSkin ? 509 : 36);
 catBtn.addChild(catTip);
 catBtn.eventMode = 'static';
 catBtn.cursor = 'pointer';
@@ -505,8 +552,8 @@ catBtn.on('pointertap', () => {
     if (line) say(txt(line.text));
 });
 dlgBox.addChild(catBtn);
-const dlgText = mkText('', 16, COL.ink, { wrap: 760, lineHeight: 23 });
-dlgText.position.set(98, 462);
+const dlgText = mkText('', workshopSkin ? 19 : 16, COL.ink, { wrap: workshopSkin ? 584 : 760, lineHeight: workshopSkin ? 28 : 23 });
+dlgText.position.set(workshopSkin ? 282 : 98, workshopSkin ? 436 : 462);
 dlgBox.addChild(dlgText);
 
 // 圓形小按鈕（收起 / 展開）
@@ -515,9 +562,9 @@ function mkRoundBtn(x, y, rad, label, size, onClick) {
     c.position.set(x, y);
     c.addChild(
         new Graphics().circle(0, 0, rad)
-            .fill({ color: COL.panel }).stroke({ width: 3, color: COL.border })
+            .fill({ color: workshopSkin ? 0x352538 : COL.panel }).stroke({ width: 3, color: workshopSkin ? COL.gold : COL.border })
     );
-    const t = mkText(label, size, COL.ink, { weight: '700' });
+    const t = mkText(label, size, workshopSkin ? 0xf4dda8 : COL.ink, { weight: '700' });
     t.anchor.set(0.5);
     c.addChild(t);
     c.eventMode = 'static';
@@ -598,9 +645,9 @@ window.addEventListener('orientationchange', () => {
 
 let dlgOpen = true, dlgUnread = false;
 
-dlgBox.addChild(mkRoundBtn(900, 470, 13, '✕', 14, () => setDialog(false)));
+dlgBox.addChild(mkRoundBtn(900, workshopSkin ? 423 : 470, 13, '✕', 14, () => setDialog(false)));
 
-const showBtn = mkRoundBtn(56, 512, 22, '💬', 20, () => setDialog(true));
+const showBtn = mkRoundBtn(workshopSkin ? 870 : 56, 512, 22, '💬', 20, () => setDialog(true));
 const unreadDot = new Graphics().circle(16, -16, 6).fill({ color: COL.red });
 showBtn.addChild(unreadDot);
 hudLayer.addChild(showBtn);
@@ -649,12 +696,14 @@ function finishTyping() {
 dlgBg.on('pointertap', finishTyping);
 
 const say = text => {
+    const live = document.getElementById('detectiveStatus');
+    if (live) live.textContent = text;
     // 對話框變扁了，太長的訊息自動縮小字級塞進去
-    for (const [size, lh] of [[16, 23], [14, 20], [12, 17]]) {
+    for (const [size, lh] of (workshopSkin ? [[19, 28], [17, 25], [15, 22]] : [[16, 23], [14, 20], [12, 17]])) {
         dlgText.style.fontSize = size;
         dlgText.style.lineHeight = lh;
         dlgText.text = text;
-        if (dlgText.height <= 70) break;
+        if (dlgText.height <= (workshopSkin ? 91 : 70)) break;
     }
     // 新訊息強制跳出對話框一次；同一則訊息之後由使用者自由開關
     if (text !== lastMsg) {
@@ -702,9 +751,10 @@ function setSceneTag(name) {
     sceneTagText.text = name;
     const w = sceneTagText.width + 32;
     sceneTagBg.clear()
-        .roundRect(0, 0, w, 34, 17)
-        .fill({ color: COL.panel, alpha: 0.92 })
-        .stroke({ width: 3, color: COL.border });
+        .roundRect(0, 0, w, 34, workshopSkin ? 8 : 17)
+        .fill({ color: workshopSkin ? 0x352538 : COL.panel, alpha: 0.92 })
+        .stroke({ width: 3, color: workshopSkin ? COL.gold : COL.border });
+    sceneTagText.style.fill = workshopSkin ? 0xf4dda8 : COL.ink;
     sceneTag.position.set(480 - w / 2, 10);       // 頂欄置中
 }
 
@@ -843,11 +893,93 @@ function renderScene(id) {
     setZoom(null);                                // 換場景就把上一個東西的放大鈕收起來
     renderBoard();
     renderInteractives();
+    refreshSceneAccess();
     // 第一次進場講開場白；之後再回來改講 introBack，才不會一直重講「快來調查吧」
     const first = !visitedScenes.has(id);
     visitedScenes.add(id);
     say(txt(first ? scene.intro : (scene.introBack || scene.intro)) || '點擊場景中的東西開始調查。');
     saveProgress();
+}
+
+function refreshSceneAccess() {
+    if (!sceneAccess) return;
+    sceneAccess.querySelector(':scope > div')?.remove();
+    const body = document.createElement('div');
+    const title = document.createElement('h2');
+    title.textContent = CASE.scenes[state.scene].name;
+    body.append(title);
+    for (const h of CASE.scenes[state.scene].hotspots) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = h.name;
+        button.addEventListener('click', () => onHotspot(h));
+        body.append(button);
+    }
+    for (const o of CASE.scenes[state.scene].objects || []) {
+        if (state.stored.has(o.id) || state.combined.has(o.id) || isHidden(o)) continue;
+        const inspect = document.createElement('button');
+        inspect.type = 'button';
+        inspect.textContent = `查看：${o.name}`;
+        inspect.addEventListener('click', () => onHotspot(o));
+        body.append(inspect);
+        if (o.draggable) {
+            const collect = document.createElement('button');
+            collect.type = 'button';
+            collect.textContent = `收進物品欄：${o.name}`;
+            collect.addEventListener('click', () => {
+                state.stored.add(o.id);
+                state.storedOrder.push(o.id);
+                delete objPositions[o.id];
+                say(`🎒 ${o.name}收進物品欄了。${txt(o.after) || '可在下方查看。'}`);
+                refreshHud(); renderInteractives(); refreshSceneAccess(); saveProgress();
+            });
+            body.append(collect);
+        }
+    }
+    if (state.storedOrder.length) {
+        const inventory = document.createElement('div');
+        const label = document.createElement('h3');
+        label.textContent = '物品欄';
+        inventory.append(label);
+        for (const id of state.storedOrder) {
+            const o = OBJ_INDEX[id];
+            if (!o) continue;
+            const view = document.createElement('button');
+            view.type = 'button';
+            view.textContent = `查看物品：${o.name}`;
+            view.addEventListener('click', () => say(txt(o.after) || lookOf(o)));
+            inventory.append(view);
+        }
+        body.append(inventory);
+    }
+    const notebook = document.createElement('div');
+    const heading = document.createElement('h3');
+    heading.textContent = `偵探筆記 ${state.clues.length}/${CASE.clues.length}`;
+    notebook.append(heading);
+    const list = document.createElement('ul');
+    for (const id of state.clues) {
+        const clue = clueById(id);
+        const row = document.createElement('li');
+        row.textContent = `${clue.name}：${clue.desc}`;
+        list.append(row);
+    }
+    notebook.append(list);
+    body.append(notebook);
+    const resolve = document.createElement('button');
+    resolve.type = 'button';
+    resolve.textContent = CASE.resolveLabel;
+    resolve.addEventListener('click', showAccuse);
+    body.append(resolve);
+    if (state.solved || state.closed) {
+        const ending = pickEnding();
+        const heading = document.createElement('h3');
+        heading.textContent = ending?.title || '案件結局';
+        const story = document.createElement('p');
+        story.className = 'detective-ending-story';
+        story.textContent = txt(ending?.text) || CASE.solution;
+        body.append(heading, story);
+    }
+    sceneAccess.append(body);
 }
 
 // ============================================================
@@ -1328,6 +1460,7 @@ function onObjUp() {
             say(`🎒 ${o.name}收起來了。要用的時候點道具欄裡的 ${it.icon} ${it.name}。`);
             refreshHud();
             renderInteractives();
+            refreshSceneAccess();
             saveProgress();
             return;
         }
@@ -1341,6 +1474,7 @@ function onObjUp() {
             : `🎒 ${o.name}收進物品欄了。點下方的圖示隨時查看。`);
         refreshHud();
         renderInteractives();
+        refreshSceneAccess();
         saveProgress();
         return;
     }
@@ -1414,6 +1548,10 @@ function onHotspot(h) {
         say(txt(h.locked) || '這裡打不開。');
         return;
     }
+    if (h.requiresStored && ![].concat(h.requiresStored).every(id => state.stored.has(id))) {
+        say(txt(h.lockedStored) || '先把需要的小物件拖進下方物品欄，再來比對。');
+        return;
+    }
     if (h.goto) { transitionTo(h.goto); return; }
 
     // 看得到本體了 → 可以拉近看上面刻的小字
@@ -1469,6 +1607,7 @@ function award(h, text) {
     say(msg);
     refreshHud();
     renderInteractives();
+    refreshSceneAccess();
     saveProgress();
 
     // 道具飛進物品欄。要在 refreshHud()（裡面會 renderTray）之後才算得出格子位置。
@@ -1479,8 +1618,11 @@ function award(h, text) {
         flying.forEach((f, n) => setTimeout(() => flyItemToSlot(f, sx, sy), n * 150));
     }
 
-    if (state.clues.length === CASE.clues.length && !state.solved) {
-        setTimeout(() => say('線索蒐集完成！點右上角的「🕵️ 指認犯人」說出你的推理。'), 3000);
+    if (state.clues.length === (CASE.resolutionPuzzle ? CASE.accuseMinClues : CASE.clues.length) && !state.solved) {
+        setTimeout(() => {
+            if (!state.solved && state.clues.length >= (CASE.resolutionPuzzle ? CASE.accuseMinClues : CASE.clues.length))
+                say(CASE.resolveReadyText || '線索蒐集完成！點右上角的「🕵️ 指認犯人」說出你的推理。');
+        }, 3000);
     }
 }
 
@@ -1557,7 +1699,8 @@ let panelCleanup = null;
 
 function openPanel(builder) {
     closePanel();
-    const dim = new Graphics().rect(0, 0, W, H).fill({ color: 0x2b2320, alpha: 0.58 });
+    if (sceneAccess) { sceneAccess.open = false; sceneAccess.hidden = true; }
+    const dim = new Graphics().rect(0, 0, W, H).fill({ color: workshopSkin ? 0x151125 : 0x2b2320, alpha: workshopSkin ? 0.72 : 0.58 });
     dim.eventMode = 'static';
     overlayLayer.addChild(dim);
     const panel = new Container();
@@ -1582,6 +1725,7 @@ function openPanel(builder) {
 
 function closePanel() {
     if (panelCleanup) { panelCleanup(); panelCleanup = null; }
+    if (sceneAccess) sceneAccess.hidden = false;
     // ★ overlayLayer 必須「立刻」空掉 —— onHotspot()、zoomBtn 等地方是用
     //   overlayLayer.children.length 判斷「現在有沒有面板開著」，
     //   把淡出中的面板留在原地會讓整個場景在動畫期間點不動。
@@ -1607,7 +1751,7 @@ function openPuzzle(h) {
         const box = panelBase(panel, { title: cfg.title, bg: cfg.bgImg, ...(cfg.box || {}) });
         // api 讓謎題自己查進度（例如推理板要知道哪幾欄的物證還沒到手）
         // flags / save 讓謎題把自己的進度寫進存檔（審訊室的洗清狀態要留到結局才用）
-        const ctx = { app, root, say, api: txtApi, flags: state.flags, save: saveProgress };
+        const ctx = { app, root, say, api: txtApi, flags: state.flags, save: saveProgress, closePanel };
         panelCleanup = PUZZLES[cfg.type](ctx, panel, box, cfg, () => {
             closePanel();
             // 重看時再按一次「檢查推理」不該重新宣布一次破案（也會再觸發一次
@@ -1780,29 +1924,60 @@ function showGallery(cfg, imgs) {
     });
 }
 
-function showNotebook() {
+function showNotebook(page = 0) {
     openPanel(panel => {
         const box = panelBase(panel, { title: '📓 偵探筆記' });
+        if (workshopSkin) {
+            const pageSize = 6;
+            const pageCount = Math.max(1, Math.ceil(state.clues.length / pageSize));
+            const currentPage = Math.min(Math.max(page, 0), pageCount - 1);
+            const counter = mkText(`${currentPage + 1} / ${pageCount}`, 15, COL.muted);
+            counter.position.set(box.x + box.w - 142, box.y + 52);
+            panel.addChild(counter);
+            state.clues.slice(currentPage * pageSize, (currentPage + 1) * pageSize).forEach((id, i) => {
+                const cl = clueById(id);
+                const col = i % 2, row = Math.floor(i / 2);
+                const x = box.x + 90 + col * 260, y = box.y + 108 + row * 101;
+                panel.addChild(new Graphics().moveTo(x, y + 84).lineTo(x + 226, y + 84)
+                    .stroke({ width: 2, color: COL.border, alpha: 0.7 }));
+                const name = mkText(`${cl.icon} ${cl.name}`, 18, COL.ink, { weight: '700' });
+                name.position.set(x, y);
+                const desc = mkText(cl.desc, 14, COL.muted, { wrap: 226, lineHeight: 20 });
+                desc.position.set(x, y + 30);
+                panel.addChild(name, desc);
+            });
+            if (!state.clues.length) {
+                const empty = mkText('還沒有線索。先到場景裡觀察吧。', 20, COL.muted);
+                empty.position.set(box.x + 80, box.y + 125);
+                panel.addChild(empty);
+            }
+            const buttonY = box.y + box.h - 58;
+            if (currentPage > 0) panel.addChild(mkButton({ label: '上一頁', x: box.x + 100, y: buttonY, w: 120, h: 38, onClick: () => showNotebook(currentPage - 1) }));
+            panel.addChild(mkButton({ label: '合上筆記', x: box.cx - 70, y: buttonY, w: 140, h: 38, onClick: closePanel }));
+            if (currentPage < pageCount - 1) panel.addChild(mkButton({ label: '下一頁', x: box.x + box.w - 220, y: buttonY, w: 120, h: 38, onClick: () => showNotebook(currentPage + 1) }));
+            return;
+        }
         if (!state.clues.length) {
             const empty = mkText('還沒有任何線索，回場景裡點點看吧！', 18, COL.muted);
             empty.anchor.set(0.5);
             empty.position.set(box.cx, box.y + 200);
             panel.addChild(empty);
         }
+        const rowH = Math.min(54, Math.floor((box.h - 150) / Math.max(state.clues.length, 1)));
         state.clues.forEach((id, i) => {
             const cl = clueById(id);
-            const y = box.y + 74 + i * 54;
+            const y = box.y + 68 + i * rowH;
             panel.addChild(
-                new Graphics().roundRect(box.x + 30, y, box.w - 60, 48, 12)
+                new Graphics().roundRect(box.x + 30, y, box.w - 60, rowH - 4, 12)
                     .fill({ color: COL.panel2 }).stroke({ width: 2, color: COL.border })
             );
             const icon = mkText(cl.icon, 20, 0xffffff);
             icon.anchor.set(0.5);
-            icon.position.set(box.x + 60, y + 24);
+            icon.position.set(box.x + 60, y + (rowH - 4) / 2);
             const name = mkText(cl.name, 16, COL.ink, { weight: '700' });
-            name.position.set(box.x + 84, y + 5);
+            name.position.set(box.x + 84, y + 3);
             const desc = mkText(cl.desc, 13, COL.muted, { wrap: box.w - 150 });
-            desc.position.set(box.x + 84, y + 26);
+            desc.position.set(box.x + 84, y + 24);
             panel.addChild(icon, name, desc);
         });
         panel.addChild(mkButton({
@@ -1814,6 +1989,25 @@ function showNotebook() {
 
 function showAccuse() {
     if (state.solved || state.closed) { showEnding(); return; }
+    if (CASE.resolutionPuzzle) {
+        const need = Number.isFinite(CASE.accuseMinClues) ? CASE.accuseMinClues : CASE.clues.length;
+        if (state.clues.length < need) { say(`線索還不夠（${state.clues.length}/${need}），再找找看吧！`); return; }
+        const cfg = CASE.resolutionPuzzle;
+        openPanel(panel => {
+            const box = panelBase(panel, { title: cfg.title, ...(cfg.box || {}) });
+            const ctx = { app, root, say, api: txtApi, flags: state.flags, save: saveProgress, closePanel };
+            panelCleanup = PUZZLES[cfg.type](ctx, panel, box, cfg, () => {
+                if (CASE.resolutionClue && !state.clues.includes(CASE.resolutionClue)) state.clues.push(CASE.resolutionClue);
+                state.solved = true;
+                saveProgress();
+                refreshHud();
+                refreshSceneAccess();
+                showEnding();
+            }) || null;
+            panel.addChild(mkButton({ label: '返回調查', x: box.x + box.w - 130, y: box.y + 14, w: 110, h: 32, size: 14, color: COL.border, textColor: COL.ink, onClick: closePanel }));
+        });
+        return;
+    }
     // ★ 門檻可以放寬：多結局的案件需要讓玩家「太早指認」真的指得下去，
     //   否則靠誤判推進的劇情（例如 AI 展覽館的凱文假高潮）根本觸發不了。
     //   沒宣告 accuseMinClues 就維持原本的「線索收齊才准指認」。
@@ -1923,14 +2117,15 @@ function showEnding() {
         const box = panelBase(panel, {
             x: 90, y: 32, w: 780, h: 536,
             title: chosen?.title || '🎉 案件偵破！',
+            ...(workshopSkin ? { titleY: 61 } : {}),
         });
         const btnY = box.y + box.h - 62;
-        const top = box.y + 62;
+        const top = box.y + (workshopSkin ? 130 : 62);
         const end = chosen || CASE.ending || {};
 
         // ---- 左欄：本尊 ----
         // 玩家找了一整場都只看到空底座，最後這一眼才是報酬 —— 高度給滿到按鈕上方
-        let textX = box.x + 38, textW = box.w - 76;
+        let textX = box.x + (workshopSkin ? 110 : 38), textW = box.w - (workshopSkin ? 220 : 76);
         if (hasTexture(end.img)) {
             const tex = Assets.get(end.img);
             const capH = end.caption ? 40 : 0;
@@ -1975,8 +2170,8 @@ function showEnding() {
 
         // ---- 右欄：破案的故事（字級自動縮到按鈕上方，長文也壓不到按鈕）----
         const maxH = btnY - top - 14;
-        const body = mkText(txt(chosen?.text) || CASE.solution, 15, COL.ink, { wrap: textW, lineHeight: 25 });
-        for (const [size, lh] of [[15, 25], [14, 23], [13, 21], [12, 19], [11, 17]]) {
+        const body = mkText(txt(chosen?.text) || CASE.solution, workshopSkin ? 20 : 15, COL.ink, { wrap: textW, lineHeight: workshopSkin ? 31 : 25 });
+        for (const [size, lh] of (workshopSkin ? [[20, 31], [19, 29], [18, 27], [17, 25]] : [[15, 25], [14, 23], [13, 21], [12, 19], [11, 17]])) {
             body.style.fontSize = size;
             body.style.lineHeight = lh;
             if (body.height <= maxH) break;
@@ -1984,8 +2179,8 @@ function showEnding() {
         body.position.set(textX, top);
         panel.addChild(body);
         panel.addChild(mkButton({
-            label: '🔁 再查一次', x: box.cx - 200, y: btnY, w: 180, h: 44,
-            onClick: () => location.reload(),
+            label: workshopSkin ? '回看小徑' : '🔁 再查一次', x: box.cx - 200, y: btnY, w: 180, h: 44,
+            onClick: workshopSkin ? closePanel : () => location.reload(),
         }));
         panel.addChild(mkButton({
             label: '回學習活動', x: box.cx + 20, y: btnY, w: 180, h: 44,
@@ -1997,10 +2192,10 @@ function showEnding() {
 
 function showBrief() {
     openPanel(panel => {
-        const box = panelBase(panel, { y: 96, h: 408, title: CASE.title });
-        const body = mkText(CASE.brief, 17, COL.ink, { wrap: box.w - 90, lineHeight: 30, align: 'center' });
-        body.anchor.set(0.5, 0);
-        body.position.set(box.cx, box.y + 78);
+        const box = panelBase(panel, workshopSkin ? { x: 120, y: 60, w: 720, h: 480, title: CASE.title, titleY: 64 } : { y: 96, h: 408, title: CASE.title });
+        const body = mkText(CASE.brief, workshopSkin ? 19 : 17, COL.ink, { wrap: box.w - (workshopSkin ? 160 : 90), lineHeight: workshopSkin ? 33 : 30, align: workshopSkin ? 'left' : 'center' });
+        body.anchor.set(workshopSkin ? 0 : 0.5, 0);
+        body.position.set(workshopSkin ? box.x + 84 : box.cx, box.y + (workshopSkin ? 120 : 78));
         panel.addChild(body);
         panel.addChild(mkButton({
             label: '開始調查', x: box.cx - 90, y: box.y + box.h - 76, w: 180, h: 48,

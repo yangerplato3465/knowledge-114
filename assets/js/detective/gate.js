@@ -1,8 +1,7 @@
 // ============================================================
 // 偵探事件簿 · 上課驗證碼門檻
 //
-// 目的：沒有老師當堂發的驗證碼就進不了案件，避免學生自己先破台，
-//       上課時再玩一次就沒有懸疑感了。
+// 目的：正式網址沒有老師當堂發的驗證碼就進不了案件；本機網址可直接試玩。
 //
 // 運作方式：
 //   1. 把「關卡 + 碼」用 PBKDF2 推成一串雜湊，那串雜湊就是 Firestore
@@ -11,14 +10,14 @@
 //      列不出來，只能拿已知的碼去對。
 //   3. 到期時間寫在規則裡用 request.time（伺服器時間）比對，
 //      把電腦時鐘調回昨天沒有用，過期就是讀不到。
-//   4. 驗過才 import 引擎；在那之前 detective.js 根本沒被載入。
+//   4. 正式網址驗過才 import 引擎；本機試玩不讀寫正式進度。
 //
 // 已知極限：這是純靜態站，解鎖狀態存在瀏覽器裡，會改 localStorage 的
 // 人繞得過去。要根治得把案件資料加密（案件金鑰放在驗證碼那筆文件裡），
 // 那是之後的第二階段。目前這層擋的是「隨手點進來玩掉」。
 // ============================================================
 
-import { DETECTIVE_GAMES, deriveCodeId, normalizeCode } from './code.js';
+import { DETECTIVE_GAMES, deriveCodeId, isLocalPreview, normalizeCode } from './code.js';
 
 const GAME_ID = window.DETECTIVE_GAME_ID || 'owl';
 const GAME = DETECTIVE_GAMES.find(g => g.id === GAME_ID);
@@ -27,10 +26,6 @@ const GROUPS_KEY = `detective.groups.${GAME_ID}`;
 // 從遊戲裡按「新增組別」跳回來時的一次性旗標：告訴 gate 這次要打新的碼，
 // 別把游標留在組別清單上。用 sessionStorage 是因為它只該影響這一次重新載入。
 const GATE_FOCUS_KEY = `detective.gateFocus.${GAME_ID}`;
-// 開發用旁路：設成 '1' 就跳過驗碼直接進遊戲（不讀也不寫進度）。
-// 刻意用一個「只可能是手動設定」的獨立 key —— 以前是靠偽造 session 達成，
-// 結果變成一條誰都可能不小心留下、又不用驗碼的後門。
-const DEV_KEY = `detective.dev.${GAME_ID}`;
 const MAX_GROUPS = 12;        // 記太多沒意義，一台電視一學期也用不到這麼多組
 const MAX_TRIES = 3;          // 連錯這麼多次就先冷卻，純粹防亂猜手癢
 const COOLDOWN_MS = 30000;
@@ -203,7 +198,7 @@ async function boot(session) {
     };
 
     wireGroupSwitch(session);
-    // 驗證通過才載入引擎——在此之前 detective.js 完全沒被下載執行
+    // 正式網址驗證通過才載入引擎；本機網址直接試玩。
     await import('./engine.js');
 }
 
@@ -222,13 +217,21 @@ function wireGroupSwitch(session) {
     const menu = $('groupMenu');
     if (!box || !btn || !menu) return;
 
-    // 沒有 codeId ＝ 開發旁路進來的，要標得很明顯，
+    // 沒有 codeId ＝ 本機試玩進來的，要標得很明顯，
     // 不然看起來就只是「一組沒取名字的組別」，會以為是正常場次
     const name = session?.label
-        || (session?.codeId ? '（未命名的組別）' : '⚠️ 開發模式 · 未驗碼');
+        || (session?.codeId ? '（未命名的組別）' : '本機試玩 · 不存檔');
     btn.textContent = saveBlocked ? `${name}（未連線）` : name;
-    btn.classList.toggle('offline', saveBlocked || !session?.codeId);
+    btn.classList.toggle('offline', saveBlocked);
+    btn.classList.toggle('preview', !session?.codeId);
     box.hidden = false;
+    if (!session?.codeId) {
+        btn.disabled = true;
+        btn.title = '本機試玩不記錄進度';
+        btn.removeAttribute('aria-haspopup');
+        btn.removeAttribute('aria-expanded');
+        return;
+    }
 
     const closeMenu = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
 
@@ -320,7 +323,7 @@ let gateWired = false;
 
 function showGate(msg = '') {
     if (!gate) return;
-    if (GAME) input.placeholder = `${GAME.prefix}-XXXX-XX`;
+    if (GAME) input.placeholder = `${GAME.prefix}-0000`;
     gate.hidden = false;
     errEl.textContent = msg;
     const remembered = renderGroups();
@@ -459,20 +462,18 @@ async function verify() {
 }
 
 // ---- 起點 ----
-// 先看本機有沒有還沒過期的解鎖場次；有就直接進遊戲，重新整理不會被要求重打。
+// 本機網址先走不存檔試玩；正式網址才讀取未過期的解鎖場次。
 // （做了進度存檔之後這裡還是會載一次 Firebase 把存檔抓回來，
 //   不再像以前那樣完全不碰網路，但省下的是重新輸碼的麻煩。）
 
 const existing = readSession();
-let devMode = false;
-try { devMode = localStorage.getItem(DEV_KEY) === '1'; } catch { /* 無痕模式讀不到 */ }
-
-if (existing) {
-    boot(existing);
-} else if (devMode) {
-    // 開發旁路：不驗碼、不記進度。頂欄會標成「開發模式」，不會被誤認成正常場次。
+if (isLocalPreview(location.hostname)) {
+    // 只有本機網址可直接試玩；不讀正式進度，也不寫回 Firestore。
+    // 舊版 detective.dev.<id> 旗標不再讓正式網址跳過驗碼。
     clearSession();
     boot(null);
+} else if (existing) {
+    boot(existing);
 } else {
     clearSession();
     showGate();
