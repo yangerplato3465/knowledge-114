@@ -12,7 +12,7 @@ test('直接開啟教材仍有固定的活動上層，網站名稱另連首頁',
   const trail = screen.getByRole('navigation', { name: '目前位置' });
   expect(within(trail).getByRole('link', { name: '回學習活動' }).getAttribute('href')).toBe('/pages/activities.html');
   expect(within(trail).getByText('數學勇者').getAttribute('aria-current')).toBe('page');
-  expect(screen.getByRole('link', { name: /大耳狗教學網/ }).getAttribute('href')).toBe('/index.html');
+  expect(screen.getByRole('link', { name: /暮光森林/ }).getAttribute('href')).toBe('/index.html');
 });
 
 test.each(['upload', 'class-rpg', 'detective-admin'] as const)('老師工具 %s 可切換同層工具、回總覽及學生首頁', current => {

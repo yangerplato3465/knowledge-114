@@ -7,6 +7,7 @@
 | 米洛、露米與暮光森林；開發新遊戲 | [世界觀與開工準則](world/README.md) → [角色圖鑑](world/characters.md) → [原圖與素材索引](world/art/README.md) |
 | 每款遊戲的玩法、教材與美術 | [遊戲目錄](games/README.md) |
 | 程式在哪裡、如何載入與儲存 | [網站架構](project/architecture.md) |
+| 網站整體美術、入口與教師工具風格 | [網站介面](project/site-design.md) |
 | 尚未完成什麼 | [待辦](project/todo.md) |
 | 如何啟動、驗證與部署 | [根目錄 README](../README.md)；修改前看 [AGENTS](../AGENTS.md) |
 

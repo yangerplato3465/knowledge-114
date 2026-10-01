@@ -1,0 +1,104 @@
+.directory-mist { position:absolute; top:-40px; right:0; width:100%; height:650px; object-fit:cover; opacity:.28; mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent),linear-gradient(transparent,#000 35%,transparent); mask-composite:intersect; z-index:-1; pointer-events:none; }
+.page-kicker { color:var(--primary-strong); font-size:.78rem; font-weight:600; letter-spacing:.14em; margin:0 0 14px; }
+.page-lead { color:var(--ink-soft); margin:16px 0 0; }
+.forest-object { object-fit:contain; width:100px; height:100px; flex-shrink:0; }
+/* Rich website entrances and calm functional surfaces; never loaded by games. */
+
+.forest-site .directory-page { position:relative; isolation:isolate; max-width:1240px; margin:28px auto 60px; }
+.forest-site .forest-intro { min-height:0; margin:0 0 30px; }
+.forest-intro>div { display:grid; grid-template-columns:1fr 1fr; align-items:end; gap:0 32px; }
+.forest-intro .page-kicker { grid-column:1/-1; }
+.forest-intro .page-lead { margin:0; justify-self:end; }
+.forest-site .directory-tabs { gap:24px; margin:0 0 42px; border-bottom:1px solid var(--border); }
+.forest-site .directory-tabs a { padding:12px 0; background:none; border:0; border-radius:0; color:var(--primary-strong); }
+.forest-site .directory-tabs a:hover { box-shadow:0 2px var(--primary-strong); }
+.forest-site .directory-sections { grid-template-columns:repeat(3,minmax(0,1fr)); gap:40px; }
+.forest-site .directory-section { display:block; }
+.category-heading { min-height:128px; }
+.category-number { display:none; }
+.forest-site .category-heading h2 { font:700 1.2rem/1.5 'Noto Sans TC','Microsoft JhengHei',sans-serif; margin:0 0 10px; }
+.forest-site .category-heading p { font-size:.85rem; }
+.forest-site .resource-list { padding:0; border:0; background:none; border-radius:0; display:grid; gap:20px; }
+.forest-site .resource-list li+li { border:0; }
+.forest-site .resource-list a { position:relative; isolation:isolate; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; gap:0; padding:0 10px 24px; border:0; border-radius:30px; background:none; box-shadow:none; min-height:270px; }
+.forest-site .resource-list a::before { content:''; position:absolute; z-index:-1; top:0; width:210px; height:175px; background:radial-gradient(ellipse,var(--primary-tint),transparent 70%); pointer-events:none; }
+.forest-site .resource-list .forest-object { width:172px; height:172px; transition:transform .3s,filter .3s; }
+.forest-site .resource-list strong { font-size:1rem; line-height:1.7; color:var(--ink); }
+.forest-site .resource-list a>span>span { font-size:.83rem; max-width:260px; margin:6px auto 0; }
+.forest-site .resource-list a>svg { margin-top:12px; color:var(--primary-strong); }
+.forest-site .resource-list a:hover .forest-object,.forest-site .resource-list a:focus-visible .forest-object { transform:translateY(-7px) rotate(-3deg); filter:drop-shadow(0 10px 8px #9670cb44); }
+.forest-site .teacher-directory>.resource-list { grid-template-columns:repeat(3,minmax(0,1fr)); gap:36px; }
+.forest-site .teacher-directory>.resource-list .forest-object { width:220px; height:220px; }
+.forest-site .teacher-header { max-width:1240px; margin:0 auto 26px; }
+.forest-site .teacher-header-actions { margin-left:auto; }
+.forest-site .teacher-header-actions>a { font-size:.86rem; }
+.forest-site .teacher-nav { border-top:1px solid var(--border); margin:0; padding:4px 0 8px; gap:28px; }
+.forest-site .teacher-nav a { font-size:.88rem; }
+.forest-site .teacher-nav a[aria-current=page] { color:var(--primary-strong); border-color:var(--primary-strong); }
+.forest-site .hub-card { position:relative; max-width:900px; width:100%; margin:34px auto; padding:clamp(24px,4vw,48px); background:var(--surface); border:0; border-radius:18px; box-shadow:0 10px 40px var(--shadow); }
+.forest-site .section-icon { display:none; }
+.forest-site .material-illustration { float:right; width:132px; height:132px; margin:-12px -10px 12px 18px; }
+.forest-site .materials>h1 { margin-bottom:14px; }
+.forest-site .materials>p { margin-bottom:26px; }
+.forest-site .materials :is(button,.material-action) { border-radius:8px; }
+.forest-site .materials .material-row { background:var(--surface-2); border:0; padding:20px; }
+.forest-site .materials .material-primary,.forest-site .material-action { background:var(--primary-strong); color:var(--on-primary); }
+.forest-site .materials .material-drop { border:1px dashed var(--border-strong)!important; background:var(--surface-2); }
+.forest-site .admin-shell { max-width:1160px; }
+.forest-site .admin-heading { min-height:170px; position:relative; gap:20px; margin:24px 0 30px; padding:20px 0; }
+.forest-site .admin-heading h1 { font-size:clamp(1.55rem,3vw,2.4rem); }
+.forest-site .admin-heading .forest-object { width:150px; height:150px; order:2; }
+.forest-site .admin-heading .subtitle { font-size:.95rem; line-height:1.8; }
+.forest-site .admin-shell .card { border:0; border-radius:16px; box-shadow:0 5px 28px var(--shadow); padding:28px; background:var(--surface); }
+.forest-site .admin-shell .card h2 { margin-top:0; font-size:1.2rem; }
+.forest-site .admin-shell .btn { background:var(--primary-strong); color:var(--on-primary); border:0; box-shadow:0 3px 10px var(--shadow); border-radius:8px; }
+.forest-site .admin-shell .btn-ghost { background:var(--surface-2); color:var(--ink); }
+.forest-site .admin-shell .btn-danger { background:var(--bad-bg); color:var(--bad); }
+.forest-site .admin-shell .btn:hover:not(:disabled) { transform:translateY(-2px); }
+.forest-site .admin-shell .auth-bar { border:0; background:var(--surface-2); border-radius:10px; }
+.forest-site .admin-shell .login-screen { padding:0 0 36px; min-height:440px; }
+.forest-site .admin-shell .login-card { position:relative; width:480px; background:var(--surface); border:0; border-radius:20px; box-shadow:0 12px 48px var(--shadow-strong); }
+.forest-site .admin-shell .login-card .lock { color:var(--primary-strong); }
+.forest-site .admin-shell .fresh { background:var(--good-bg); border:1px solid var(--good-border); }
+.forest-site .admin-shell .code-row { border:0; padding:20px; background:var(--surface-2); }
+.forest-site .admin-shell :is(label,.hint,.code-info,.fresh-meta) { font-size:.9rem; }
+.forest-site .admin-shell .code-val { font-family:ui-monospace,monospace; font-size:1.25rem; }
+.forest-site .activity-trail { max-width:1160px; margin:8px auto 24px; }
+.forest-site :is(.water-lesson,.magic-ink-lesson) { border-color:transparent; box-shadow:0 5px 25px var(--shadow); }
+.forest-site .lesson-nav { border:0; background:var(--surface); box-shadow:0 3px 14px var(--shadow); }
+.forest-site .lesson-nav a { border-radius:8px; }
+.forest-site .water-lesson .slide-container { background:var(--surface); border:0; border-radius:18px; }
+.forest-site .water-lesson .title-slide { background:radial-gradient(ellipse at top right,var(--primary-tint),transparent 65%),var(--surface); }
+.forest-site .water-lesson .deco-bubble { display:none; }
+.forest-site .water-lesson .title-layout { position:relative; padding:32px; }
+.forest-site .water-lesson .lesson-title-art { width:170px; height:170px; }
+.forest-site .water-lesson .title-layout h1 { color:var(--ink); text-shadow:none; font-size:clamp(1.9rem,3.5vw,3rem); }
+.forest-site .water-lesson .academic-badge { background:none; border:0; color:var(--primary-strong); }
+.forest-site .magic-ink-lesson :is(.hero,.card,.brand-bar,section,footer) { border-color:var(--border); }
+.forest-site .magic-ink-lesson .hero { background:var(--surface); border:0; box-shadow:0 5px 22px var(--shadow); }
+.forest-site .magic-ink-lesson h1 { color:var(--ink); }
+.forest-site .magic-ink-lesson .rb-arch { width:auto; right:3px; }
+@media(max-width:760px) {
+ 
+.forest-site .directory-page { position:relative; isolation:isolate; margin:20px auto 40px; }
+ .forest-intro>div { display:block; }
+ .forest-intro .page-lead { margin-top:12px; }
+ .forest-site .directory-tabs { gap:20px; margin-bottom:28px; }
+ .forest-site .directory-tabs a { font-size:.84rem; }
+ .forest-site .directory-sections { grid-template-columns:1fr; gap:32px; }
+ .category-heading { min-height:0; margin-bottom:16px; }
+ .forest-site .resource-list { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+ .forest-site .resource-list a { min-height:240px; padding:0 2px 12px; }
+ .forest-site .resource-list a::before { width:100%; height:140px; }
+ .forest-site .resource-list .forest-object { width:140px; height:140px; max-width:100%; }
+ .forest-site .resource-list strong { font-size:.9rem; }
+ .forest-site .resource-list a>span>span { font-size:.78rem; }
+ .forest-site .teacher-directory>.resource-list { grid-template-columns:1fr; }
+ .forest-site .teacher-directory>.resource-list a { flex-direction:row; text-align:left; gap:12px; min-height:150px; }
+ .forest-site .teacher-directory>.resource-list .forest-object { width:130px; height:130px; }
+ .forest-site .teacher-directory>.resource-list a::before { width:140px; }
+ .forest-site .admin-heading { min-height:130px; }
+ .forest-site .admin-heading .forest-object { display:none; }
+ .forest-site .admin-shell .card { padding:22px 18px; }
+ .forest-site .material-illustration { width:90px; height:90px; }
+}

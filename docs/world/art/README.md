@@ -8,6 +8,7 @@
 | --- | --- |
 | 六位居民的造型、表情與動作原稿 | [角色圖鑑](../characters.md)；實體檔案按人物放在 `characters/<角色英文識別名>/` |
 | 工坊背景、物件及整張素材表 | 下方按類別列出的 `workshop/` 原稿 |
+| 網站首頁、活動入口與教師工作室 | [網站原稿與產製規格](site/manifest.json)；介面分工見 [網站設計](../../project/site-design.md) |
 | 尺寸、格位、錨點、留白、產圖提示與生成紀錄 | [製作清單](#製作清單與重建)，不在多個 MD 重複抄寫規格 |
 | 實際載入的 WebP | [工坊 display](../../../assets/images/magic-workshop/display/)；程式使用原 URL，未複製第二份共用素材 |
 | 星燈小徑的場景與道具 | [案件素材](../../../assets/images/detective/starlight/)；目前專案只有十張 WebP，未找到對應高解析原稿或產圖 manifest，不能稱為母圖 |

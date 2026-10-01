@@ -20,7 +20,7 @@ it('檔名作純文字呈現並編碼下載路徑，排除資料夾及 gitkeep',
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response([{ ...file, name }, { type: 'dir' }, { type: 'file', name: '.gitkeep' }])));
   render(<ThemeProvider><Downloads /></ThemeProvider>);
   expect(await screen.findByText(name)).toBeTruthy();
-  expect(document.querySelector('img')).toBeNull();
+  expect(document.querySelector('.material-list img')).toBeNull();
   expect(screen.getByRole('link', { name: `下載 ${name}` }).getAttribute('href')).toContain(encodeURIComponent(name));
   expect(screen.getByText('2.0 KB')).toBeTruthy();
 });

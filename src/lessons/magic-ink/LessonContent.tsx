@@ -435,5 +435,5 @@ export function LessonContent() { return (<div className="wrap">
 </div>
 </div>
 <footer >
-<img src={import.meta.env.BASE_URL + "assets/images/magic-ink/logo-wall.webp"} alt="超知識 logo 牆" loading="lazy" width={859} height={532} />{"\n        超知識 SUPER SCIENCE KNOWLEDGE · 1143L1 神奇的墨水！原子筆的科學"}<br  />{"\n        40 分鐘課程懶人包 · 大耳狗教學網 · By Anita 老師\n    "}</footer>
+<img src={import.meta.env.BASE_URL + "assets/images/magic-ink/logo-wall.webp"} alt="超知識 logo 牆" loading="lazy" width={859} height={532} />{"\n        超知識 SUPER SCIENCE KNOWLEDGE · 1143L1 神奇的墨水！原子筆的科學"}<br  />{"\n        40 分鐘課程懶人包 · 暮光森林學習驛站 · By Anita 老師\n    "}</footer>
 </div>); }

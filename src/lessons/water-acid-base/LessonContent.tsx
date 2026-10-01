@@ -1,10 +1,12 @@
 import { Beaker, Question, useLab } from './interactions';
+import { ForestArt } from '../../components/ForestArt';
 export function LessonContent() { const lab = useLab(); return <><div className="slide-container title-slide" id="slide1">
 <div className="deco-bubble" style={{"width":"60px","height":"60px","top":"15%","left":"10%"}}></div>
 <div className="deco-bubble" style={{"width":"40px","height":"40px","bottom":"20%","right":"12%"}}></div>
 <div className="deco-bubble" style={{"width":"25px","height":"25px","top":"50%","right":"8%"}}></div>
 <div className="title-layout">
-<div className="academic-badge">{"🧪 微觀化學與酸鹼平衡 🧪"}</div>
+<ForestArt name="science" className="lesson-title-art" />
+<div className="academic-badge">微觀化學與酸鹼平衡</div>
 <h1 >{"水與酸鹼的微觀奧秘"}</h1>
 <p className="subtitle">{"用簡單直覺的視角，探索液體中的離子行為與 pH/pOH 的平衡美學"}</p>
 </div>

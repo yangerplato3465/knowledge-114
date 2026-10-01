@@ -6,4 +6,7 @@ import '../assets/css/theme.css';
 import { MagicInk } from './lessons/magic-ink/MagicInk';
 import './styles/ui.css';
 
+import './styles/forest.css';
+import './styles/forest-pages.css';
+
 createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><ThemeProvider><MagicInk /></ThemeProvider></ErrorBoundary></StrictMode>);

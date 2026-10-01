@@ -177,3 +177,28 @@
 @media (max-width: 600px) {
     .theme-toggle { right: 14px; bottom: 14px; width: 42px; height: 42px; font-size: 17px; }
 }
+
+/* 暮光森林網站色票：只套用網站／教師工具，不改變遊戲內的主題。 */
+body.forest-site {
+ --bg:#f0edf7; --surface:#fffcff; --surface-2:#e9e3f3; --surface-3:#dcd3ec;
+ --ink:#302943; --ink-soft:#534560; --muted:#695e78; --muted-2:#776a88;
+ --primary:#79609f; --primary-strong:#64428c; --primary-tint:#ded1f0; --on-primary:#fff9f1;
+ --border:#d9cfe7; --border-strong:#927aaa; --accent:#347d80; --forest-gold:#8a632d;
+ --shadow:rgba(38,58,37,.07); --shadow-strong:rgba(38,58,37,.14); --primary-shadow:rgba(28,79,57,.16);
+}
+:root[data-theme="dark"] body.forest-site {
+ --bg:#1f1b30; --surface:#332c47; --surface-2:#403651; --surface-3:#514563;
+ --ink:#f8f0ff; --ink-soft:#d3c6e2; --muted:#c7b9d6; --muted-2:#b7a7c8;
+ --primary:#c6a3e8; --primary-strong:#ddbaee; --primary-tint:#4c3863; --on-primary:#352242;
+ --border:#524460; --border-strong:#a68abd; --accent:#ddbaee; --forest-gold:#e9bb7e;
+ --shadow:rgba(0,0,0,.16); --shadow-strong:rgba(0,0,0,.28); --primary-shadow:rgba(0,0,0,.2);
+}
+@media(prefers-color-scheme:dark) {
+ :root:not([data-theme="light"]) body.forest-site {
+  --bg:#1f1b30; --surface:#332c47; --surface-2:#403651; --surface-3:#514563;
+  --ink:#f8f0ff; --ink-soft:#d3c6e2; --muted:#c7b9d6; --muted-2:#b7a7c8;
+  --primary:#c6a3e8; --primary-strong:#ddbaee; --primary-tint:#4c3863; --on-primary:#352242;
+  --border:#524460; --border-strong:#a68abd; --accent:#ddbaee; --forest-gold:#e9bb7e;
+  --shadow:rgba(0,0,0,.16); --shadow-strong:rgba(0,0,0,.28); --primary-shadow:rgba(0,0,0,.2);
+ }
+}

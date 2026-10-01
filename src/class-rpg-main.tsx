@@ -7,4 +7,7 @@ import '../assets/css/class-rpg.css';
 
 import './styles/ui.css';
 
+import './styles/forest.css';
+import './styles/forest-pages.css';
+
 createRoot(document.getElementById('root')!).render(<ErrorBoundary><ThemeProvider><ClassRpgAdmin /></ThemeProvider></ErrorBoundary>);

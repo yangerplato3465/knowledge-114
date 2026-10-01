@@ -1,0 +1,181 @@
+{
+  "generator": "Built-in image_gen",
+  "purpose": "暮光森林學習驛站：網站首頁、活動入口、素材庫及教師工具；不替換遊戲美術。",
+  "styleReference": "../workshop/backgrounds/workbench-twilight-v1.png",
+  "styleMaster": "forest-arrival-v3.png",
+  "preparation": "scripts/prepare-site-art.py",
+  "runtimeDirectory": "assets/images/site",
+  "assets": [
+    {
+      "source": "forest-arrival-v3.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "anchor": [
+        768,
+        512
+      ],
+      "safePadding": 80,
+      "background": "opaque",
+      "usage": "現役背景：紫色暮光、星燈、月弧與微光小徑；不遮擋左側文字。",
+      "initialPrompt": "Create an extremely restrained Twilight Forest website background using this workshop reference ONLY for palette and painterly materials. 1536x1024 opaque 1frame anchor768,512 safe80 for distinctive objects. NO interior, NO castle, NO furniture, NO lanterns, NO props, NO characters. Calm lavender twilight sky occupying upper80percent, broad soft watercolor gradient lavender ivory at top into muted violet and peach near low horizon. Just a few VERY distant simplified indigo tree silhouettes along BOTTOM EDGE and one broad curved lilac clearing below, no detailed leaves, no dense branches, no focal building. Delicate warm amber dusk glow near lower right horizon. Empty atmospheric canvas for foreground purple/teal interactive illustrations. Palette pale lavender #eee8f7, muted plum #635080, twilight indigo #46466b, hint muted teal #739e9c, small amber #c89b63. Low contrast scenery. Edge-to-edge coherent space, matte painterly storybook, not photoreal, not green/beige minimalism. No stars or sparkles, no text or UI, no framing.",
+      "prompt": "Edit this calm lavender twilight clearing to add just THREE subtle original storybook magic cues while keeping simplicity and generous empty space. Keep 1536x1024 opaque1frame. A fine softly glowing turquoise path curves only across the LOWEST20percent of frame; THREE small floating warm amber star lanterns sit along far right x1250..1420,y500..820 like lights guiding travelers, distinctive objects fully within80pixel margins; a very faint broad crescent-shaped veil of lavender magic in upper RIGHT sky. Important: no busy fireflies, no dense stars, no sparkles behind left text area, no new buildings, no frames/UI. Reduce sky cloud detail by half especially left60percent, shift left into near-uniform pale lavender mist. Stars gently luminous not glaring white. Fantasy atmosphere from deliberate impossible floating lamps and turquoise path, not overwhelming detail. Lower edge organically fades into pale lilac mist, left and top edges also pale lavender matching #f0edf7. Right magic objects should be recognizable yet low contrast backdrop, foreground website objects will remain much higher contrast."
+    },
+    {
+      "source": "portal-objects-source-v2.png",
+      "normalizedMaster": "portal-objects-v2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "grid": [
+        3,
+        2
+      ],
+      "frameSize": [
+        512,
+        512
+      ],
+      "frameOrder": [
+        "science",
+        "adventure",
+        "lantern",
+        "library",
+        "ledger",
+        "key"
+      ],
+      "anchor": [
+        256,
+        256
+      ],
+      "safePadding": 64,
+      "background": "transparent RGBA",
+      "normalization": "原始六格完整輪廓至少保有 12px 邊距，但未達 64px；每格完整縮為 384px 並置中於 512px，統一增加真正 alpha=0 的 64px 空邊，不裁切輪廓。原稿透明區 RGB 帶背景色，檢視須以 alpha 合成；六個執行圖逐格檢查。",
+      "prompt": "Edit the first six-object transparent sheet to match the second Twilight Forest workshop palette. Preserve all six identities, cell positions and complete silhouettes. EXACT1536x1024 RGBA;3columns2rows;512cells; anchor256,256; full objects inside x64..448,y64..448 local; outer64 fully transparent. Keep consistent scale. Simplify excessive filigree, flowers and tiny decorations by half. MAIN hues warm plum purple and twilight indigo for book covers, ribbon and inkpot; secondary sea-glass teal potion and glass; antique honey brass limited small accents. Softer matte painterly finish, warm amber upper-left lighting, purple shaded forms. Top row science flask+lens, adventure closed book+potion, star lantern+map; bottom books+scroll, open ledger+quill, key+envelope. No exterior glitter/glow/no added backdrop/no text/no borders. Clear charming original storybook props, not jeweled luxury icons. Transparent sheet intended as large clickable web objects."
+    },
+    {
+      "source": "forest-arrival-v2.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "anchor": [
+        768,
+        512
+      ],
+      "safePadding": 80,
+      "background": "opaque",
+      "usage": "未採用灰綠草稿，保留來源；不產生網站執行圖。",
+      "prompt": "Edit this website background into an EXTREMELY SIMPLE quiet illustrated forest backdrop. User explicitly rejects excessive beauty/detail/objects/visual stimulation. Exact1536x1024 opaque single frame. Entire left TWO THIRDS almost empty warm ivory mist, only faint broad soft sage shapes. Right third: ONLY two simple slender muted sage tree silhouettes and ONE small distant cream woodland cottage with a subdued teal roof, tiny unlit window, complete inside x=1080..1380 y=500..760. Broad soft painterly strokes, very low contrast, generous negative space, gentle muted palette. REMOVE castle, mountains, waterfalls, flowers, pots, books, bottles, glowing lights, hanging lanterns, stars, dense leaves, branches, stepping stones and all tiny details. No foreground objects. No bright yellow or purple, no high contrast focal scenery. A quiet pale sage horizon at lower third blending seamlessly into warm ivory edges. Background supports dark foreground UI, never competes with it. Single1x1frame anchor768,512; distinctive cottage safety80px. No text, no UI panels, no border."
+    },
+    {
+      "source": "forest-arrival-v1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "anchor": [
+        768,
+        512
+      ],
+      "safePadding": 80,
+      "background": "opaque",
+      "usage": "未採用草稿，僅保留生成來源供溯源；不產生網站執行圖。",
+      "prompt": "Use case: stylized-concept. Create a production website hero environment for an original Taiwanese elementary learning website, Twilight Forest. Reference image is ONLY the painterly world/material/lighting style reference, do NOT reproduce its composition or interior. One opaque landscape frame, 1536x1024 pixels, 1x1 grid, visual anchor center. Premium richly illustrated storybook fantasy, textured painterly brushwork, rounded honey wood architecture, botanical realism, subtle magical atmosphere. A breathtaking peaceful forest learning village at lavender twilight, warm amber lit windows in a lovely small woodland book-and-potion cottage on the RIGHT HALF, curved stone path leading toward the cottage, distant lavender mountains, leafy green trees, tiny star lanterns. LEFT HALF is soft luminous quiet ivory-green mist and distant low-detail foliage, deliberately very low contrast and spacious for dark website typography later. No characters. Key cottage/tree/path features inside x=660..1440,y=130..820; minimum 80px safe area for distinctive objects; background scenery can bleed. Bottom edge transitions organically into pale warm mist, not a hard flat rectangle. Calm refined warm-ivory, deep forest teal, pale gold, muted lavender; not saturated neon, not a busy video game screenshot. No lettering, no numbers, no logos, no UI panels, no border, no watermark. Landscape must be a coherent painting, not a collage."
+    },
+    {
+      "source": "teachers-study-v1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "anchor": [
+        768,
+        512
+      ],
+      "safePadding": 100,
+      "background": "opaque",
+      "prompt": "Use case: stylized-concept. Production editorial banner illustration for Twilight Forest teacher workspace. Style reference only: match the provided cozy painterly village world, NO copied cottage composition. One opaque frame, 1536x1024 canvas, no sheet. Visual anchor center, all key objects within 100px safety margins. A beautifully detailed quiet woodland archivist's desk in a small magical treehouse library: honey oak shelving, closed teal cloth journals, a brass star lantern, a cream parchment ledger with no readable writing, feather quill and sealed envelopes, delicate green foliage through an arched window, lavender twilight and distant treetops. Place desk and main still life centrally toward RIGHT 65% of frame. LEFT area softly lit with gentle defocused wood and foliage, low detail usable for layout. Warm ivory ambient light, dark evergreen accents, tiny contained gold reflections, lilac outside. Premium illustrated storybook, warm and peaceful, not a 3D game, not flat vector. No characters, no letters, no symbols resembling readable text, no logos, no UI, no borders. Full continuous painted space. This will be used as an atmospheric crop in teacher tools and document library; keep important books, lantern and quill in center-right x=620..1280,y=280..750.",
+      "usage": "未採用草稿，僅保留生成來源供溯源；不產生網站執行圖。"
+    },
+    {
+      "source": "exploration-trails-v1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "anchor": [
+        768,
+        512
+      ],
+      "safePadding": 80,
+      "background": "opaque",
+      "prompt": "Use case: stylized-concept. A refined storybook environment illustration for the activity directory of Twilight Forest, original learning website. Match supplied reference's textured painterly light and handcrafted warm forest architecture. One opaque frame, exact 1536x1024, visual center (768,512), key scenery within x=160..1376,y=140..880. A branching woodland trail in a magical botanical garden at early twilight. Three stone paths gently lead between herbs, small turquoise glass bottles on a stump, an open weathered book on a bench, and a welcoming star lantern hung on a low tree branch. NO characters. Atmospheric layered depth, verdant fern foliage, soft golden light, pale mauve mist, gentle cream sky. Scene visually weighted on right with quieter tree shade on left. Rich but not busy, wistfully beautiful, peaceful and curious. Important objects complete, safe 80px margins, continuous painted landscape, background can bleed. No text, no sign lettering, no symbols, no frame, no UI or border, no collage. Camera at friendly eye level; natural soft edges and foreground leaves. Do not draw a grand castle or copy the cottage.",
+      "usage": "未採用草稿，僅保留生成來源供溯源；不產生網站執行圖。"
+    },
+    {
+      "source": "portal-objects-source-v1.png",
+      "normalizedMaster": "portal-objects-v1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "grid": [
+        3,
+        2
+      ],
+      "frameSize": [
+        512,
+        512
+      ],
+      "frameOrder": [
+        "science",
+        "adventure",
+        "lantern",
+        "library",
+        "ledger",
+        "key"
+      ],
+      "anchor": [
+        256,
+        256
+      ],
+      "facing": "三分之四物件視角；無角色步態",
+      "background": "transparent RGBA",
+      "safePadding": 64,
+      "maximumBounds": [
+        64,
+        64,
+        448,
+        448
+      ],
+      "normalization": "工具原始回傳有接近透明的外緣雜點，未達要求的 64px 空邊。保留完整生成來源，六格一律將完整 512px 格等比縮至 384px、置中於 512px；不依可見內容裁切。標準化母圖四邊各 64px alpha=0，執行圖為整格縮至 256px。所有可見物件在原格內，原圖及六個輸出逐格驗收。",
+      "initialPrompt": "Use case: stylized-concept. A production TRANSPARENT UI illustration sprite sheet for the Twilight Forest learning website. Match the supplied forest village reference's fine painterly storybook brushwork, honey wood, brass, cream parchment, teal green and subtle lavender. EXACT 1536x1024 canvas, 3 columns x 2 rows, six 512x512 cells. Each cell contains ONE independent full object vignette. Anchor each at local (256,280). ALL visible objects, tiny stars, contact shadows and glows must stay strictly inside local x=64..448,y=64..448. Outer 64 px fully transparent for EVERY cell. No floor, no background, no visible grid, no frames, no lettering. Consistent soft upper-left warm illumination, matte detailed materials, gently dimensional, readable at 120px. TOP LEFT: a small teal liquid glass flask beside a small brass magnifying lens and two sage leaves, science exploration. TOP MIDDLE: a closed teal magical study book with tiny brass crescent clasp, one small glass potion and contained warm star spark, learning adventures. TOP RIGHT: elegant antique brass lantern with a tiny star inside, rolled path map at base, investigation. BOTTOM LEFT: a welcoming stack of three cream and teal books with a paper scroll tied by olive ribbon, downloadable materials. BOTTOM MIDDLE: an open teacher's ledger, teal inkpot and one feather quill, no text, classroom preparation. BOTTOM RIGHT: a beautiful antique brass key laid diagonally across a sealed cream envelope, with tiny wax crescent seal, access code administration. Do not draw characters or faces. No vector flat icons, no saturated candy colors. Make all six equally sized and coherent. Each whole silhouette must be well away from cell edges, including shadows. Genuine alpha transparency.",
+      "cleanupPrompt": "Edit the provided six-object sprite sheet ONLY to correct production transparency and consistent safe padding. Keep the SAME six object identities, exact painterly style, colors, material rendering, arrangement and contents. Output exactly 1536x1024 RGBA PNG, 3 columns x2 rows, cell512x512. Uniformly reduce ALL six complete object groups to fit inside local x=80..432,y=80..432, center anchor (256,256). Do not crop or remove any part of the object silhouettes; shrink each full group uniformly by the same factor. CRITICAL: all pixels outside each object's complete silhouette, including every 64px border around every cell, must have alpha EXACTLY ZERO. Erase the hazy dark/gold/green backdrop and all nearly transparent noise, ghost shadows or speckles outside the objects. NO external glow, NO ground shadows, no detached glitter or floating sparkles. Preserve internal glass reflections and lantern light inside their silhouettes. Six clean complete standalone cutouts separated by abundant truly transparent empty space. Do not add a checkerboard, background color, text, borders or grid. There must be no pixels touching or crossing any cell boundary. This is a technical cleanup, not a new scene.",
+      "usage": "前版物件來源，現役採用 v2。"
+    }
+  ],
+  "characterReference": "../characters/milo/apprentice-v2.png",
+  "brandMark": "assets/images/site-mark.svg；網站專用月芽葉片識別，以原生 SVG 製作。"
+}
