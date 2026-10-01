@@ -1,5 +1,5 @@
 body:has(.mw-game) { padding: 0; background: #21182d; }
-.mw-game { width: 100%; min-height: 100svh; background: #21182d; }
+.mw-game { width: 100%; min-height: 100svh; background: #21182d; -webkit-tap-highlight-color: transparent; }
 .mw-topbar { height: 52px; display: flex; align-items: center; gap: 18px; padding: 0 max(16px, env(safe-area-inset-left)); color: var(--ink); background: var(--surface); font-size: 13px; }
 .mw-topbar a { text-decoration: none; white-space: nowrap; }
 .mw-topbar-title { margin-right: auto; opacity: .7; letter-spacing: .15em; }

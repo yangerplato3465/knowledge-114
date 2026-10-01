@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { bottleDimensions, workshopLayout } from './scene-layout';
+import { bottleDimensions, counterMask, counterY, workshopLayout } from './scene-layout';
 import { difficultyTitle } from './scene-model';
 
 it('難度恢復原本的魔法職階稱號', () => {
@@ -17,7 +17,7 @@ it('容量分成三種瓶身尺寸，保持玻璃瓶比例與可讀性',()=>{
   }
 });
 
-it.each([[1920,1200],[1920,1080],[2560,1080],[1024,768],[375,812],[768,1024],[844,390]])('%i × %i 操作配置填滿實際視窗，物件保留等比例', (w,h) => {
+it.each([[1920,1200],[1920,1080],[2560,1080],[1024,768],[375,625],[375,812],[768,1024],[844,390]])('%i × %i 操作配置填滿實際視窗，物件保留等比例', (w,h) => {
   const l=workshopLayout(w,h);
   expect(l.width*l.scale).toBeCloseTo(w);expect(l.height*l.scale).toBeCloseTo(h);
   if(l.portrait)expect(l.order.x+l.order.width/2).toBe(l.width-l.edge);
@@ -38,6 +38,24 @@ it.each([[1920,1200],[1920,1080],[2560,1080],[1024,768],[375,812],[768,1024],[84
   expect(l.station.springWidth).toBeGreaterThan(l.station.recyclerWidth);
   expect(l.station.right+80).toBeLessThan(l.width);
   expect(l.station.y-l.station.springHeight).toBeGreaterThan(l.order.y+132);
+  // Rendering and actor clipping must use the same cover transform, including fullscreen ratios.
+  expect(l.background.width/l.background.height).toBeCloseTo(1536/1024);
+  expect(l.background.width).toBeGreaterThanOrEqual(l.width);
+  expect(l.background.height).toBeGreaterThanOrEqual(l.height);
+  for(const [x,y] of l.tableEdge){
+    expect(counterY(l.tableEdge,x)).toBeCloseTo(y);
+  }
+  expect(l.tableY).toBeCloseTo(l.background.y+(573+(574-573)*(768-640)/(900-640))*l.background.height/1024);
+  const mask=counterMask(l.tableEdge,l.guest.laneLeft,l.width-l.edge);
+  expect(mask.slice(4,6)).toEqual([l.width-l.edge,counterY(l.tableEdge,l.width-l.edge)]);
+  expect(mask.slice(-2)).toEqual([l.guest.laneLeft,counterY(l.tableEdge,l.guest.laneLeft)]);
+  if(l.portrait){
+    for(const capacity of [2,7,14]){
+      const bottleTop=l.bottles.y-bottleDimensions(capacity,true).h;
+      expect(bottleTop-l.station.y).toBeGreaterThanOrEqual(24);
+      expect(l.station.y).toBeGreaterThan(l.tableY);
+    }
+  }
 });
 
 it('加寬時左右資訊隨邊界分開，瓶子間距跟著擴展', () => {
@@ -54,5 +72,5 @@ it('直向加高時操作列靠下，瓶子與角色依桌面重新排位', () =
   const a=workshopLayout(600,1000),b=workshopLayout(600,1400);
   expect(b.footer.y-a.footer.y).toBe(400);
   expect(b.bottles.y).toBeGreaterThan(a.bottles.y);
-  expect(b.milo.y-b.tableY).toBeCloseTo(a.milo.y-a.tableY);
+  expect(b.milo.y-counterY(b.tableEdge,b.milo.x)).toBeCloseTo(a.milo.y-counterY(a.tableEdge,a.milo.x));
 });
