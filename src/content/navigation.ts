@@ -1,19 +1,18 @@
 export interface Activity { path: string; title: string; description: string }
-export interface ActivityCategory { id: string; title: string; description: string; items: Activity[] }
+export interface ActivityCategory { id: string; title: string; starName: string; description: string; items: Activity[] }
 
 // 僅活動頁使用；首頁不載入清單或教材／遊戲模組。
 export const categories: ActivityCategory[] = [
-  { id: 'science', title: '科學小實驗', description: '從日常生活出發，一起找出背後的科學。', items: [
+  { id: 'science', title: '科學小實驗', starName: '觀察座', description: '從日常生活出發，一起找出背後的科學。', items: [
     { path: 'water-acid-base', title: '水與酸鹼的微觀奧秘', description: '探索離子行為，認識 pH 與 pOH。' },
     { path: 'magic-ink', title: '神奇的墨水！原子筆的科學', description: '觀察墨水的秘密，動手做變色實驗。' },
   ] },
-  { id: 'games', title: '互動學習', description: '讓練習變成一場冒險。', items: [
+  { id: 'games', title: '互動學習', starName: '冒險座', description: '讓練習變成一場冒險。', items: [
     { path: 'math-rpg', title: '數學勇者', description: '開放遊玩 · 五上第 1–5 單元，答題出劍、五關冒險。' },
     { path: 'magic-workshop', title: '魔法工坊', description: '量取魔力液 · 規劃補滿、倒空與互倒，完成五關委託。' },
   ] },
-  { id: 'detective', title: '偵探事件簿', description: '跟著老師進入案件，觀察線索、一起推理。', items: [
+  { id: 'detective', title: '偵探事件簿', starName: '線索座', description: '跟著老師進入案件，觀察線索、一起推理。', items: [
     { path: 'detective-golden-owl', title: '黃金貓頭鷹雕像失竊事件', description: '校園失竊案 · 密碼與邏輯推理' },
-    { path: 'detective-ai-museum', title: 'AI 展覽館的消失記憶', description: '建置中 · 觀察比對與審訊推理' },
     { path: 'detective-starlight', title: '星燈小徑燈光偏移事件', description: '暮光森林 · 重建時間、燈光與郵路' },
   ] },
 ];

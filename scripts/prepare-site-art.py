@@ -25,6 +25,10 @@ for name in ['forest-arrival']:
     if name == 'forest-arrival':
         encode(image, name + '-small', (900, 600), 80)
 
+star_atlas = Image.open(SOURCE / 'star-atlas-v1.png').convert('RGB')
+assert star_atlas.size == (1536, 1024), star_atlas.size
+encode(star_atlas, 'star-atlas', (1536, 1024), 84)
+
 sheet = Image.open(SOURCE / 'portal-objects-source-v2.png').convert('RGBA')
 assert sheet.size == (1536, 1024), sheet.size
 normalized = Image.new('RGBA', sheet.size)

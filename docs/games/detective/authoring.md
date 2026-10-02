@@ -3,7 +3,7 @@
 ## 入口與資料
 
 - 案件欄位範例：assets/js/detective/cases/golden-owl.js 檔頭。新增案件需 cases 資料、獨立 images/detective/<case>/、React entry 與 pages HTML、code.js 的 DETECTIVE_GAMES、navigation.ts 入口。
-- golden-owl 的永久 ID 是 owl；ai-museum 保持原 ID。已發碼後不可改 ID、PEPPER、PBKDF2 迭代或正規化，否則舊碼與存檔無法讀取。
+- golden-owl 的永久 ID 是 owl。已發碼後不可改現役案件 ID、PEPPER、PBKDF2 迭代或正規化，否則舊碼與存檔無法讀取。
 - 圖片以案件 script URL 建立絕對位置，不以頁面 URL 猜路徑；每案分資料夾，避免覆蓋同名圖片。
 - 載入順序固定：案件資料 → gate 驗碼 → 讀進度 → engine。session 必須含 codeId；僅 exp 不能授權。
 
@@ -20,6 +20,7 @@
 ## 設計與視覺
 
 - 畫布 960×600；場景、物品欄與對話區分層，互動熱點不得落在底部 UI 後方。
+- 兩個案件共用橫向手機版：直向時立即以 CSS 旋轉整個遊戲區，並將觸控座標反向映射回 Pixi 畫布；橫向時直接填滿可用視窗。手機收起網站頁首，遊戲畫面內保留「回線索座」入口，讓容器全螢幕時仍可離開；桌機使用頁面返回列，遊戲內不顯示浮動返回鍵。切換組別在手機浮於畫面邊緣。固定畫布縮放後的文字與觸控大小仍須用實機驗收。
 - 對話框高 70px，會縮至 12px；solvedText 預留系統附加的「新線索」一行，完整解說放 after。
 - 線索 desc 只寫一行結論；道具欄最多 12 格。任何解題資訊都要能再次點擊讀取。
 - 回饋不透露錯誤格數／類別，避免逐格試答案；密碼由多來源資訊推理，不直接截取單一數字。

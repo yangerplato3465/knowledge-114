@@ -8,7 +8,7 @@ const MiloCompanion = lazy(() => import('../components/MiloCompanion').then(modu
 export function App() {
   const base = import.meta.env.BASE_URL;
   return <div className="home-page">
-    <a className="skip-link" href="#main">跳至主要內容</a><SiteHeader home navigation />
+    <a className="skip-link" href="#main">跳至主要內容</a><SiteHeader navigation />
     <main id="main" tabIndex={-1} className="learning-home">
       <section className="home-hero" aria-labelledby="welcome-title">
         <picture className="home-landscape" aria-hidden="true">
@@ -23,7 +23,7 @@ export function App() {
         </div>
         <nav className="hero-actions" aria-label="開始學習">
           <a className="world-portal" href={base + 'pages/downloads.html'}><span className="portal-art"><img src={base + 'assets/images/site/library.webp'} alt="" width="256" height="256" /></span><span className="portal-caption"><small>翻開靈感</small><strong>素材下載 <Icon name="download" /></strong></span></a>
-          <a className="world-portal" href={base + 'pages/activities.html'}><span className="portal-art"><img src={base + 'assets/images/site/lantern.webp'} alt="" width="256" height="256" /></span><span className="portal-caption"><small>點亮好奇</small><strong>探索學習活動 <Icon name="arrow" /></strong></span></a>
+          <a className="world-portal world-portal-activities" href={base + 'pages/activities.html'}><span className="portal-art"><img src={base + 'assets/images/site/lantern.webp'} alt="" width="256" height="256" /></span><span className="portal-caption"><small>點亮好奇</small><strong>探索學習活動 <Icon name="arrow" /></strong></span></a>
         </nav>
       </section>
       <p className="home-note">慢慢想，也很好。每個發現，都能讓森林亮一點。</p>

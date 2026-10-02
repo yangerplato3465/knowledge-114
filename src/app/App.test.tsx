@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { Activities } from './Activities';
@@ -10,7 +10,7 @@ import { categories } from '../content/navigation';
 import { teacherTools } from '../content/teacherTools';
 import { version } from '../../config.json';
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); window.history.replaceState(null, '', '/'); });
 it('首頁提供兩個學生入口，老師工具只在頁尾，沒有活動或管理清單', () => {
   render(<ThemeProvider><App /></ThemeProvider>);
   const main = screen.getByRole('main');
@@ -27,18 +27,63 @@ it('版本只顯示版號，首頁不再發送版本或清單請求', () => {
   expect(screen.getByLabelText('網站版本').textContent).toBe('v' + version);
   expect(fetcher).not.toHaveBeenCalled();
 });
-it('活動頁包含獨立的魔法工坊入口，分類捷徑有對應區塊', () => {
+it('星圖按分類收納活動，星座內立即列出每個有名稱的入口', () => {
+  vi.useFakeTimers();
   render(<ThemeProvider><Activities /></ThemeProvider>);
   const main = screen.getByRole('main');
-  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'magic-workshop', 'detective-golden-owl', 'detective-ai-museum', 'detective-starlight']);
-  for (const category of categories) for (const item of category.items) {
-    expect(within(main).getByRole('link', { name: new RegExp(item.title.replace(/[！]/g, '.')) }).getAttribute('href')).toBe('/pages/' + item.path + '.html');
-    expect(readFileSync('pages/' + item.path + '.html', 'utf8')).toContain('id="root"');
-  }
-  for (const link of within(screen.getByRole('navigation', { name: '活動分類' })).getAllByRole('link')) {
-    expect(document.querySelector(link.getAttribute('href')!)).toBeTruthy();
+  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'magic-workshop', 'detective-golden-owl', 'detective-starlight']);
+  expect(within(main).getByRole('heading', { name: '星燈星圖' })).toBeTruthy();
+  expect(within(main).queryByText('魔法工坊')).toBeNull();
+  for (const category of categories) {
+    fireEvent.click(within(within(main).getByRole('group', { name: '活動星座' })).getByRole('button', { name: new RegExp(category.starName) }));
+    expect(main.querySelector('.star-sky.is-zooming.star-zoom-' + category.id)).toBeTruthy();
+    act(() => { vi.advanceTimersByTime(700); });
+    expect(window.location.hash).toBe('#' + category.id);
+    const journal = within(main).getByRole('region', { name: '活動目錄' });
+    expect(within(journal).queryAllByRole('link')).toHaveLength(0);
+    for (const item of category.items) {
+      fireEvent.click(within(journal).getByRole('button', { name: '查看' + item.title + '介紹' }));
+      expect(within(main).queryByRole('dialog')).toBeNull();
+      expect(within(main).getByRole('link', { name: '進入' + item.title }).getAttribute('href')).toBe('/pages/' + item.path + '.html');
+      expect(readFileSync('pages/' + item.path + '.html', 'utf8')).toContain('id="root"');
+    }
+    fireEvent.click(within(main).getByRole('button', { name: /返回星圖/ }));
+    expect(window.location.hash).toBe('');
   }
   expect(within(main).queryByText('上傳素材')).toBeNull();
+});
+it('活動星座可由網址直接進入，也能由瀏覽器返回星圖', () => {
+  window.history.replaceState(null, '', '/pages/activities.html#games');
+  render(<ThemeProvider><Activities /></ThemeProvider>);
+  expect(screen.getByRole('heading', { name: '冒險座' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '查看魔法工坊介紹' }));
+  expect(screen.getByRole('link', { name: '進入魔法工坊' }).getAttribute('href')).toBe('/pages/magic-workshop.html');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  window.history.replaceState(null, '', '/pages/activities.html#main');
+  fireEvent(window, new Event('hashchange'));
+  expect(screen.getByRole('heading', { name: '冒險座' })).toBeTruthy();
+  window.history.replaceState(null, '', '/pages/activities.html');
+  fireEvent.popState(window);
+  expect(screen.getByRole('heading', { name: '星燈星圖' })).toBeTruthy();
+});
+it('點選活動後將原有入口捲入視野並移動鍵盤焦點', () => {
+  window.history.replaceState(null, '', '/pages/activities.html#detective');
+  let frame!: FrameRequestCallback;
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => { frame = callback; return 1; });
+  const scroll = vi.fn();
+  Object.defineProperty(Element.prototype, 'scrollIntoView', { configurable: true, value: scroll });
+  try {
+    render(<ThemeProvider><Activities /></ThemeProvider>);
+    fireEvent.click(screen.getByRole('button', { name: '查看星燈小徑燈光偏移事件介紹' }));
+    act(() => frame(0));
+    const entrance = screen.getByRole('link', { name: '進入星燈小徑燈光偏移事件' });
+    expect(scroll).toHaveBeenCalledWith(expect.objectContaining({ block: 'center' }));
+    expect(document.activeElement).toBe(entrance);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  } finally {
+    Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
+    vi.restoreAllMocks();
+  }
 });
 it('老師工具集中三個受權限保護的入口', () => {
   render(<ThemeProvider><TeacherTools /></ThemeProvider>);

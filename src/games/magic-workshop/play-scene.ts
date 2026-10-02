@@ -455,7 +455,17 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       if(model.codeOpen)drawCode();
       if(pendingDelivery||orderEntrance.active||guestEntering())controls=controls.map(c=>({...c,disabled:c.id!=='home'}));
       if(orderNode){foreground.addChild(orderNode);poseOrder();}
-      if(model.fullscreen){illustration('exit-fullscreen',W-54,48,60,60);addControl('fullscreen','退出全螢幕',W-54,48,76,76);}
+      if(model.fullscreen) illustration('exit-fullscreen',W-54,48,60,60);
+      else {
+        const icon=group(W-54,48);
+        illustration('wood',0,0,60,60,icon,true);
+        const corners=graphic(icon);
+        for(const sx of [-1,1]) for(const sy of [-1,1]) {
+          corners.moveTo(sx*8,sy*19).lineTo(sx*19,sy*19).lineTo(sx*19,sy*8);
+        }
+        corners.stroke({color:C.paper,width:3});
+      }
+      addControl('fullscreen',model.fullscreen?'退出全螢幕':'全螢幕',W-54,48,76,76);
       drawGuest();highlight();hooks.controls(controls);app.render();
     };
     const cancel = () => {

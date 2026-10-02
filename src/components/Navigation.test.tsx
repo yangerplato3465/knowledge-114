@@ -8,11 +8,12 @@ import { ThemeProvider } from '../features/theme/ThemeProvider';
 afterEach(cleanup);
 
 test('直接開啟教材仍有固定的活動上層，網站名稱另連首頁', () => {
-  render(<ThemeProvider><PageLayout activityTitle="數學勇者"><h1>數學勇者</h1></PageLayout></ThemeProvider>);
+  render(<ThemeProvider><PageLayout activityTitle="數學勇者" activityCategory="games"><h1>數學勇者</h1></PageLayout></ThemeProvider>);
   const trail = screen.getByRole('navigation', { name: '目前位置' });
-  expect(within(trail).getByRole('link', { name: '回學習活動' }).getAttribute('href')).toBe('/pages/activities.html');
+  expect(within(trail).getByRole('link', { name: '← 回冒險座' }).getAttribute('href')).toBe('/pages/activities.html#games');
   expect(within(trail).getByText('數學勇者').getAttribute('aria-current')).toBe('page');
   expect(screen.getByRole('link', { name: /暮光森林/ }).getAttribute('href')).toBe('/index.html');
+  expect(within(screen.getByRole('navigation', { name: '主要導覽' })).getByRole('link', { name: '學習活動' }).getAttribute('aria-current')).toBe('page');
 });
 
 test.each(['upload', 'class-rpg', 'detective-admin'] as const)('老師工具 %s 可切換同層工具、回總覽及學生首頁', current => {

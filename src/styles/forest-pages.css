@@ -67,8 +67,9 @@ button:disabled { cursor:not-allowed; opacity:.6; }
 .forest-site .admin-shell .code-row { border:0; padding:20px; background:var(--surface-2); }
 .forest-site .admin-shell :is(label,.hint,.code-info,.fresh-meta) { font-size:.9rem; }
 .forest-site .admin-shell .code-val { font-family:ui-monospace,monospace; font-size:1.25rem; }
-.forest-site .activity-trail { max-width:1160px; margin:8px auto 24px; }
+.forest-site .activity-trail { max-width:var(--activity-frame-width); margin:8px auto 24px; }
 .forest-site :is(.water-lesson,.magic-ink-lesson) { border-color:transparent; box-shadow:0 5px 25px var(--shadow); }
+.forest-site .magic-ink-lesson { box-shadow:none; }
 .forest-site .lesson-nav { border:0; background:var(--surface); box-shadow:0 3px 14px var(--shadow); }
 .forest-site .lesson-nav a { border-radius:8px; }
 .forest-site .water-lesson .slide-container { background:var(--surface); border:0; border-radius:18px; }

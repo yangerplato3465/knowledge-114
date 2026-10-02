@@ -32,6 +32,7 @@ const app = new Application();
 await app.init({
     resizeTo: container,
     background: getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#f0e6df',
+    backgroundAlpha: 0,
     antialias: true,
     resolution: window.devicePixelRatio || 1,
     autoDensity: true,
@@ -61,6 +62,20 @@ await Promise.all([
 ]);
 document.getElementById('gameLoading')?.remove();
 container.appendChild(app.canvas);
+
+// 直向手機以 CSS 將整個遊戲橫放；Pixi 預設只看軸向外框，觸控座標需反向旋回畫布。
+const portraitLandscape = () => window.matchMedia('(max-width: 900px) and (orientation: portrait)').matches;
+const events = app.renderer.events;
+const mapPositionToPoint = events.mapPositionToPoint.bind(events);
+events.mapPositionToPoint = (point, clientX, clientY) => {
+    if (!portraitLandscape()) {
+        mapPositionToPoint(point, clientX, clientY);
+        return;
+    }
+    const rect = app.canvas.getBoundingClientRect();
+    point.x = (clientY - rect.top) * (app.canvas.width / app.canvas.clientWidth) / events.resolution;
+    point.y = (rect.right - clientX) * (app.canvas.height / app.canvas.clientHeight) / events.resolution;
+};
 
 // ---- 圖層 ----
 const root = new Container();
@@ -629,6 +644,7 @@ const isFullscreen = () => (canNativeFS
     : document.body.classList.contains('fs-fallback'));
 
 const toggleFullscreen = () => {
+    if (portraitLandscape()) return; // 已由版面填滿直向視窗，避免原生全螢幕改變旋轉基準。
     if (canNativeFS) {
         if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
         else (container.requestFullscreen || container.webkitRequestFullscreen)?.call(container);
@@ -647,6 +663,7 @@ hudLayer.addChild(fsHudBtn);
 
 function syncFsUI() {
     const fs = isFullscreen();
+    fsHudBtn.visible = !portraitLandscape();
     fsHudBtn.setLabel(fs ? '✕' : '⛶');
     // 等版面重排完再叫 Pixi 重算尺寸，否則量到的還是舊的容器大小
     requestAnimationFrame(() => app.resize());
@@ -657,8 +674,10 @@ for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) {
 }
 // 備援模式下轉螢幕方向，視窗尺寸會變（原生模式 Pixi 自己會處理）
 window.addEventListener('orientationchange', () => {
-    if (!canNativeFS) requestAnimationFrame(() => app.resize());
+    syncFsUI();
 });
+window.addEventListener('resize', syncFsUI);
+syncFsUI();
 
 let dlgOpen = true, dlgUnread = false;
 
@@ -904,6 +923,9 @@ const visitedScenes = new Set();
 function renderScene(id) {
     state.scene = id;
     const scene = CASE.scenes[id];
+    // Fullscreen can be wider or taller than the 8:5 play field. Extend the current
+    // scene painting behind its transparent margins instead of exposing a flat band.
+    container.style.backgroundImage = scene.bg ? `url("${scene.bg}")` : '';
 
     sceneLayer.removeChildren();
     drawProps(scene.bg ? [{ t: 'img', src: scene.bg, x: 0, y: 0, w: W, h: H }, ...scene.props] : scene.props, sceneLayer);
@@ -2038,7 +2060,7 @@ function showAccuse() {
         return;
     }
     // ★ 門檻可以放寬：多結局的案件需要讓玩家「太早指認」真的指得下去，
-    //   否則靠誤判推進的劇情（例如 AI 展覽館的凱文假高潮）根本觸發不了。
+    //   否則靠誤判推進的劇情無法觸發。
     //   沒宣告 accuseMinClues 就維持原本的「線索收齊才准指認」。
     const need = Number.isFinite(CASE.accuseMinClues) ? CASE.accuseMinClues : CASE.clues.length;
     if (state.clues.length < need) {
@@ -2212,7 +2234,7 @@ function showEnding() {
             onClick: workshopSkin ? closePanel : () => location.reload(),
         }));
         panel.addChild(mkButton({
-            label: '回學習活動', x: box.cx + 20, y: btnY, w: 180, h: 44,
+            label: '回線索座', x: box.cx + 20, y: btnY, w: 180, h: 44,
             color: COL.mint, textColor: 0xffffff,
             onClick: () => { document.querySelector('.game-bar .back-link')?.click(); },
         }));

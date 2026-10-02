@@ -136,7 +136,7 @@ export function MathRpg() {
     return { ...current, seed: seed === current.seed ? (seed + 1) >>> 0 : seed };
   });
   const ready = isUnitReady(grade, unit);
-  return <PageLayout activityTitle="數學勇者">{session ? <Adventure key={session.seed} session={session} onLeave={() => setSession(null)} onReplay={replay} /> : <section className="mr-shell mr-setup">
+  return <PageLayout activityTitle="數學勇者" activityCategory="games">{session ? <Adventure key={session.seed} session={session} onLeave={() => setSession(null)} onReplay={replay} /> : <section className="mr-shell mr-setup">
     <div className="mr-welcome"><div className="mr-welcome-copy"><p className="page-kicker"><Spark /> 一場用知識出發的小冒險</p><h1>小小勇者，<br /><em>大大的力量。</em></h1><p className="page-lead">用答案揮出你的劍，<br />讓每一次思考，都成為前進的力量。</p><div className="mr-welcome-badges"><span>五關像素冒險</span><span>答題 × 成長 × 驚喜</span></div></div><AdventurePoster /></div>
     <Journey />
     <div className="mr-preparation"><div className="mr-preparation-heading"><span className="mr-section-number">01</span><div><p className="mr-eyebrow">READY, LITTLE HERO?</p><h2>準備好，就出發吧</h2></div><span className="mr-preparation-note">準備紙筆 · 隨時可暫停</span></div>

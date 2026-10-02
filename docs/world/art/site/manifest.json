@@ -7,6 +7,16 @@
   "runtimeDirectory": "assets/images/site",
   "assets": [
     {
+      "source": "star-atlas-v1.png",
+      "size": [1536, 1024],
+      "grid": [1, 1],
+      "anchor": [768, 512],
+      "safePadding": 80,
+      "background": "opaque",
+      "usage": "現役學習活動星圖；星點與連線勾出左側玻璃瓶及放大鏡、中央展翼書、右側持鑰貓頭鷹三個虛構星座。標籤由網頁文字提供。",
+      "prompt": "One complete 1536x1024 landscape Twilight Forest picture-book star chart. THREE LARGE IMAGINARY ASTRONOMICAL CONSTELLATIONS like recognizable Pegasus or Scorpio charts: individual luminous stars connected by thin warm-gold lines trace unmistakable silhouettes, with only faint translucent nebula shading, no painted solid props. Left x20%,y55% a bulbous alchemist flask with narrow neck and circular magnifying lens; center x50%,y55% an open adventure book with feathered wings rising from the pages; right x80%,y55% a friendly owl holding an antique key. Each motif occupies about 25% canvas width, separated by generous gaps, readable small. Quiet low magical forest silhouette in bottom 15%; deep indigo/plum sky, lavender and teal nebula wisps, secondary stars much dimmer than the three figures. Top-left sky relatively quiet for HTML heading; important constellation lines and stars within 7% safe margin. No solid rendered objects, text, labels, cards, buttons, borders or watermark."
+    },
+    {
       "source": "forest-arrival-v3.png",
       "size": [
         1536,

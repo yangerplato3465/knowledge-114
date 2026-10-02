@@ -24,7 +24,6 @@ const PBKDF2_ITERATIONS = 150000;
 //   而 id 發過碼之後就不能動了。新案的 id 直接跟檔名取一樣的，不要再留落差。
 export const DETECTIVE_GAMES = [
     { id: 'owl', prefix: 'OWL', name: '黃金貓頭鷹雕像失竊事件' },
-    { id: 'ai-museum', prefix: 'AIM', name: 'AI 展覽館的消失記憶' },
     { id: 'starlight', prefix: 'STR', name: '星燈小徑燈光偏移事件' },
 ];
 

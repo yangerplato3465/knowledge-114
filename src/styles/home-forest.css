@@ -12,6 +12,7 @@
 .world-portal { display:flex; flex-direction:column; align-items:center; min-width:0; padding:10px 4px 16px; border-radius:28px; text-align:center; text-decoration:none; }
 .portal-art { position:relative; display:block; width:min(100%,270px); height:180px; overflow:hidden; }
 .portal-art img { position:absolute; left:50%; top:-45px; width:300px; height:300px; transform:translateX(-50%); transition:transform .3s; }
+.world-portal-activities .portal-art img { top:-68px; }
 .world-portal:hover .portal-art img,.world-portal:focus-visible .portal-art img { transform:translate(-50%,-8px) rotate(-3deg); }
 .world-portal small { display:block; color:var(--ink-soft); font-size:.95rem; }
 .world-portal strong { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:52px; max-width:100%; padding:10px 18px; border-radius:999px; background:var(--primary-strong); color:var(--on-primary); font-size:1.05rem; white-space:nowrap; box-shadow:0 5px 14px var(--primary-shadow); }
@@ -29,6 +30,7 @@
  .hero-actions { gap:12px; padding-bottom:20px; }
  .portal-art { height:145px; }
  .portal-art img { width:230px; height:230px; top:-34px; }
+ .world-portal-activities .portal-art img { top:-49px; }
  .world-portal small { font-size:.85rem; }
  .world-portal strong { min-height:46px; font-size:.88rem; gap:6px; padding:9px 12px; }
  .home-note { font-size:.78rem; margin:10px 0; }
@@ -39,5 +41,6 @@
  .world-portal { flex-direction:row; gap:4px; padding:0 8px; }
  .portal-art { flex:none; width:84px; height:96px; }
  .portal-art img { width:160px; height:160px; top:-28px; }
+ .world-portal-activities .portal-art img { top:-38px; }
  .world-portal strong { font-size:.9rem; padding:8px; }
 }
