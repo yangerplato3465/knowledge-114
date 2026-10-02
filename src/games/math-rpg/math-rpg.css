@@ -2,7 +2,7 @@
   --mr-paper: #fffcf4; --mr-card: #ffffff; --mr-soft: #edf5ee; --mr-line: #d7e4d8;
   --mr-ink: #24493f; --mr-muted: #526e64; --mr-green: #28745d; --mr-green-dark: #185641;
   --mr-gold: #eac577; --mr-gold-soft: #fff2d3; --mr-red: #ae4053;
-  max-width: 1040px; margin: 12px auto 36px; color: var(--mr-ink); background: var(--mr-paper);
+  max-width: var(--activity-frame-width, 1120px); margin: 12px auto 36px; color: var(--mr-ink); background: var(--mr-paper);
   border: 1px solid var(--mr-line); border-radius: 24px; overflow: hidden;
   box-shadow: 0 12px 40px rgb(36 73 63 / 8%); font-variant-numeric: tabular-nums;
 }
@@ -111,7 +111,7 @@
 }
 
 /* Fixed play space: the question panel scrolls independently of the battlefield. */
-.mr-adventure { max-width: 1440px; }
+.mr-adventure { max-width: var(--activity-frame-width, 1120px); }
 .mr-session .mr-fullscreen-button { margin-left: auto; min-height: 44px; font-size: .78rem; padding: 8px 12px; white-space: nowrap; }
 .mr-session-score + .mr-fullscreen-button { margin-left: 0; }
 .mr-play-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); height: clamp(560px, calc(100dvh - 270px), 760px); min-height: 0; }

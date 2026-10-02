@@ -1,0 +1,118 @@
+[
+  {
+    "file": "forest-arrival.webp",
+    "size": [
+      1536,
+      1024
+    ],
+    "bytes": 54606
+  },
+  {
+    "file": "forest-arrival-small.webp",
+    "size": [
+      900,
+      600
+    ],
+    "bytes": 22072
+  },
+  {
+    "file": "star-atlas.webp",
+    "size": [
+      1536,
+      1024
+    ],
+    "bytes": 200288
+  },
+  {
+    "file": "science.webp",
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 10388,
+    "sourceBoundsAlpha8": [
+      54,
+      138,
+      467,
+      469
+    ]
+  },
+  {
+    "file": "adventure.webp",
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 12576,
+    "sourceBoundsAlpha8": [
+      36,
+      118,
+      454,
+      493
+    ]
+  },
+  {
+    "file": "lantern.webp",
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 11122,
+    "sourceBoundsAlpha8": [
+      74,
+      96,
+      458,
+      482
+    ]
+  },
+  {
+    "file": "library.webp",
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 11594,
+    "sourceBoundsAlpha8": [
+      38,
+      75,
+      474,
+      413
+    ]
+  },
+  {
+    "file": "ledger.webp",
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 11504,
+    "sourceBoundsAlpha8": [
+      45,
+      44,
+      497,
+      415
+    ]
+  },
+  {
+    "file": "key.webp",
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 10308,
+    "sourceBoundsAlpha8": [
+      69,
+      83,
+      472,
+      399
+    ]
+  },
+  {
+    "file": "milo.webp",
+    "size": [
+      320,
+      320
+    ],
+    "bytes": 18416
+  }
+]

@@ -51,10 +51,23 @@ it.each([[1920,1200],[1920,1080],[2560,1080],[1024,768],[375,625],[375,812],[768
   expect(mask.slice(-2)).toEqual([l.guest.laneLeft,counterY(l.tableEdge,l.guest.laneLeft)]);
   if(l.portrait){
     for(const capacity of [2,7,14]){
-      const bottleTop=l.bottles.y-bottleDimensions(capacity,true).h;
-      expect(bottleTop-l.station.y).toBeGreaterThanOrEqual(24);
+      const bottleTop=l.bottles.y-bottleDimensions(capacity,true,l.bottles.sizeScale).h;
+      // Each hit area extends 2 logical pixels into the 4 px gap, without overlapping.
+      expect(bottleTop-2-(l.station.y+2)).toBeGreaterThanOrEqual(-1e-8);
       expect(l.station.y).toBeGreaterThan(l.tableY);
+      expect(l.bottles.y).toBeLessThanOrEqual(l.tableFrontY-12);
     }
+  }
+});
+
+it('手機工具列壓縮高度時，兩列物件等比縮小並停在桌面內；足夠高時保留原尺寸',()=>{
+  const compact=workshopLayout(430,717),tall=workshopLayout(430,956);
+  expect(compact.bottles.sizeScale).toBeLessThan(1);
+  expect(tall.bottles.sizeScale).toBe(1);
+  expect(tall.bottles.y).toBeCloseTo(Math.max(tall.height*.76,tall.tableY+289));
+  for(const capacity of [2,7,14]){
+    const full=bottleDimensions(capacity,true),small=bottleDimensions(capacity,true,compact.bottles.sizeScale);
+    expect(small.w/small.h).toBeCloseTo(full.w/full.h);
   }
 });
 

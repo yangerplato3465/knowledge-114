@@ -21,7 +21,7 @@ beforeEach(() => {
     model = initial; activate = hooks.activate; signal = abort;
     const update = (next: SceneModel) => {
       model = next;
-      hooks.controls([{ id: 'start', label: '開始五關委託', x: 0, y: 0, w: 100, h: 50 }]);
+      hooks.controls([{ id: 'start', label: '開始五關委託', x: 0, y: 0, w: 100, h: 50 }, { id: 'fullscreen', label: next.fullscreen ? '退出全螢幕' : '全螢幕', x: 0, y: 0, w: 76, h: 76 }]);
     };
     return { update, focus: vi.fn(), activate: hooks.activate, cancel: vi.fn(), motion: vi.fn(), destroy };
   });
@@ -36,6 +36,8 @@ function command(id: string) { act(() => activate(id)); }
 
 it('載入一個場景，沒有舊的 DOM 卡片、瓶子或分頁；保留可及性操作', async () => {
   await mount();
+  expect(document.querySelector('.mw-topbar')).toBeNull();
+  expect(screen.getByRole('link', { name: '← 回冒險座' }).getAttribute('href')).toBe('/pages/activities.html#games');
   expect(document.querySelectorAll('.mw-pixi-host')).toHaveLength(1);
   expect(document.querySelector('.mw-workbench, .mw-progress, .mw-commission, .mw-home')).toBeNull();
   expect(screen.getByRole('button', { name: '開始五關委託' }).closest('.mw-accessibility')).toBeTruthy();
@@ -115,12 +117,13 @@ it('原生全螢幕失敗保留遊戲模式，過期失敗不會重新進入', a
   await act(async()=>reject(new Error('late')));expect(model.fullscreen).toBe(false);
 });
 
-it('載入途中進入全螢幕，晚到的場景仍收到出口狀態', async () => {
+it('全螢幕入口只在場景載入後出現', async () => {
   let finish!: ()=>void;
   const original=bridge.create.getMockImplementation()!;
   bridge.create.mockImplementationOnce((...args)=>new Promise(resolve=>{finish=()=>resolve(original(...args));}));
   render(<ThemeProvider><MagicWorkshop /></ThemeProvider>);
-  fireEvent.click(screen.getByRole('button',{name:'全螢幕'}));
+  expect(screen.queryByRole('button',{name:'全螢幕'})).toBeNull();
   await act(async()=>finish());
-  expect(model.fullscreen).toBe(true);
+  expect(model.fullscreen).toBe(false);
+  expect(screen.getByRole('button',{name:'全螢幕'})).toBeTruthy();
 });

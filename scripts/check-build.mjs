@@ -26,7 +26,7 @@ for (const file of await readdir(new URL('assets/images/math-rpg/', root), { rec
   assert.deepEqual(await readFile(new URL(path, root)), await readFile(new URL('dist/' + path, root)), path);
 }
 const workshop = 'assets/images/magic-workshop/';
-const displayManifest = JSON.parse(await readFile(new URL(workshop + 'display/manifest.json', root), 'utf8'));
+const displayManifest = JSON.parse(await readFile(new URL('docs/world/art/manifests/display-manifest.json', root), 'utf8'));
 for (const { file } of displayManifest.assets) {
   const path = workshop + 'display/' + file;
   assert.deepEqual(await readFile(new URL(path, root)), await readFile(new URL('dist/' + path, root)), path);

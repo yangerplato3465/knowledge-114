@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ThemeSelect } from '../../features/theme/ThemeProvider';
+import { SiteHeader } from '../../components/SiteHeader';
+import { ActivityTrail } from '../../components/ActivityTrail';
 import { gameReducer, initialGame, type GameEvent } from './session';
 import { freshSeed } from './fresh-seed';
 import { useWorkshopAudio } from './useWorkshopAudio';
@@ -128,16 +129,10 @@ export function MagicWorkshop({ sounds = {} }: { sounds?: WorkshopSoundBank }) {
     catch { if(mounted.current && generation===fullGeneration.current)setFullscreen(true); }
   };
   fullAction.current = () => { void full(); };
-  return <section className={`mw-game${fullscreen ? ' mw-immersive' : ''}`} ref={shell} aria-label="魔法工坊">
-    <header className="mw-topbar">
-      <a href={`${import.meta.env.BASE_URL}pages/activities.html`}>‹ 學習活動</a>
-      <span className="mw-topbar-title">暮光魔法工坊</span>
-      <ThemeSelect />
-      <button onClick={full}>{fullscreen ? '退出全螢幕' : '全螢幕'}</button>
-    </header>
+  return <><SiteHeader navigation current="activities" /><ActivityTrail title="魔法工坊" category="games" /><section className={`mw-game${fullscreen ? ' mw-immersive' : ''}`} ref={shell} aria-label="魔法工坊">
     <main className="mw-stage" aria-label="魔法師的工作台">
       <div ref={host} className="mw-pixi-host" />
-      {status !== 'ready' && <div className="mw-loading" role="status"><img className="mw-loading-art" alt="" src={`${import.meta.env.BASE_URL}assets/images/magic-workshop/display/ui-crystal-lit.webp`} /><p>{status === 'loading' ? '正在點亮工坊…' : '工坊暫時無法點亮，請重新開啟。'}</p>{status === 'error' && <button onClick={() => setAttempt(n => n + 1)}>重新開啟工坊</button>}{fullscreen && <button onClick={full}>退出全螢幕</button>}</div>}
+      {status !== 'ready' && <div className="mw-loading" role="status"><img className="mw-loading-art" alt="" src={`${import.meta.env.BASE_URL}assets/images/magic-workshop/display/ui-crystal-lit.webp`} /><p>{status === 'loading' ? '正在點亮工坊…' : '工坊暫時無法點亮，請重新開啟。'}</p>{status === 'error' && <button onClick={() => setAttempt(n => n + 1)}>重新開啟工坊</button>}</div>}
       {status === 'ready' && <div ref={accessibility} className="mw-accessibility" aria-label="場景操作" onKeyDown={event => {
         if (event.key === 'Escape') { scene.current?.cancel(); if (latest.current.codeOpen) activate.current('code'); else if (isSession(latest.current.game)) send({ type: 'select', index: null }); }
         if (model.codeOpen && /^\d$/.test(event.key)) { event.preventDefault(); activate.current(`key:${event.key}`); }
@@ -154,5 +149,5 @@ export function MagicWorkshop({ sounds = {} }: { sounds?: WorkshopSoundBank }) {
       </div>}
       <p className="mw-sr-only" role="status" aria-live="polite" aria-atomic="true">{sceneAnnouncement(model.game)}</p>
     </main>
-  </section>;
+  </section></>;
 }

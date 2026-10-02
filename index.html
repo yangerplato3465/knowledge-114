@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>大耳狗教學網</title>
-    <link rel="icon" type="image/webp" href="./assets/images/favicon.webp" />
-    <script>try { const mode = localStorage.getItem('knowledge114-theme'); if (mode === 'dark' || mode === 'light') document.documentElement.dataset.theme = mode; } catch {}</script>
+    <title>暮光森林學習驛站</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/images/site-mark.svg" />
+    <script>try { document.documentElement.dataset.theme = localStorage.getItem('knowledge114-theme') === 'dark' ? 'dark' : 'light'; } catch {}</script>
   </head>
-  <body>
+  <body class="forest-site">
     <div id="root"></div>
     <noscript>請啟用 JavaScript 以使用互動教學網站。</noscript>
     <script type="module" src="/src/main.tsx"></script>

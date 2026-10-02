@@ -15,7 +15,8 @@ const homeHtml = await readFile(new URL('../dist/index.html', import.meta.url), 
 const homeCssFiles = [...new Set([...homeHtml.matchAll(/href="[^"]*app-assets\/([^"/]+\.css)"/g)].map(match => match[1]))];
 const homeCss = await Promise.all(homeCssFiles.map(name => readFile(new URL(name, assets), 'utf8')));
 const cssBytes = homeCss.reduce((sum, css) => sum + Buffer.byteLength(css), 0);
-assert.ok(cssBytes <= 12_000, `首頁 CSS 超過 12 KB：${cssBytes} bytes`);
+// 全站共用的明暗開關會出現在首頁；為其保留約 1 KB 的樣式空間。
+assert.ok(cssBytes <= 13_000, `首頁 CSS 超過 13 KB：${cssBytes} bytes`);
 assert.doesNotMatch(homeCss.join('\n'), /\.(?:admin-shell|maintenance-page|game-shell|material-row|water-lesson|magic-ink-lesson|resource-list)\b/, '首頁不得載入功能頁或目錄專用樣式');
 // Shared chunk names vary with Rollup's dependency graph; inspect actual preloads.
 const shared = [...homeHtml.matchAll(/rel="modulepreload"[^>]+href="[^"]*app-assets\/([^"/]+\.js)"/g)].map(match => match[1]);

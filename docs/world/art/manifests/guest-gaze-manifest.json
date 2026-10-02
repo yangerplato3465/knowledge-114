@@ -1,0 +1,30 @@
+{
+  "generator": "Built-in image_gen, identity-preserve edits of registered front idle frames",
+  "frameSize": [1254, 1254],
+  "grid": [1, 1],
+  "background": "transparent RGBA",
+  "safePadding": 96,
+  "facing": "directly toward the player",
+  "preparation": "scripts/prepare-workshop-gaze.py",
+  "registration": "Visible bounds are measured at alpha >= 16; play-scene.ts matches each new frame to its existing 512x512 front pose by visible height, center and planted foot.",
+  "frames": [
+    {
+      "key": "rabbit",
+      "source": "guest-rabbit-front-gaze-v2.png",
+      "display": "guest-rabbit-front-gaze-v2.webp",
+      "prompt": "Identity-preserve edit of the existing front idle rabbit. Both pupils and irises look straight toward the player, centered in the eye whites with symmetrical catchlights. Preserve rabbit identity, straw flower hat, ears, peach shirt, blue overalls, leaf, glass dew jar, full silhouette, pose, painterly style and transparent padding. One complete front-facing frame; no background, crop or extra effects."
+    },
+    {
+      "key": "owl",
+      "source": "guest-owl-front-gaze-v2.png",
+      "display": "guest-owl-front-gaze-v2.webp",
+      "prompt": "Identity-preserve edit of the existing front idle owl. Center both pupils and irises behind the round glasses so he looks directly at the player, never sideways or cross-eyed. Preserve owl identity, feathers, beak, plum scarf, teal coat, glowing brass lantern, pose, painterly style and transparent padding. One complete front-facing frame; no background, crop or extra effects."
+    },
+    {
+      "key": "fox",
+      "source": "guest-fox-front-gaze-v2.png",
+      "display": "guest-fox-front-gaze-v2.webp",
+      "prompt": "Identity-preserve edit of the existing front idle fox. Both pupils and irises look directly at the player, centered and level. Preserve russet-and-cream face, ears, smile, green cape, lavender scarf, herb basket, satchel, clear flask, full tail, planted feet, pose, painterly style and transparent padding. One complete front-facing frame; no background, crop or extra effects."
+    }
+  ]
+}

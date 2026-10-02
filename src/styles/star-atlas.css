@@ -1,0 +1,123 @@
+/* The activity directory is one illustrated star chart; HTML supplies labels and controls. */
+.star-atlas { position:relative; width:100%; max-width:1240px; margin:8px auto 56px; }
+.star-atlas :is(button,a):focus-visible { outline:3px solid #f8d68b; outline-offset:4px; }
+.star-sky,.star-interior { position:relative; isolation:isolate; overflow:hidden; border:1px solid #776597; border-radius:30px; box-shadow:0 22px 55px var(--shadow-strong); }
+.star-sky { display:flex; flex-direction:column; background:#11172e; color:#fff7e8; }
+.star-chart { position:relative; min-height:700px; overflow:hidden; }
+.star-sky-art { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; pointer-events:none; }
+.star-chart::after { content:''; position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(180deg,#11172f5c,transparent 32%,#0b102363 100%); }
+.star-sky-copy { position:relative; z-index:2; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:end; gap:0 clamp(28px,4vw,60px); width:100%; padding:24px clamp(28px,4vw,54px) 26px; border-bottom:1px solid #e4cc9952; background:linear-gradient(100deg,#141a33,#222242); text-shadow:0 2px 12px #080d21; }
+.star-sky-copy .star-eyebrow { grid-column:1/-1; }
+.star-sky-copy h1 { grid-row:2/4; }
+.star-eyebrow { margin:0 0 8px; font-size:.78rem; font-weight:800; letter-spacing:.18em; }
+.star-sky h1 { color:#fff7e8; font-size:clamp(2.4rem,3.8vw,3.45rem); line-height:1.14; letter-spacing:.12em; }
+.star-sky-copy>p:not(.star-eyebrow) { grid-column:2; margin:0; font-size:clamp(1.05rem,1.5vw,1.2rem); font-weight:700; }
+.star-sky-hint { grid-column:2; display:inline-block; margin-top:7px; color:#f1dfc5; font-size:.9rem; }
+.star-choices { position:absolute; z-index:2; inset:7% 3% 10%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:2%; }
+.star-choice { position:relative; width:100%; min-height:0; padding:0; border:0; border-radius:44% 44% 22px 22px; background:transparent; color:#fff7e8; text-align:center; text-shadow:0 2px 9px #080d21; }
+.star-choice::before { content:''; position:absolute; inset:2% 1% 14%; border:1px solid #ffe3a100; border-radius:50%; background:radial-gradient(ellipse,#ffe6ad33,transparent 68%); opacity:0; transition:opacity .25s,border-color .25s; }
+.star-choice:is(:hover,:focus-visible)::before { opacity:1; border-color:#ffe3a177; }
+.star-choice-caption { position:absolute; left:0; right:0; bottom:0; display:flex; flex-direction:column; align-items:center; padding:14px 8px 6px; background:radial-gradient(ellipse at 50% 52%,#11172fe9,#11172fa8 59%,transparent 77%); }
+.star-choice-name { font:800 clamp(1.25rem,2.1vw,1.8rem)/1.3 'Noto Sans TC','Microsoft JhengHei',sans-serif; letter-spacing:.12em; }
+.star-choice-subtitle { margin-top:3px; font-size:.92rem; font-weight:700; }
+.star-choice-count { display:inline-flex; align-items:center; gap:8px; min-height:30px; margin-top:7px; padding:2px 12px; border:1px solid #f6deaaae; border-radius:999px; background:#1e2543d9; color:#fff4dc; font-size:.73rem; font-weight:800; }
+.star-mobile-nav { display:none; }
+.star-sky-foot { position:relative; z-index:2; padding:10px 16px 12px; border-top:1px solid #e4cc9938; color:#f8e9cf; font-size:.73rem; font-weight:700; letter-spacing:.1em; text-align:center; text-shadow:0 2px 7px #080d21; }
+
+.star-sky.is-zooming { pointer-events:none; }
+.star-sky.is-zooming .star-chart { transform-origin:var(--zoom-x, 50%) 50%; animation:star-chart-zoom .7s cubic-bezier(.18,.68,.25,1) both; }
+.star-zoom-science { --zoom-x:18%; --zoom-shift:8%; }
+.star-zoom-games { --zoom-x:50%; --zoom-shift:0%; }
+.star-zoom-detective { --zoom-x:82%; --zoom-shift:-8%; }
+.star-sky.is-zooming :is(.star-sky-copy,.star-sky-foot,.star-choice-caption) { animation:star-copy-dissolve .35s ease-in both; }
+@keyframes star-chart-zoom { 0% { transform:translateX(0) scale(1); filter:blur(0); } 75% { opacity:1; } 100% { transform:translateX(var(--zoom-shift, 0%)) scale(2.2); filter:blur(6px); opacity:.35; } }
+@keyframes star-copy-dissolve { to { opacity:0; } }
+
+.star-interior { min-height:690px; padding:clamp(24px,3.5vw,44px); background:linear-gradient(180deg,#11182de0,#182039e8),url('../../assets/images/site/star-atlas.webp') center / cover no-repeat; color:#fff7e8; }
+.star-interior-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.star-back { min-height:44px; padding:7px 16px; border:1px solid #dbb976; border-radius:999px; background:#17203be8; color:#fff4d8; font-weight:800; }
+.star-back:hover { background:#333250; }
+.star-interior-marker { font-size:.82rem; font-weight:700; color:#e8d7f2; }
+.star-interior-title { margin:24px 0 20px; text-shadow:0 2px 8px #080d21; }
+.star-interior-title h1 { color:#fff7e8; font-size:clamp(2.35rem,4vw,3.8rem); line-height:1.2; }
+.star-interior-title>p:last-child { margin:6px 0 0; font-weight:600; }
+.star-interior-body { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:clamp(18px,3vw,36px); align-items:stretch; }
+.star-observation { display:flex; min-width:0; min-height:500px; padding:0; overflow:hidden; border:1px solid #f8e2af9c; border-radius:28px; background-image:linear-gradient(180deg,#0a122563 0%,#0d1835a3 100%),url('../../assets/images/site/star-atlas.webp'); background-repeat:no-repeat; background-size:auto 135%; }
+.star-observation-science { background-position:left center; }
+.star-observation-games { background-position:center; }
+.star-observation-detective { background-position:right center; }
+.star-feature { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; width:100%; min-height:500px; padding:215px clamp(20px,2.2vw,34px) 34px; border-radius:inherit; background:linear-gradient(180deg,#11172f03 0%,#11172f35 32%,var(--surface) 57%,var(--surface-2) 100%); color:var(--ink); text-align:center; }
+.star-feature::before { content:''; position:absolute; top:38px; left:50%; width:200px; height:200px; transform:translateX(-50%); border-radius:50%; background:radial-gradient(circle,#f8dc9d38,transparent 70%); pointer-events:none; }
+.star-feature-art { position:absolute; top:70px; left:50%; width:150px; height:150px; transform:translateX(-50%); }
+.star-feature-art .forest-object { width:150px; height:150px; filter:drop-shadow(0 8px 7px #090d244d); }
+.star-feature-kicker { font-size:.72rem; font-weight:800; letter-spacing:.13em; color:var(--primary-strong); }
+.star-feature h2 { margin:5px 0 6px; font-size:clamp(1.25rem,2vw,1.55rem); line-height:1.45; }
+.star-feature p { margin:0 auto 18px; max-width:25em; color:var(--ink-soft); font-size:.89rem; line-height:1.7; }
+.star-enter { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:46px; max-width:100%; padding:10px 22px; border-radius:999px; background:var(--primary-strong); color:var(--on-primary); font-weight:800; text-decoration:none; box-shadow:0 5px 12px var(--shadow-strong); }
+.star-enter:hover { transform:translateY(-2px); filter:brightness(.9); }
+.star-journal { position:relative; min-width:0; padding:clamp(24px,2.7vw,38px); border:1px solid #d5b879; border-radius:26px; background:linear-gradient(145deg,var(--surface),var(--surface-2)); box-shadow:inset 0 0 0 5px var(--surface),inset 0 0 0 6px var(--border-strong),0 18px 34px #080d215c; color:var(--ink); }
+.star-journal::before { content:'✦'; position:absolute; top:13px; right:18px; color:var(--forest-gold); font-size:.9rem; }
+.star-journal-head { display:flex; align-items:center; gap:16px; padding:4px 4px 20px; border-bottom:1px solid var(--border-strong); }
+.star-journal-head>span:first-child { display:grid; place-items:center; flex:none; width:46px; height:46px; border:1px solid var(--border-strong); border-radius:50%; background:var(--primary-tint); color:var(--forest-gold); font-size:1.6rem; }
+.star-journal-head p { margin:0; color:var(--primary-strong); font-size:.75rem; font-weight:800; letter-spacing:.15em; }
+.star-journal-head h2 { margin:2px 0 0; font-size:1.28rem; line-height:1.4; }
+.star-journal-count { margin-left:auto; padding:5px 10px; border:1px solid var(--border); border-radius:999px; white-space:nowrap; font-size:.75rem; color:var(--ink-soft); }
+.star-search { display:block; margin:18px 0 4px; font-size:.83rem; font-weight:800; }
+.star-search input { display:block; width:100%; margin-top:6px; }
+.star-activity-list { list-style:none; margin:12px 0 0; padding:0; }
+.star-activity-list li { display:block; padding:5px 0; }
+.star-activity-list li+li { border-top:1px solid var(--border); }
+.star-activity { display:flex; align-items:center; width:100%; gap:16px; min-width:0; min-height:94px; padding:16px 18px; border:1px solid transparent; border-radius:16px; background:transparent; color:var(--ink); text-align:left; }
+.star-activity:hover,.star-activity[aria-pressed=true] { border-color:var(--border-strong); background:linear-gradient(110deg,var(--primary-tint),var(--surface)); box-shadow:inset 3px 0 var(--forest-gold); }
+.star-activity-number { display:grid; place-items:center; flex:none; width:34px; height:34px; border:1px solid var(--border-strong); border-radius:50%; color:var(--primary-strong); font:700 .75rem/1 Georgia,serif; }
+.star-activity-text { min-width:0; }
+.star-activity-text strong { display:block; font-size:1rem; line-height:1.45; }
+.star-activity-text small { display:block; margin-top:4px; color:var(--ink-soft); font-size:.78rem; line-height:1.5; }
+.star-empty { margin:28px 4px; color:var(--ink-soft); }
+.star-atlas :is(.star-feature,.star-journal) :is(button,a):focus-visible { outline-color:var(--primary-strong); }
+
+@media (max-width:850px) {
+  .star-interior-body { grid-template-columns:1fr; }
+  .star-journal { order:-1; }
+  .star-observation,.star-feature { min-height:430px; }
+}
+@media (max-width:620px) {
+  .star-atlas { margin:10px auto 36px; }
+  .star-sky,.star-interior { border-radius:22px; }
+  .star-chart { min-height:550px; }
+  .star-sky-art { inset:auto auto 0 50%; width:auto; height:100%; max-width:none; object-fit:contain; transition:transform .55s ease; }
+  .star-focus-science .star-sky-art { transform:translateX(-20%); }
+  .star-focus-games .star-sky-art { transform:translateX(-50%); }
+  .star-focus-detective .star-sky-art { transform:translateX(-80%); }
+  .star-sky-copy { display:block; padding:22px 20px 24px; }
+  .star-sky-copy>p:not(.star-eyebrow) { margin-top:8px; }
+  .star-sky h1 { font-size:clamp(2.25rem,10vw,3rem); }
+  .star-sky-copy>p:not(.star-eyebrow) { font-size:1.02rem; }
+  .star-sky-hint { font-size:.78rem; }
+  .star-choices { inset:7% 4% 15%; display:block; }
+  .star-choice { display:none; }
+  .star-choice.is-mobile-active { display:block; height:100%; }
+  .star-choice-caption { bottom:0; padding:16px 8px 12px; }
+  .star-choice-name { font-size:1.55rem; }
+  .star-mobile-nav { position:absolute; z-index:3; right:12px; bottom:12px; left:12px; display:flex; justify-content:center; gap:5px; }
+  .star-mobile-nav button { min-height:44px; flex:1; padding:6px 4px; border:1px solid #f4daa78c; border-radius:999px; background:#18203dd9; color:#fff2d5; font-size:.78rem; font-weight:800; }
+  .star-mobile-nav button[aria-pressed=true] { background:#f4daa7; color:#30243f; }
+  .star-sky-foot { display:none; }
+  .star-interior { padding:20px 14px; }
+  .star-interior-title { margin:22px 2px 18px; }
+  .star-interior-marker { font-size:.7rem; }
+  .star-journal { padding:20px 16px; }
+  .star-journal-head { gap:10px; }
+  .star-journal-head h2 { font-size:1.13rem; }
+  .star-activity { min-height:82px; gap:10px; padding:12px 10px; }
+  .star-activity-text strong { font-size:.92rem; }
+  .star-activity-text small { font-size:.74rem; }
+  .star-observation,.star-feature { min-height:430px; }
+  .star-feature { padding:188px 16px 24px; }
+  .star-feature-art { top:42px; }
+  .star-sky.is-zooming .star-chart { transform-origin:50% 50%; --zoom-shift:0%; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .star-sky.is-zooming .star-chart,.star-sky.is-zooming :is(.star-sky-copy,.star-sky-foot,.star-choice-caption) { animation:none; }
+  .star-sky-art { transition:none; }
+}

@@ -1,4 +1,4 @@
-# 大耳狗教學網
+# 暮光森林學習驛站
 
 Anita 老師的國小互動教學網站；React＋Vite＋TypeScript 多頁架構。
 
@@ -21,4 +21,4 @@ Anita 老師的國小互動教學網站；React＋Vite＋TypeScript 多頁架構
 
 ## 文件
 
-[遊戲製作必讀：世界觀與設計準則](docs/GAME_WORLD.md) · [工作指引](AGENTS.md) · [架構](docs/TECH_ARCHITECTURE.md) · [玩法](docs/GAMEPLAY.md) · [偵探製作](docs/detective-authoring.md) · [待辦](docs/TODO.md) · [本地引擎](assets/vendor/README.md)
+[專案導覽與分類](docs/README.md) · [暮光森林世界觀](docs/world/README.md) · [角色圖鑑與母圖](docs/world/characters.md) · [工作指引](AGENTS.md)

@@ -150,30 +150,50 @@
     }
 }
 
-/* ---------- 深色 / 淺色 切換鈕 ---------- */
-.theme-toggle {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    z-index: 9999;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    border: 1px solid var(--border-strong);
-    background: var(--surface);
-    color: var(--ink);
-    font-size: 19px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 14px var(--shadow);
-    transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease;
-    font-family: inherit;
+/* 暮光森林網站色票：只套用網站／教師工具，不改變遊戲內的主題。 */
+body.forest-site {
+ --bg:#f0edf7; --surface:#fffcff; --surface-2:#e9e3f3; --surface-3:#dcd3ec;
+ --ink:#302943; --ink-soft:#534560; --muted:#695e78; --muted-2:#776a88;
+ --primary:#79609f; --primary-strong:#64428c; --primary-tint:#ded1f0; --on-primary:#fff9f1;
+ --border:#d9cfe7; --border-strong:#927aaa; --accent:#347d80; --forest-gold:#8a632d;
+ --shadow:rgba(38,58,37,.07); --shadow-strong:rgba(38,58,37,.14); --primary-shadow:rgba(28,79,57,.16);
 }
-.theme-toggle:hover { transform: translateY(-2px) scale(1.05); }
-.theme-toggle:active { transform: scale(0.95); }
+:root[data-theme="dark"] body.forest-site {
+ --bg:#1f1b30; --surface:#332c47; --surface-2:#403651; --surface-3:#514563;
+ --ink:#f8f0ff; --ink-soft:#d3c6e2; --muted:#c7b9d6; --muted-2:#b7a7c8;
+ --primary:#c6a3e8; --primary-strong:#ddbaee; --primary-tint:#4c3863; --on-primary:#352242;
+ --border:#524460; --border-strong:#a68abd; --accent:#ddbaee; --forest-gold:#e9bb7e;
+ --shadow:rgba(0,0,0,.16); --shadow-strong:rgba(0,0,0,.28); --primary-shadow:rgba(0,0,0,.2);
+}
+@media(prefers-color-scheme:dark) {
+ :root:not([data-theme="light"]) body.forest-site {
+  --bg:#1f1b30; --surface:#332c47; --surface-2:#403651; --surface-3:#514563;
+  --ink:#f8f0ff; --ink-soft:#d3c6e2; --muted:#c7b9d6; --muted-2:#b7a7c8;
+  --primary:#c6a3e8; --primary-strong:#ddbaee; --primary-tint:#4c3863; --on-primary:#352242;
+  --border:#524460; --border-strong:#a68abd; --accent:#ddbaee; --forest-gold:#e9bb7e;
+  --shadow:rgba(0,0,0,.16); --shadow-strong:rgba(0,0,0,.28); --primary-shadow:rgba(0,0,0,.2);
+ }
+}
 
-@media (max-width: 600px) {
-    .theme-toggle { right: 14px; bottom: 14px; width: 42px; height: 42px; font-size: 17px; }
+/* 共用主題開關：單擊切換明暗。 */
+.theme-select {
+ --theme-control-ink:var(--ink); --theme-control-accent:var(--primary-strong);
+ --theme-control-on-accent:var(--on-primary); --theme-control-border:var(--border-strong);
+ --theme-control-surface:var(--surface); --theme-control-soft:var(--surface-2);
+ --theme-control-gold:var(--forest-gold,#9c713d);
+ display:inline-flex; align-items:center; flex-shrink:0; gap:0; min-height:48px;
+ padding:3px; border:1px solid var(--theme-control-border); border-radius:999px;
+ background:linear-gradient(145deg,var(--theme-control-surface),var(--theme-control-soft));
+ color:var(--theme-control-ink); box-shadow:0 4px 14px var(--shadow),inset 0 0 0 1px var(--theme-control-surface);
 }
+.theme-select button { display:inline-flex; align-items:center; justify-content:center; min-height:40px; border:0; background:transparent; color:inherit; cursor:pointer; font:700 .82rem/1.2 'Noto Sans TC',system-ui,sans-serif; }
+.theme-select button:hover { background:var(--theme-control-soft); }
+.theme-select button:focus-visible { outline:2px solid var(--theme-control-accent); outline-offset:2px; }
+.theme-switch-button { gap:7px; padding:0 8px 0 11px; border-radius:999px; white-space:nowrap; }
+.theme-switch-mark { color:var(--theme-control-gold); font-size:.82rem; }
+.theme-switch-label { min-width:2em; text-align:center; }
+.theme-switch-track { position:relative; display:block; flex:none; width:44px; height:24px; border:1px solid var(--theme-control-border); border-radius:999px; background:var(--theme-control-soft); color:var(--theme-control-accent); transition:background-color .2s ease; }
+.theme-switch-thumb { position:absolute; left:2px; top:2px; width:18px; height:18px; border-radius:50%; background:var(--theme-control-surface); box-shadow:0 1px 4px #1d183c40; transition:transform .2s ease; }
+.theme-select[data-dark=true] .theme-switch-track { background:var(--theme-control-accent); color:var(--theme-control-on-accent); }
+.theme-select[data-dark=true] .theme-switch-thumb { transform:translateX(20px); }
+@media(prefers-reduced-motion:reduce) { .theme-switch-track,.theme-switch-thumb { transition:none; } }

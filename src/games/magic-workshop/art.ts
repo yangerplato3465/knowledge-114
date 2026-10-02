@@ -34,3 +34,15 @@ export const GUESTS = [
   { art: 'fox', name: '菲恩', title: '草藥師' },
   { art: 'bear', name: '布諾', title: '火光修理師' },
 ] as const;
+
+/** Front-gaze edits are registered to the alpha bounds of the existing 512px idle frames. */
+interface FrontGazeSpec {
+  file: string;
+  bounds: readonly [number, number, number, number];
+  walkBounds: readonly [number, number, number, number];
+}
+export const FRONT_GAZE: Partial<Record<(typeof GUESTS)[number]['art'], FrontGazeSpec>> = {
+  rabbit: { file: 'guest-rabbit-front-gaze-v2.png', bounds: [338, 244, 933, 1085], walkBounds: [145, 124, 369, 448] },
+  owl: { file: 'guest-owl-front-gaze-v2.png', bounds: [314, 348, 904, 1100], walkBounds: [129, 144, 367, 448] },
+  fox: { file: 'guest-fox-front-gaze-v2.png', bounds: [237, 196, 891, 1116], walkBounds: [107, 117, 341, 448] },
+};

@@ -1,0 +1,139 @@
+/* Website entrance chrome around games. Game scenes keep their own palette. */
+body.forest-game-page {
+  --frame-bg:#f0edf7; --frame-surface:#fffcff; --frame-soft:#e9e3f3;
+  --frame-ink:#302943; --frame-muted:#534560; --frame-primary:#64428c;
+  --frame-on-primary:#fff9f1; --frame-border:#d9cfe7; --frame-border-strong:#927aaa;
+  --frame-gold:#8a632d; --frame-shadow:rgba(38,58,37,.1);
+  background:var(--frame-bg); color:var(--frame-ink);
+}
+/* The detective renderer reads --bg while its scene artwork is loading. */
+body.forest-game-page.detective-frame { --bg:var(--frame-soft); }
+:root[data-theme=dark] body.forest-game-page {
+  --frame-bg:#1f1b30; --frame-surface:#332c47; --frame-soft:#403651;
+  --frame-ink:#f8f0ff; --frame-muted:#d3c6e2; --frame-primary:#ddbaee;
+  --frame-on-primary:#352242; --frame-border:#524460; --frame-border-strong:#a68abd;
+  --frame-gold:#e9bb7e; --frame-shadow:rgba(0,0,0,.28);
+}
+@media(prefers-color-scheme:dark) {
+  :root:not([data-theme=light]) body.forest-game-page {
+    --frame-bg:#1f1b30; --frame-surface:#332c47; --frame-soft:#403651;
+    --frame-ink:#f8f0ff; --frame-muted:#d3c6e2; --frame-primary:#ddbaee;
+    --frame-on-primary:#352242; --frame-border:#524460; --frame-border-strong:#a68abd;
+    --frame-gold:#e9bb7e; --frame-shadow:rgba(0,0,0,.28);
+  }
+}
+
+.forest-game-page .site-header { max-width:1240px; min-height:108px; margin:0 auto 8px; }
+.forest-game-page:has(.game-shell) .game-shell { width:100%; max-width:var(--activity-frame-width); min-height:0; height:auto; margin-inline:auto; gap:16px; overflow:visible; }
+.forest-game-page.fs-fallback .site-header { display:none; }
+.forest-game-page .site-brand { color:var(--frame-ink); }
+.forest-game-page .site-brand strong { letter-spacing:.12em; }
+.forest-game-page .site-brand small { color:var(--frame-muted); }
+.forest-game-page .brand-mark { width:48px; height:48px; border:0; background:transparent; color:var(--frame-primary); }
+.forest-game-page .forest-mark { width:44px; height:44px; }
+.forest-game-page .public-nav a { border:1px solid transparent; border-radius:999px; color:var(--frame-ink); }
+.forest-game-page .public-nav .nav-download { border-color:var(--frame-border); background:var(--frame-surface); }
+.forest-game-page .public-nav a:hover { color:var(--frame-primary); background:var(--frame-soft); }
+.forest-game-page .public-nav a[aria-current=page] { color:var(--frame-primary); background:var(--frame-soft); border-color:var(--frame-border-strong); text-decoration:none; }
+.forest-game-page .activity-trail { max-width:var(--activity-frame-width); color:var(--frame-muted); }
+.forest-game-page .activity-trail a { color:var(--frame-primary); }
+.forest-game-page .game-bar.activity-trail { width:100%; max-width:var(--activity-frame-width); margin:8px 0 0; }
+.forest-game-page .game-bar.activity-trail .back-link { padding:10px 17px; border-radius:999px; background:var(--frame-soft); color:var(--frame-primary); }
+.forest-game-page .site-footer { max-width:1240px; border-color:var(--frame-border); color:var(--frame-muted); }
+.forest-game-page .site-footer a { color:var(--frame-muted); }
+
+/* The math introduction is a website entrance; the pixel poster and battle stay green. */
+.forest-game-page .mr-setup,
+:root[data-theme=dark] .forest-game-page .mr-setup {
+  --mr-paper:var(--frame-surface); --mr-card:var(--frame-surface);
+  --mr-soft:var(--frame-soft); --mr-line:var(--frame-border);
+  --mr-ink:var(--frame-ink); --mr-muted:var(--frame-muted);
+  --mr-green:var(--frame-primary); --mr-green-dark:var(--frame-primary);
+}
+@media(prefers-color-scheme:dark) {
+  :root:not([data-theme=light]) .forest-game-page .mr-setup {
+    --mr-paper:var(--frame-surface); --mr-card:var(--frame-surface);
+    --mr-soft:var(--frame-soft); --mr-line:var(--frame-border);
+    --mr-ink:var(--frame-ink); --mr-muted:var(--frame-muted);
+    --mr-green:var(--frame-primary); --mr-green-dark:var(--frame-primary);
+  }
+}
+
+.forest-game-page .theme-select {
+  --theme-control-ink:var(--frame-ink); --theme-control-accent:var(--frame-primary);
+  --theme-control-on-accent:var(--frame-on-primary); --theme-control-border:var(--frame-border-strong);
+  --theme-control-surface:var(--frame-surface); --theme-control-soft:var(--frame-soft);
+  --theme-control-gold:var(--frame-gold);
+}
+
+.forest-game-page .game-shell:not(.detective-starlight) .game-bar { border-color:var(--frame-border); background:var(--frame-surface); box-shadow:0 5px 18px var(--frame-shadow); }
+.forest-game-page .game-shell:not(.detective-starlight) .game-bar h1 { color:var(--frame-ink); }
+.forest-game-page .game-shell:not(.detective-starlight) .back-link { padding:8px 14px; border-radius:999px; background:var(--frame-soft); color:var(--frame-primary); }
+.forest-game-page .game-shell:not(.detective-starlight) .back-link:hover { background:var(--frame-surface); text-decoration:underline; }
+.forest-game-page .game-shell:not(.detective-starlight) .group-tag:not(.offline) { border-color:var(--frame-border-strong); background:var(--frame-surface); color:var(--frame-primary); }
+.forest-game-page .game-shell:not(.detective-starlight) .group-tag:not(.offline):hover { background:var(--frame-soft); color:var(--frame-primary); }
+.forest-game-page .game-shell:not(.detective-starlight) .group-menu:not([hidden]) { border-color:var(--frame-border-strong); background:var(--frame-surface); }
+.forest-game-page .game-shell #gameContainer {
+  flex:none; width:100%; height:auto; min-height:0; aspect-ratio:8 / 5;
+  border:1px solid var(--frame-border); border-radius:24px;
+  background-color:var(--frame-soft); background-position:center; background-size:cover; background-repeat:no-repeat;
+  box-shadow:0 10px 32px var(--frame-shadow); overflow:hidden;
+}
+.forest-game-page .game-shell #gameContainer::before { content:""; position:absolute; inset:-18px; z-index:0; background:inherit; background-size:cover; filter:blur(14px) brightness(.75); pointer-events:none; }
+.forest-game-page .game-shell #gameContainer canvas { position:relative; z-index:1; }
+.forest-game-page .game-shell #gameContainer .game-canvas-back {
+  display:none; position:absolute; top:12px; left:12px; z-index:20;
+  align-items:center; justify-content:center; min-height:44px; padding:8px 16px;
+  border:1px solid #e7c990; border-radius:999px;
+  background:rgba(30,25,50,.88); color:#fff9eb; box-shadow:0 6px 18px rgba(12,10,25,.32);
+  font-size:14px; font-weight:700; text-decoration:none; white-space:nowrap;
+}
+.forest-game-page .game-shell #gameContainer .game-canvas-back:focus-visible { outline:3px solid #fff9eb; outline-offset:3px; }
+.forest-game-page .game-shell.detective-starlight #gameContainer { border:1px solid var(--frame-border); border-radius:24px; box-shadow:0 10px 32px var(--frame-shadow); }
+@media (orientation:landscape) and (max-height:600px) and (max-width:1000px) {
+  body.forest-game-page.detective-frame { min-height:100dvh; padding:0; gap:0; overflow:hidden; }
+  .forest-game-page.detective-frame :is(.site-header,.site-footer) { display:none; }
+  .forest-game-page.detective-frame:has(.game-shell) .game-shell { width:100%; max-width:none; height:100dvh; margin:0; gap:0; }
+  .forest-game-page.detective-frame .game-bar.activity-trail { flex:none; width:100%; max-width:none; min-height:48px; height:48px; margin:0; padding:3px 12px; border-radius:0; box-shadow:none; }
+  .forest-game-page.detective-frame .game-bar h1 { display:none; }
+  .forest-game-page.detective-frame .game-shell #gameContainer { flex:1; width:100%; height:calc(100dvh - 48px); aspect-ratio:auto; border:0; border-radius:0; box-shadow:none; }
+}
+.forest-game-page .game-shell #gameContainer:fullscreen,
+.forest-game-page.fs-fallback .game-shell #gameContainer { width:100vw; height:100dvh; min-height:0; aspect-ratio:auto; border:0; border-radius:0; box-shadow:none; }
+@media (max-width:900px) and (orientation:portrait) {
+  body.forest-game-page.detective-frame { min-height:100dvh; padding:0; gap:0; overflow:hidden; }
+  .forest-game-page.detective-frame :is(.site-header,.site-footer) { display:none; }
+  .forest-game-page.detective-frame:has(.game-shell) .game-shell {
+    position:fixed; top:0; left:100vw; z-index:900; width:100dvh; max-width:none; height:100vw;
+    margin:0; gap:0; transform:rotate(90deg); transform-origin:top left;
+  }
+  .forest-game-page.detective-frame .game-bar.activity-trail { flex:none; width:100%; max-width:none; min-height:48px; height:48px; margin:0; padding:3px 12px; border-radius:0; box-shadow:none; }
+  .forest-game-page.detective-frame .game-bar h1 { display:none; }
+  .forest-game-page.detective-frame .game-shell #gameContainer { flex:1; width:100%; height:calc(100vw - 48px); aspect-ratio:auto; border:0; border-radius:0; box-shadow:none; }
+}
+@media (max-width:900px) and (orientation:portrait),
+       (orientation:landscape) and (max-height:600px) and (max-width:1000px) {
+  .forest-game-page.detective-frame .game-shell { position:relative; }
+  .forest-game-page.detective-frame .game-shell .game-bar.activity-trail {
+    position:absolute; top:12px; right:12px; left:auto; z-index:30;
+    display:block; width:auto; min-height:0; height:auto; margin:0; padding:0;
+    border:0; background:transparent; box-shadow:none; pointer-events:none;
+  }
+  .forest-game-page.detective-frame .game-shell .game-bar h1 { display:none; }
+  .forest-game-page.detective-frame .game-shell .game-bar .back-link { pointer-events:auto; }
+  .forest-game-page.detective-frame .game-shell .game-bar .group-switch:not([hidden]) { display:inline-block; margin:0; pointer-events:auto; }
+  .forest-game-page.detective-frame .game-shell #gameContainer { flex:1; height:100%; }
+}
+@media (pointer:coarse) and (max-width:600px) and (orientation:portrait),
+       (pointer:coarse) and (max-width:1000px) and (max-height:600px) and (orientation:landscape) {
+  .forest-game-page.detective-frame .game-shell .game-bar .back-link { display:none; }
+  .forest-game-page.detective-frame .game-shell #gameContainer .game-canvas-back { display:inline-flex; }
+}
+.forest-game-page .game-shell:not(.detective-starlight) .gate:not([hidden]) { background:var(--frame-bg); }
+.forest-game-page .game-shell:not(.detective-starlight) .gate-card { border-color:var(--frame-border); background:var(--frame-surface); color:var(--frame-ink); box-shadow:0 12px 36px var(--frame-shadow); }
+.forest-game-page .game-shell:not(.detective-starlight) .gate-icon { background:var(--frame-soft); color:var(--frame-primary); }
+.forest-game-page .game-shell:not(.detective-starlight) .gate-btn { background:var(--frame-primary); color:var(--frame-on-primary); }
+@media(max-width:680px) {
+  .forest-game-page .site-header { min-height:88px; }
+  .forest-game-page .public-nav a { white-space:nowrap; }
+}

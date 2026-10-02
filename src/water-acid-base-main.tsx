@@ -6,4 +6,7 @@ import '../assets/css/theme.css';
 import { WaterAcidBase } from './lessons/water-acid-base/WaterAcidBase';
 import './styles/ui.css';
 
+import './styles/forest.css';
+import './styles/forest-pages.css';
+
 createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><ThemeProvider><WaterAcidBase /></ThemeProvider></ErrorBoundary></StrictMode>);

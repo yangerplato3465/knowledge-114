@@ -1,0 +1,46 @@
+.home-page { min-height:calc(100dvh - 28px); display:flex; flex-direction:column; }
+.learning-home { width:100%; max-width:1240px; margin:auto; flex:1; }
+.home-hero { position:relative; isolation:isolate; min-height:620px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); align-items:center; gap:clamp(24px,4vw,64px); }
+.home-landscape { position:absolute; z-index:-1; inset:-40px calc(-1 * var(--site-gutter)) -40px; pointer-events:none; mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent),linear-gradient(transparent,#000 28%,#000 70%,transparent); mask-composite:intersect; opacity:.6; }
+.home-landscape img { width:100%; height:100%; object-fit:cover; }
+.hero-copy { padding:24px 0 0; }
+.home-eyebrow { color:var(--primary-strong); font-size:.85rem; letter-spacing:.12em; }
+.forest-site .home-hero h1 { font-weight:750; font-size:clamp(2.1rem,3.6vw,3.4rem); line-height:1.4; font-family:inherit; }
+.home-hero h1 span { color:var(--primary-strong); }
+.hero-description { margin:20px 0 8px; color:var(--ink-soft); line-height:1.9; }
+.hero-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:center; gap:clamp(10px,2vw,24px); }
+.world-portal { display:flex; flex-direction:column; align-items:center; min-width:0; padding:10px 4px 16px; border-radius:28px; text-align:center; text-decoration:none; }
+.portal-art { position:relative; display:block; width:min(100%,270px); height:180px; overflow:hidden; }
+.portal-art img { position:absolute; left:50%; top:-45px; width:300px; height:300px; transform:translateX(-50%); transition:transform .3s; }
+.world-portal-activities .portal-art img { top:-68px; }
+.world-portal:hover .portal-art img,.world-portal:focus-visible .portal-art img { transform:translate(-50%,-8px) rotate(-3deg); }
+.world-portal small { display:block; color:var(--ink-soft); font-size:.95rem; }
+.world-portal strong { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:52px; max-width:100%; padding:10px 18px; border-radius:999px; background:var(--primary-strong); color:var(--on-primary); font-size:1.05rem; white-space:nowrap; box-shadow:0 5px 14px var(--primary-shadow); }
+.milo-stage-placeholder { height:202px; }
+
+.home-note { text-align:center; color:var(--ink-soft); margin:18px 0; }
+:root[data-theme=dark] .home-landscape { opacity:.14; }
+@media(prefers-color-scheme:dark) { :root:not([data-theme=light]) .home-landscape { opacity:.14; } }
+@media(max-width:760px) {
+ .home-hero { grid-template-columns:1fr; gap:0; min-height:0; }
+ .hero-copy { padding:22px 0 0; }
+ .forest-site .home-hero h1 { font-size:clamp(2rem,7vw,2.8rem); }
+ .hero-description { margin:16px 0 4px; font-size:.94rem; }
+ .milo-stage-placeholder { height:185px; }
+ .hero-actions { gap:12px; padding-bottom:20px; }
+ .portal-art { height:145px; }
+ .portal-art img { width:230px; height:230px; top:-34px; }
+ .world-portal-activities .portal-art img { top:-49px; }
+ .world-portal small { font-size:.85rem; }
+ .world-portal strong { min-height:46px; font-size:.88rem; gap:6px; padding:9px 12px; }
+ .home-note { font-size:.78rem; margin:10px 0; }
+}
+@media(max-width:380px) {
+ .forest-site .home-hero h1 { font-size:1.7rem; line-height:1.35; }
+ .hero-actions { grid-template-columns:1fr; }
+ .world-portal { flex-direction:row; gap:4px; padding:0 8px; }
+ .portal-art { flex:none; width:84px; height:96px; }
+ .portal-art img { width:160px; height:160px; top:-28px; }
+ .world-portal-activities .portal-art img { top:-38px; }
+ .world-portal strong { font-size:.9rem; padding:8px; }
+}

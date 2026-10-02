@@ -1,3 +1,4 @@
+import { ForestArt } from '../../components/ForestArt';
 import { TeacherHeader } from '../../components/TeacherHeader';
 import { Icon } from '../../components/Icon';
 import { LegacyModule } from '../../components/LegacyModule';
@@ -6,7 +7,7 @@ export function DetectiveAdmin() { return <>
     <div className="wrap admin-shell"><TeacherHeader current="detective-admin" /><div className="admin-heading"><div><p className="page-kicker"><Icon name="lock" />老師工作室</p>
 
         <h1>偵探事件簿 · 驗證碼後台</h1>
-        <p className="subtitle">管理課堂案件與限時驗證碼，讓每一組偵探準備好再出發。</p></div></div>
+        <p className="subtitle">管理課堂案件與限時驗證碼，讓每一組偵探準備好再出發。</p></div><ForestArt name="key" /></div>
 
 
         <div id="loginScreen" className="login-screen" style={{"display":"none"}}>

@@ -4,8 +4,8 @@ import { App } from './app/App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeProvider } from './features/theme/ThemeProvider';
 import '../assets/css/theme.css';
-import './styles/global.css';
+import './styles/home-forest.css';
 
-import './styles/base.css';
+import './styles/forest.css';
 
 createRoot(document.getElementById('root')!).render(<StrictMode><ErrorBoundary><ThemeProvider><App /></ThemeProvider></ErrorBoundary></StrictMode>);

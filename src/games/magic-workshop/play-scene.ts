@@ -1,4 +1,4 @@
-import { ART, GUESTS, REACTIONS, artUrl, type ArtKey } from './art';
+import { ART, FRONT_GAZE, GUESTS, REACTIONS, artUrl, type ArtKey } from './art';
 import { UI_ART, type UiArtKey } from './ui-art';
 import { createPaintLayer, placeIllustration, type PaintLayer } from './sprite-paint';
 import { bottleDimensions, counterMask, counterY, workshopLayout } from './scene-layout';
@@ -83,6 +83,11 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
         const image = await loadCharacterImage(artUrl(`guest-${guest.art}-walk-v1-${frame}.png`), signal);
         signal.throwIfAborted(); textures.set(`${guest.art}:${frame}`, P.Texture.from(image));
       })())),
+      ...Object.entries(FRONT_GAZE).map(async ([key, spec]) => {
+        if (!spec) return;
+        const image = await loadCharacterImage(artUrl(spec.file), signal);
+        signal.throwIfAborted(); textures.set(`${key}:front`, P.Texture.from(image));
+      }),
       (async () => {
         const image = await loadCharacterImage(artUrl('workbench-twilight-v1.png'), signal);
         signal.throwIfAborted(); textures.set('background', P.Texture.from(image));
@@ -103,10 +108,13 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
     const actors = world.addChild(new P.Container());
     const visitor = actors.addChild(new P.Sprite(textures.get('rabbit:5')!));
     const visitorFront = actors.addChild(new P.Sprite(textures.get('rabbit:5')!));
+    const visitorHappy = actors.addChild(new P.Sprite(textures.get('rabbitHappy')!));
     const hero = world.addChild(new P.Container());
     const visitorMask=world.addChild(new P.Graphics());actors.mask=visitorMask;
     const heroMask=world.addChild(new P.Graphics());hero.mask=heroMask;
     visitor.anchor.set(.5, 448/512); visitorFront.anchor.set(.5, 448/512);
+    // Match each reaction painting to the registered front walk frame's visible height.
+    const reactionHeight: Record<(typeof GUESTS)[number]['art'],number>={rabbit:324,deer:320,owl:304,fox:331,bear:311};
     foreground = world.addChild(new P.Container());
     glow = world.addChild(createPaintLayer(P,textures));
     effects = world.addChild(createPaintLayer(P,textures));
@@ -246,19 +254,48 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
     };
     const drawGuest = () => {
       const index=guestMotion.index, pose=guestMotion.pose();
-      visitor.visible=visitorFront.visible=index!==null;
+      visitor.visible=visitorFront.visible=visitorHappy.visible=index!==null;
       if(index===null)return;
       const key=GUESTS[index].art, size=layout.guest.scale;
       const travel=Math.max(0,Math.min(1,(pose.x-.5)/.68));
       const x=layout.guest.seatX+(layout.guest.entryX-layout.guest.seatX)*travel;
       const y=counterY(layout.tableEdge,x)+(layout.guest.y-layout.tableY)+pose.bob;
       visitor.texture=textures.get(`${key}:${pose.frame}`)!;
-      visitorFront.texture=textures.get(`${key}:5`)!;
-      [visitor,visitorFront].forEach((sprite: Sprite)=>{sprite.position.set(x,y);sprite.scale.set(size*pose.facing,size);});
-      visitorFront.scale.x=size;
-      visitor.alpha=pose.alpha*(1-pose.turnMix);visitorFront.alpha=pose.alpha*pose.turnMix;
+      visitor.position.set(x,y);visitor.scale.set(size*pose.facing,size);
+      const gaze=FRONT_GAZE[key];
+      let frontScale=size;
+      if(gaze){
+        const [left,top,right,bottom]=gaze.bounds,[walkLeft,walkTop,walkRight,walkBottom]=gaze.walkBounds;
+        const frontTexture=textures.get(`${key}:front`)!;
+        visitorFront.texture=frontTexture;
+        visitorFront.anchor.set((left+right)/2/frontTexture.width,bottom/frontTexture.height);
+        frontScale=size*(walkBottom-walkTop)/(bottom-top);
+        visitorFront.position.set(x+((walkLeft+walkRight)/2-256)*size,y);
+      }else{
+        visitorFront.texture=textures.get(`${key}:5`)!;
+        visitorFront.anchor.set(.5,448/512);
+        visitorFront.position.set(x,y);
+      }
+      visitorFront.scale.set(frontScale);
+      const happy=model.game.screen==='ready'||guestMotion.phase==='thanks';
+      const reactionKey=REACTIONS[key]!;
+      const [left,top,right,bottom]=ART[reactionKey].bounds;
+      const reactionTexture=textures.get(reactionKey)!;
+      visitorHappy.texture=reactionTexture;
+      visitorHappy.anchor.set((left+right)/2/1254,bottom/1254);
+      const reactionScale=size*reactionHeight[key]/((bottom-top)/1254*reactionTexture.height);
+      visitorHappy.scale.set(reactionScale);
+      const cheer=happy&&guestMotion.phase==='idle'&&celebration<1.1?Math.sin(celebration/1.1*Math.PI)*16:0;
+      visitorHappy.position.set(x,y-cheer);
+      visitorHappy.rotation=happy&&!reduced&&guestMotion.phase==='thanks'?Math.sin(guestMotion.elapsed/600*Math.PI*2)*.045:0;
+      visitor.alpha=pose.alpha*(1-pose.turnMix);
+      visitorFront.alpha=pose.alpha*pose.turnMix*(happy?0:1);
+      visitorHappy.alpha=pose.alpha*pose.turnMix*(happy?1:0);
       // Front-facing idle has a restrained breathing motion, with feet staying planted.
-      if(guestMotion.phase==='idle')visitor.scale.y=size*(1+Math.sin(time*1.8)*.003);
+      if(guestMotion.phase==='idle'){
+        const breath=1+Math.sin(time*1.8)*.003;
+        visitorFront.scale.y=frontScale*breath;visitorHappy.scale.y=reactionScale*breath;
+      }
     };
     const paintStars = () => {
       if(!stars.length)return;
@@ -359,15 +396,16 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       const {sh,sw,rw,rh}=stationGeometry();
       illustration('spring-rustic',sx,sy-sh/2,sw,sh);
       illustration('recycler-rustic',rx,sy-rh/2,rw,rh);
-      addControl('spring','魔力泉，補滿選取的瓶子',sx,sy-sh/2,sw+14,sh+16,g.screen!=='playing');
-      addControl('recycler','回收釜，倒空選取的瓶子',rx,sy-rh/2,rw+14,rh+16,g.screen!=='playing');
+      const hitPadding=portrait?4:16;
+      addControl('spring','魔力泉，補滿選取的瓶子',sx,sy-sh/2,sw+14,sh+hitPadding,g.screen!=='playing');
+      addControl('recycler','回收釜，倒空選取的瓶子',rx,sy-rh/2,rw+14,rh+hitPadding,g.screen!=='playing');
       p.capacities.forEach((capacity,i)=>{
-        const {w:bw,h:bh}=bottleDimensions(capacity,portrait);
+        const {w:bw,h:bh}=bottleDimensions(capacity,portrait,layout.bottles.sizeScale);
         const x=W/2+(i-(count-1)/2)*Math.min(span/count,portrait?192:310);
         shadow(x,by,bw*.52);
         const b=makeBottle(x,by,bw,bh,g.amounts[i],capacity);bottles.push(b);
         text(`${i+1}`,x,by+27,20,C.paper,foreground,undefined,true);
-        addControl(`bottle:${i}`,`第 ${i+1} 瓶，容量 ${capacity} 單位，目前 ${g.amounts[i]} 單位`,x,by-b.h/2,b.w+18,b.h+16,g.screen!=='playing',g.selected===i);
+        addControl(`bottle:${i}`,`第 ${i+1} 瓶，容量 ${capacity} 單位，目前 ${g.amounts[i]} 單位`,x,by-b.h/2,Math.max(b.w+18,44/scale),b.h+hitPadding,g.screen!=='playing',g.selected===i);
         const before=animate?g.history.at(-1)?.before[i]:undefined;
         if(before!==undefined)b.amount=before;
         liquidDraw(b,b.amount);
@@ -380,7 +418,8 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       woodSign('hint','靈感',portrait?W-layout.edge-76:layout.edge+520,bottom,portrait?151:173,false,g.screen!=='playing'||g.hintLevel===2);
       text('回到工坊',layout.footer.homeX,layout.footer.homeY,21,C.paper,foreground,undefined,true);addControl('home','回到工坊首頁',layout.footer.homeX,layout.footer.homeY,165,65);
       if(g.screen==='ready') {
-        const x=portrait?W/2:W-layout.edge-210, y=portrait?layout.tableY-47:H-119;
+        // In portrait, keep delivery above the dialogue and away from the guest's face.
+        const x=portrait?layout.edge+140:W-layout.edge-210, y=portrait?layout.order.y+56:H-119;
         art('gift',x-100,y+22,48,68);
         woodSign('deliver',pendingDelivery?'客人正在道別…':g.practice?'完成練習':g.index===4?'交付 · 看成果':'交付這份魔法',x+12,y,portrait?271:258,true,pendingDelivery);
       }
@@ -416,7 +455,17 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       if(model.codeOpen)drawCode();
       if(pendingDelivery||orderEntrance.active||guestEntering())controls=controls.map(c=>({...c,disabled:c.id!=='home'}));
       if(orderNode){foreground.addChild(orderNode);poseOrder();}
-      if(model.fullscreen){illustration('exit-fullscreen',W-54,48,60,60);addControl('fullscreen','退出全螢幕',W-54,48,76,76);}
+      if(model.fullscreen) illustration('exit-fullscreen',W-54,48,60,60);
+      else {
+        const icon=group(W-54,48);
+        illustration('wood',0,0,60,60,icon,true);
+        const corners=graphic(icon);
+        for(const sx of [-1,1]) for(const sy of [-1,1]) {
+          corners.moveTo(sx*8,sy*19).lineTo(sx*19,sy*19).lineTo(sx*19,sy*8);
+        }
+        corners.stroke({color:C.paper,width:3});
+      }
+      addControl('fullscreen',model.fullscreen?'退出全螢幕':'全螢幕',W-54,48,76,76);
       drawGuest();highlight();hooks.controls(controls);app.render();
     };
     const cancel = () => {

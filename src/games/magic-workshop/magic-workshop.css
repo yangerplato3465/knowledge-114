@@ -1,12 +1,12 @@
-body:has(.mw-game) { padding: 0; background: #21182d; }
-.mw-game { width: 100%; min-height: 100svh; background: #21182d; -webkit-tap-highlight-color: transparent; }
-.mw-topbar { height: 52px; display: flex; align-items: center; gap: 18px; padding: 0 max(16px, env(safe-area-inset-left)); color: var(--ink); background: var(--surface); font-size: 13px; }
-.mw-topbar a { text-decoration: none; white-space: nowrap; }
-.mw-topbar-title { margin-right: auto; opacity: .7; letter-spacing: .15em; }
-.mw-topbar button { border: 0; padding: 0 8px; border-radius: 0; background: none; color: var(--ink); min-height: 44px; white-space: nowrap; font-size: 13px; }
-.mw-topbar .theme-select > span { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; }
-.mw-topbar .theme-select select { border: 0; border-radius: 0; padding: 4px; background: none; min-height: 44px; max-width: 110px; }
-.mw-stage { position: relative; width: 100%; height: calc(100svh - 52px); min-height: 560px; overflow: hidden; background: #21182d; }
+body:has(.mw-game) { padding: 0; background: var(--frame-bg); }
+body:has(.mw-game) .activity-trail { width:calc(100% - 32px); max-width:var(--activity-frame-width); }
+.mw-game {
+  width:calc(100% - 32px); max-width:var(--activity-frame-width); margin:0 auto 32px;
+  border:1px solid var(--frame-border); border-radius:24px; overflow:hidden;
+  background:#21182d; box-shadow:0 10px 32px var(--frame-shadow);
+  -webkit-tap-highlight-color:transparent;
+}
+.mw-stage { position:relative; width:100%; height:auto; aspect-ratio:3 / 2; overflow:hidden; background:#21182d; }
 .mw-pixi-host { width: 100%; height: 100%; }
 .mw-pixi-host canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .mw-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #f4dda8; background: radial-gradient(ellipse at center, #3d344c, #21182d); font-family: 'Workshop Rounded', sans-serif; }
@@ -15,13 +15,8 @@ body:has(.mw-game) { padding: 0; background: #21182d; }
 /* Semantic controls have no visual cards or panels. Their focus is painted on the matching Pixi object. */
 .mw-accessibility, .mw-sr-only { position: absolute; top: 0; left: 0; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .mw-accessibility button { display: block; }
-.mw-game.mw-immersive, .mw-game:fullscreen { position: fixed; inset: 0; width: 100%; height: 100dvh; min-height: 0; z-index: 1000; overflow: hidden; }
-.mw-game.mw-immersive .mw-topbar, .mw-game:fullscreen .mw-topbar { display: none; }
-.mw-game.mw-immersive .mw-stage, .mw-game:fullscreen .mw-stage { height: 100%; min-height: 0; }
+.mw-game.mw-immersive, .mw-game:fullscreen { position:fixed; inset:0; width:100%; max-width:none; height:100dvh; margin:0; border:0; border-radius:0; box-shadow:none; z-index:1000; overflow:hidden; }
+.mw-game.mw-immersive .mw-stage, .mw-game:fullscreen .mw-stage { height:100%; aspect-ratio:auto; }
 @media (max-width: 649px) {
-  .mw-stage { min-height: calc(100vw * 1.667); height: calc(100svh - 52px); }
-  .mw-topbar { gap: 8px; padding-inline: 10px; }
-  .mw-topbar-title { display: none; }
-  .mw-topbar > a { margin-right: auto; }
+  .mw-stage { height:max(calc((100vw - 32px) * 1.667), calc(100dvh - 220px)); aspect-ratio:auto; }
 }
-@media (max-height: 550px) and (min-width: 650px) { .mw-stage { min-height: 520px; } }
