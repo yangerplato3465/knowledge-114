@@ -7,7 +7,7 @@
 - 先看 `git status`、保留既有修改；用 `rg` 找相關程式／測試，只改本次範圍。
 - 本站是 React＋Vite＋TypeScript 多頁網站；`index.html`／`pages/*.html` 各有入口，不恢復舊頁或 `next/`。
 - **每款遊戲開工前必讀 [共用世界觀與遊戲設計準則](docs/world/README.md)**，包含新增遊戲、玩法／劇情／角色／美術／介面修改。新遊戲預設沿用暮光森林 IP，先寫清六項開工要點；既有遊戲只更新受影響的設計，不因這條規則自動改版。
-- 文件與素材分類先看 [專案導覽](docs/README.md)；共用角色原圖與個性只在 `docs/world/` 維護，各遊戲只記差異。
+- 新增、搬移或改名文件／素材前，必讀 [分類與維護規則](docs/README.md#新增與改名流程)；按唯一來源更新內容、索引及引用，不另建重複總覽。共用角色原圖與個性只在 `docs/world/` 維護，各遊戲只記差異。
 - 按需查閱：[架構／模組定位](docs/project/architecture.md)、[玩法](docs/games/README.md)、[偵探](docs/games/detective/authoring.md)、[待辦](docs/project/todo.md)、[啟動／部署](README.md)。
 
 ## 修改邊界
