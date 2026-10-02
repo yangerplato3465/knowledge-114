@@ -3,6 +3,9 @@
 .page-lead { color:var(--ink-soft); margin:16px 0 0; }
 .forest-object { object-fit:contain; width:100px; height:100px; flex-shrink:0; }
 /* Rich website entrances and calm functional surfaces; never loaded by games. */
+button:disabled { cursor:not-allowed; opacity:.6; }
+:is(input:not([type=checkbox]):not([type=radio]),select,textarea) { color:var(--ink); background:var(--surface); border:1px solid var(--border-strong); border-radius:10px; min-height:46px; padding:10px 14px; max-width:100%; }
+.teacher-header-actions>a:hover { color:var(--primary-strong); }
 
 .forest-site .directory-page { position:relative; isolation:isolate; max-width:1240px; margin:28px auto 60px; }
 .forest-site .forest-intro { min-height:0; margin:0 0 30px; }
@@ -20,12 +23,13 @@
 .forest-site .category-heading p { font-size:.85rem; }
 .forest-site .resource-list { padding:0; border:0; background:none; border-radius:0; display:grid; gap:20px; }
 .forest-site .resource-list li+li { border:0; }
-.forest-site .resource-list a { position:relative; isolation:isolate; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; gap:0; padding:0 10px 24px; border:0; border-radius:30px; background:none; box-shadow:none; min-height:270px; }
+.forest-site .resource-list a { position:relative; isolation:isolate; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; gap:0; padding:8px 16px 18px; border:1px solid var(--border); border-radius:26px; background:linear-gradient(155deg,var(--surface),var(--surface-2)); box-shadow:0 5px 18px var(--shadow),inset 0 0 0 3px var(--surface); min-height:286px; }
+.forest-site .resource-list a:hover { border-color:var(--border-strong); box-shadow:0 10px 24px var(--shadow-strong),inset 0 0 0 3px var(--surface); }
 .forest-site .resource-list a::before { content:''; position:absolute; z-index:-1; top:0; width:210px; height:175px; background:radial-gradient(ellipse,var(--primary-tint),transparent 70%); pointer-events:none; }
 .forest-site .resource-list .forest-object { width:172px; height:172px; transition:transform .3s,filter .3s; }
 .forest-site .resource-list strong { font-size:1rem; line-height:1.7; color:var(--ink); }
 .forest-site .resource-list a>span>span { font-size:.83rem; max-width:260px; margin:6px auto 0; }
-.forest-site .resource-list a>svg { margin-top:12px; color:var(--primary-strong); }
+.forest-site .resource-list a>svg { margin-top:12px; padding:5px; width:30px; height:30px; border:1px solid var(--border-strong); border-radius:50%; background:var(--surface); color:var(--primary-strong); }
 .forest-site .resource-list a:hover .forest-object,.forest-site .resource-list a:focus-visible .forest-object { transform:translateY(-7px) rotate(-3deg); filter:drop-shadow(0 10px 8px #9670cb44); }
 .forest-site .teacher-directory>.resource-list { grid-template-columns:repeat(3,minmax(0,1fr)); gap:36px; }
 .forest-site .teacher-directory>.resource-list .forest-object { width:220px; height:220px; }
@@ -33,8 +37,8 @@
 .forest-site .teacher-header-actions { margin-left:auto; }
 .forest-site .teacher-header-actions>a { font-size:.86rem; }
 .forest-site .teacher-nav { border-top:1px solid var(--border); margin:0; padding:4px 0 8px; gap:28px; }
-.forest-site .teacher-nav a { font-size:.88rem; }
-.forest-site .teacher-nav a[aria-current=page] { color:var(--primary-strong); border-color:var(--primary-strong); }
+.forest-site .teacher-nav a { padding:8px 14px; border:1px solid transparent; border-radius:999px; font-size:.88rem; }
+.forest-site .teacher-nav a[aria-current=page] { color:var(--primary-strong); background:var(--primary-tint); border-color:var(--border-strong); text-decoration:none; }
 .forest-site .hub-card { position:relative; max-width:900px; width:100%; margin:34px auto; padding:clamp(24px,4vw,48px); background:var(--surface); border:0; border-radius:18px; box-shadow:0 10px 40px var(--shadow); }
 .forest-site .section-icon { display:none; }
 .forest-site .material-illustration { float:right; width:132px; height:132px; margin:-12px -10px 12px 18px; }
@@ -88,7 +92,7 @@
  .forest-site .directory-sections { grid-template-columns:1fr; gap:32px; }
  .category-heading { min-height:0; margin-bottom:16px; }
  .forest-site .resource-list { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
- .forest-site .resource-list a { min-height:240px; padding:0 2px 12px; }
+ .forest-site .resource-list a { min-height:252px; padding:5px 8px 12px; }
  .forest-site .resource-list a::before { width:100%; height:140px; }
  .forest-site .resource-list .forest-object { width:140px; height:140px; max-width:100%; }
  .forest-site .resource-list strong { font-size:.9rem; }

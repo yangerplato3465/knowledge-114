@@ -6,5 +6,6 @@ import '../assets/css/theme.css';
 import '../assets/css/detective.css';
 
 import './styles/ui.css';
+import './styles/forest-game-frame.css';
 
 createRoot(document.getElementById('root')!).render(<ErrorBoundary><ThemeProvider><DetectiveCase gameId="owl" caseFile="golden-owl" placeholder="OWL-0000" /></ThemeProvider></ErrorBoundary>);

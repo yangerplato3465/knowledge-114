@@ -27,7 +27,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 export function ThemeSelect() {
   const theme = useContext(ThemeContext)!;
-  return <label className="theme-select"><span>顯示主題</span><select value={theme.mode} onChange={e => theme.setMode(e.target.value as Mode)}>
-    <option value="system">跟隨系統</option><option value="light">淺色</option><option value="dark">深色</option>
-  </select></label>;
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false);
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const query = window.matchMedia('(prefers-color-scheme: dark)');
+    const sync = () => setSystemDark(query.matches);
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+  const dark = theme.mode === 'dark' || (theme.mode === 'system' && systemDark);
+  return <div className="theme-select" data-dark={dark} data-auto={theme.mode === 'system'} aria-label="顯示主題">
+    <button className="theme-switch-button" type="button" role="switch" aria-label="深色模式" aria-checked={dark} title={`切換為${dark ? '淺色' : '深色'}主題`} onClick={() => theme.setMode(dark ? 'light' : 'dark')}>
+      <span className="theme-switch-mark" aria-hidden="true">✦</span><span className="theme-switch-label" aria-hidden="true">{dark ? '深色' : '淺色'}</span>
+      <span className="theme-switch-track" aria-hidden="true"><span className="theme-switch-thumb" /></span>
+    </button>
+    <button className="theme-auto-button" type="button" aria-label="跟隨系統主題" aria-pressed={theme.mode === 'system'} title="跟隨系統主題" onClick={() => theme.setMode('system')}>自動</button>
+  </div>;
 }

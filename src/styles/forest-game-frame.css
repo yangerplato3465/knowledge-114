@@ -1,0 +1,80 @@
+/* Website entrance chrome around games. Game scenes keep their own palette. */
+body.forest-game-page {
+  --frame-bg:#f0edf7; --frame-surface:#fffcff; --frame-soft:#e9e3f3;
+  --frame-ink:#302943; --frame-muted:#534560; --frame-primary:#64428c;
+  --frame-on-primary:#fff9f1; --frame-border:#d9cfe7; --frame-border-strong:#927aaa;
+  --frame-gold:#8a632d; --frame-shadow:rgba(38,58,37,.1);
+  background:var(--frame-bg); color:var(--frame-ink);
+}
+/* The detective renderer reads --bg once for its scene letterboxing. */
+body.forest-game-page.detective-frame { --bg:var(--frame-soft); }
+:root[data-theme=dark] body.forest-game-page {
+  --frame-bg:#1f1b30; --frame-surface:#332c47; --frame-soft:#403651;
+  --frame-ink:#f8f0ff; --frame-muted:#d3c6e2; --frame-primary:#ddbaee;
+  --frame-on-primary:#352242; --frame-border:#524460; --frame-border-strong:#a68abd;
+  --frame-gold:#e9bb7e; --frame-shadow:rgba(0,0,0,.28);
+}
+@media(prefers-color-scheme:dark) {
+  :root:not([data-theme=light]) body.forest-game-page {
+    --frame-bg:#1f1b30; --frame-surface:#332c47; --frame-soft:#403651;
+    --frame-ink:#f8f0ff; --frame-muted:#d3c6e2; --frame-primary:#ddbaee;
+    --frame-on-primary:#352242; --frame-border:#524460; --frame-border-strong:#a68abd;
+    --frame-gold:#e9bb7e; --frame-shadow:rgba(0,0,0,.28);
+  }
+}
+
+.forest-game-page .site-header { max-width:1240px; min-height:88px; margin-bottom:24px; }
+.forest-game-page .site-brand { color:var(--frame-ink); }
+.forest-game-page .site-brand strong { letter-spacing:.12em; }
+.forest-game-page .site-brand small { color:var(--frame-muted); }
+.forest-game-page .brand-mark { width:48px; height:48px; border:0; background:transparent; color:var(--frame-primary); }
+.forest-game-page .forest-mark { width:44px; height:44px; }
+.forest-game-page .public-nav a { border:1px solid transparent; border-radius:999px; color:var(--frame-ink); }
+.forest-game-page .public-nav .nav-download { border-color:var(--frame-border); background:var(--frame-surface); }
+.forest-game-page .public-nav a:hover { color:var(--frame-primary); background:var(--frame-soft); }
+.forest-game-page .public-nav a[aria-current=page] { color:var(--frame-primary); background:var(--frame-soft); border-color:var(--frame-border-strong); text-decoration:none; }
+.forest-game-page .activity-trail { max-width:1240px; color:var(--frame-muted); }
+.forest-game-page .activity-trail a { color:var(--frame-primary); }
+.forest-game-page .site-footer { max-width:1240px; border-color:var(--frame-border); color:var(--frame-muted); }
+.forest-game-page .site-footer a { color:var(--frame-muted); }
+
+/* The math introduction is a website entrance; the pixel poster and battle stay green. */
+.forest-game-page .mr-setup,
+:root[data-theme=dark] .forest-game-page .mr-setup {
+  --mr-paper:var(--frame-surface); --mr-card:var(--frame-surface);
+  --mr-soft:var(--frame-soft); --mr-line:var(--frame-border);
+  --mr-ink:var(--frame-ink); --mr-muted:var(--frame-muted);
+  --mr-green:var(--frame-primary); --mr-green-dark:var(--frame-primary);
+}
+@media(prefers-color-scheme:dark) {
+  :root:not([data-theme=light]) .forest-game-page .mr-setup {
+    --mr-paper:var(--frame-surface); --mr-card:var(--frame-surface);
+    --mr-soft:var(--frame-soft); --mr-line:var(--frame-border);
+    --mr-ink:var(--frame-ink); --mr-muted:var(--frame-muted);
+    --mr-green:var(--frame-primary); --mr-green-dark:var(--frame-primary);
+  }
+}
+
+.forest-game-page .theme-select {
+  --theme-control-ink:var(--frame-ink); --theme-control-accent:var(--frame-primary);
+  --theme-control-on-accent:var(--frame-on-primary); --theme-control-border:var(--frame-border-strong);
+  --theme-control-surface:var(--frame-surface); --theme-control-soft:var(--frame-soft);
+  --theme-control-gold:var(--frame-gold);
+}
+
+.forest-game-page .game-shell:not(.detective-starlight) .game-bar { border-color:var(--frame-border); background:var(--frame-surface); box-shadow:0 5px 18px var(--frame-shadow); }
+.forest-game-page .game-shell:not(.detective-starlight) .game-bar h1 { color:var(--frame-ink); }
+.forest-game-page .game-shell:not(.detective-starlight) .back-link { padding:8px 14px; border-radius:999px; background:var(--frame-soft); color:var(--frame-primary); }
+.forest-game-page .game-shell:not(.detective-starlight) .back-link:hover { background:var(--frame-surface); text-decoration:underline; }
+.forest-game-page .game-shell:not(.detective-starlight) .group-tag:not(.offline) { border-color:var(--frame-border-strong); background:var(--frame-surface); color:var(--frame-primary); }
+.forest-game-page .game-shell:not(.detective-starlight) .group-tag:not(.offline):hover { background:var(--frame-soft); color:var(--frame-primary); }
+.forest-game-page .game-shell:not(.detective-starlight) .group-menu:not([hidden]) { border-color:var(--frame-border-strong); background:var(--frame-surface); }
+.forest-game-page .game-shell:not(.detective-starlight) #gameContainer { border-color:var(--frame-border); background:var(--frame-soft); }
+.forest-game-page .game-shell:not(.detective-starlight) .gate:not([hidden]) { background:var(--frame-bg); }
+.forest-game-page .game-shell:not(.detective-starlight) .gate-card { border-color:var(--frame-border); background:var(--frame-surface); color:var(--frame-ink); box-shadow:0 12px 36px var(--frame-shadow); }
+.forest-game-page .game-shell:not(.detective-starlight) .gate-icon { background:var(--frame-soft); color:var(--frame-primary); }
+.forest-game-page .game-shell:not(.detective-starlight) .gate-btn { background:var(--frame-primary); color:var(--frame-on-primary); }
+@media(max-width:680px) {
+  .forest-game-page .site-header { min-height:88px; }
+  .forest-game-page .public-nav a { white-space:nowrap; }
+}
