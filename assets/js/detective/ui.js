@@ -10,7 +10,9 @@ import {
 
 export const W = 960, H = 600;                 // 設計尺寸（所有座標都以此為準）
 const WORKSHOP_SKIN = window.DETECTIVE_CASE?.skin === 'workshop';
-export const FONT = WORKSHOP_SKIN ? "'Workshop Rounded', 'Microsoft JhengHei', sans-serif" : "'Noto Sans TC', 'Fredoka', sans-serif";
+// Workshop Rounded covers only part of the Chinese copy. Mixing its glyphs
+// with a fallback inside one sentence produces visibly uneven strokes.
+export const FONT = WORKSHOP_SKIN ? "'Microsoft JhengHei', 'Noto Sans TC', sans-serif" : "'Noto Sans TC', 'Fredoka', sans-serif";
 
 export const COL = {
     panel: 0xfffdf9,
@@ -58,7 +60,9 @@ export function mkButton({ label, icon = '', iconSide = 'left', x, y, w, h, colo
         const wood = new Sprite(Assets.get(window.DETECTIVE_CASE.skinAssets.wood));
         // 共用木牌素材保有透明留白；依實際可見木面縮放，點擊仍只落在按鈕矩形內。
         wood.width = w / 0.8125;
-        wood.height = h / 0.305;
+        // The painted plank occupies y=88..185 of the 256px texture.
+        // Size to those visible pixels, not to the transparent image frame.
+        wood.height = h * 256 / 97;
         wood.position.set(-wood.width * 24 / 256, -wood.height * 88 / 256);
         wood.eventMode = 'none';
         c.addChild(wood);
@@ -86,8 +90,14 @@ export function mkButton({ label, icon = '', iconSide = 'left', x, y, w, h, colo
         t.position.set(w / 2, h / 2);
         if (iconText) {
             iconText.anchor.set(0.5);
-            const offset = t.width / 2 + iconText.width / 2 + 6;
-            iconText.position.set(w / 2 + (iconSide === 'right' ? offset : -offset), h / 2);
+            if (!t.text) iconText.position.set(w / 2, h / 2);
+            else {
+                const gap = 6;
+                const iconOffset = (t.width + gap) / 2;
+                const textOffset = (iconText.width + gap) / 2;
+                iconText.position.set(w / 2 + (iconSide === 'right' ? iconOffset : -iconOffset), h / 2);
+                t.x = w / 2 + (iconSide === 'right' ? -textOffset : textOffset);
+            }
         }
     };
     centerLabel();
@@ -194,19 +204,32 @@ export function drawProps(list, layer) {
                 });
                 node.anchor.set(p.ax ?? 0, p.ay ?? 0);
                 node.position.set(p.x, p.y);
+                if (p.shadow) node.style.dropShadow = {
+                    color: p.shadow, alpha: 0.9, blur: 3, distance: 1,
+                };
                 if (p.rot) node.rotation = p.rot;
                 if (p.icon) {
                     const icon = mkText(p.icon, p.size, p.c, {
                         weight: p.weight || '700', align: 'center', lineHeight: p.size,
                     });
-                    const anchorX = p.ax ?? 0;
+                    if (p.shadow) icon.style.dropShadow = {
+                        color: p.shadow, alpha: 0.9, blur: 3, distance: 1,
+                    };
                     const anchorY = p.ay ?? 0;
-                    const textCenterX = p.x + (0.5 - anchorX) * node.width;
                     const textCenterY = p.y + (0.5 - anchorY) * node.height;
                     const iconGap = p.iconGap ?? 5;
-                    const offset = node.width / 2 + icon.width / 2 + iconGap;
+                    const groupWidth = node.width + iconGap + icon.width;
+                    const groupLeft = p.x - groupWidth / 2;
                     icon.anchor.set(0.5);
-                    icon.position.set(textCenterX + (p.iconSide === 'right' ? offset : -offset), textCenterY);
+                    if (p.iconSide === 'right') {
+                        node.x = groupLeft + node.width / 2;
+                        icon.x = groupLeft + node.width + iconGap + icon.width / 2;
+                    } else {
+                        icon.x = groupLeft + icon.width / 2;
+                        node.x = groupLeft + icon.width + iconGap + node.width / 2;
+                    }
+                    node.anchor.x = 0.5;
+                    icon.y = textCenterY;
                     icon.eventMode = 'none';
                     decoration = icon;
                 }

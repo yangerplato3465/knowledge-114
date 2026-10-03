@@ -58,7 +58,7 @@
 
 ## 星燈小徑素材
 
-米洛及共用木牌沿用工坊執行圖，不再複製。以下圖片的故事用途以 [案件腳本](../../../assets/js/detective/cases/starlight.js) 為準，案件獨有場景規則見 [設計](../../games/detective/starlight.md)。若找回高解析原稿，存入本美術庫並補上原稿到 WebP 的來源關係。
+共用木牌沿用工坊執行圖，不再複製；本案調查中的米洛小頭像取自下列偵探變裝定稿幀。以下圖片的故事用途以 [案件腳本](../../../assets/js/detective/cases/starlight.js) 為準，案件獨有場景規則見 [設計](../../games/detective/starlight.md)。若找回高解析原稿，存入本美術庫並補上原稿到 WebP 的來源關係。
 
 | 類別 | 現有 WebP |
 | --- | --- |

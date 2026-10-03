@@ -202,7 +202,8 @@ function transformFilter(front, faceSource) {
  * Returns true when the case brief should open. All art is loaded before motion
  * begins so scene changes never wait on a request in the middle of playback.
  */
-export function playStarlightOpening({ app, root, container, sceneAccess, opening, scenes }) {
+export function playStarlightOpening({ app, root, container, sceneAccess, opening, scenes,
+    toggleFullscreen, isFullscreen }) {
     const layer = root.addChild(new Container());
     layer.eventMode = 'static';
     layer.hitArea = new Rectangle(0, 0, W, H);
@@ -213,11 +214,26 @@ export function playStarlightOpening({ app, root, container, sceneAccess, openin
     label.position.set(W / 2, H / 2);
     layer.addChild(label);
 
+    const controls = document.createElement('div');
+    controls.className = 'detective-opening-controls';
     const skip = document.createElement('button');
     skip.type = 'button';
     skip.className = 'detective-opening-skip';
-    skip.textContent = '略過動畫，查看案件介紹';
-    container.append(skip);
+    skip.textContent = '跳過動畫';
+    controls.append(skip);
+    const fullscreen = document.createElement('button');
+    fullscreen.type = 'button';
+    fullscreen.className = 'detective-opening-fullscreen';
+    const syncFullscreen = () => {
+        fullscreen.textContent = isFullscreen() ? '離開全螢幕' : '全螢幕';
+    };
+    const onFullscreen = async () => { await toggleFullscreen(); syncFullscreen(); };
+    fullscreen.addEventListener('click', onFullscreen);
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    document.addEventListener('webkitfullscreenchange', syncFullscreen);
+    syncFullscreen();
+    controls.append(fullscreen);
+    container.append(controls);
     const oldAccessHidden = sceneAccess?.hidden;
     if (sceneAccess) sceneAccess.hidden = true;
     const live = container.querySelector('#detectiveStatus');
@@ -232,9 +248,12 @@ export function playStarlightOpening({ app, root, container, sceneAccess, openin
         ended = true;
         if (tick) app.ticker.remove(tick);
         skip.removeEventListener('click', onSkip);
+        fullscreen.removeEventListener('click', onFullscreen);
+        document.removeEventListener('fullscreenchange', syncFullscreen);
+        document.removeEventListener('webkitfullscreenchange', syncFullscreen);
         window.removeEventListener('keydown', onKey);
         window.removeEventListener('pagehide', onPageHide);
-        skip.remove();
+        controls.remove();
         if (sceneAccess) sceneAccess.hidden = oldAccessHidden;
         if (layer.parent) layer.parent.removeChild(layer);
         layer.destroy({ children: true });

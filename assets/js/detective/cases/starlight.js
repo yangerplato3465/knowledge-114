@@ -6,7 +6,7 @@ const paper = 0xf3dfb2;
 
 window.DETECTIVE_CASE = {
     title: '星燈小徑燈光偏移事件',
-    brief: '「燈明明亮著，信怎麼到了舊榛樹郵箱？」奧利把退回的信放到桌上。\n諾爾輕聲說：「昨晚沒有一盞燈熄掉。只是光落下來的地方，和以前不一樣。」\n\n跟米洛走進小徑左右兩條路，查看夜花坡、石橋郵路與守燈亭，找出燈光、時間和郵路之間的關係。',
+    brief: '奧利看著退回的信：「燈亮著，怎麼會投進舊郵箱？」\n諾爾說：「昨晚的燈沒熄；光落下的地方變了。」\n\n跟米洛走訪夜花坡、石橋郵路與守燈亭，\n查明燈光、時間和錯投的關係。',
     startScene: 'trail',
     opening: {
         rear: IMG + 'oli-opening-rear-walk-v1.webp',
@@ -23,9 +23,10 @@ window.DETECTIVE_CASE = {
         speech: IMG + 'dialogue-scroll.webp',
         wood: WORKSHOP + 'ui-wood.webp',
         star: WORKSHOP + 'ui-star.webp',
-        font: new URL('../../../fonts/workshop/workshop-rounded.woff2', document.currentScript.src).href,
     },
-    assistantImg: WORKSHOP + 'apprentice-v2.webp',
+    assistantImg: IMG + 'milo-detective-transform-v2-keys.webp',
+    // Portrait crop from the final detective costume cell (column 3, row 2).
+    assistantFrame: { x: 1176, y: 620, w: 214, h: 220 },
     assistantName: '米洛',
     resolveLabel: '整理事件',
     resolveReadyText: '兩條支路和守燈亭的線索已能串起事件。點右上角「整理事件」，再確認還缺哪一個答案。',
@@ -81,11 +82,9 @@ window.DETECTIVE_CASE = {
             introBack: '左右兩條路都可回訪；路標、星燈與郵箱也能再次查看。',
             props: [
                 { t: 'img', src: WORKSHOP + 'ui-wood.webp', x: 766, y: 54, w: 174, h: 86 },
-                { t: 'text', s: '守燈亭', icon: '←', x: 853, y: 96, size: 18, c: paper, ax: 0.5, ay: 0.5 },
-                { t: 'rect', x: 182, y: 386, w: 160, h: 38, r: 10, c: 0x352538, a: 0.92, s: 0xc89c61, sw: 2 },
-                { t: 'text', s: '夜花坡', icon: '←', x: 262, y: 405, size: 18, c: paper, ax: 0.5, ay: 0.5 },
-                { t: 'rect', x: 690, y: 386, w: 170, h: 38, r: 10, c: 0x352538, a: 0.92, s: 0xc89c61, sw: 2 },
-                { t: 'text', s: '石橋郵路', icon: '→', iconSide: 'right', x: 775, y: 405, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '守燈亭', icon: '←', x: 853, y: 100, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '夜花坡', icon: '↖', x: 287, y: 344, size: 17, c: paper, shadow: 0x1d1729, weight: '700', ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '石橋郵路', icon: '↗', iconSide: 'right', x: 775, y: 335, size: 17, c: paper, shadow: 0x1d1729, weight: '700', ax: 0.5, ay: 0.5 },
             ],
             objects: [], hotspots: [
                 { id: 'trailSign', x: 425, y: 198, w: 92, h: 125, name: '岔路路標', look: '觀察：地面舊星形記號在主路；今晚的光斑卻落在岔路邊。諾爾確認三盞燈昨夜都沒有熄掉。', gives: ['mark'], after: '已確認：舊路標的位置沒變，改變的是光照方向。' },
@@ -93,8 +92,8 @@ window.DETECTIVE_CASE = {
                 { id: 'lampTwo', x: 614, y: 144, w: 104, h: 227, name: '第二盞星燈', look: '觀察：卡榫有一條新刮痕，縫裡留有藍灰色布纖維。', after: '第二盞被轉動過；新刮痕與纖維能互相支持。' },
                 { id: 'lampThree', x: 867, y: 152, w: 86, h: 190, name: '第三盞星燈', look: '觀察：第三盞燈罩有同色纖維，燈柱下的夜花花粉沾到工具套。花粉不能證明工具主人是誰。', after: '第三盞附近有纖維與花粉；仍須看別的證據判斷發生了什麼。' },
                 { id: 'forkBox', x: 348, y: 231, w: 68, h: 110, name: '岔路邊的舊郵箱', look: '舊榛樹郵箱旁的路面通往右側石橋；它仍在，但正式郵路早已改走東側。', after: '想知道奧利怎麼走到這裡，可沿右側道路去石橋比對。' },
-                { id: 'toFlower', x: 182, y: 366, w: 160, h: 78, name: '走左路到夜花坡', goto: 'flower', exit: true },
-                { id: 'toBridge', x: 690, y: 366, w: 170, h: 78, name: '走右路到石橋郵路', goto: 'bridge', exit: true },
+                { id: 'toFlower', x: 214, y: 307, w: 146, h: 75, name: '走左路到夜花坡', goto: 'flower', exit: true },
+                { id: 'toBridge', x: 703, y: 297, w: 145, h: 76, name: '走右路到石橋郵路', goto: 'bridge', exit: true },
                 { id: 'toHut', x: 771, y: 67, w: 169, h: 57, name: '前往守燈亭', goto: 'hut', exit: true },
             ],
         },
@@ -130,8 +129,7 @@ window.DETECTIVE_CASE = {
             intro: '左路的夜花坡有一張小工作桌，布簾替夜蛾擋住直射的星燈光。',
             introBack: '夜花仍在夜色裡開著。花叢、布簾與小工作桌都可再次查看。',
             props: [
-                { t: 'rect', x: 704, y: 385, w: 184, h: 38, r: 10, c: 0x352538, a: 0.92, s: 0xc89c61, sw: 2 },
-                { t: 'text', s: '返回岔路', icon: '→', iconSide: 'right', x: 796, y: 404, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '返回岔路', icon: '↘', iconSide: 'right', x: 822, y: 344, size: 17, c: paper, shadow: 0x1d1729, weight: '700', ax: 0.5, ay: 0.5 },
                 { t: 'img', src: WORKSHOP + 'ui-wood.webp', x: 605, y: 58, w: 216, h: 86 },
                 { t: 'text', s: '重現燈光方向', x: 713, y: 100, size: 18, c: paper, ax: 0.5, ay: 0.5 },
             ],
@@ -142,7 +140,7 @@ window.DETECTIVE_CASE = {
                 { id: 'flowerMoths', x: 280, y: 120, w: 255, h: 195, name: '夜花與夜蛾', look: '觀察：19:05 的花圃巡查紙記著剛孵化的夜蛾聚在夜花旁；布簾擋住直射強光。工作桌上的札記因此露了出來。', gives: ['moth'], after: '夜蛾聚集是可確認的現象，照護員的動機仍待詢問。' },
                 { id: 'flowerCanopy', x: 28, y: 78, w: 335, h: 163, name: '遮光布簾', look: '布簾固定在花圃上方，邊緣的藍灰線和桌上的遮光布同色；它不是路標。', after: '布簾說明夜花坡需要柔和光線，不足以指認調燈的人。' },
                 { id: 'lightPuzzle', x: 616, y: 65, w: 198, h: 80, name: '重現燈光方向', needsClue: 'trace', lockedClue: '先在守燈亭比對卡榫與布纖維，再來重現光線。', requiresStored: 'flowerNotes', lockedStored: '先查看夜花與夜蛾，把工作桌上的觀察札記拖進物品欄。', look: '米洛攤開札記和小徑縮圖，轉動燈罩方向，比較光斑落在哪裡。', puzzle: { type: 'starlight', kind: 'light', title: '重現燈光方向', prompt: '轉動第二、三盞燈罩；比較地面舊標記與夜花旁的弱光。', hint1: '星燈本身仍亮著；會改變光斑的是遮光罩。', hint2: '比對夜花旁殘留的弱光，想想遮光罩轉向何處才會形成低光帶。' }, gives: ['light'], solvedText: '弱光帶沿花叢與岔路延伸；主路舊標記因此變暗。', after: '已確認：遮光罩的轉向造成偏移光斑；動機仍待查證。', reopen: true },
-                { id: 'flowerReturn', x: 704, y: 365, w: 184, h: 78, name: '從夜花坡返回岔路', goto: 'trail', exit: true },
+                { id: 'flowerReturn', x: 750, y: 305, w: 145, h: 77, name: '從夜花坡返回岔路', goto: 'trail', exit: true },
             ],
         },
         bridge: {
@@ -150,8 +148,7 @@ window.DETECTIVE_CASE = {
             intro: '右路穿過石橋。舊郵箱、橋頭路標與往村口的新郵路都留在月光下。',
             introBack: '你回到石橋。舊郵箱和橋頭路標仍可比對。',
             props: [
-                { t: 'rect', x: 290, y: 387, w: 190, h: 38, r: 10, c: 0x352538, a: 0.92, s: 0xc89c61, sw: 2 },
-                { t: 'text', s: '返回岔路', icon: '←', x: 385, y: 406, size: 18, c: paper, ax: 0.5, ay: 0.5 },
+                { t: 'text', s: '返回岔路', icon: '↙', x: 311, y: 388, size: 17, c: paper, shadow: 0x1d1729, weight: '700', ax: 0.5, ay: 0.5 },
             ],
             objects: [
                 { id: 'routeRubbing', name: '郵路印記拓片', x: 286, y: 247, w: 96, h: 98, draggable: true, icon: '🗺️', hiddenUntil: 'bridgeMarks', art: [{ t: 'img', src: IMG + 'route-rubbing.webp', x: 0, y: 0, w: 96, h: 98 }], look: '紙上拓有橋頭岔路和停用郵戳。把拓片拖進物品欄，才能和奧利的信比對。', after: '拓片可把舊路印記與橋頭位置放回郵路順序。' },
@@ -163,7 +160,7 @@ window.DETECTIVE_CASE = {
                     { id: 'third', label: '19:29 第三盞燈旁', detail: '菲恩看到奧利的郵袋；無法證明他故意改道。' },
                     { id: 'second', label: '19:24 第二盞燈旁', detail: '奧利記得自己沿著光走。' },
                 ], answer: ['east', 'second', 'third', 'box'], hint1: '從最早的正常投遞印記開始排。', hint2: '19:29 的目擊發生在 19:35 的錯誤郵戳之前。' }, gives: ['route'], solvedText: '奧利沿偏移光帶誤入舊路；目擊和他的說法並不矛盾。', after: '已確認：東側收件點 → 第二盞 → 第三盞 → 舊郵箱。', reopen: true },
-                { id: 'bridgeReturn', x: 290, y: 367, w: 190, h: 78, name: '從石橋返回岔路', goto: 'trail', exit: true },
+                { id: 'bridgeReturn', x: 221, y: 350, w: 180, h: 75, name: '從石橋返回岔路', goto: 'trail', exit: true },
             ],
         },
     },

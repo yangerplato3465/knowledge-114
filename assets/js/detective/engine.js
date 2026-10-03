@@ -1,5 +1,5 @@
 import {
-    Application, Assets, Container, Graphics, Rectangle, Sprite
+    Application, Assets, Container, Graphics, Rectangle, Sprite, Texture
 } from '../../vendor/pixi.esm.min.js';
 import {
     W, H, COL, mkText, mkButton, panelBase, drawProps,
@@ -40,8 +40,6 @@ await app.init({
 });
 globalThis.__PIXI_APP__ = app;               // Pixi Devtools 的標準掛勾，方便除錯
 app.stage.eventMode = 'static';              // 濾鏡謎題要靠 stage 收拖曳事件
-// 字型和圖片沒有先後關係，兩件事同時等 —— 分開 await 的話，
-// 十幾個 woff2 子集載完才會開始抓圖，白白多花一段時間。
 // 圖只等「起始場景 + 全域」那批，其他場景在背景繼續載
 //（見 detective-ui.js 的 preloadImages）。缺圖不影響，會退回向量替代圖形。
 // 有存檔的話開場會直接進存檔記的那個場景，所以要先載「那個」場景的圖，
@@ -49,18 +47,7 @@ app.stage.eventMode = 'static';              // 濾鏡謎題要靠 stage 收拖�
 const savedScene = window.DETECTIVE_SESSION?.progress?.scene;
 const bootScene = (savedScene && CASE.scenes[savedScene]) ? savedScene : CASE.startScene;
 
-await Promise.all([
-    (async () => {
-        if (workshopSkin && CASE.skinAssets?.font) {
-            try {
-                const font = new FontFace('Workshop Rounded', `url(${CASE.skinAssets.font})`);
-                document.fonts.add(await font.load());
-            } catch { /* 字型失敗時仍保留系統繁中字型 */ }
-        }
-        await document.fonts.ready;
-    })(),
-    preloadImages(CASE, bootScene),
-]);
+await Promise.all([document.fonts.ready, preloadImages(CASE, bootScene)]);
 document.getElementById('gameLoading')?.remove();
 container.appendChild(app.canvas);
 
@@ -527,7 +514,7 @@ sceneTagText.anchor.set(0.5);
 sceneTag.addChild(sceneTagBg, sceneTagText);
 hudLayer.addChild(sceneTag);
 
-// 對話框（左邊坐著助手大耳狗喜拿）—— 可以收起來，把整個場景看個清楚
+// 對話框可收起來，把整個場景看個清楚。
 // 下方要讓位給物品欄，所以比較扁；太長的訊息會自動縮小字級。
 const dlgBox = new Container();
 hudLayer.addChild(dlgBox);
@@ -538,26 +525,43 @@ const dlgBg = workshopSkin ? new Container() : new Graphics().roundRect(30, 452,
     .fill({ color: COL.panel }).stroke({ width: 4, color: COL.border });
 if (workshopSkin) {
     const scroll = new Sprite(Assets.get(CASE.skinAssets.speech));
-    // 透明原圖保留完整紙卷；對齊實際紙張範圍，讓邊角不被切斷。
-    scroll.position.set(208, 343);
-    scroll.width = 723;
-    scroll.height = 259;
+    // Keep the scroll centered in the 960px play field and preserve its
+    // original aspect ratio. Its painted paper begins below the transparent top.
+    scroll.position.set(105, 338);
+    scroll.width = 750;
+    scroll.height = 268;
     scroll.eventMode = 'none';
     dlgBg.addChild(scroll);
-    dlgBg.hitArea = new Rectangle(210, 407, 720, 140);
+    dlgBg.hitArea = new Rectangle(108, 405, 744, 132);
 }
 dlgBg.eventMode = 'static';
 dlgBox.addChild(dlgBg);
-// 喜拿只住在對話框裡：點頭像＝跟助手求提示（場景中不再出現）
-// 圓底 → 頭像 → 圓框，三層疊出標準頭像；缺圖時退回 🐶 emoji，版面不會垮。
-// 半徑 26：頭像 34–86，對話文字從 x=98 開始，連 hover 放大 1.1 倍都碰不到。
+// 助手收進對話卷軸邊緣的小頭像；點擊仍可求提示，不遮住調查場景。
 const catBtn = new Container();
-catBtn.position.set(workshopSkin ? 0 : 60, workshopSkin ? 0 : 486);
-const AVATAR_R = 26;
+catBtn.position.set(workshopSkin ? 150 : 60, workshopSkin ? 462 : 486);
+const AVATAR_R = workshopSkin ? 42 : 26;
 const ASSIST = CASE.assistantImg;
 if (workshopSkin && hasTexture(ASSIST)) {
-    drawProps([{ t: 'img', src: ASSIST, x: -57, y: 278, w: 300, h: 300 }], catBtn);
-    catBtn.hitArea = new Rectangle(15, 303, 174, 247);
+    catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R)
+        .fill({ color: 0x352538 }));
+    const crop = CASE.assistantFrame;
+    const portraitTexture = crop
+        ? new Texture({ source: Assets.get(ASSIST).source,
+            frame: new Rectangle(crop.x, crop.y, crop.w, crop.h) })
+        : Assets.get(ASSIST);
+    const portrait = new Sprite(portraitTexture);
+    portrait.anchor.set(0.5);
+    portrait.width = portrait.height = AVATAR_R * 2;
+    portrait.eventMode = 'none';
+    const portraitMask = new Graphics().circle(0, 0, AVATAR_R - 2)
+        .fill(0xffffff);
+    portraitMask.eventMode = 'none';
+    portrait.mask = portraitMask;
+    catBtn.addChild(portrait, portraitMask);
+    catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R)
+        .stroke({ width: 3, color: COL.gold }));
+    catBtn.hitArea = new Rectangle(-AVATAR_R - 4, -AVATAR_R - 4,
+        (AVATAR_R + 4) * 2, AVATAR_R * 2 + 29);
 } else {
     catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R).fill({ color: COL.panel2 }));
     if (hasTexture(ASSIST)) drawProps([{ t: 'img', src: ASSIST, x: -AVATAR_R, y: -AVATAR_R, w: AVATAR_R * 2, h: AVATAR_R * 2 }], catBtn);
@@ -568,25 +572,26 @@ if (workshopSkin && hasTexture(ASSIST)) {
     }
     catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R).stroke({ width: 3, color: COL.border }));
 }
-const catTip = mkText(workshopSkin ? '問米洛 ✦' : '提示', workshopSkin ? 16 : 9, workshopSkin ? 0xf4dda8 : COL.muted, { weight: '700' });
+const catTip = mkText(workshopSkin ? '問米洛' : '提示', workshopSkin ? 14 : 9, workshopSkin ? 0xf4dda8 : COL.muted, { weight: '700', lineHeight: workshopSkin ? 14 : 9 });
 catTip.anchor.set(0.5);
-catTip.position.set(workshopSkin ? 105 : 0, workshopSkin ? 509 : 36);
+catTip.position.set(0, workshopSkin ? 56 : 36);
 catBtn.addChild(catTip);
 catBtn.eventMode = 'static';
 catBtn.cursor = 'pointer';
-catBtn.on('pointerover', () => { catBtn.scale.set(1.1); });
+catBtn.on('pointerover', () => { catBtn.scale.set(workshopSkin ? 1.04 : 1.1); });
 catBtn.on('pointerout', () => { catBtn.scale.set(1); });
-catBtn.on('pointertap', () => {
+function showAssistantHint() {
     if (overlayLayer.children.length) return;
     const hints = CASE.hints || [];
     const line = hints.find(e =>
         (e.unless && !hasClue(e.unless)) || (e.unlessItem && !hasItem(e.unlessItem))
     ) || hints[hints.length - 1];
     if (line) say(txt(line.text));
-});
+}
+catBtn.on('pointertap', showAssistantHint);
 dlgBox.addChild(catBtn);
-const dlgText = mkText('', workshopSkin ? 19 : 16, COL.ink, { wrap: workshopSkin ? 584 : 760, lineHeight: workshopSkin ? 28 : 23 });
-dlgText.position.set(workshopSkin ? 282 : 98, workshopSkin ? 436 : 462);
+const dlgText = mkText('', workshopSkin ? 17 : 16, COL.ink, { wrap: workshopSkin ? 550 : 760, lineHeight: workshopSkin ? 24 : 23 });
+dlgText.position.set(workshopSkin ? 225 : 98, workshopSkin ? 456 : 462);
 dlgBox.addChild(dlgText);
 
 // 圓形小按鈕（收起 / 展開）
@@ -640,18 +645,24 @@ const canNativeFS = !!(container.requestFullscreen || container.webkitRequestFul
     && document.fullscreenEnabled !== false;
 
 const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
-const isFullscreen = () => (canNativeFS
-    ? !!fsElement()
-    : document.body.classList.contains('fs-fallback'));
+const isFullscreen = () => !!fsElement() || document.body.classList.contains('fs-fallback');
 
-const toggleFullscreen = () => {
+const toggleFullscreen = async () => {
     if (portraitLandscape()) return; // 已由版面填滿直向視窗，避免原生全螢幕改變旋轉基準。
-    if (canNativeFS) {
-        if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
-        else (container.requestFullscreen || container.webkitRequestFullscreen)?.call(container);
-        return;                                    // 之後由 fullscreenchange 收尾
+    if (document.body.classList.contains('fs-fallback')) {
+        document.body.classList.remove('fs-fallback');
+    } else if (fsElement()) {
+        try { await (document.exitFullscreen || document.webkitExitFullscreen)?.call(document); }
+        catch { /* 全螢幕狀態若已由瀏覽器結束，交給 syncFsUI 校正 */ }
+    } else if (canNativeFS) {
+        try { await (container.requestFullscreen || container.webkitRequestFullscreen)?.call(container); }
+        catch { document.body.classList.add('fs-fallback'); }
+        // Some embedded browsers resolve the request without keeping the
+        // element fullscreen. Keep the same usable full-window control there.
+        if (!fsElement()) document.body.classList.add('fs-fallback');
+    } else {
+        document.body.classList.add('fs-fallback');
     }
-    document.body.classList.toggle('fs-fallback');
     syncFsUI();
 };
 
@@ -682,9 +693,9 @@ syncFsUI();
 
 let dlgOpen = true, dlgUnread = false;
 
-dlgBox.addChild(mkRoundBtn(900, workshopSkin ? 423 : 470, 13, '✕', 14, () => setDialog(false)));
+dlgBox.addChild(mkRoundBtn(workshopSkin ? 829 : 900, workshopSkin ? 423 : 470, 13, '✕', 14, () => setDialog(false)));
 
-const showBtn = mkRoundBtn(workshopSkin ? 870 : 56, 512, 22, '💬', 20, () => setDialog(true));
+const showBtn = mkRoundBtn(workshopSkin ? 820 : 56, 512, 22, '💬', 20, () => setDialog(true));
 const unreadDot = new Graphics().circle(16, -16, 6).fill({ color: COL.red });
 showBtn.addChild(unreadDot);
 hudLayer.addChild(showBtn);
@@ -735,12 +746,19 @@ dlgBg.on('pointertap', finishTyping);
 const say = text => {
     const live = document.getElementById('detectiveStatus');
     if (live) live.textContent = text;
-    // 對話框變扁了，太長的訊息自動縮小字級塞進去
-    for (const [size, lh] of (workshopSkin ? [[19, 28], [17, 25], [15, 22]] : [[16, 23], [14, 20], [12, 17]])) {
-        dlgText.style.fontSize = size;
-        dlgText.style.lineHeight = lh;
+    if (workshopSkin) {
+        // One body size throughout this case. Short lines sit in the middle of
+        // the paper instead of clinging to its upper decorative edge.
         dlgText.text = text;
-        if (dlgText.height <= (workshopSkin ? 91 : 70)) break;
+        dlgText.y = 474 - dlgText.height / 2;
+    } else {
+        // The first case keeps its compact dialogue behavior.
+        for (const [size, lh] of [[16, 23], [14, 20], [12, 17]]) {
+            dlgText.style.fontSize = size;
+            dlgText.style.lineHeight = lh;
+            dlgText.text = text;
+            if (dlgText.height <= 70) break;
+        }
     }
     // 新訊息強制跳出對話框一次；同一則訊息之後由使用者自由開關
     if (text !== lastMsg) {
@@ -955,6 +973,13 @@ function refreshSceneAccess() {
         button.textContent = h.name;
         button.addEventListener('click', () => onHotspot(h));
         body.append(button);
+    }
+    if (CASE.hints?.length) {
+        const hint = document.createElement('button');
+        hint.type = 'button';
+        hint.textContent = `向${CASE.assistantName || '助手'}求提示`;
+        hint.addEventListener('click', showAssistantHint);
+        body.append(hint);
     }
     for (const o of CASE.scenes[state.scene].objects || []) {
         if (state.stored.has(o.id) || state.combined.has(o.id) || isHidden(o)) continue;
@@ -1304,10 +1329,12 @@ function makePillLabel(text, icon = '') {
     const width = Math.ceil(labelText.width + paddingX * 2 + (labelIcon ? labelIcon.width + iconGap : 0));
     const height = Math.ceil(Math.max(34, labelText.height + paddingY * 2));
     labelText.anchor.set(0.5);
-    labelText.position.set(width / 2, height / 2);
+    const groupWidth = labelText.width + (labelIcon ? labelIcon.width + iconGap : 0);
+    const groupLeft = (width - groupWidth) / 2;
+    labelText.position.set(groupLeft + labelText.width / 2, height / 2);
     if (labelIcon) {
         labelIcon.anchor.set(0.5);
-        labelIcon.position.set(width / 2 + labelText.width / 2 + iconGap + labelIcon.width / 2, height / 2);
+        labelIcon.position.set(groupLeft + labelText.width + iconGap + labelIcon.width / 2, height / 2);
         labelIcon.eventMode = 'none';
     }
 
@@ -2280,6 +2307,7 @@ if (resumed) {
     if (CASE.opening && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         const showIntro = await playStarlightOpening({
             app, root, container, sceneAccess, opening: CASE.opening, scenes: CASE.scenes,
+            toggleFullscreen, isFullscreen,
         });
         if (showIntro && container.isConnected) showBrief();
     } else {
