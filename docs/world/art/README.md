@@ -11,7 +11,7 @@
 | 網站首頁、活動入口與教師工作室 | [網站原稿與產製規格](site/manifest.json)；介面分工見 [網站設計](../../project/site-design.md) |
 | 尺寸、格位、錨點、留白、產圖提示與生成紀錄 | [製作清單](#製作清單與重建)，不在多個 MD 重複抄寫規格 |
 | 實際載入的 WebP | [工坊 display](../../../assets/images/magic-workshop/display/)；程式使用原 URL，未複製第二份共用素材 |
-| 星燈小徑的場景與道具 | [案件素材](../../../assets/images/detective/starlight/)；目前專案只有十張 WebP，未找到對應高解析原稿或產圖 manifest，不能稱為母圖 |
+| 星燈小徑的場景與道具 | [案件素材](../../../assets/images/detective/starlight/)；原有十張場景／道具 WebP 未找到對應高解析原稿，新開場角色母圖另見[製作清單](manifests/starlight-opening-manifest.json) |
 
 **原稿與執行圖分工**：此資料夾保留完整原圖供後續產製，不隨網站發布。中間切幀不另存入美術庫，加工直接使用完整母圖。PNG 檔名沿用生成版本便於追溯，人物資料夾與圖鑑提供可讀名稱。WebP 是縮圖／切幀的遊戲素材，不等於另一份原稿。歷史版本有不同像素與構圖，保留作來源比對，不能因版本號大就直接更換遊戲圖。
 
@@ -65,6 +65,7 @@
 | 場景 | [星燈小徑](../../../assets/images/detective/starlight/trail.webp) · [守燈亭](../../../assets/images/detective/starlight/keeper-hut.webp) · [夜花坡](../../../assets/images/detective/starlight/nightflower-slope.webp) · [石橋舊郵路](../../../assets/images/detective/starlight/postal-bridge.webp) |
 | 道具 | [燈罩](../../../assets/images/detective/starlight/brass-hood.webp) · [遮光布](../../../assets/images/detective/starlight/shade-cloth.webp) · [夜花札記](../../../assets/images/detective/starlight/flower-notes.webp) · [郵路拓片](../../../assets/images/detective/starlight/route-rubbing.webp) |
 | 介面插圖 | [調查卷宗](../../../assets/images/detective/starlight/investigation-board.webp) · [對話卷軸](../../../assets/images/detective/starlight/dialogue-scroll.webp) |
+| 開場角色動畫 | [奧利背向步態](../../../assets/images/detective/starlight/oli-opening-rear-walk-v1.webp) · [奧利反應](../../../assets/images/detective/starlight/oli-opening-reactions-v1.webp) · [諾爾反應](../../../assets/images/detective/starlight/noel-opening-reactions-v1.webp) · [米洛向左步態](../../../assets/images/detective/starlight/milo-opening-left-walk-v1.webp) · [偵探變裝關鍵幀](../../../assets/images/detective/starlight/milo-detective-transform-v2-keys.webp) · [變裝銜接幀](../../../assets/images/detective/starlight/milo-detective-transform-v2-inbetweens.webp)；原稿與格位見[開場製作清單](manifests/starlight-opening-manifest.json) |
 
 ## 製作清單與重建
 
@@ -82,6 +83,7 @@
 | [reactions-manifest.json](manifests/reactions-manifest.json) | 六位居民感謝表情與原造型的對應 |
 | [rustic-manifest.json](manifests/rustic-manifest.json) | 樸素道具素材表；其中泉／釜是歷史版本 |
 | [stations-manifest.json](manifests/stations-manifest.json) | 初期魔力泉與回收釜來源 |
+| [starlight-opening-manifest.json](manifests/starlight-opening-manifest.json) | 星燈小徑開場角色動畫原稿、格位與執行圖 |
 | [ui-manifest.json](manifests/ui-manifest.json) | 魔法書、結晶、紙張、木牌與特效素材表 |
 | [warm-props-manifest.json](manifests/warm-props-manifest.json) | 暖色泉／釜的中間版本 |
 | [water-stream-manifest.json](manifests/water-stream-manifest.json) | 連續水流原稿 |

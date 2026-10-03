@@ -6,6 +6,7 @@ import {
     preloadImages, ensureSceneLoaded, hasTexture
 } from './ui.js';
 import { PUZZLES } from './puzzles.js';
+import { playStarlightOpening } from './starlight-opening.js';
 
 // ============================================================
 // 偵探事件簿 · 點擊解謎引擎（Pixi.js v8）
@@ -2276,7 +2277,14 @@ if (resumed) {
     say(`📁 接續上次的進度${sess?.label ? `（${sess.label}）` : ''}\n`
         + `目前線索 ${state.clues.length}/${CASE.clues.length}，繼續調查吧！`);
 } else {
-    showBrief();
+    if (CASE.opening && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const showIntro = await playStarlightOpening({
+            app, root, container, sceneAccess, opening: CASE.opening, scenes: CASE.scenes,
+        });
+        if (showIntro && container.isConnected) showBrief();
+    } else {
+        showBrief();
+    }
 }
 
 // 存檔讀不到時（斷線、碼被刪或過期）遊戲照樣能玩，但這次不會被記錄。

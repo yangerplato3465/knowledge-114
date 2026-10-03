@@ -8,6 +8,15 @@ window.DETECTIVE_CASE = {
     title: '星燈小徑燈光偏移事件',
     brief: '「燈明明亮著，信怎麼到了舊榛樹郵箱？」奧利把退回的信放到桌上。\n諾爾輕聲說：「昨晚沒有一盞燈熄掉。只是光落下來的地方，和以前不一樣。」\n\n跟米洛走進小徑左右兩條路，查看夜花坡、石橋郵路與守燈亭，找出燈光、時間和郵路之間的關係。',
     startScene: 'trail',
+    opening: {
+        rear: IMG + 'oli-opening-rear-walk-v1.webp',
+        oli: IMG + 'oli-opening-reactions-v1.webp',
+        noel: IMG + 'noel-opening-reactions-v1.webp',
+        miloKeys: IMG + 'milo-detective-transform-v2-keys.webp',
+        miloBetween: IMG + 'milo-detective-transform-v2-inbetweens.webp',
+        miloWalk: IMG + 'milo-opening-left-walk-v1.webp',
+        oliSide: [0, 1, 2, 3].map(i => WORKSHOP + `guest-deer-walk-v1-${i}.webp`),
+    },
     skin: 'workshop',
     skinAssets: {
         board: IMG + 'investigation-board.webp',

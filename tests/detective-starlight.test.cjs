@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { readFileSync } = require('node:fs');
+const { existsSync, readFileSync } = require('node:fs');
 const { runInNewContext } = require('node:vm');
 const { pathToFileURL } = require('node:url');
 const { resolve } = require('node:path');
@@ -52,4 +52,16 @@ test('排序、痕跡配對和燈光重現的判定只接受完整證據鏈', as
     assert.ok(correctLight([1, 1]));
     assert.equal(correctLight([1, 2]), false);
     assert.equal(correctSequence(['moths', 'shade', 'beam', 'mail', 'ask'], c.resolutionPuzzle.answer), true);
+});
+
+test('新案件開場需要的角色方位與場景素材都有可載入檔案', () => {
+    const c = loadCase();
+    assert.equal(c.startScene, 'trail');
+    assert.equal(c.opening.oliSide.length, 4);
+    const urls = [c.scenes.trail.bg, c.scenes.bridge.bg, c.scenes.hut.bg,
+        c.opening.rear, c.opening.oli, c.opening.noel,
+        c.opening.miloKeys, c.opening.miloBetween,
+        c.opening.miloWalk,
+        ...c.opening.oliSide];
+    for (const url of urls) assert.ok(existsSync(new URL(url)), `開場缺少素材：${url}`);
 });

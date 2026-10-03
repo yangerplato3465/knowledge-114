@@ -25,6 +25,21 @@
 
 **芮雅**是已出現在 [星燈小徑案件](../games/detective/starlight.md) 的夜蛾照護員，關心剛孵化的夜蛾，與米洛、諾爾及奧利共同修復通行問題。現有設定未指定物種、服裝與獨立立繪；不可替她套用其他居民的圖像。案件真相留在案件文件。
 
+## 同場角色尺度
+
+角色在同一地面深度並排時，以奧利的自然站姿輪廓為 1.00 校準視覺身高；帽沿、耳尖、羽角、提燈、披風與魔法光暈不拿來決定縮放。這是跨遊戲的畫面比例基準，不是角色的公分身高；遠近透視仍由場景座標調整。各角色有頭身與體型差異，但不把任何居民畫成另一位的巨人或矮人。
+
+| 角色 | 同深度視覺身高 | 造型差異 |
+| --- | ---: | --- |
+| 露米 | 約 0.96 | 兔耳高於頭頂，身體仍接近其他居民 |
+| 奧利 | 1.00 | 輕巧的小鹿身形，郵袋不計入身高 |
+| 諾爾 | 約 0.98 | 羽身較寬、站姿較圓，提燈不放大本體 |
+| 菲恩 | 約 1.03 | 狐狸身形較修長，尾巴不計入身高 |
+| 米洛 | 約 1.05 | 人類學徒略高，巫師帽與偵探帽不計入身高 |
+| 布諾 | 約 1.10 | 肩背較寬厚，是這組角色中稍高的一位 |
+
+星燈小徑開場的守燈亭是第一個同框驗收點：奧利、諾爾與米洛腳底落在相近的地面線，角色輪廓高度只作上述小幅差異。角色換姿勢時錨點跟著腳底，不以 512px 影格大小當角色身高。
+
 ## 造型基準與原圖
 
 上方速覽直接引用現役 WebP；「造型母圖」連向完整 PNG 原稿，製作新圖時優先使用它。表情、步態與正視修正是同一角色的衍生姿勢，不是不同角色。原稿尺寸、提示與生成紀錄以所連的 manifest 為準；有透明殘點的早期原稿仍需重新驗收，不能把它當成已通過新動畫規格。
@@ -34,6 +49,8 @@
 栗棕捲髮、淡紫星飾巫師帽、青綠上衣、梅紫披風、棕靴與小瓶。
 
 [造型母圖](art/characters/milo/apprentice-v2.png) · [感謝表情原圖](art/characters/milo/apprentice-celebrate-v1.png) · [造型來源紀錄](art/manifests/manifest.json)
+
+案件服裝衍生：[星燈小徑開場變裝關鍵六幀](art/characters/milo/milo-detective-transform-v2-keys.png) · [銜接六幀](art/characters/milo/milo-detective-transform-v2-inbetweens.png) · [向左入場步態六幀](art/characters/milo/milo-opening-left-walk-v1.png)；服裝用途見[案件設計](../games/detective/starlight.md)。
 
 ### 露米（lumi）
 
@@ -51,6 +68,8 @@
 
 其他姿勢：[六幀步態母圖](art/characters/oli/guest-deer-walk-v1.png)
 
+星燈小徑開場：[背向步態六幀](art/characters/oli/oli-opening-rear-walk-v1.png) · [尋路與錯愕六幀](art/characters/oli/oli-opening-reactions-v1.png)。
+
 ### 諾爾（noel）
 
 棕／米白羽毛、圓眼鏡、梅紫圍巾、青綠外套與黃銅提燈。
@@ -58,6 +77,8 @@
 [造型母圖](art/characters/noel/visitor-owl-keeper-v1.png) · [感謝表情原圖](art/characters/noel/visitor-owl-happy-v1.png) · [造型來源紀錄](art/manifests/batch-2-manifest.json)
 
 其他姿勢：[正視修正原圖](art/characters/noel/guest-owl-front-gaze-v2.png) · [六幀步態母圖](art/characters/noel/guest-owl-walk-v1.png)
+
+星燈小徑開場：[傾聽與困惑六幀](art/characters/noel/noel-opening-reactions-v1.png)。
 
 ### 菲恩（finn）
 

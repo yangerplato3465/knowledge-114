@@ -1,0 +1,77 @@
+{
+  "generator": "Built-in image_gen; identity-preserve generation and cell-padding edits",
+  "frameSize": [512, 512],
+  "grid": [3, 2],
+  "background": "transparent RGBA",
+  "anchor": "visible horizontal midpoint and planted foot per frame; measured alpha bounds in assets/js/detective/starlight-opening.js",
+  "preparation": "scripts/normalize-starlight-transform.py registers each new Milo sheet at one fixed 76% scale and foot y=450; scripts/prepare-starlight-opening.py validates all 42 source and runtime cells, then writes lossless WebP",
+  "activeMiloSequence": "keys[0], inbetweens[0], keys[1], inbetweens[1], keys[2], inbetweens[2], keys[3], inbetweens[3], keys[4], inbetweens[4], keys[5], inbetweens[5]",
+  "sheets": [
+    {
+      "source": "characters/oli/oli-opening-rear-walk-v1.png",
+      "runtime": "assets/images/detective/starlight/oli-opening-rear-walk-v1.webp",
+      "safePadding": 48,
+      "facing": "rear, walking away; last two are rear three-quarter toward upper-right",
+      "frames": ["left-hoof-contact", "passing", "right-hoof-contact", "opposite-passing", "diagonal-contact-a", "diagonal-contact-b"],
+      "reference": "characters/oli/visitor-deer-post-v4.png",
+      "prompt": "Identity-preserve Oli, antlerless young deer postman with red cap, cream vest, mustard shirt and red mail satchel. 1536x1024 transparent 3x2 sheet, 512px cells. Six rear-view walking frames in the listed order, last two rear three-quarter toward upper-right. Edit the generated sheet by uniformly reducing each figure to about 72%, align horizontal centre and foot baseline, and keep every ear, cap, bag, tail and hoof strictly within each cell with at least 48px alpha padding. No background, grid, text, clipping or overlap."
+    },
+    {
+      "source": "characters/oli/oli-opening-reactions-v1.png",
+      "runtime": "assets/images/detective/starlight/oli-opening-reactions-v1.webp",
+      "safePadding": 24,
+      "facing": "front except final left-facing three-quarter",
+      "frames": ["front-neutral", "look-viewer-left", "look-viewer-right", "inspect-envelope", "startled", "hurry-left"],
+      "reference": "characters/oli/visitor-deer-post-v4.png",
+      "prompt": "Identity-preserve the same antlerless Oli and postal uniform. 1536x1024 transparent 3x2 sheet, six 512px cells: neutral front, look viewer-left, look viewer-right, inspect envelope with concern, startled front, anxious left-facing lean. Uniformly shrink and register each pose inside its cell, with complete cap, ears, bag, envelope and hooves, at least 24px alpha padding, fixed foot position and no background or crossing."
+    },
+    {
+      "source": "characters/noel/noel-opening-reactions-v1.png",
+      "runtime": "assets/images/detective/starlight/noel-opening-reactions-v1.webp",
+      "safePadding": 20,
+      "facing": "front with head/gaze turns",
+      "frames": ["calm", "listen", "look-down", "surprised", "thinking", "look-to-milo"],
+      "reference": "characters/noel/visitor-owl-keeper-v1.png",
+      "prompt": "Identity-preserve Noel, brown and cream owl with round glasses, plum scarf, teal coat and brass lantern. 1536x1024 transparent 3x2 sheet, six 512px cells: calm, attentive tilt, worried glance down, surprised, thoughtful tilt, hopeful uncertain look toward Milo. Reduce and re-register each complete owl and lantern within its own cell. Keep at least 20px alpha padding; no background, grid or clipped feathers, scarf, glow or feet."
+    },
+    {
+      "source": "characters/milo/milo-detective-transform-v1.png",
+      "runtime": "assets/images/detective/starlight/milo-detective-transform-v1.webp",
+      "safePadding": 48,
+      "facing": "front",
+      "frames": ["apprentice", "magic-start", "mid-transform", "detective-near-complete", "detective-with-notes", "detective-invitation"],
+      "reference": "characters/milo/apprentice-v2.png",
+      "prompt": "Identity-preserve Milo's chestnut curls, friendly child face, eyes, teal and plum star motif. 1536x1024 transparent 3x2 sheet, six 512px cells: original apprentice clothes; small gold-teal magic rings; forming short plum cape and purple star detective cap; nearly complete detective clothes; complete teal vest, short cape, notebook satchel and brass magnifier; inviting detective gesture. Uniformly reduce every whole figure and sparkle to fit its own cell with at least 48px transparent padding, matching centre, size and boot baseline. No background, grid, cropped cape or cross-cell magic."
+    },
+    {
+      "source": "characters/milo/milo-detective-transform-v2-keys.png",
+      "runtime": "assets/images/detective/starlight/milo-detective-transform-v2-keys.webp",
+      "safePadding": 48,
+      "facing": "front three-quarter, one complete costume state per frame",
+      "frames": ["apprentice", "bending-hat", "rounded-cap-and-vest", "notebook-and-short-cape", "magnifier-forming", "detective-ready"],
+      "reference": "characters/milo/apprentice-v2.png; characters/milo/milo-detective-transform-v1.png",
+      "normalization": "All six cells uniformly scaled to 76%, centred on x=256 and planted at foot y=450; alpha below 16 cleared. The shorter detective hat naturally reduces total silhouette height, while face and body scale remain fixed.",
+      "prompt": "Create a production animation sprite sheet, transparent 1536x1024 PNG, 3x2 cells of 512px. Same Milo child, fixed three-quarter pose and body size: original apprentice; wizard hat point bends; one hat rounds into a cap; cape shortens and notebook forms; magnifier appears; final detective jacket, satchel, cap and props. Exactly one complete character, one hat on head and one outfit state per cell. No floating old hat, duplicated clothing, ghosts, fade blend or drawn magic effects. Keep all parts within each cell with 48px safe transparent padding and a shared planted-foot baseline."
+    },
+    {
+      "source": "characters/milo/milo-detective-transform-v2-inbetweens.png",
+      "runtime": "assets/images/detective/starlight/milo-detective-transform-v2-inbetweens.webp",
+      "safePadding": 48,
+      "facing": "front three-quarter, six in-between frames for v2-keys",
+      "frames": ["hat-bend-between", "cap-brim-between", "book-between", "magnifier-between", "tailoring-between", "detective-settle"],
+      "reference": "characters/milo/milo-detective-transform-v2-keys.png; characters/milo/milo-detective-transform-v1.png",
+      "normalization": "Same fixed 76% scale, x=256 centre, foot y=450, alpha threshold 16 as the v2 key sheet.",
+      "prompt": "Create six unique halfway drawings to insert between consecutive panels of the v2 key transformation sheet, as transparent 1536x1024 PNG in six 512px cells. Evolve one wizard hat into one detective cap, shorten cape and tailor jacket, turn the vial into notebook and brass magnifier. Match Milo's face, body, stance, scale and planted boots in every cell. One silhouette, one hat, no old costume overlaid or detached, no ghosts, background, text or drawn effects, and 48px safe margins."
+    },
+    {
+      "source": "characters/milo/milo-opening-left-walk-v1.png",
+      "runtime": "assets/images/detective/starlight/milo-opening-left-walk-v1.webp",
+      "safePadding": 48,
+      "facing": "viewer-left side or three-quarter, in original apprentice clothes",
+      "frames": ["left-foot-contact", "passing", "right-foot-contact", "opposite-passing", "left-foot-and-cape-settle", "right-foot-and-cape-settle"],
+      "reference": "characters/milo/apprentice-v2.png; characters/milo/milo-detective-transform-v1.png",
+      "normalization": "Generated at 1536x1024; each cell uniformly scaled to 81% about local x=256 and alpha>=16 silhouette, with visible bottom registered to y=446; alpha below 16 cleared before lossless WebP conversion.",
+      "prompt": "Use case: identity-preserve. Production transparent 1536x1024 3x2 sprite sheet, six 512px cells. Same Milo as the canonical apprentice and transformation references: chestnut curls, plum wizard hat with brass star, teal tunic, plum embroidered cape, brown trousers, boots and pouch. Six chronological full-body walking poses facing viewer-left, never front or back: alternating foot plants and passing steps, last two with cape settling. Consistent visible size and boot baseline; every feature remains at least 48px from its own cell edge. No detective costume, scene, grid, labels, extra limbs or clipped fabric."
+    }
+  ]
+}
