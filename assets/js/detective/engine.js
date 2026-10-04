@@ -6,7 +6,6 @@ import {
     preloadImages, ensureSceneLoaded, hasTexture, DETECTIVE_ICONS
 } from './ui.js';
 import { PUZZLES } from './puzzles.js';
-import { playStarlightOpening } from './starlight-opening.js';
 
 // ============================================================
 // 偵探事件簿 · 點擊解謎引擎（Pixi.js v8）
@@ -684,7 +683,7 @@ if (workshopSkin && hasTexture(ASSIST)) {
     }
     catBtn.addChild(new Graphics().circle(0, 0, AVATAR_R).stroke({ width: 3, color: COL.border }));
 }
-const catTip = mkText(workshopSkin ? '問米洛' : '提示', workshopSkin ? 14 : 9, workshopSkin ? 0xf4dda8 : COL.muted, { weight: '700', lineHeight: workshopSkin ? 14 : 9 });
+const catTip = mkText('提示', workshopSkin ? 14 : 9, workshopSkin ? 0xf4dda8 : COL.muted, { weight: '700', lineHeight: workshopSkin ? 14 : 9 });
 catTip.anchor.set(0.5);
 catTip.position.set(0, workshopSkin ? 56 : 36);
 catBtn.addChild(catTip);
@@ -2412,7 +2411,7 @@ function showEnding() {
         body.position.set(textX, top);
         panel.addChild(body);
         panel.addChild(mkButton({
-            label: workshopSkin ? '回看小徑' : '🔁 再查一次', x: box.cx - 200, y: btnY, w: 180, h: 44,
+            label: '🔁 再查一次', x: box.cx - 200, y: btnY, w: 180, h: 44,
             onClick: workshopSkin ? closePanel : () => location.reload(),
         }));
         panel.addChild(mkButton({
@@ -2458,15 +2457,7 @@ if (resumed) {
     say(`📁 接續上次的進度${sess?.label ? `（${sess.label}）` : ''}\n`
         + `目前線索 ${state.clues.length}/${CASE.clues.length}，繼續調查吧！`);
 } else {
-    if (CASE.opening && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const showIntro = await playStarlightOpening({
-            app, root, container, sceneAccess, opening: CASE.opening, scenes: CASE.scenes,
-            toggleFullscreen, isFullscreen,
-        });
-        if (showIntro && container.isConnected) showBrief();
-    } else {
-        showBrief();
-    }
+    showBrief();
 }
 
 // 存檔讀不到時（斷線、碼被刪或過期）遊戲照樣能玩，但這次不會被記錄。

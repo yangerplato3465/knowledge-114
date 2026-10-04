@@ -31,7 +31,7 @@ it('星圖按分類收納活動，星座內立即列出每個有名稱的入口'
   vi.useFakeTimers();
   render(<ThemeProvider><Activities /></ThemeProvider>);
   const main = screen.getByRole('main');
-  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'magic-workshop', 'detective-golden-owl', 'detective-starlight']);
+  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'magic-workshop', 'detective-golden-owl']);
   expect(within(main).getByRole('heading', { name: '星燈星圖' })).toBeTruthy();
   expect(within(main).queryByText('魔法工坊')).toBeNull();
   for (const category of categories) {
@@ -74,9 +74,9 @@ it('點選活動後將原有入口捲入視野並移動鍵盤焦點', () => {
   Object.defineProperty(Element.prototype, 'scrollIntoView', { configurable: true, value: scroll });
   try {
     render(<ThemeProvider><Activities /></ThemeProvider>);
-    fireEvent.click(screen.getByRole('button', { name: '查看星燈小徑燈光偏移事件介紹' }));
+    fireEvent.click(screen.getByRole('button', { name: '查看黃金貓頭鷹雕像失竊事件介紹' }));
     act(() => frame(0));
-    const entrance = screen.getByRole('link', { name: '進入星燈小徑燈光偏移事件' });
+    const entrance = screen.getByRole('link', { name: '進入黃金貓頭鷹雕像失竊事件' });
     expect(scroll).toHaveBeenCalledWith(expect.objectContaining({ block: 'center' }));
     expect(document.activeElement).toBe(entrance);
     expect(screen.queryByRole('dialog')).toBeNull();

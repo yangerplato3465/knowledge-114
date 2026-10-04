@@ -1,0 +1,9 @@
+{
+  "purpose": "共用偵探介面圖示",
+  "processor": "scripts/prepare-detective-icons.py",
+  "layout": { "pixels": [128, 128], "cells": [1, 1], "anchor": "center", "safePadding": 12 },
+  "assets": [
+    { "source": "detective/shared/magnifier-v1.png", "runtime": "assets/images/detective/shared/magnifier-v1.webp" },
+    { "source": "detective/shared/drag-hand-v1.png", "runtime": "assets/images/detective/shared/drag-hand-v1.webp" }
+  ]
+}

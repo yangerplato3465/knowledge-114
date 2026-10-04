@@ -80,9 +80,6 @@ body.fs-fallback #gameContainer {
 .detective-access h3 { font-size: 15px; margin: 10px 0 4px; }
 .detective-access ul { padding-left: 23px; margin: 4px 0; }
 .detective-access .detective-ending-story { white-space: pre-line; }
-.detective-starlight .detective-access { background: #f4dda8; color: #30233e; border-color: #79513b; }
-.detective-starlight .detective-access button, .detective-starlight .detective-access select { background: #f7e8c8; border-color: #79513b; color: #30233e; }
-@media (max-width: 650px) { .detective-starlight .game-bar { gap: 8px; } .detective-starlight .game-bar h1 { display: none; } }
 
 /* ---- 上課驗證碼門檻（見 assets/js/detective-gate.js）---- */
 
@@ -286,45 +283,3 @@ body.fs-fallback #gameContainer {
     .group-menu:not([hidden]) { min-width: 200px; }
 }
 }
-
-/* 工坊案件採滿版舞台；共用 ui.css 未分層，這組版面覆寫需留在 layer 外。 */
-body:has(.game-shell.detective-starlight) { padding: 16px; min-height: 100dvh; background: var(--frame-bg); }
-body.fs-fallback:has(.game-shell.detective-starlight) { padding: 0; background: #21182d; }
-.game-shell.detective-starlight { min-height: 0; height: 100dvh; gap: 0; overflow: hidden; }
-.game-shell.detective-starlight .game-bar { flex: 0 0 auto; min-height: 86px; margin: 8px auto 20px; padding: 14px 24px; border: 1px solid var(--frame-border); border-radius: 22px; background: var(--frame-surface); color: var(--frame-ink); }
-.game-shell.detective-starlight .game-bar h1 { font-size: 1.2rem; font-weight: 700; color: var(--frame-ink); opacity: 1; }
-.game-shell.detective-starlight .game-bar .back-link { color: var(--frame-primary); }
-.game-shell.detective-starlight #gameContainer { min-height: 0; border: 0; border-radius: 0; box-shadow: none; background: radial-gradient(ellipse at center, #3a314a, #21182d); }
-/* 這組等效操作留給鍵盤與讀屏；一般遊玩畫面不顯示額外的物件按鈕。 */
-.game-shell.detective-starlight .scene-access:not([open]):not(:has(> summary:focus-visible)) {
-    width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
-    clip-path: inset(50%); border: 0; box-shadow: none;
-}
-.game-shell.detective-starlight .scene-access:has(> summary:focus-visible),
-.game-shell.detective-starlight .scene-access[open] { width: min(370px, calc(100% - 16px)); }
-.detective-opening-controls {
-    position: absolute;
-    z-index: 20;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    gap: 8px;
-}
-.detective-opening-controls button {
-    border: 2px solid #f6d883;
-    border-radius: 999px;
-    min-height: 44px;
-    padding: 8px 14px;
-    background: #21172de8;
-    color: #fff2cd;
-    font: 700 15px/1.3 'Microsoft JhengHei', 'Noto Sans TC', sans-serif;
-    cursor: pointer;
-    touch-action: manipulation;
-}
-.detective-opening-controls button:hover { background: #40304d; }
-.detective-opening-controls button:focus-visible { outline: 3px solid #65e0d0; outline-offset: 3px; }
-@media (max-width: 900px) and (orientation: portrait) {
-    .detective-opening-controls { left: 12px; right: auto; }
-    .detective-opening-fullscreen { display: none; }
-}
-@media (max-width: 650px) { .game-shell.detective-starlight .game-bar { padding: 12px 16px; } .game-shell.detective-starlight .game-bar h1 { display: block; font-size: 1rem; } }
