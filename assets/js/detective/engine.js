@@ -3,7 +3,7 @@ import {
 } from '../../vendor/pixi.esm.min.js';
 import {
     W, H, COL, mkText, mkButton, panelBase, drawProps,
-    preloadImages, ensureSceneLoaded, hasTexture
+    preloadImages, ensureSceneLoaded, hasTexture, DETECTIVE_ICONS
 } from './ui.js';
 import { PUZZLES } from './puzzles.js';
 import { playStarlightOpening } from './starlight-opening.js';
@@ -262,6 +262,17 @@ const clueById = id => CASE.clues.find(c => c.id === id);
 const itemById = id => CASE.items.find(i => i.id === id);
 const hasClue = id => state.clues.includes(id);
 const hasItem = id => state.items.includes(id);
+function collectObjectClues(o) {
+    let message = '';
+    for (const id of [].concat(o.gives || [])) {
+        if (hasClue(id)) continue;
+        const clue = clueById(id);
+        if (!clue) continue;
+        state.clues.push(id);
+        message += `\n📌 新線索：${clue.icon} ${clue.name}（${state.clues.length}/${CASE.clues.length}）`;
+    }
+    return message;
+}
 
 // ============================================================
 // 動態文案：look / after / locked / lockedClue / intro / 提示的 text
@@ -286,6 +297,63 @@ const lookOf = h => txt((h.doneItem && hasItem(h.doneItem) && h.lookDone) || h.l
 const OBJ_INDEX = {};
 for (const sc of Object.values(CASE.scenes)) {
     for (const o of sc.objects || []) OBJ_INDEX[o.id] = o;
+}
+const SCENE_TARGETS = Object.values(CASE.scenes).flatMap(sc =>
+    (sc.hotspots || []).map(h => ({ id: h.id, name: h.name, scene: sc.name })));
+let selectedObjectId = null;
+const objectUsesOf = id => CASE.objectUses?.[id] || [];
+const useKey = (id, target) => `${id}:${target}`;
+const usedObjects = () => {
+    if (!state.flags.usedObjects || typeof state.flags.usedObjects !== 'object' || Array.isArray(state.flags.usedObjects)) {
+        state.flags.usedObjects = {};
+    }
+    return state.flags.usedObjects;
+};
+const isObjectUsed = (id, target) => Boolean(usedObjects()[useKey(id, target)]);
+
+function selectInventoryObject(id) {
+    if (!state.stored.has(id)) return;
+    const uses = objectUsesOf(id);
+    if (!uses.length) { onHotspot(OBJ_INDEX[id]); return; }
+    if (selectedObjectId === id) {
+        selectedObjectId = null;
+        say(`已放下${OBJ_INDEX[id].name}。`);
+    } else {
+        selectedObjectId = id;
+        const pending = uses.filter(use => !isObjectUsed(id, use.target));
+        const destinations = (pending.length ? pending : uses).map(use => {
+            const target = SCENE_TARGETS.find(h => h.id === use.target);
+            return target ? `${target.scene}的${target.name}` : use.target;
+        });
+        say(`已選取${OBJ_INDEX[id].name}。${txt(OBJ_INDEX[id].after) || ''}點擊${destinations.join('、')}使用；再點一次物品可取消。`);
+    }
+    renderTray();
+    renderInteractives();
+    refreshSceneAccess();
+}
+
+function applyInventoryObject(id, h) {
+    const use = objectUsesOf(id).find(entry => entry.target === h.id);
+    if (!use) return false;
+    selectedObjectId = null;
+    if (isObjectUsed(id, h.id)) {
+        say(`${OBJ_INDEX[id].name}已在${h.name}用過。可以繼續查看這裡。`);
+    } else {
+        usedObjects()[useKey(id, h.id)] = true;
+        const total = h.requiresUse?.length || 0;
+        const done = h.requiresUse?.filter(itemId => isObjectUsed(itemId, h.id)).length || 0;
+        const ready = total && done === total;
+        const next = ready ? (h.needsClue && !hasClue(h.needsClue)
+            ? ` ${txt(h.lockedClue) || '先完成前一段推理，再回來操作。'}`
+            : ' 現在點這裡可打開謎題。') : '';
+        say(`${OBJ_INDEX[id].name}用在${h.name}。${use.text}${total ? `（${done}/${total}）` : ''}${next}`);
+        ring(h.x + h.w / 2, h.y + h.h / 2, { color: COL.hint, r0: 12, r1: 48, ms: 420, width: 2.5 });
+        saveProgress();
+    }
+    renderTray();
+    renderInteractives();
+    refreshSceneAccess();
+    return true;
 }
 
 // ============================================================
@@ -335,6 +403,7 @@ const SLOT_N = workshopSkin ? 8 : 12;
 const SLOT_SIZE = workshopSkin ? 48 : 60;
 const SLOT_PITCH = workshopSkin ? 64 : 71;
 const SLOT_X0 = workshopSkin ? 152 : 84;
+let trayPage = 0;
 const slotY = TRAY_MID - SLOT_SIZE / 2;
 const slotCX = i => SLOT_X0 + i * SLOT_PITCH + SLOT_SIZE / 2;
 const emptySlots = new Graphics();
@@ -345,6 +414,30 @@ for (let i = 0; i < SLOT_N; i++) {
         .stroke({ width: 2, color: workshopSkin ? 0x9a7448 : 0x6b5b4d });
 }
 trayBar.addChild(emptySlots);
+
+const trayPager = new Container();
+trayPager.position.set(690, TRAY_MID);
+trayBar.addChild(trayPager);
+function trayPageButton(label, x, direction) {
+    const button = new Container();
+    button.position.set(x, 0);
+    button.addChild(new Graphics().roundRect(-19, -20, 38, 40, 9)
+        .fill({ color: 0x352538 }).stroke({ width: 2, color: COL.gold }));
+    const glyph = mkText(label, 21, 0xf4dda8, { weight: '700', lineHeight: 21 });
+    glyph.anchor.set(0.5);
+    button.addChild(glyph);
+    button.eventMode = 'static';
+    button.cursor = 'pointer';
+    button.on('pointertap', () => { trayPage += direction; renderTray(); });
+    trayPager.addChild(button);
+    return button;
+}
+const trayPrev = trayPageButton('‹', 0, -1);
+const trayNext = trayPageButton('›', 170, 1);
+const trayPageText = mkText('', 15, 0xf4dda8, { weight: '700' });
+trayPageText.anchor.set(0.5);
+trayPageText.position.set(85, 0);
+trayPager.addChild(trayPageText);
 
 const trayChips = new Container();
 trayBar.addChild(trayChips);
@@ -403,8 +496,10 @@ function flyItemToSlot(item, sx, sy) {
         ...state.items.filter(x => !stillOnStage(x)).map(x => ({ kind: 'item', id: x })),
     ];
     const idx = entries.findIndex(e => e.kind === 'item' && e.id === item.id);
-    if (idx < 0 || idx >= SLOT_N) return;               // 格子滿了就不飛，免得飛到畫面外
-    flyToTray(item.icon, sx, sy, idx);
+    if (idx < 0) return;
+    trayPage = Math.floor(idx / SLOT_N);
+    renderTray();
+    flyToTray(item.icon, sx, sy, idx % SLOT_N);
 }
 
 const seenTrayIds = new Set();                 // 已經出現過的格子內容，用來認出「這格是新的」
@@ -417,7 +512,18 @@ function renderTray() {
         ...state.storedOrder.map(id => ({ kind: 'obj', id })),
         ...state.items.filter(id => !stillOnStage(id)).map(id => ({ kind: 'item', id })),
     ];
-    entries.slice(0, SLOT_N).forEach((en, i) => {
+    // 新取得的物件若落在第二頁，立即切到該頁，讓玩家看見收納結果。
+    if (!trayFirstRender) {
+        const newest = entries.findIndex(en => !seenTrayIds.has(en.id));
+        if (newest >= 0) trayPage = Math.floor(newest / SLOT_N);
+    }
+    const pageCount = Math.max(1, Math.ceil(entries.length / SLOT_N));
+    trayPage = Math.min(Math.max(trayPage, 0), pageCount - 1);
+    trayPager.visible = workshopSkin && pageCount > 1;
+    trayPrev.visible = trayPage > 0;
+    trayNext.visible = trayPage < pageCount - 1;
+    trayPageText.text = `物品 ${trayPage + 1}/${pageCount}`;
+    entries.slice(trayPage * SLOT_N, (trayPage + 1) * SLOT_N).forEach((en, i) => {
         // 第一次繪製（含讀存檔進來）整排都算「新的」，那時不該整排一起閃
         const isNew = !trayFirstRender && !seenTrayIds.has(en.id);
         seenTrayIds.add(en.id);
@@ -428,8 +534,8 @@ function renderTray() {
         chip.addChild(
             new Graphics()
                 .roundRect(-SLOT_SIZE / 2, -SLOT_SIZE / 2, SLOT_SIZE, SLOT_SIZE, 12)
-                .fill({ color: workshopSkin ? 0x58413d : 0x574c42 })
-                .stroke({ width: 2, color: COL.gold })
+                .fill({ color: en.id === selectedObjectId ? 0x234b53 : (workshopSkin ? 0x58413d : 0x574c42) })
+                .stroke({ width: en.id === selectedObjectId ? 3 : 2, color: en.id === selectedObjectId ? COL.mint : COL.gold })
         );
         const icon = en.kind === 'obj'
             ? (OBJ_INDEX[en.id].icon || '📦')
@@ -438,8 +544,8 @@ function renderTray() {
         if (workshopSkin && hasTexture(artSrc)) {
             const thumbnail = new Sprite(Assets.get(artSrc));
             thumbnail.anchor.set(0.5);
-            thumbnail.width = 56;
-            thumbnail.height = 56;
+            thumbnail.width = SLOT_SIZE - 7;
+            thumbnail.height = SLOT_SIZE - 7;
             chip.addChild(thumbnail);
         } else {
             const t = mkText(icon, workshopSkin ? 25 : 30, 0xffffff);
@@ -457,13 +563,19 @@ function renderTray() {
             chip.addChild(dot);
             trayPulses.push(dot);
         }
+        if (en.kind === 'obj' && objectUsesOf(en.id).length && objectUsesOf(en.id).every(use => isObjectUsed(en.id, use.target))) {
+            const usedMark = mkText('✓', 17, COL.mint, { weight: '700' });
+            usedMark.anchor.set(0.5);
+            usedMark.position.set(21, 20);
+            chip.addChild(usedMark);
+        }
         chip.eventMode = 'static';
         chip.cursor = 'pointer';
         chip.on('pointertap', () => {
             if (overlayLayer.children.length) return;
             if (en.kind === 'obj') {
                 if (combineInTray(en.id)) return;      // 兩個半邊都在包包裡 → 點一下就組起來
-                onHotspot(OBJ_INDEX[en.id]);
+                selectInventoryObject(en.id);
                 return;
             }
             const it = itemById(en.id);
@@ -496,7 +608,7 @@ const HUD_BUTTON_RIGHT = 20;
 const resolveButtonX = W - HUD_BUTTON_RIGHT - HUD_BUTTON_W;
 const clueButtonX = resolveButtonX - HUD_BUTTON_GAP - HUD_BUTTON_W;
 const clueBtn = mkButton({
-    label: '', icon: '🔎', x: clueButtonX, y: HUD_BUTTON_Y, w: HUD_BUTTON_W, h: HUD_BUTTON_H,
+    label: '', iconSrc: DETECTIVE_ICONS.magnifier, x: clueButtonX, y: HUD_BUTTON_Y, w: HUD_BUTTON_W, h: HUD_BUTTON_H,
     color: 0x574c42, textColor: 0xfff6e9, onClick: showNotebook,
 });
 const accuseBtn = mkButton({
@@ -781,7 +893,7 @@ const say = text => {
 let zoomCfg = null;
 
 const zoomBtn = mkButton({
-    label: '放大看', icon: '🔍', x: 760, y: 410, w: 170, h: 34,
+    label: '放大看', iconSrc: DETECTIVE_ICONS.magnifier, x: 760, y: 410, w: 170, h: 34,
     onClick: () => {
         if (zoomCfg && !overlayLayer.children.length) showZoom(zoomCfg);
     },
@@ -923,7 +1035,8 @@ function restoreProgress(p) {
         pickOrder.length = 0;
         pickOrder.push(...keep(p.pickOrder, id => !!OBJ_INDEX[id]));
         for (const [id, pos] of Object.entries(p.objPositions || {})) {
-            if (OBJ_INDEX[id] && Number.isFinite(pos?.x) && Number.isFinite(pos?.y)) {
+            if (OBJ_INDEX[id] && !['placed', 'physical'].includes(OBJ_INDEX[id].revealStyle)
+                && Number.isFinite(pos?.x) && Number.isFinite(pos?.y)) {
                 objPositions[id] = { x: pos.x, y: pos.y };
             }
         }
@@ -996,7 +1109,8 @@ function refreshSceneAccess() {
                 state.stored.add(o.id);
                 state.storedOrder.push(o.id);
                 delete objPositions[o.id];
-                say(`🎒 ${o.name}收進物品欄了。${txt(o.after) || '可在下方查看。'}`);
+                const clueMessage = collectObjectClues(o);
+                say(`🎒 ${o.name}收進物品欄了。${objectUsesOf(o.id).length ? '選取物品，再點場景中的用途位置。' : (txt(o.after) || '可在下方查看。')}${clueMessage}`);
                 refreshHud(); renderInteractives(); refreshSceneAccess(); saveProgress();
             });
             body.append(collect);
@@ -1012,8 +1126,11 @@ function refreshSceneAccess() {
             if (!o) continue;
             const view = document.createElement('button');
             view.type = 'button';
-            view.textContent = `查看物品：${o.name}`;
-            view.addEventListener('click', () => say(txt(o.after) || lookOf(o)));
+            view.textContent = objectUsesOf(id).length
+                ? `${selectedObjectId === id ? '取消選取' : '選取使用'}：${o.name}`
+                : `查看物品：${o.name}`;
+            view.addEventListener('click', () => objectUsesOf(id).length
+                ? selectInventoryObject(id) : say(txt(o.after) || lookOf(o)));
             inventory.append(view);
         }
         body.append(inventory);
@@ -1322,7 +1439,10 @@ function fadeOut(node, ms) {
 
 function makePillLabel(text, icon = '') {
     const labelText = mkText(text, 16, COL.ink, { weight: '700', align: 'center', lineHeight: 16 });
-    const labelIcon = icon ? mkText(icon, 16, COL.ink, { weight: '700', align: 'center', lineHeight: 16 }) : null;
+    const labelIcon = icon === 'drag' && hasTexture(DETECTIVE_ICONS.dragHand)
+        ? new Sprite(Assets.get(DETECTIVE_ICONS.dragHand))
+        : icon ? mkText(icon === 'drag' ? '拖' : icon, 16, COL.ink, { weight: '700', align: 'center', lineHeight: 16 }) : null;
+    if (labelIcon instanceof Sprite) { labelIcon.width = 28; labelIcon.height = 28; }
     const paddingX = labelIcon ? 22 : 14;
     const paddingY = 4;
     const iconGap = 6;
@@ -1355,7 +1475,8 @@ const DRAG_SLOP = 6;                           // 移動超過這距離才算「
 
 function makeObject(o) {
     const c = new Container();
-    const p = objPositions[o.id] || { x: o.x, y: o.y };
+    const p = ['placed', 'physical'].includes(o.revealStyle)
+        ? { x: o.x, y: o.y } : (objPositions[o.id] || { x: o.x, y: o.y });
     c.position.set(p.x, p.y);
     c.eventMode = 'static';
     c.cursor = o.draggable ? 'grab' : 'pointer';
@@ -1367,11 +1488,13 @@ function makeObject(o) {
     art.position.set(o.w / 2, o.h / 2);
     // 拿到某道具後外觀會變（例如解密盤裝好轉輪）
     drawProps((o.doneItem && hasItem(o.doneItem) && o.artDone) || o.art, art);
+    // 舊案件的 placed 小樣拖起時才顯示；physical 實物始終顯示自身圖片。
+    if (o.revealStyle === 'placed') art.visible = false;
     c.addChild(art);
     c.art = art;
 
     // 滑過去只出現名牌，不畫外框（外框太搶眼，會蓋掉美術）
-    const { label, width: labelW, height: labelH } = makePillLabel(o.name, o.draggable ? '✋' : '');
+    const { label, width: labelW, height: labelH } = makePillLabel(o.name, o.draggable ? 'drag' : '');
     label.alpha = 0;
     label.eventMode = 'none';                  // 同 makeHotspot：名牌不能參與 hit-test
     labelLayer.addChild(label);                // 放獨立圖層，座標改成畫面絕對座標
@@ -1406,6 +1529,7 @@ function makeObject(o) {
         dragLayer.addChild(c);
         dragLayer.addChild(c.label);
         c.cursor = 'grabbing';
+        if (o.revealStyle === 'placed') art.visible = true;
         art.alpha = 0.92;
         // 拿起來：從 1.18 彈回 1.06（原本是直接跳到 1.06，沒有「抓住」的頓點），
         // 再從物件中心盪一圈金環，明確告訴玩家「這個東西現在在你手上」。
@@ -1423,7 +1547,7 @@ function makeObject(o) {
     });
 
     // 剛被翻出來的東西播一次掉落動畫（只有藏起來的物件、且還沒被玩家搬過位置）
-    if (o.hiddenUntil && !dropPlayed.has(o.id) && !objPositions[o.id]) {
+    if (o.hiddenUntil && o.revealStyle !== 'placed' && !dropPlayed.has(o.id) && !objPositions[o.id]) {
         dropPlayed.add(o.id);
         // 起點＝剛剛點的那個熱點，讓東西看起來是從那裡掉出來的。
         // 但一律從落點上方開始，否則往上飛看起來很怪（例如從抽屜「飛」到桌面）。
@@ -1484,7 +1608,10 @@ function onObjUp() {
     // 節點會蓋在道具欄橫幅和對話框上面）
     objLayer.addChild(node);
     labelLayer.addChild(node.label);
-    if (dragDist < DRAG_SLOP) return;                  // 只是點一下，位置不動
+    if (dragDist < DRAG_SLOP) {
+        if (o.revealStyle === 'placed') node.art.visible = false;
+        return;                  // 只是點一下，位置不動
+    }
 
     const cx = node.x + o.w / 2, cy = node.y + o.h / 2;
 
@@ -1553,11 +1680,12 @@ function onObjUp() {
         state.stored.add(o.id);
         state.storedOrder.push(o.id);
         delete objPositions[o.id];
+        const clueMessage = collectObjectClues(o);
         // 另一半也在包包裡的話，直接把「點一下就能組」講出來，免得玩家以為卡住了
         const partner = partnerOf(o.id);
-        say(partner && state.stored.has(partner.id)
+        say((partner && state.stored.has(partner.id)
             ? `🎒 ${o.name}收進物品欄了。${partner.name}也在裡面 —— 點其中一個就能把它們裝起來。`
-            : `🎒 ${o.name}收進物品欄了。點下方的圖示隨時查看。`);
+            : `🎒 ${o.name}收進物品欄了。${objectUsesOf(o.id).length ? '點下方圖示選取，再點場景中的用途位置。' : '點下方的圖示隨時查看。'}`) + clueMessage);
         refreshHud();
         renderInteractives();
         refreshSceneAccess();
@@ -1565,10 +1693,21 @@ function onObjUp() {
         return;
     }
 
+    // 從背景取樣的物件若沒放進物品欄，就回到原來的實物位置。
+    // 不留下移位的透明熱區，下一次仍能從同一處拖出。
+    if (o.revealStyle === 'placed' || o.revealStyle === 'physical') {
+        node.position.set(o.x, o.y);
+        node.placeLabel();
+        node.art.visible = o.revealStyle === 'physical';
+        delete objPositions[o.id];
+        return;
+    }
+
     // 3) 一般放下：別藏到對話框或物品欄後面
     const maxY = (dlgOpen ? 446 : TRAY_TOP - 6) - o.h;
     if (node.y > maxY) { node.y = Math.max(60, maxY); node.placeLabel(); }
     objPositions[o.id] = { x: node.x, y: node.y };
+    if (o.revealStyle === 'placed') node.art.visible = false;
     saveProgress();
 }
 
@@ -1581,6 +1720,12 @@ function makeHotspot(h) {
     c.eventMode = 'static';
     c.cursor = 'pointer';
     c.hitArea = new Rectangle(h.x, h.y, h.w, h.h);
+    if (selectedObjectId && objectUsesOf(selectedObjectId).some(use => use.target === h.id)) {
+        const outline = new Graphics().roundRect(h.x + 3, h.y + 3, h.w - 6, h.h - 6, 12)
+            .stroke({ width: 2, color: COL.hint, alpha: 0.78 });
+        outline.eventMode = 'none';
+        c.addChild(outline);
+    }
 
     // 滑過去只出現名牌，不畫外框（外框太搶眼，會蓋掉背景美術）
     const { label, width: labelW, height: labelH } = makePillLabel(h.name);
@@ -1614,6 +1759,11 @@ function makeHotspot(h) {
 
 function onHotspot(h) {
     if (overlayLayer.children.length) return;          // 面板打開時先不理場景
+    if (selectedObjectId && !h.goto) {
+        if (applyInventoryObject(selectedObjectId, h)) return;
+        say(`${OBJ_INDEX[selectedObjectId].name}不適合用在${h.name}。點同一件物品可取消選取。`);
+        return;
+    }
     setZoom(null);                                     // 放大鈕永遠只跟著「現在這一則」說明
     if (isHidden(h)) { say('那個東西你還沒找到。'); return; }   // 從道具欄繞過來的也擋一下
 
@@ -1629,6 +1779,10 @@ function onHotspot(h) {
     }
     if (h.requiresStored && ![].concat(h.requiresStored).every(id => state.stored.has(id))) {
         say(txt(h.lockedStored) || '先把需要的小物件拖進下方物品欄，再來比對。');
+        return;
+    }
+    if (h.requiresUse && ![].concat(h.requiresUse).every(id => isObjectUsed(id, h.id))) {
+        say(txt(h.lockedUse) || '選取物品欄裡的實物，再點場景中對應的位置使用。');
         return;
     }
     if (h.goto) { transitionTo(h.goto); return; }

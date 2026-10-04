@@ -11,7 +11,7 @@
 | 網站首頁、活動入口與教師工作室 | [網站原稿與產製規格](site/manifest.json)；介面分工見 [網站設計](../../project/site-design.md) |
 | 尺寸、格位、錨點、留白、產圖提示與生成紀錄 | [製作清單](#製作清單與重建)，不在多個 MD 重複抄寫規格 |
 | 實際載入的 WebP | [工坊 display](../../../assets/images/magic-workshop/display/)；程式使用原 URL，未複製第二份共用素材 |
-| 星燈小徑的場景與道具 | [案件素材](../../../assets/images/detective/starlight/)；原有十張場景／道具 WebP 未找到對應高解析原稿，新開場角色母圖另見[製作清單](manifests/starlight-opening-manifest.json) |
+| 星燈小徑的場景與道具 | [案件素材](../../../assets/images/detective/starlight/)；原有場景／道具 WebP 未找到對應高解析原稿；四處互動背景、獨立物件及共用圖示見[互動素材清單](manifests/starlight-interactives-manifest.json)，開場角色母圖見[開場製作清單](manifests/starlight-opening-manifest.json) |
 
 **原稿與執行圖分工**：此資料夾保留完整原圖供後續產製，不隨網站發布。中間切幀不另存入美術庫，加工直接使用完整母圖。PNG 檔名沿用生成版本便於追溯，人物資料夾與圖鑑提供可讀名稱。WebP 是縮圖／切幀的遊戲素材，不等於另一份原稿。歷史版本有不同像素與構圖，保留作來源比對，不能因版本號大就直接更換遊戲圖。
 
@@ -66,6 +66,7 @@
 | 道具 | [燈罩](../../../assets/images/detective/starlight/brass-hood.webp) · [遮光布](../../../assets/images/detective/starlight/shade-cloth.webp) · [夜花札記](../../../assets/images/detective/starlight/flower-notes.webp) · [郵路拓片](../../../assets/images/detective/starlight/route-rubbing.webp) |
 | 介面插圖 | [調查卷宗](../../../assets/images/detective/starlight/investigation-board.webp) · [對話卷軸](../../../assets/images/detective/starlight/dialogue-scroll.webp) |
 | 開場角色動畫 | [奧利背向步態](../../../assets/images/detective/starlight/oli-opening-rear-walk-v1.webp) · [奧利反應](../../../assets/images/detective/starlight/oli-opening-reactions-v1.webp) · [諾爾反應](../../../assets/images/detective/starlight/noel-opening-reactions-v1.webp) · [米洛向左步態](../../../assets/images/detective/starlight/milo-opening-left-walk-v1.webp) · [偵探變裝關鍵幀](../../../assets/images/detective/starlight/milo-detective-transform-v2-keys.webp) · [變裝銜接幀](../../../assets/images/detective/starlight/milo-detective-transform-v2-inbetweens.webp)；原稿與格位見[開場製作清單](manifests/starlight-opening-manifest.json) |
+| 本案新互動素材 | [小徑互動背景](../../../assets/images/detective/starlight/trail-interactive-v1.webp) · [守燈亭互動背景](../../../assets/images/detective/starlight/keeper-hut-interactive-v1.webp) · [夜花坡互動背景](../../../assets/images/detective/starlight/nightflower-slope-interactive-v1.webp) · [石橋互動背景](../../../assets/images/detective/starlight/postal-bridge-interactive-v1.webp)；獨立物件、共用放大鏡與拖曳手勢的原稿見[互動素材清單](manifests/starlight-interactives-manifest.json) |
 
 ## 製作清單與重建
 
@@ -84,6 +85,7 @@
 | [rustic-manifest.json](manifests/rustic-manifest.json) | 樸素道具素材表；其中泉／釜是歷史版本 |
 | [stations-manifest.json](manifests/stations-manifest.json) | 初期魔力泉與回收釜來源 |
 | [starlight-opening-manifest.json](manifests/starlight-opening-manifest.json) | 星燈小徑開場角色動畫原稿、格位與執行圖 |
+| [starlight-interactives-manifest.json](manifests/starlight-interactives-manifest.json) | 星燈小徑四處互動背景、獨立物件與共用偵探圖示的原稿、尺寸和執行圖 |
 | [ui-manifest.json](manifests/ui-manifest.json) | 魔法書、結晶、紙張、木牌與特效素材表 |
 | [warm-props-manifest.json](manifests/warm-props-manifest.json) | 暖色泉／釜的中間版本 |
 | [water-stream-manifest.json](manifests/water-stream-manifest.json) | 連續水流原稿 |
@@ -98,5 +100,6 @@
 | 客人正視修正 | [prepare-workshop-gaze.py](../../../scripts/prepare-workshop-gaze.py) |
 | 石泉、釜、見習筆記與出口 | [prepare-workshop-rustic.py](../../../scripts/prepare-workshop-rustic.py) |
 | UI 素材表與水流 | [prepare-workshop-ui.py](../../../scripts/prepare-workshop-ui.py) |
+| 四處互動背景、現場實物與共用偵探圖示 | [prepare-starlight-interactives.py](../../../scripts/prepare-starlight-interactives.py) |
 
 現有腳本不是所有歷史素材的全量產生器；未涵蓋項目保留現役 WebP 與來源紀錄，不以重新壓縮代替來源追溯。製作腳本會寫入 WebP／部分 TypeScript 素材中繼資料，執行後須檢查差異與留白。字體授權與來源見 [字體說明](../../../assets/fonts/workshop/README.md)；音效與 BGM 見 [工坊設計](../../games/magic-workshop/design.md#動畫素材與音訊)。

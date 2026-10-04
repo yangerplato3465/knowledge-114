@@ -11,3 +11,8 @@ export function correctMatches(selected, rows) {
 export function correctLight(angles) {
     return Array.isArray(angles) && angles.length === 2 && angles.every(angle => angle === 1);
 }
+
+export function correctPostalLock(symbols, answer) {
+    return Array.isArray(symbols) && symbols.length === 3 &&
+        symbols.every((symbol, index) => symbol === answer[index]);
+}

@@ -295,7 +295,13 @@ body.fs-fallback:has(.game-shell.detective-starlight) { padding: 0; background: 
 .game-shell.detective-starlight .game-bar h1 { font-size: 1.2rem; font-weight: 700; color: var(--frame-ink); opacity: 1; }
 .game-shell.detective-starlight .game-bar .back-link { color: var(--frame-primary); }
 .game-shell.detective-starlight #gameContainer { min-height: 0; border: 0; border-radius: 0; box-shadow: none; background: radial-gradient(ellipse at center, #3a314a, #21182d); }
-.game-shell.detective-starlight .scene-access:not([open]) { width: 190px; }
+/* 這組等效操作留給鍵盤與讀屏；一般遊玩畫面不顯示額外的物件按鈕。 */
+.game-shell.detective-starlight .scene-access:not([open]):not(:has(> summary:focus-visible)) {
+    width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+    clip-path: inset(50%); border: 0; box-shadow: none;
+}
+.game-shell.detective-starlight .scene-access:has(> summary:focus-visible),
+.game-shell.detective-starlight .scene-access[open] { width: min(370px, calc(100% - 16px)); }
 .detective-opening-controls {
     position: absolute;
     z-index: 20;

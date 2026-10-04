@@ -1,6 +1,6 @@
 import { Container, Graphics } from '../../vendor/pixi.esm.min.js';
 import { COL, mkText, mkButton } from './ui.js';
-import { correctSequence, correctMatches, correctLight } from './starlight-rules.js';
+import { correctSequence, correctMatches, correctLight, correctPostalLock } from './starlight-rules.js';
 
 const pale = 0xf1dfb9;
 const dark = 0x30233e;
@@ -179,6 +179,46 @@ export function starlight(ctx, panel, box, cfg, onSolve) {
             domButton(body, `轉動第二盞；目前${lampAngles[angles[0]]}`, () => turn(0));
             domButton(body, `轉動第三盞；目前${lampAngles[angles[1]]}`, () => turn(1));
             domButton(body, '比較昨夜光痕', check);
+        };
+    } else if (cfg.kind === 'postalLock') {
+        const allowed = new Set(cfg.symbols.map(symbol => symbol.id));
+        let selected = Array.isArray(saved[puzzleKey]) && saved[puzzleKey].length === 3
+            ? saved[puzzleKey].map(id => allowed.has(id) ? id : '') : ['', '', ''];
+        const turn = index => {
+            const current = cfg.symbols.findIndex(symbol => symbol.id === selected[index]);
+            selected = selected.map((id, i) => i === index ? cfg.symbols[(current + 1) % cfg.symbols.length].id : id);
+            store(selected);
+            redraw();
+        };
+        const check = () => {
+            if (selected.some(id => !id)) { feedback('三個圖形環都要轉到一個地標。'); return; }
+            if (!correctPostalLock(selected, cfg.answer)) {
+                feedback('郵袋沒有打開。沿著奧利走入舊路的方向，再比較星形路標、橋拱拓片與停用郵戳。');
+                return;
+            }
+            onSolve();
+        };
+        drawWork = () => {
+            rectangle(work, box.x + 48, box.y + 136, box.w - 96, 179, 0x473527, 0xcaa66d);
+            textAt(work, '封緘郵袋上的三個轉環', box.x + 76, box.y + 151, 17, 0, 0xffe3a9);
+            const labels = ['岔口起點', '途中地標', '舊郵箱'];
+            selected.forEach((id, index) => {
+                const x = box.x + 70 + index * 197;
+                textAt(work, labels[index], x + 30, box.y + 190, 16, 150, 0xffe3a9);
+                const name = cfg.symbols.find(symbol => symbol.id === id)?.label || '？';
+                work.addChild(mkButton({ label: name, icon: '↻', iconSide: 'right', x, y: box.y + 226,
+                    w: 166, h: 60, size: 21, color: 0xe8d6b4, onClick: () => turn(index) }));
+                if (index < 2) textAt(work, '→', x + 174, box.y + 237, 22, 0, 0xffe3a9);
+            });
+            textAt(work, '拓片辨地形，印記辨終點；夜花不在郵路上。', box.x + 57, box.y + 331, 16, box.w - 114);
+            work.addChild(mkButton({ label: '試開郵袋', x: box.cx - 87, y: box.y + box.h - 58, w: 174, h: 35, onClick: check }));
+        };
+        renderAccess = body => {
+            ['岔口起點', '途中地標', '舊郵箱'].forEach((label, index) => {
+                const current = cfg.symbols.find(symbol => symbol.id === selected[index])?.label || '未選';
+                domButton(body, `旋轉${label}圖形環，目前${current}`, () => turn(index));
+            });
+            domButton(body, '試開郵袋', check);
         };
     } else throw new Error(`未知的星燈謎題：${cfg.kind}`);
 
