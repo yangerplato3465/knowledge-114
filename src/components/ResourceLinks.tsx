@@ -4,7 +4,7 @@ import { ForestArt, type ForestObject } from './ForestArt';
 
 const artwork: Record<string, ForestObject> = {
   'water-acid-base': 'science', 'magic-ink': 'ledger', 'math-rpg': 'adventure',
-  'magic-workshop': 'science', 'detective-golden-owl': 'key',
+  'magic-workshop': 'science', 'detective-golden-owl': 'key', 'detective-new': 'key',
   upload: 'library', 'class-rpg': 'ledger', 'detective-admin': 'key',
 };
 
