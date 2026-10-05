@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, checkpointY, CHECKPOINTS, GOAL, initialState, isLightOn, isSolid, LEVEL_SECONDS, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
+import { advance, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_SECONDS, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
@@ -95,13 +95,31 @@ describe('固定向前的一段跳世界', () => {
     expect(landed.size).toBe(PLATFORMS.filter(p => p.kind === 'bridge').length);
     expect(s.checkpoint).toBe(CHECKPOINTS.length - 1);
     expect(seconds).toBeGreaterThanOrEqual(40); expect(seconds).toBeLessThanOrEqual(50);
-    // The last color transition jumps across the goal, then finishes on landing.
-    expect(seconds - LEVEL_SECONDS).toBeLessThan(0.4);
+    // Contact with the portal starts a little before its center; the neutral approach adds no timing puzzle.
+    expect(Math.abs(seconds - LEVEL_SECONDS)).toBeLessThan(0.4);
   });
   it('不切色就無法通過紅藍路線，落腳區皆保留正常地面', () => {
     expect(initialState().color).toBeNull();
     expect(runRoute(PLATFORMS, false).state.falls).toBeGreaterThan(0);
     CHECKPOINTS.forEach(x => expect(PLATFORMS.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w)?.color).toBeUndefined());
+  });
+  it('出口在特殊地板之後的正常跑道，兩秒內不用再跳或換燈', () => {
+    const approach = PLATFORMS.find(p => p.x === 12800)!;
+    expect(approach.color).toBeUndefined(); expect(approach.endY).toBe(approach.y);
+    expect(EXIT.x - EXIT.radius - BODY.half - approach.x).toBeGreaterThan(PHYSICS.speed * 1.8);
+    for (const color of [null, 'red', 'blue', 'purple'] as const) {
+      const result = simulate({ ...initialState(), x: approach.x + 20, y: approach.y, color }, neutral, 3, PLATFORMS);
+      expect(result.completed).toBe(true); expect(result.falls).toBe(0);
+    }
+  });
+  it('必須真正碰到傳送門，越過水平終點但高度不對不會完成', () => {
+    expect(touchesExit({ x: EXIT.x, y: EXIT.y + 30 })).toBe(true);
+    expect(touchesExit({ x: EXIT.x, y: EXIT.y - EXIT.radius - 1 })).toBe(false);
+    expect(touchesExit({ x: EXIT.x, y: EXIT.y + EXIT.radius + 80 })).toBe(false);
+    const above = advance({ ...initialState(), x: GOAL + 10, y: EXIT.y - 100, grounded: false, coyote: 0 }, neutral, PHYSICS.step);
+    expect(above.completed).toBe(false);
+    const touching = advance({ ...initialState(), x: EXIT.x, y: EXIT.y, grounded: false, coyote: 0 }, neutral, PHYSICS.step);
+    expect(touching.completed).toBe(true);
   });
   it('前段只用分散紅色，跨洞先保留同色；連接三色挑戰留到後段', () => {
     const opening = PLATFORMS.filter(p => p.x < 3584);

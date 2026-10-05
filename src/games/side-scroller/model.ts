@@ -8,7 +8,7 @@ export function toggleColor(color: WorldColor | null, button: ColorButton): Worl
 }
 export interface Platform { x: number; y: number; w: number; h: number; kind: 'ground' | 'bridge'; endY?: number; color?: WorldColor }
 export interface Input { jump: boolean; color?: WorldColor | null }
-export const WORLD_WIDTH = 12800;
+export const WORLD_WIDTH = 13632;
 export const BODY = { half: 19, height: 60 };
 export const PHYSICS = { speed: 280, gravity: 1800, jump: 680, maxFall: 1000, grace: 0.1, buffer: 0.12, step: 1 / 120 };
 export const GHOST_ALPHA = 0.32;
@@ -34,10 +34,18 @@ export const PLATFORMS: Platform[] = [
   bridge(10112, 288, 192, 'purple'), bridge(10432, 352, 192, 'blue'), bridge(10752, 416, 192, 'red'),
   ground(10944, 416, 320), ground(11264, 416, 512, 480), ground(11776, 480, 256, 480, 'blue'),
   ground(12160, 480, 192), ground(12352, 480, 256, 480, 'red'), ground(12608, 480, 192, 480, 'purple'),
+  // A quiet, neutral approach after the last color change; no input is needed to reach the exit.
+  ground(12800, 480, 832),
 ];
 export const CHECKPOINTS = [160, 2624, 5056, 7488, 11136];
-export const GOAL = WORLD_WIDTH - 160;
+export const GOAL = WORLD_WIDTH - 224;
+export const EXIT = { x: GOAL, y: 408, radius: 54 };
 export const LEVEL_SECONDS = (GOAL - CHECKPOINTS[0]) / PHYSICS.speed;
+export function touchesExit(state: Pick<State, 'x' | 'y'>): boolean {
+  const nearestX = Math.max(state.x - BODY.half, Math.min(EXIT.x, state.x + BODY.half));
+  const nearestY = Math.max(state.y - BODY.height, Math.min(EXIT.y, state.y));
+  return (nearestX - EXIT.x) ** 2 + (nearestY - EXIT.y) ** 2 <= EXIT.radius ** 2;
+}
 export function checkpointY(index: number): number {
   const x = CHECKPOINTS[index];
   const p = PLATFORMS.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w)!;
@@ -102,6 +110,6 @@ export function advance(state: State, input: Input, dt: number, platforms: reado
     s.x = CHECKPOINTS[s.checkpoint]; s.y = checkpointY(s.checkpoint); s.vx = PHYSICS.speed; s.vy = 0; s.grounded = true;
     s.coyote = PHYSICS.grace; s.buffer = 0; s.falls++;
   }
-  if (s.x >= GOAL && s.grounded) { s.completed = true; s.vx = 0; }
+  if (touchesExit(s)) { s.completed = true; s.vx = 0; }
   return s;
 }

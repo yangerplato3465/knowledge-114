@@ -7,8 +7,9 @@ import { createSideScroller, type SceneStatus, type SideScrollerScene } from './
 import { toggleColor } from './model';
 
 vi.mock('./scene', () => ({ createSideScroller: vi.fn() }));
+vi.mock('./TutorialDemo', () => ({ TutorialDemo: () => <div>玩法動畫示範</div> }));
 afterEach(() => { cleanup(); vi.resetAllMocks(); });
-const fakeScene = (): SideScrollerScene => ({ hold: vi.fn(), tap: vi.fn(), setMode: vi.fn(), toggleColor: vi.fn(), togglePause: vi.fn(), restart: vi.fn(), destroy: vi.fn() });
+const fakeScene = (): SideScrollerScene => ({ hold: vi.fn(), tap: vi.fn(), setMode: vi.fn(), toggleColor: vi.fn(), togglePause: vi.fn(), setTutorial: vi.fn(), restart: vi.fn(), destroy: vi.fn() });
 it('提供回冒險座入口、可用鍵盤的控制與重試操作', async () => {
   const created = fakeScene();
   vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
@@ -17,11 +18,12 @@ it('提供回冒險座入口、可用鍵盤的控制與重試操作', async () =
   });
   render(<ThemeProvider><SideScroller /></ThemeProvider>);
   await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
   expect(screen.getByRole('link', { name: '← 回冒險座' }).getAttribute('href')).toBe('/pages/activities.html#games');
   expect(screen.getByRole('button', { name: '世界巡覽' }).getAttribute('aria-pressed')).toBe('true');
   expect(screen.queryByRole('button', { name: '跳躍' })).toBeNull();
   expect(screen.queryByRole('button', { name: '向左移動' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: '試跑' })); expect(created.setMode).toHaveBeenCalledWith('play');
+  fireEvent.click(screen.getByRole('button', { name: '開始冒險' })); expect(created.setMode).toHaveBeenCalledWith('play');
   const jump = screen.getByRole('button', { name: '跳躍' });
   fireEvent.keyDown(jump, { key: 'Enter' }); fireEvent.keyUp(jump, { key: 'Enter' });
   expect(created.hold).toHaveBeenNthCalledWith(1, 'jump', true, 'button-jump');
@@ -43,6 +45,7 @@ it('兩按鈕可同時開啟紫色，保持獨立開關；暫停巡覽仍可檢�
     return created;
   });
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
   const red = screen.getByRole('button', { name: '紅燈' }), blue = screen.getByRole('button', { name: '藍燈' });
   expect(red.getAttribute('aria-pressed')).toBe('false'); expect(blue.getAttribute('aria-pressed')).toBe('false');
   act(() => {
@@ -51,13 +54,13 @@ it('兩按鈕可同時開啟紫色，保持獨立開關；暫停巡覽仍可檢�
   });
   expect(created.toggleColor).toHaveBeenCalledTimes(2);
   expect(red.getAttribute('aria-pressed')).toBe('true'); expect(blue.getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByText('紅＋藍開啟 · 紫色 ◆ 實體')).toBeTruthy();
+  expect(screen.getByRole('status').textContent).toContain('紅＋藍開啟 · 紫色實體');
   fireEvent.click(blue, { detail: 1 }); expect(created.toggleColor).toHaveBeenCalledTimes(2);
   expect(document.activeElement).toBe(screen.getByRole('region', { name: '橫向遊戲世界' }));
   fireEvent.click(screen.getByRole('button', { name: '暫停' })); expect(blue.hasAttribute('disabled')).toBe(false);
   fireEvent.click(red); expect(red.getAttribute('aria-pressed')).toBe('false'); expect(blue.getAttribute('aria-pressed')).toBe('true');
   fireEvent.click(blue); expect(blue.getAttribute('aria-pressed')).toBe('false');
-  fireEvent.click(screen.getByRole('button', { name: '試跑' })); fireEvent.click(screen.getByRole('button', { name: '暫停' }));
+  fireEvent.click(screen.getByRole('button', { name: '開始冒險' })); fireEvent.click(screen.getByRole('button', { name: '暫停' }));
   expect(red.hasAttribute('disabled')).toBe(true); expect(blue.hasAttribute('disabled')).toBe(true); expect(screen.getByRole('button', { name: '跳躍' }).hasAttribute('disabled')).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: '從頭開始' })); expect(red.getAttribute('aria-pressed')).toBe('false'); expect(blue.getAttribute('aria-pressed')).toBe('false');
 });
@@ -70,4 +73,24 @@ it('離場會取消載入；延遲完成的舊場景必須銷毀', async () => {
   const created = fakeScene();
   await act(async () => resolve(created));
   expect(created.destroy).toHaveBeenCalledOnce(); expect(created.restart).not.toHaveBeenCalled();
+});
+it('開場三頁手冊阻止跑道前進，可用鍵盤翻頁，開始後可重看並返回', async () => {
+  const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  const manual = screen.getByRole('dialog');
+  expect(created.setTutorial).toHaveBeenLastCalledWith(true);
+  expect(screen.getByRole('heading', { name: '歡迎來到魔法禁書庫' })).toBeTruthy();
+  fireEvent.keyDown(manual, { key: 'ArrowRight' });
+  expect(screen.getByRole('heading', { name: '點亮，才站得穩' })).toBeTruthy();
+  fireEvent.keyDown(manual, { key: 'ArrowRight' });
+  expect(screen.getByRole('heading', { name: '兩盞燈，一起亮' })).toBeTruthy();
+  const buttons = screen.getAllByRole('button', { name: '開始冒險' }); fireEvent.click(buttons.at(-1)!);
+  expect(screen.queryByRole('dialog')).toBeNull(); expect(created.setTutorial).toHaveBeenLastCalledWith(false);
+  expect(created.setMode).toHaveBeenCalledWith('play');
+  fireEvent.click(screen.getByRole('button', { name: '玩法手冊' }));
+  expect(created.setTutorial).toHaveBeenLastCalledWith(true);
+  fireEvent.click(screen.getByRole('button', { name: '返回遊戲' }));
+  expect(created.setTutorial).toHaveBeenLastCalledWith(false); expect(created.setMode).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: '紅燈' }).textContent).toBe('紅燈 1');
+  expect(screen.getByRole('button', { name: '藍燈' }).textContent).toBe('藍燈 2');
 });

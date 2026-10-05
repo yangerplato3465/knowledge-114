@@ -12,6 +12,7 @@
 | 尺寸、格位、錨點、留白、產圖提示與生成紀錄 | [製作清單](#製作清單與重建)，不在多個 MD 重複抄寫規格 |
 | 實際載入的 WebP | [工坊 display](../../../assets/images/magic-workshop/display/)；程式使用原 URL，未複製第二份共用素材 |
 | 偵探共用圖示 | [圖示來源與輸出](manifests/detective-icons-manifest.json)；黃金貓頭鷹案件共用放大鏡與拖曳手勢 |
+| 橫向遊戲的米洛與旋轉終點 | [動畫製作清單](manifests/side-scroller-sprites-manifest.json)；米洛原稿在 `characters/milo/`，傳送門原稿在 `side-scroller/`；[手冊外框](side-scroller/manual-frame-manifest.json) |
 
 **原稿與執行圖分工**：此資料夾保留完整原圖供後續產製，不隨網站發布。中間切幀不另存入美術庫，加工直接使用完整母圖。PNG 檔名沿用生成版本便於追溯，人物資料夾與圖鑑提供可讀名稱。WebP 是縮圖／切幀的遊戲素材，不等於另一份原稿。歷史版本有不同像素與構圖，保留作來源比對，不能因版本號大就直接更換遊戲圖。
 
@@ -69,6 +70,7 @@
 | [guest-animation-manifest.json](manifests/guest-animation-manifest.json) | 五位客人完整六幀步態表與固定格規格 |
 | [guest-gaze-manifest.json](manifests/guest-gaze-manifest.json) | 露米、諾爾、菲恩的正視修正 |
 | [manifest.json](manifests/manifest.json) | 初批背景、米洛、菲恩與道具原稿；早期透明殘點紀錄 |
+| [side-scroller-sprites-manifest.json](manifests/side-scroller-sprites-manifest.json) | 使用者核准的 Q 版米洛跑跳、8 幀旋轉傳送門；固定格與製作提示 |
 | [muted-props-manifest.json](manifests/muted-props-manifest.json) | 現役石泉與低亮度釜 |
 | [reactions-manifest.json](manifests/reactions-manifest.json) | 六位居民感謝表情與原造型的對應 |
 | [rustic-manifest.json](manifests/rustic-manifest.json) | 樸素道具素材表；其中泉／釜是歷史版本 |
@@ -88,5 +90,6 @@
 | 石泉、釜、見習筆記與出口 | [prepare-workshop-rustic.py](../../../scripts/prepare-workshop-rustic.py) |
 | UI 素材表與水流 | [prepare-workshop-ui.py](../../../scripts/prepare-workshop-ui.py) |
 | 偵探共用介面圖示 | [prepare-detective-icons.py](../../../scripts/prepare-detective-icons.py) |
+| 橫向遊戲跑跳與傳送門 | [prepare-side-scroller-sprites.mjs](../../../scripts/prepare-side-scroller-sprites.mjs)（Node + Sharp，可用 `NODE_PATH` 指定已安裝的套件位置） |
 
 現有腳本不是所有歷史素材的全量產生器；未涵蓋項目保留現役 WebP 與來源紀錄，不以重新壓縮代替來源追溯。製作腳本會寫入 WebP／部分 TypeScript 素材中繼資料，執行後須檢查差異與留白。字體授權與來源見 [字體說明](../../../assets/fonts/workshop/README.md)；音效與 BGM 見 [工坊設計](../../games/magic-workshop/design.md#動畫素材與音訊)。

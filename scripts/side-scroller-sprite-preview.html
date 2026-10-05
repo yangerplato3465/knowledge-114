@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>米洛與傳送門｜動畫預覽</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:24px;font:16px/1.65 system-ui,sans-serif;background:#f3f0f8;color:#302943}main{max-width:920px;margin:auto}h1{font-size:26px;margin:0}p{margin:8px 0 18px}nav{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}button,select{padding:9px 15px;font:inherit;border:1px solid #a59ab5;border-radius:10px;background:white;color:inherit;cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid #7763c3;outline-offset:3px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}article{overflow:hidden;background:white;border:1px solid #ddd5e5;border-radius:16px}h2{font-size:18px;margin:12px 18px 0}canvas{width:256px;height:280px;display:block;margin:auto;max-width:100%;object-fit:contain}output{display:block;padding:0 18px 12px;color:#675b79;font-size:14px}a{color:#6246a0}small{display:block;margin-top:20px;color:#675b79}.sheets{display:flex;gap:16px;flex-wrap:wrap}body.dark{background:#241f30;color:#eee}body.dark article{background:#30293d;border-color:#554563}body.dark output,body.dark small{color:#c7bbd8}
+body.dark button,body.dark select{background:#473953;color:#f5f1fb}body.dark a{color:#d3b8ff}
+</style>
+<main><h1>米洛與傳送門</h1><p>向右跑、收腿跳躍，還有簡化成 8 幀的旋轉終點。</p>
+<nav aria-label="播放控制"><button id="pause">暫停</button><button id="restart">重新播放</button><button id="theme">深色背景</button><label>速度 <select id="speed"><option value="1">正常</option><option value="0.5">半速</option></select></label><label>尺寸 <select id="size"><option value="1">遊戲尺寸</option><option value="1.6">放大檢查</option></select></label></nav>
+<div class="grid"><article><h2>跑步 · 12 幀</h2><canvas id="run" width="512" height="560" aria-label="米洛向右跑步動畫"></canvas><output id="run-status"></output></article><article><h2>跳躍 · 8 幀</h2><canvas id="jump" width="512" height="560" aria-label="米洛起跳、收腿與落地動畫"></canvas><output id="jump-status"></output></article><article><h2>傳送門 · 8 幀</h2><canvas id="portal" width="512" height="560" aria-label="金色青綠傳送門順時針旋轉"></canvas><output id="portal-status"></output></article></div>
+<p class="sheets"><a href="../../../assets/images/side-scroller/milo-run-v1.png" download>跑步 sprite sheet</a><a href="../../../assets/images/side-scroller/milo-jump-v1.png" download>跳躍 sprite sheet</a><a href="../../../assets/images/side-scroller/finish-portal-v1.png" download>傳送門 sprite sheet</a></p>
+<small>透明 PNG・每格 256 × 256・由左至右、由上至下。此處為美術播放預覽；跳躍弧線用來檢視姿勢，尚未接入關卡。</small><p id="error" role="alert"></p>
+</main>
+<script>
+const specs = /* SPRITE_SPEC */;
+const images = {}, contexts = {};
+let paused = matchMedia('(prefers-reduced-motion: reduce)').matches, dark = false, speed = 1, zoom = 1, elapsed = 0, last = 0, raf;
+const pause = document.querySelector('#pause');
+pause.textContent = paused ? '播放' : '暫停';
+pause.onclick = () => { paused = !paused; pause.textContent = paused ? '播放' : '暫停'; };
+document.querySelector('#restart').onclick = () => { elapsed = 0; paused = false; pause.textContent = '暫停'; };
+document.querySelector('#theme').onclick = event => { dark = !dark; document.body.classList.toggle('dark', dark); event.target.textContent = dark ? '淺色背景' : '深色背景'; };
+document.querySelector('#speed').onchange = event => { speed = Number(event.target.value); };
+document.querySelector('#size').onchange = event => { zoom = Number(event.target.value); };
+function frameAt(name, time) { const durations = specs[name].durationsMs; const total = durations.reduce((a,b)=>a+b,0); let t = time % total; for(let i=0;i<durations.length;i++){ if(t<durations[i]) return i; t-=durations[i]; } return 0; }
+function draw(name, frame, y, sequence = name) {
+  const ctx = contexts[name]; ctx.setTransform(2,0,0,2,0,0); ctx.fillStyle = dark ? '#30293d' : '#dceeff'; ctx.fillRect(0,0,256,280);
+  if(name !== 'portal'){ ctx.strokeStyle = dark ? '#9d8299' : '#bc9474'; ctx.lineWidth = 2; ctx.beginPath();ctx.moveTo(12,230);ctx.lineTo(244,230);ctx.stroke(); }
+  const s = (name === 'portal' ? 160 : 128) * zoom;
+  const anchor = name === 'portal' ? 0.5 : 216/256;
+  ctx.drawImage(images[sequence], (frame%4)*256, Math.floor(frame/4)*256, 256,256,128-s/2,y-s*anchor,s,s);
+}
+function tick(now) {
+  if(last && !paused && !document.hidden) elapsed += Math.min(now-last,100) * speed; last = now;
+  const runCycle = specs.run.durationsMs.reduce((a,b)=>a+b,0), portalCycle = specs.portal.durationsMs.reduce((a,b)=>a+b,0);
+  const runFrame = frameAt('run',elapsed), portalFrame = frameAt('portal',elapsed);
+  const jumpTime = elapsed%2100; let jumpFrame = 0, jumpY = 230, sequence='jump';
+  if(jumpTime<560 || jumpTime>=1240){ sequence='run';jumpFrame=frameAt('run',elapsed); }
+  else { const t=jumpTime-560; jumpFrame=frameAt('jump',t); if(t<580) jumpY-=Math.sin(Math.PI*t/580)*62; }
+  draw('run',runFrame,230);draw('jump',jumpFrame,jumpY,sequence);draw('portal',portalFrame,145);
+  document.querySelector('#run-status').textContent=`第 ${runFrame+1} / 12 幀 · 已播放 ${Math.floor(elapsed/runCycle)} 輪`;
+  document.querySelector('#jump-status').textContent=sequence==='run'?'跑步銜接':`第 ${jumpFrame+1} / 8 幀`;
+  document.querySelector('#portal-status').textContent=`第 ${portalFrame+1} / 8 幀 · 已播放 ${Math.floor(elapsed/portalCycle)} 輪`;
+  raf=requestAnimationFrame(tick);
+}
+Promise.all(Object.entries(specs).map(([name,spec]) => new Promise((resolve,reject) => { contexts[name]=document.querySelector('#'+name).getContext('2d'); const image=new Image();images[name]=image; image.onload=resolve;image.onerror=reject;image.src='../../../'+spec.file; }))).then(()=>{raf=requestAnimationFrame(tick)}).catch(()=>document.querySelector('#error').textContent='圖片載入失敗，請確認素材與預覽在同一個專案內。');
+addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
+</script>
+</html>

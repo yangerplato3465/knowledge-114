@@ -10,7 +10,7 @@ export const categories: ActivityCategory[] = [
   { id: 'games', title: '互動學習', starName: '冒險座', description: '讓練習變成一場冒險。', items: [
     { path: 'math-rpg', title: '數學勇者', description: '開放遊玩 · 五上第 1–5 單元，答題出劍、五關冒險。' },
     { path: 'magic-workshop', title: '魔法工坊', description: '量取魔力液 · 規劃補滿、倒空與互倒，完成五關委託。' },
-    { path: 'side-scroller', title: '橫向遊戲框架', description: '世界原型 · 巡覽晴空小徑，試跳坑洞、緩坡與空中平台。' },
+    { path: 'side-scroller', title: '魔法禁書庫', description: '陪米洛點亮紅藍燈、穿越浮空小徑，找出神祕空間的傳送出口。' },
   ] },
   { id: 'detective', title: '偵探事件簿', starName: '線索座', description: '跟著老師進入案件，觀察線索、一起推理。', items: [
     { path: 'detective-golden-owl', title: '黃金貓頭鷹雕像失竊事件', description: '校園失竊案 · 密碼與邏輯推理' },

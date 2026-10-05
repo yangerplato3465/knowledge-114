@@ -12,7 +12,7 @@ React＋Vite 多頁網站，瀏覽器直連 GitHub／Firebase，無前端 Router
 | 素材上下載 | `src/features/materials` | GitHub Contents API；清單可取消，寫入依序執行 |
 | 數學勇者 | `src/games/math-rpg` | 五關冒險已開放；`battle.ts` 純函式戰鬥／數值、React 操作、本地 Pixi 像素動畫戰場；`question-deck.ts` 管理五上／六上單元，五上小數、因數與倍數、擴約分與通分、多邊形與扇形動態題庫開放 |
 | 魔法工坊 | `src/games/magic-workshop` | 獨立五關量取遊戲；`rules.ts` 管理補滿、倒空、互倒與最短解，`puzzles.ts` 管理已驗證候選題與可重現抽題；`play-scene.ts` 以單一 Pixi canvas 承載場景、操作與液量，隱藏 DOM 提供鍵盤及螢幕閱讀器語意 |
-| 橫向遊戲框架 | `src/games/side-scroller` | 本地 Pixi 世界巡覽與固定前進原型；`model.ts` 固定步長／一段跳／坡面碰撞，`scene.ts` Kenney 場景／視差／鏡頭／測試方塊，React 提供巡覽、試跑及可存取操作；角色美術待重新設計 |
+| 魔法禁書庫 | `src/games/side-scroller` | 本地 Pixi 世界巡覽與固定前進；`model.ts` 一段跳／切色／出口碰撞，`scene.ts` 場景與鏡頭，`art.ts` 米洛與傳送門動畫；React 的三頁手冊搭配 Pixi 教學示範 |
 | 班級／偵探 | `src/features/class-rpg`、`src/features/detective` | React 外殼接 `assets/js/class-rpg*`／`assets/js/detective`；仍有直接操作 DOM 的模組 |
 
 ## 載入與樣式

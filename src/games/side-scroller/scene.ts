@@ -1,5 +1,7 @@
-import type { App, Node, Pixi, Sprite, Texture } from '../magic-workshop/scene-types';
-import { advance, BODY, GHOST_ALPHA, initialState, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, WORLD_WIDTH, type ColorButton, type Platform, type WorldColor } from './model';
+import type { App, Node, Sprite, Texture } from '../magic-workshop/scene-types';
+import { advance, EXIT, GHOST_ALPHA, initialState, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, WORLD_WIDTH, type ColorButton, type Platform, type WorldColor } from './model';
+
+import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type ArtPixi } from './art';
 
 export type SceneMode = 'preview' | 'play';
 type Action = 'jump';
@@ -10,6 +12,7 @@ export interface SideScrollerScene {
   setMode(mode: SceneMode): void;
   toggleColor(button: ColorButton): void;
   togglePause(): void;
+  setTutorial(open: boolean): void;
   restart(): void;
   destroy(): void;
 }
@@ -17,8 +20,8 @@ const HEIGHT = 600, TILE = 64;
 const LIGHT_ALPHA = 0.08;
 const LIGHT_COLORS = { red: 0xff596e, blue: 0x477dff, purple: 0xb968f0 };
 interface ColorFilter { matrix: number[]; destroy(): void }
-type ColorPixi = Pixi & { ColorMatrixFilter: new () => ColorFilter };
-function colorMatrix(color: WorldColor, alpha: number) {
+export type ColorPixi = ArtPixi & { ColorMatrixFilter: new () => ColorFilter };
+export function colorMatrix(color: WorldColor, alpha: number) {
   const channels = color === 'red' ? [1.45, 0.34, 0.42] : color === 'blue' ? [0.3, 0.76, 1.55] : [1.0, 0.42, 1.5];
   return [...channels.flatMap(value => [0.299 * value, 0.587 * value, 0.114 * value, 0, 0]), 0, 0, 0, alpha, 0];
 }
@@ -26,28 +29,20 @@ const ASSETS = ['background_clouds', 'background_fade_hills', 'background_fade_t
   'terrain_sand_block_top', 'terrain_sand_block_center', 'terrain_sand_horizontal_left',
   'terrain_sand_horizontal_middle', 'terrain_sand_horizontal_right'] as const;
 
-function loadImage(url: string, signal: AbortSignal): Promise<HTMLImageElement> {
-  signal.throwIfAborted();
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const cleanup = () => { img.onload = img.onerror = null; signal.removeEventListener('abort', aborted); };
-    const aborted = () => { cleanup(); img.src = ''; reject(signal.reason); };
-    img.onload = () => { cleanup(); resolve(img); };
-    img.onerror = () => { cleanup(); reject(new Error(`素材載入失敗：${url}`)); };
-    signal.addEventListener('abort', aborted, { once: true });
-    img.src = url;
-  });
-}
-
 export async function createSideScroller(host: HTMLElement, signal: AbortSignal, onStatus: (status: SceneStatus) => void): Promise<SideScrollerScene> {
   const P = await import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as ColorPixi;
-  const images = await Promise.all(ASSETS.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.png`, signal)));
+  const [images, spriteImages] = await Promise.all([
+    Promise.all(ASSETS.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.png`, signal))),
+    loadSpriteImages(signal),
+  ]);
   signal.throwIfAborted();
-  const textures = Object.fromEntries(ASSETS.map((name, i) => [name, P.Texture.from(images[i])])) as Record<typeof ASSETS[number], Texture>;
+  const textures = {} as Record<typeof ASSETS[number], Texture>;
+  ASSETS.forEach((name, i) => { textures[name] = P.Texture.from(images[i]); });
+  const art = createSpriteArt(P, spriteImages);
   const app: App = new P.Application();
   const filters = { red: new P.ColorMatrixFilter(), blue: new P.ColorMatrixFilter(), purple: new P.ColorMatrixFilter() };
   let initialized = false;
-  const dispose = () => { if (initialized) app.destroy({ removeView: true }, { children: true }); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
+  const dispose = () => { if (initialized) app.destroy({ removeView: true }, { children: true }); art.destroy(); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
   try {
     await app.init({ width: 1067, height: HEIGHT, background: 0xc3e3ff, antialias: true, autoStart: false,
       sharedTicker: false, preference: 'webgl', resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true });
@@ -115,9 +110,9 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       group.addChild(edges);
       markColor(p, group);
     }
-    const player = new P.Graphics().roundRect(-BODY.half, -BODY.height, BODY.half * 2, BODY.height, 8).fill(0x686cb2)
-      .stroke({ color: 0x353451, width: 3 }).poly([0, -36, 8, -30, 0, -24]).fill(0xffffff);
-    neutralWorld.addChild(player); player.visible = false;
+    const portal = art.create('portal'); portal.scale.set(0.8); portal.position.set(EXIT.x, EXIT.y); neutralWorld.addChild(portal);
+    const milo = createMilo(P, art, neutralWorld), player = milo.sprite; player.visible = false;
+    let tutorialOpen = true, finishAge = 0;
     let state = initialState(), previous = state, accumulator = 0, camera = 0, viewportWidth = 1067, previewTravel = 0;
     let mode: SceneMode = 'preview', paused = false, destroyed = false, lap = 1, lastStatus = '';
     const held = new Set<string>(); let tapTimer: number | undefined; let jumpPressed = false;
@@ -129,7 +124,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       { node: trees, name: 'background_fade_trees' as const, width: 640, height: 340, y: 300, factor: 0.38, sprites: [] as Sprite[] },
     ];
     const emit = () => {
-      const status = { mode, paused, completed: mode === 'play' && state.completed, checkpoint: state.checkpoint, falls: state.falls, lap, color: state.color };
+      const status = { mode, paused, completed: mode === 'play' && state.completed && finishAge >= 0.6, checkpoint: state.checkpoint, falls: state.falls, lap, color: state.color };
       const serialized = JSON.stringify(status);
       if (serialized !== lastStatus) { lastStatus = serialized; onStatus(status); }
     };
@@ -142,6 +137,12 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       }));
       const mix = paused || state.completed ? 1 : accumulator / PHYSICS.step;
       player.position.set(previous.x + (state.x - previous.x) * mix, previous.y + (state.y - previous.y) * mix);
+      if (state.completed) {
+        const progress = Math.min(1, finishAge / 0.6), eased = progress * progress * (3 - 2 * progress);
+        player.x += (EXIT.x - player.x) * eased; player.y += (EXIT.y + 30 - player.y) * eased;
+        player.scale.set(0.5 * (1 - eased * 0.65)); player.alpha = 1 - eased;
+      }
+      portal.visible = EXIT.x + 110 >= camera && EXIT.x - 110 <= camera + viewportWidth;
       player.visible = mode === 'play';
     };
     const paintLight = () => {
@@ -164,22 +165,22 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       paintLight();
     };
     const toggleLight = (button: ColorButton) => {
-      if (destroyed || (mode === 'play' && (paused || state.completed))) return;
+      if (destroyed || tutorialOpen || (mode === 'play' && (paused || state.completed))) return;
       state = selectWorldColor(state, toggleColor(state.color, button)); previous = state;
       updateColors(); draw(); if (paused) app.render(); emit();
     };
-    const togglePause = () => { if (destroyed) return; paused = !paused; release(); accumulator = 0; previous = state; emit(); };
-    const reset = (preserveColor = false) => { release(); const color = state.color; state = initialState(); if (preserveColor) state.color = color; previous = state; paused = false; camera = previewTravel = accumulator = 0; lap = 1; updateColors(); draw(); emit(); };
+    const togglePause = () => { if (destroyed || tutorialOpen) return; paused = !paused; release(); accumulator = 0; previous = state; emit(); };
+    const reset = (preserveColor = false) => { release(); milo.reset(); finishAge = 0; const color = state.color; state = initialState(); if (preserveColor) state.color = color; previous = state; paused = false; camera = previewTravel = accumulator = 0; lap = 1; updateColors(); draw(); emit(); };
     const keydown = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).closest('button,a,input,select')) return;
+      if (tutorialOpen || (event.target as HTMLElement).closest('button,a,input,select,dialog')) return;
       if (!event.repeat && ['1', '2'].includes(event.key)) { event.preventDefault(); toggleLight(event.key === '1' ? 'red' : 'blue'); }
-      if (['Space', 'ArrowUp', 'KeyW'].includes(event.code)) {
+      if (['Space', 'ArrowUp', 'KeyW'].includes(event.code) || [' ', 'Space', 'ArrowUp', 'w', 'W'].includes(event.key)) {
         event.preventDefault();
-        if (!paused && mode === 'play') { held.add(event.code); if (!event.repeat) jumpPressed = true; }
+        if (!paused && mode === 'play') { held.add(event.code || event.key); if (!event.repeat) jumpPressed = true; }
       }
-      if ((event.code === 'KeyP' || event.code === 'Escape') && !event.repeat) { event.preventDefault(); togglePause(); }
+      if ((event.code === 'KeyP' || event.key === 'p' || event.key === 'P' || event.key === 'Escape') && !event.repeat) { event.preventDefault(); togglePause(); }
     };
-    const keyup = (event: KeyboardEvent) => { if (held.delete(event.code)) event.preventDefault(); };
+    const keyup = (event: KeyboardEvent) => { if (held.delete(event.code || event.key)) event.preventDefault(); };
     const focus = (event: PointerEvent) => { if (!(event.target as HTMLElement).closest('button,a')) stage.focus({ preventScroll: true }); };
     const focusout = (event: FocusEvent) => { if (!stage.contains(event.relatedTarget as globalThis.Node | null)) release(); };
     const blur = () => { release(); paused = true; accumulator = 0; previous = state; emit(); };
@@ -188,7 +189,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     const observer = new ResizeObserver(resize);
     const tick = (ticker: { deltaMS: number }) => {
       const dt = Math.min(0.1, ticker.deltaMS / 1000);
-      if (!paused) {
+      if (!paused && !tutorialOpen) {
         if (mode === 'preview') {
           const limit = Math.max(0, WORLD_WIDTH - viewportWidth);
           previewTravel += PHYSICS.speed * dt;
@@ -200,10 +201,17 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
             previous = state;
             state = advance(state, { jump: jumpPressed || held.size > 0 }, PHYSICS.step);
             jumpPressed = false;
-            if (state.falls !== previous.falls) previous = state;
+            if (state.falls !== previous.falls) { previous = state; milo.reset(); }
             accumulator -= PHYSICS.step;
           }
           camera = Math.max(0, Math.min(WORLD_WIDTH - viewportWidth, state.x - viewportWidth * 0.28));
+        }
+      }
+      if (!paused && !tutorialOpen) {
+        if (!reduced) portal.update({ deltaTime: dt * 60 });
+        if (mode === 'play') {
+          if (state.completed) finishAge = Math.min(0.6, finishAge + dt);
+          else milo.update(state, dt, reduced);
         }
       }
       draw(); emit();
@@ -216,15 +224,16 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     return {
       hold(_action, active, source) {
         if (destroyed) return;
-        if (active && !paused && mode === 'play') { if (!held.has(source)) jumpPressed = true; held.add(source); }
+        if (active && !tutorialOpen && !paused && !state.completed && mode === 'play') { if (!held.has(source)) jumpPressed = true; held.add(source); }
         else held.delete(source);
       },
       tap() {
-        if (destroyed || paused || mode !== 'play') return;
+        if (destroyed || tutorialOpen || paused || state.completed || mode !== 'play') return;
         jumpPressed = true; held.add('tap'); if (tapTimer !== undefined) window.clearTimeout(tapTimer);
         tapTimer = window.setTimeout(() => { held.delete('tap'); tapTimer = undefined; }, 100);
       },
       setMode(next) { if (destroyed) return; mode = next; reset(true); },
+      setTutorial(open) { if (destroyed) return; tutorialOpen = open; release(); accumulator = 0; previous = state; },
       toggleColor: toggleLight,
       togglePause,
       restart() { if (!destroyed) reset(); },

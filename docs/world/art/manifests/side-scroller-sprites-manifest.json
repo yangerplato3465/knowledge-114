@@ -1,0 +1,533 @@
+{
+  "version": 1,
+  "status": "exported; integrated into gameplay and tutorial; browser motion checked",
+  "tool": "built-in image_gen; deterministic Sharp grid extraction and rigid portal rotation",
+  "approval": "使用者已確認兩張造型母圖並授權直接產製動畫；後續要求傳送門減少幀數，採8幀。",
+  "scope": "米洛跑、跳與旋轉出口已接入遊戲及手冊示範；關卡規則以 docs/games/side-scroller/design.md 與 model.ts 為準。",
+  "contract": {
+    "cell": [
+      256,
+      256
+    ],
+    "padding": 32,
+    "order": "row-major",
+    "alpha": true,
+    "miloAnchor": [
+      128,
+      216
+    ],
+    "portalAnchor": [
+      128,
+      128
+    ],
+    "facing": "right",
+    "display": {
+      "miloCell": 128,
+      "portalCell": 160
+    }
+  },
+  "masters": {
+    "milo": "docs/world/art/characters/milo/milo-platformer-master-v1.png",
+    "portal": "docs/world/art/side-scroller/finish-portal-master-v1.png"
+  },
+  "sources": {
+    "run": "docs/world/art/characters/milo/milo-platformer-run-source-v1.png",
+    "jump": "docs/world/art/characters/milo/milo-platformer-jump-source-v1.png",
+    "runFlight": "docs/world/art/characters/milo/milo-platformer-run-flight-source-v1.png"
+  },
+  "prompts": {
+    "run": "Use case: identity-preserve. Create a complete smooth RIGHT-FACING RUN animation sprite sheet from the approved character. Image 1 is the APPROVED design master. Preserve this exact chibi Milo identity: chestnut curls, one large brown eye in true RIGHT-FACING side profile, lavender floppy wizard hat with one yellow star and brown band, teal tunic, cream cuffs, gold round cape clasp, brown belt and boots, short plum cape. BOTH HANDS EMPTY. Same thick charcoal outlines and simple colored cartoon shading. No props, particles, ground shadow, floor, text, labels or grid lines. One full character per cell, consistent head/body/hat size and camera. No changing costumes or facial expression. Production sheet: exactly 4 columns, row-major left-to-right then next row; equal square cells 384x384 pixels. Transparent RGBA background. In EVERY cell, the fixed body root is x=192, virtual grounded foot baseline y=324. Maximum complete figure including hat/cape/hands/boots fits x=48..336, y=48..324; minimum safe padding 48 pixels on all edges. Body stays at same horizontal position in every cell. Don't shift a character to center its silhouette. Preserve natural knee tucking inside the fixed cell; do not bake the world jump arc into the sheet. No visible guides or repeated contact pose as a replacement for real in-betweens. Exactly 12 DISTINCT animation frames arranged 4 columns by 3 rows, canvas 1536x1152. One full run cycle, not twelve nearly identical running illustrations. TWO alternating leg cycles with near and far legs changing which is in front. Near leg has the brighter boot, far leg darker/behind torso. Arms swing opposite their legs. Maintain 2 legs, 2 arms, no duplicates. Essential beats in row-major order:\n0 near leg forward contact, far leg back raised;\n1 near boot supporting BELOW torso with bent knee, far knee swinging forward;\n2 near boot trailing at toe-off, far knee passing in front of hips;\n3 flight: far knee leads forward, near leg bent trailing, both soles above baseline;\n4 far leg extends toward front landing while near heel rises backward;\n5 far boot almost contact forward, near leg far back;\n6 far boot forward CONTACT, near leg raised back (opposite frame 0, keep facing right);\n7 far boot supporting under torso, near knee swings forward;\n8 far boot trailing at toe-off, near knee passes forward;\n9 flight with near knee leading and far knee trailing, both feet off baseline;\n10 near leg extends forward, far heel rises backward;\n11 near boot almost at forward contact, flows into frame 0.\nSmall intentional torso bob 4-8px only, planted support foot meets y324, flight feet above it. Hat and cape follow subtly with motion, no shape/size drifting. Must show leg crossover and flight, NOT same front foot repeated in all cells. Crop nothing. Keep all 12 complete figures individually separated.",
+    "runRevision": "Edit the first input run sheet; second input is approved identity only. Preserve Milo's exact face, clothing, rightward view, empty hands and bold cartoon rendering. Correct run anatomy and phasing. EXACTLY12 characters on a 4column3row equal-square grid. Transparent background, no floor/shadows/labels. Output aspect4:3, requested1536x1152. Each384cell must keep complete figure inside x48..336 y48..324 with body root at192 and ground baseline324. Reduce ALL figures uniformly to provide this padding, preserve head/body scale across grid.\nCritical correction: in original all twelve frames have the NEAR ARM BACK, which is wrong. Animate arm swing and ALTERNATING NEAR/FAR LEG support across the cycle. Use these explicit positions:\nFrame0 near hand behind hip, far fist forward; near boot front contact, far leg back.\nFrame1 near hand swings toward hip; near knee bearing weight under hip; far knee coming forward.\nFrame2 near fist moves IN FRONT OF CHEST, far arm starts back; near leg trailing at toe-off, far knee leads.\nFrame3 near fist FORWARD AT CHEST, far hand behind; FAR knee high forward, NEAR boot trailing back, flight.\nFrame4 near fist fully FORWARD, far arm behind body; far leg extends forward, near boot behind.\nFrame5 near fist FORWARD, far arm behind; far leg nearly front landing, near heel behind.\nFrame6 NEAR FIST FORWARD at chest, far arm behind; FAR LEG supports forward contact, NEAR leg bent back. This must be the opposite limbs to0.\nFrame7 near fist lowers toward front hip; far leg compressed under body, near knee swings forward.\nFrame8 near hand returns behind hip; far leg trailing toe-off, near knee passes forward.\nFrame9 near hand BACK at hip, far fist forward; NEAR knee high forward, FAR leg trailing, flight.\nFrame10 near hand fully BACK, far fist forward; near boot extends forward about to land, far heel tucked back.\nFrame11 near hand back, far fist forward; near leg front pre-contact to flow into0.\nNear arm is the viewer-facing arm attached to the clearly visible cream cuff. Draw it OVER tunic in forward swing, instead of keeping it behind the hip. Far limbs are darker and occluded correctly, not fused. Exactly2arms2legs. Do not change face/head size or place feet at cell edge. Do not horizontally flip any entire figure. Retain subtle cape and hat follow-through. All frames same world root, slight 4px run bob only.",
+    "jump": "Use case: identity-preserve. Create a RIGHT-FACING platformer JUMP phase animation sprite sheet from the approved character. Image 1 is the APPROVED design master. Preserve this exact chibi Milo identity: chestnut curls, one large brown eye in true RIGHT-FACING side profile, lavender floppy wizard hat with one yellow star and brown band, teal tunic, cream cuffs, gold round cape clasp, brown belt and boots, short plum cape. BOTH HANDS EMPTY. Same thick charcoal outlines and simple colored cartoon shading. No props, particles, ground shadow, floor, text, labels or grid lines. One full character per cell, consistent head/body/hat size and camera. No changing costumes or facial expression. Production sheet: exactly 4 columns, row-major left-to-right then next row; equal square cells 384x384 pixels. Transparent RGBA background. In EVERY cell, the fixed body root is x=192, virtual grounded foot baseline y=324. Maximum complete figure including hat/cape/hands/boots fits x=48..336, y=48..324; minimum safe padding 48 pixels on all edges. Body stays at same horizontal position in every cell. Don't shift a character to center its silhouette. Preserve natural knee tucking inside the fixed cell; do not bake the world jump arc into the sheet. No visible guides or repeated contact pose as a replacement for real in-betweens. Exactly 8 DISTINCT sequential poses, 4 columns by 2 rows, canvas 1536x768. Fixed full figure scale matches approved run design; one human boy per cell. The art stays in place, physical world movement applied later by game engine. 8 row-major beats:\n0 TAKEOFF: back boot pushing off baseline, front knee raised, chest slightly tilted forward;\n1 EARLY RISE: both boots off virtual baseline, leading knee forward and back knee starts folding, empty hands lift slightly;\n2 TUCK: both knees bend up compactly below tunic, boots tucked, cape trails down-left;\n3 APEX: relaxed tucked knees, body upright, hands spread slightly for balance, cape eases toward left;\n4 EARLY FALL: knees begin unfolding, empty arms balance, cape lifts up-left;\n5 PRE-LANDING: both lower legs extend downward and slightly forward toward virtual baseline, one boot a little ahead, body prepares contact;\n6 LANDING COMPRESSION: boot soles both at baseline, knees visibly compressed and torso lower by 8px, hands low, hat and cape subtly settle;\n7 RECOVER TO RUN: front foot planted and back foot lifting, torso recovers, opposite arms ready for running.\nSame right profile and head proportions in every cell. Tucking legs shortens lower silhouette but head/root doesn't jump upward inside the cell. Distinct rising/falling silhouettes, no full world parabolic trajectory, no full-size changes. Complete hat and cape inside margins."
+  },
+  "animations": {
+    "run": {
+      "frames": 12,
+      "columns": 4,
+      "rows": 3,
+      "durationsMs": [
+        50,
+        50,
+        40,
+        50,
+        50,
+        40,
+        50,
+        50,
+        40,
+        50,
+        50,
+        40
+      ],
+      "loop": true,
+      "file": "assets/images/side-scroller/milo-run-v1.png",
+      "sourceSize": [
+        1448,
+        1086
+      ],
+      "size": [
+        1024,
+        768
+      ],
+      "anchor": [
+        128,
+        216
+      ]
+    },
+    "jump": {
+      "frames": 8,
+      "columns": 4,
+      "rows": 2,
+      "durationsMs": [
+        60,
+        90,
+        100,
+        110,
+        100,
+        120,
+        50,
+        50
+      ],
+      "loop": false,
+      "phases": [
+        "takeoff",
+        "early-rise",
+        "tuck",
+        "apex",
+        "early-fall",
+        "extend",
+        "landing-compression",
+        "recover"
+      ],
+      "playback": "Physics-phase driven in game; durations are preview only.",
+      "file": "assets/images/side-scroller/milo-jump-v1.png",
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "size": [
+        1024,
+        512
+      ],
+      "anchor": [
+        128,
+        216
+      ]
+    },
+    "portal": {
+      "frames": 8,
+      "columns": 4,
+      "rows": 2,
+      "durationsMs": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "loop": true,
+      "anglesDegrees": [
+        0,
+        45,
+        90,
+        135,
+        180,
+        225,
+        270,
+        315
+      ],
+      "file": "assets/images/side-scroller/finish-portal-v1.png",
+      "size": [
+        1024,
+        512
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    }
+  },
+  "processing": {
+    "script": "scripts/prepare-side-scroller-sprites.mjs",
+    "grid": "Fixed equal cells, rounded boundaries where source dimensions not divisible. No visible-bounds cropping.",
+    "alpha": "Remove only alpha below 24 (generator background dust); preserve all remaining translucent edges.",
+    "portal": "Fixed approved-master region [192,186,870,870], shared188px scale, exact45deg clockwise rotations; no per-frame redraw.",
+    "notes": "Shared per-action scale; explicitly measured torso/foot registration, no per-frame resize.",
+    "registration": {
+      "run": [
+        [
+          205,
+          356
+        ],
+        [
+          196,
+          357
+        ],
+        [
+          206,
+          353
+        ],
+        [
+          207,
+          353
+        ],
+        [
+          207,
+          343
+        ],
+        [
+          205,
+          344
+        ],
+        [
+          204,
+          344
+        ],
+        [
+          201,
+          344
+        ],
+        [
+          203,
+          332
+        ],
+        [
+          209,
+          334
+        ],
+        [
+          208,
+          335
+        ],
+        [
+          207,
+          333
+        ]
+      ],
+      "jump": [
+        [
+          245,
+          433
+        ],
+        [
+          243,
+          433
+        ],
+        [
+          242,
+          433
+        ],
+        [
+          244,
+          433
+        ],
+        [
+          245,
+          419
+        ],
+        [
+          244,
+          419
+        ],
+        [
+          245,
+          419
+        ],
+        [
+          248,
+          419
+        ]
+      ]
+    },
+    "cellResize": {
+      "run": 200,
+      "jump": 192
+    },
+    "runFlight": "Frame 9 from original run pass preserves the correct near-arm-back phase. Identical fixed source grid, shared scale and explicit root registration.",
+    "previewTemplate": "scripts/side-scroller-sprite-preview.html"
+  },
+  "review": {
+    "frameIntegrity": true,
+    "motionPreview": true,
+    "runtimeIntegration": true,
+    "frameBounds": {
+      "run": [
+        {
+          "frame": 0,
+          "bounds": [
+            45,
+            37,
+            191,
+            218
+          ]
+        },
+        {
+          "frame": 1,
+          "bounds": [
+            55,
+            37,
+            195,
+            219
+          ]
+        },
+        {
+          "frame": 2,
+          "bounds": [
+            51,
+            39,
+            190,
+            213
+          ]
+        },
+        {
+          "frame": 3,
+          "bounds": [
+            52,
+            39,
+            190,
+            214
+          ]
+        },
+        {
+          "frame": 4,
+          "bounds": [
+            49,
+            37,
+            191,
+            215
+          ]
+        },
+        {
+          "frame": 5,
+          "bounds": [
+            50,
+            37,
+            191,
+            218
+          ]
+        },
+        {
+          "frame": 6,
+          "bounds": [
+            48,
+            37,
+            190,
+            219
+          ]
+        },
+        {
+          "frame": 7,
+          "bounds": [
+            54,
+            37,
+            193,
+            218
+          ]
+        },
+        {
+          "frame": 8,
+          "bounds": [
+            51,
+            37,
+            194,
+            218
+          ]
+        },
+        {
+          "frame": 9,
+          "bounds": [
+            41,
+            38,
+            192,
+            212
+          ]
+        },
+        {
+          "frame": 10,
+          "bounds": [
+            49,
+            36,
+            195,
+            216
+          ]
+        },
+        {
+          "frame": 11,
+          "bounds": [
+            50,
+            36,
+            192,
+            217
+          ]
+        }
+      ],
+      "jump": [
+        {
+          "frame": 0,
+          "bounds": [
+            53,
+            40,
+            198,
+            219
+          ]
+        },
+        {
+          "frame": 1,
+          "bounds": [
+            53,
+            37,
+            194,
+            208
+          ]
+        },
+        {
+          "frame": 2,
+          "bounds": [
+            55,
+            43,
+            192,
+            204
+          ]
+        },
+        {
+          "frame": 3,
+          "bounds": [
+            52,
+            39,
+            189,
+            205
+          ]
+        },
+        {
+          "frame": 4,
+          "bounds": [
+            50,
+            43,
+            201,
+            211
+          ]
+        },
+        {
+          "frame": 5,
+          "bounds": [
+            45,
+            41,
+            196,
+            218
+          ]
+        },
+        {
+          "frame": 6,
+          "bounds": [
+            50,
+            62,
+            198,
+            219
+          ]
+        },
+        {
+          "frame": 7,
+          "bounds": [
+            50,
+            42,
+            198,
+            219
+          ]
+        }
+      ],
+      "portal": [
+        {
+          "frame": 0,
+          "bounds": [
+            38,
+            38,
+            218,
+            218
+          ]
+        },
+        {
+          "frame": 1,
+          "bounds": [
+            33,
+            33,
+            223,
+            223
+          ]
+        },
+        {
+          "frame": 2,
+          "bounds": [
+            38,
+            38,
+            218,
+            218
+          ]
+        },
+        {
+          "frame": 3,
+          "bounds": [
+            33,
+            33,
+            223,
+            223
+          ]
+        },
+        {
+          "frame": 4,
+          "bounds": [
+            38,
+            38,
+            218,
+            218
+          ]
+        },
+        {
+          "frame": 5,
+          "bounds": [
+            33,
+            33,
+            223,
+            223
+          ]
+        },
+        {
+          "frame": 6,
+          "bounds": [
+            38,
+            38,
+            218,
+            218
+          ]
+        },
+        {
+          "frame": 7,
+          "bounds": [
+            33,
+            33,
+            223,
+            223
+          ]
+        }
+      ]
+    },
+    "notes": [
+      "Inspected full sources and all 28 exported cells. Source grid boundaries checked separately from final padding; no clipped or neighboring silhouettes.",
+      "Preview runs beyond three cycles at nominal display size. Checked normal/half-speed, light/dark alpha edges, pause/resume, and run/jump/landing transition. No browser warnings or errors.",
+      "Generated Milo retains minor line/detail variations between poses; no per-frame scaling is applied. The runtime shares frame timing and anchors from sprites-v1.json; jump poses follow physics and landing transitions."
+    ]
+  },
+  "masterPrompts": {
+    "milo": "Use case: stylized-concept. Asset type: one approval master frame for a 2D side-scrolling game sprite, NOT a sprite sheet or animation yet.\nInput references: image 1 apprentice-v2.png defines Milo's identity and costume only; image 2 Preview (Characters).png and image 3 Sample A.png define the target Kenney New Platformer Pack rendering style. Do not reproduce the reference montage, logos, text, or environments.\nCreate exactly ONE full-body chibi human boy apprentice Milo, facing RIGHT in an unmistakable true side-view platformer running contact pose. Eye, nose, torso, hips and both boots point right. Near leg reaches forward to contact the invisible ground with the boot, far leg trails back raised; arms swing opposite the legs. He runs empty-handed: no bottle, wand, book, bag, carried objects or weapons. Both hands clearly empty.\nPreserve his recognizable chestnut-brown curly hair, lavender floppy wizard hat with ONE small warm-yellow star emblem, teal tunic with simple cream cuffs, short plum-purple cape and simple brown boots. Simplify to about two-heads-tall chibi proportions excluding the hat, round friendly face with one large dark readable eye and small cheerful smile. A few chunky curls, short cape streaming slightly left, compact floppy hat staying contained; no ornate embroidery or tiny accessories.\nStyle: closely match the provided platformer pack: clean flat raster cartoon sprite with thick charcoal outlines, rounded chunky shapes, large flat saturated color areas, one simple darker shade per material and restrained highlights. Crisp smooth edges. No realistic materials, painterly texture, 3D rendering, airbrush modeling, lighting gradients, or pixel art.\nCanvas/frame contract: square 1024x1024 RGBA, one cell/one frame, genuinely transparent background. Stable body root x=512 and contact boot baseline y=864. Fit the ENTIRE figure, hat, cape, hair, hands and boots within x=128..896 and y=128..864; at least 96 pixels clear on every outside edge. Consistent game-scale silhouette designed to remain readable around 80-100 pixels tall. No ground, cast shadow, floating props, magic effects, motion streaks, labels, borders, guides, extra views or repeated characters. This is the 0th right-facing run/contact art approval frame, not an animation.",
+    "portal": "Use case: stylized-concept. Asset type: one approval master frame of a finish-line portal for a 2D side-scrolling platformer; NOT a sprite sheet or animation yet.\nInput references: Preview (Characters).png and Sample A.png are STYLE references only for the Kenney New Platformer Pack. Do not copy the montage, text, logo, characters or background.\nCreate exactly ONE upright circular magical exit portal viewed face-on as a flat 2D game sprite, for the player to touch and enter at the finish. A chunky warm sand-gold ring with thick charcoal outlines surrounds a clearly open luminous turquoise/sea-green spiral. Three broad curved energy bands curl inward, with a darker teal center to convey depth using flat colors. The inner swirl and two understated asymmetrical rim marks establish a visible clockwise rotation phase for a later looping sprite animation. The external silhouette must remain circular and centered through rotation. Make it friendly and readable, not menacing. No doors, buildings, floor tiles, pedestal, scenery, character, arrows or lettering.\nStyle must match the supplied asset pack: bold dark charcoal outlines, rounded shapes, simple two-tone flat shading, crisp cartoon raster edges, minimal detail. Gold and sea-green clearly distinguish the goal from red/blue/purple special floors. Keep any aura thin, gentle, and bounded close to the ring; no detached sparks or huge glow. No realistic metal/stone texture, painterly rendering, realistic 3D perspective, dense fantasy runes or pixel art.\nCanvas/frame contract: square 1024x1024 RGBA, genuinely transparent background, one frame/one cell. Center and future rotation anchor exactly (512,512). Ring plus all energy/aura must fit within x=144..880, y=144..880, with at least 128px fully clear margin on every edge. Complete uncut circular silhouette, 1:1 face-on proportions, no cast shadow. Designed for clear reading around 128px in game. Only this single neutral rotation-phase master image is needed for the user's art-style approval."
+  },
+  "generation": {
+    "miloMaster": "exec-8caf6b59-69d7-4550-b9ee-56847e3fcd62",
+    "portalMaster": "exec-827b82bf-13e4-4cb1-b233-fe6b17845a33",
+    "runSource": "exec-31bf55a4-cfac-4471-8edd-bbc43c303d16",
+    "runFlightSource": "exec-b7436235-d5ae-4405-bbf0-6f3c64701967",
+    "jumpSource": "exec-5e040de7-151f-4473-a381-ae50e84b5f58"
+  }
+}

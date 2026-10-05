@@ -1,0 +1,45 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Create ONE empty tutorial storybook UI panel frame for a friendly 2D platformer named Magic Forbidden Library. Reference image is ONLY the Kenney New Platformer Pack cartoon visual style: thick charcoal rounded outlines, flat 2-tone shading, chunky warm sand/orange edges. Do not copy characters, logos, lettering, platforms or scene. Requested image1024x768 RGBA, 1frame1cell, center anchor512,384. A front-facing landscape rectangle, broad cream paper interior, rounded golden-sand outer frame with a thin plum-purple backing visible below/right like a book cover. Four rounded corners, modest highlight along upper-left edge. Very simple friendly game asset, NOT an ornate fantasy scroll. Straight horizontal/vertical edges suitable for stretching as a UI backdrop. Whole frame within x32..992 y32..736, at least32px transparent safety margin outside; centered. Border occupies only about56px width. The entire central area x110..914 y110..658 is uniform blank warm ivory for readable HTML text and animated game demonstration overlay. No folds/marks/texture across interior. Absolutely NO words, glyphs, symbols, text lines, decorative stars, tabs, buttons, icons, characters or content. No cast shadow outside, no realistic texture, perspective, 3D lighting or glow. Transparent outside the complete panel; opaque ivory center. This is a single static reusable UI frame, not a sprite sheet.",
+  "source": "manual-frame-source-v1.png",
+  "runtime": "assets/images/side-scroller/manual-frame-v1.webp",
+  "generation": "exec-91f41898-e7f0-4171-9394-b648ddb6f8fa",
+  "contract": {
+    "requestedCanvas": [
+      1024,
+      768
+    ],
+    "cell": [
+      1,
+      1
+    ],
+    "frames": 1,
+    "anchor": [
+      512,
+      384
+    ],
+    "padding": 32,
+    "contentBounds": [
+      110,
+      110,
+      914,
+      658
+    ],
+    "alpha": "Transparent outside; opaque blank ivory interior"
+  },
+  "processing": {
+    "actualSourceSize": [1448, 1086],
+    "fixedRegion": [
+      80,
+      108,
+      1300,
+      874
+    ],
+    "output": [
+      900,
+      605
+    ],
+    "format": "webp quality92"
+  },
+  "review": "Complete border and outside alpha inspected; blank center reserved for HTML text and Pixi demonstrations."
+}
