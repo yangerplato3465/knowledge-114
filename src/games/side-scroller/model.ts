@@ -30,8 +30,8 @@ export const PLATFORMS: Platform[] = [
   // Hard section: adjoining colors with longer approach/landing room before the next jump.
   ground(8576, 416, 256, 416, 'red'), ground(8832, 416, 256, 416, 'purple'),
   // Continuous airborne color changes alternate descent and ascent, with real gaps.
-  bridge(9152, 352, 192, 'red'), bridge(9472, 416, 192, 'blue'), bridge(9792, 352, 192, 'red'),
-  bridge(10112, 288, 192, 'purple'), bridge(10432, 352, 192, 'blue'), bridge(10752, 416, 192, 'red'),
+  bridge(9152, 352, 192, 'blue'), bridge(9472, 416, 192, 'purple'), bridge(9792, 352, 192, 'red'),
+  bridge(10112, 288, 192, 'purple'), bridge(10432, 352, 192, 'blue'), bridge(10752, 416, 192, 'purple'),
   ground(10944, 416, 320), ground(11264, 416, 512, 480), ground(11776, 480, 256, 480, 'blue'),
   ground(12160, 480, 192), ground(12352, 480, 256, 480, 'red'), ground(12608, 480, 192, 480, 'purple'),
   // A quiet, neutral approach after the last color change; no input is needed to reach the exit.
