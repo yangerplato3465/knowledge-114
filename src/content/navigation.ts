@@ -13,6 +13,6 @@ export const categories: ActivityCategory[] = [
   ] },
   { id: 'detective', title: '偵探事件簿', starName: '線索座', description: '跟著老師進入案件，觀察線索、一起推理。', items: [
     { path: 'detective-golden-owl', title: '黃金貓頭鷹雕像失竊事件', description: '校園失竊案 · 密碼與邏輯推理' },
-    { path: 'detective-starlight', title: '星燈小徑燈光偏移事件', description: '暮光森林 · 重建時間、燈光與郵路' },
+    { path: 'detective-new', title: '新偵探遊戲', description: 'Pixi 場景框架 · 案件內容尚未加入' },
   ] },
 ];

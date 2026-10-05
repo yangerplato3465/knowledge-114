@@ -11,7 +11,7 @@
 | 網站首頁、活動入口與教師工作室 | [網站原稿與產製規格](site/manifest.json)；介面分工見 [網站設計](../../project/site-design.md) |
 | 尺寸、格位、錨點、留白、產圖提示與生成紀錄 | [製作清單](#製作清單與重建)，不在多個 MD 重複抄寫規格 |
 | 實際載入的 WebP | [工坊 display](../../../assets/images/magic-workshop/display/)；程式使用原 URL，未複製第二份共用素材 |
-| 星燈小徑的場景與道具 | [案件素材](../../../assets/images/detective/starlight/)；目前專案只有十張 WebP，未找到對應高解析原稿或產圖 manifest，不能稱為母圖 |
+| 偵探共用圖示 | [圖示來源與輸出](manifests/detective-icons-manifest.json)；黃金貓頭鷹案件共用放大鏡與拖曳手勢 |
 
 **原稿與執行圖分工**：此資料夾保留完整原圖供後續產製，不隨網站發布。中間切幀不另存入美術庫，加工直接使用完整母圖。PNG 檔名沿用生成版本便於追溯，人物資料夾與圖鑑提供可讀名稱。WebP 是縮圖／切幀的遊戲素材，不等於另一份原稿。歷史版本有不同像素與構圖，保留作來源比對，不能因版本號大就直接更換遊戲圖。
 
@@ -56,16 +56,6 @@
 | 完整素材表 | [workshop-icons-v1.png](workshop/sheets/workshop-icons-v1.png) | 1536 × 1024 | [ui](manifests/ui-manifest.json) |
 | 完整素材表 | [workshop-panels-v1.png](workshop/sheets/workshop-panels-v1.png) | 1536 × 1024 | [ui](manifests/ui-manifest.json) |
 
-## 星燈小徑素材
-
-米洛及共用木牌沿用工坊執行圖，不再複製。以下圖片的故事用途以 [案件腳本](../../../assets/js/detective/cases/starlight.js) 為準，案件獨有場景規則見 [設計](../../games/detective/starlight.md)。若找回高解析原稿，存入本美術庫並補上原稿到 WebP 的來源關係。
-
-| 類別 | 現有 WebP |
-| --- | --- |
-| 場景 | [星燈小徑](../../../assets/images/detective/starlight/trail.webp) · [守燈亭](../../../assets/images/detective/starlight/keeper-hut.webp) · [夜花坡](../../../assets/images/detective/starlight/nightflower-slope.webp) · [石橋舊郵路](../../../assets/images/detective/starlight/postal-bridge.webp) |
-| 道具 | [燈罩](../../../assets/images/detective/starlight/brass-hood.webp) · [遮光布](../../../assets/images/detective/starlight/shade-cloth.webp) · [夜花札記](../../../assets/images/detective/starlight/flower-notes.webp) · [郵路拓片](../../../assets/images/detective/starlight/route-rubbing.webp) |
-| 介面插圖 | [調查卷宗](../../../assets/images/detective/starlight/investigation-board.webp) · [對話卷軸](../../../assets/images/detective/starlight/dialogue-scroll.webp) |
-
 ## 製作清單與重建
 
 清單內的 PNG basename 由 [workshop_art_paths.py](../../../scripts/workshop_art_paths.py) 在此美術庫唯一解析；WebP basename 指向工坊 `display/`。提示詞、生成識別與舊驗收記錄原樣保留。不要把 manifest 裡舊的 `runtime` 或 `status` 字段當作現在的選圖表。
@@ -74,6 +64,7 @@
 | --- | --- |
 | [batch-2-manifest.json](manifests/batch-2-manifest.json) | 露米、奧利、諾爾與布諾造型原稿 |
 | [display-manifest.json](manifests/display-manifest.json) | 完整畫布縮成 WebP 的尺寸與可見範圍 |
+| [detective-icons-manifest.json](manifests/detective-icons-manifest.json) | 偵探共用介面圖示原稿與執行圖 |
 | [effects-manifest.json](manifests/effects-manifest.json) | 早期瓶身光環等效果來源 |
 | [guest-animation-manifest.json](manifests/guest-animation-manifest.json) | 五位客人完整六幀步態表與固定格規格 |
 | [guest-gaze-manifest.json](manifests/guest-gaze-manifest.json) | 露米、諾爾、菲恩的正視修正 |
@@ -96,5 +87,6 @@
 | 客人正視修正 | [prepare-workshop-gaze.py](../../../scripts/prepare-workshop-gaze.py) |
 | 石泉、釜、見習筆記與出口 | [prepare-workshop-rustic.py](../../../scripts/prepare-workshop-rustic.py) |
 | UI 素材表與水流 | [prepare-workshop-ui.py](../../../scripts/prepare-workshop-ui.py) |
+| 偵探共用介面圖示 | [prepare-detective-icons.py](../../../scripts/prepare-detective-icons.py) |
 
 現有腳本不是所有歷史素材的全量產生器；未涵蓋項目保留現役 WebP 與來源紀錄，不以重新壓縮代替來源追溯。製作腳本會寫入 WebP／部分 TypeScript 素材中繼資料，執行後須檢查差異與留白。字體授權與來源見 [字體說明](../../../assets/fonts/workshop/README.md)；音效與 BGM 見 [工坊設計](../../games/magic-workshop/design.md#動畫素材與音訊)。

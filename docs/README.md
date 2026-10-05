@@ -18,7 +18,7 @@
 | `docs/world/` | 暮光森林共同設定、角色身分與造型、原始美術與來源紀錄 |
 | `docs/games/<遊戲>/` | 遊戲專屬玩法／教材／場景／美術；用連結引用世界觀 |
 | `docs/project/` | 網站整體設計、架構、待辦與必要的技術驗收證據 |
-| `assets/images/` | 實際載入的圖片，按用途／遊戲分類；網站共用圖在 `site/`，工坊 `display/` 也是星燈小徑目前共用的載入位置 |
+| `assets/images/` | 實際載入的圖片，按用途／遊戲分類；網站共用圖在 `site/`，工坊執行圖在 `magic-workshop/display/` |
 | `src/`、`assets/js/` | 現役程式；規則、數值與完整台詞以程式為準，不複製到多份文件 |
 | `assets/uploads/` | 教學檔案，不當作角色母圖庫 |
 | `assets/vendor/`、`node_modules/` | 本地引擎／安裝依賴，不歸入世界觀 |

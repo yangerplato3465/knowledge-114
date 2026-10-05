@@ -3,12 +3,12 @@ const assert = require('node:assert/strict');
 
 test('新驗證碼使用案件三碼英文與四位數字，舊碼仍可驗證', async () => {
     const { randomCode, normalizeCode, deriveCodeId } = await import('../assets/js/detective/code.js');
-    for (const prefix of ['OWL', 'AIM', 'STR']) {
+    for (const prefix of ['OWL', 'AIM', 'XYZ']) {
         for (let i = 0; i < 30; i++) {
             assert.match(randomCode(prefix), new RegExp(`^${prefix}-\\d{4}$`));
         }
     }
-    assert.equal(normalizeCode('str-0042'), 'STR0042');
+    assert.equal(normalizeCode('owl-0042'), 'OWL0042');
     assert.equal(
         await deriveCodeId('owl', 'OWL-7K3M-92'),
         await deriveCodeId('owl', 'owl 7k3m 92'),

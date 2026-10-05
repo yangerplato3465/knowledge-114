@@ -1,6 +1,11 @@
 import {
-    Assets, Container, Graphics, Rectangle, Sprite, Text
+    Assets, Container, Graphics, Rectangle, Sprite, Text, Texture
 } from '../../vendor/pixi.esm.min.js';
+
+export const DETECTIVE_ICONS = {
+    magnifier: new URL('../../images/detective/shared/magnifier-v1.webp', import.meta.url).href,
+    dragHand: new URL('../../images/detective/shared/drag-hand-v1.webp', import.meta.url).href,
+};
 
 // ============================================================
 // 偵探事件簿 · 共用介面工具
@@ -10,7 +15,9 @@ import {
 
 export const W = 960, H = 600;                 // 設計尺寸（所有座標都以此為準）
 const WORKSHOP_SKIN = window.DETECTIVE_CASE?.skin === 'workshop';
-export const FONT = WORKSHOP_SKIN ? "'Workshop Rounded', 'Microsoft JhengHei', sans-serif" : "'Noto Sans TC', 'Fredoka', sans-serif";
+// Workshop Rounded covers only part of the Chinese copy. Mixing its glyphs
+// with a fallback inside one sentence produces visibly uneven strokes.
+export const FONT = WORKSHOP_SKIN ? "'Microsoft JhengHei', 'Noto Sans TC', sans-serif" : "'Noto Sans TC', 'Fredoka', sans-serif";
 
 export const COL = {
     panel: 0xfffdf9,
@@ -50,7 +57,7 @@ export function mkText(str, size, color, opt = {}) {
     });
 }
 
-export function mkButton({ label, icon = '', iconSide = 'left', x, y, w, h, color = COL.gold, textColor = COL.bar, size = 16, onClick }) {
+export function mkButton({ label, icon = '', iconSrc = '', iconSide = 'left', x, y, w, h, color = COL.gold, textColor = COL.bar, size = 16, onClick }) {
     const c = new Container();
     c.position.set(x, y);
     if (WORKSHOP_SKIN && hasTexture(window.DETECTIVE_CASE?.skinAssets?.wood)) {
@@ -58,7 +65,9 @@ export function mkButton({ label, icon = '', iconSide = 'left', x, y, w, h, colo
         const wood = new Sprite(Assets.get(window.DETECTIVE_CASE.skinAssets.wood));
         // 共用木牌素材保有透明留白；依實際可見木面縮放，點擊仍只落在按鈕矩形內。
         wood.width = w / 0.8125;
-        wood.height = h / 0.305;
+        // The painted plank occupies y=88..185 of the 256px texture.
+        // Size to those visible pixels, not to the transparent image frame.
+        wood.height = h * 256 / 97;
         wood.position.set(-wood.width * 24 / 256, -wood.height * 88 / 256);
         wood.eventMode = 'none';
         c.addChild(wood);
@@ -74,24 +83,35 @@ export function mkButton({ label, icon = '', iconSide = 'left', x, y, w, h, colo
     c.addChild(gloss);
     const labelColor = WORKSHOP_SKIN ? 0xf4dda8 : textColor;
     const t = mkText(label, size, labelColor, { weight: '700', align: 'center', lineHeight: size });
-    const iconText = icon ? mkText(icon, size, labelColor, { weight: '700', align: 'center', lineHeight: size }) : null;
+    const iconNode = iconSrc && hasTexture(iconSrc)
+        ? new Sprite(Assets.get(iconSrc))
+        : icon ? mkText(icon, size, labelColor, { weight: '700', align: 'center', lineHeight: size }) : null;
+    if (iconNode instanceof Sprite) { iconNode.width = size + 14; iconNode.height = size + 14; }
     const fitLabel = () => {
         if (!WORKSHOP_SKIN) return;
         t.style.fontSize = size;
-        while ((t.width > w - 20 || t.height > h - 8) && t.style.fontSize > 12) t.style.fontSize -= 1;
+        while ((t.width + (iconNode ? iconNode.width + 8 : 0) > w - 20 || t.height > h - 8)
+            && t.style.fontSize > 12) t.style.fontSize -= 1;
     };
     fitLabel();
-    const centerLabel = () => {
+    const centerContent = () => {
         t.anchor.set(0.5);
-        t.position.set(w / 2, h / 2);
-        if (iconText) {
-            iconText.anchor.set(0.5);
-            const offset = t.width / 2 + iconText.width / 2 + 6;
-            iconText.position.set(w / 2 + (iconSide === 'right' ? offset : -offset), h / 2);
+        if (!iconNode) { t.position.set(w / 2, h / 2); return; }
+        iconNode.anchor.set(0.5);
+        if (!t.text) { iconNode.position.set(w / 2, h / 2); return; }
+        const gap = 7;
+        const total = t.width + gap + iconNode.width;
+        const left = (w - total) / 2;
+        if (iconSide === 'right') {
+            t.position.set(left + t.width / 2, h / 2);
+            iconNode.position.set(left + t.width + gap + iconNode.width / 2, h / 2);
+        } else {
+            iconNode.position.set(left + iconNode.width / 2, h / 2);
+            t.position.set(left + iconNode.width + gap + t.width / 2, h / 2);
         }
     };
-    centerLabel();
-    if (iconText) c.addChild(iconText);
+    centerContent();
+    if (iconNode) c.addChild(iconNode);
     c.addChild(t);
     c.eventMode = 'static';
     c.cursor = 'pointer';
@@ -107,7 +127,7 @@ export function mkButton({ label, icon = '', iconSide = 'left', x, y, w, h, colo
     c.on('pointerup', () => { if (!c.locked) { if (!WORKSHOP_SKIN) gloss.alpha = 0.20; lift(0); } });
     c.on('pointerupoutside', () => { gloss.alpha = 0; lift(0); });
     c.on('pointertap', () => { if (!c.locked && onClick) onClick(); });
-    c.setLabel = s => { t.text = s; fitLabel(); centerLabel(); };
+    c.setLabel = s => { t.text = s; fitLabel(); centerContent(); };
     // 讓外面（引擎）可以借這層亮片做「數字跳動了」的閃光。
     // 動畫本身交給呼叫端的 tween 驅動 —— ui.js 沒有 app/ticker，
     // 在這裡自己開一支 requestAnimationFrame 會變成第二套時間軸。
@@ -194,19 +214,32 @@ export function drawProps(list, layer) {
                 });
                 node.anchor.set(p.ax ?? 0, p.ay ?? 0);
                 node.position.set(p.x, p.y);
+                if (p.shadow) node.style.dropShadow = {
+                    color: p.shadow, alpha: 0.9, blur: 3, distance: 1,
+                };
                 if (p.rot) node.rotation = p.rot;
                 if (p.icon) {
                     const icon = mkText(p.icon, p.size, p.c, {
                         weight: p.weight || '700', align: 'center', lineHeight: p.size,
                     });
-                    const anchorX = p.ax ?? 0;
+                    if (p.shadow) icon.style.dropShadow = {
+                        color: p.shadow, alpha: 0.9, blur: 3, distance: 1,
+                    };
                     const anchorY = p.ay ?? 0;
-                    const textCenterX = p.x + (0.5 - anchorX) * node.width;
                     const textCenterY = p.y + (0.5 - anchorY) * node.height;
                     const iconGap = p.iconGap ?? 5;
-                    const offset = node.width / 2 + icon.width / 2 + iconGap;
+                    const total = node.width + iconGap + icon.width;
+                    const left = p.x - total / 2;
                     icon.anchor.set(0.5);
-                    icon.position.set(textCenterX + (p.iconSide === 'right' ? offset : -offset), textCenterY);
+                    if (p.iconSide === 'right') {
+                        node.x = left + node.width / 2;
+                        icon.x = left + node.width + iconGap + icon.width / 2;
+                    } else {
+                        icon.x = left + icon.width / 2;
+                        node.x = left + icon.width + iconGap + node.width / 2;
+                    }
+                    node.anchor.x = 0.5;
+                    icon.y = textCenterY;
                     icon.eventMode = 'none';
                     decoration = icon;
                 }
@@ -215,7 +248,10 @@ export function drawProps(list, layer) {
                 // 正式素材用；圖還沒放進來時就跳過，不會壞掉
                 const tex = Assets.cache.has(p.src) ? Assets.get(p.src) : null;
                 if (!tex) break;
-                node = new Sprite(tex);
+                const texture = p.frame
+                    ? new Texture({ source: tex.source, frame: new Rectangle(p.frame.x, p.frame.y, p.frame.w, p.frame.h) })
+                    : tex;
+                node = new Sprite(texture);
                 node.position.set(p.x, p.y);
                 if (p.w) node.width = p.w;
                 if (p.h) node.height = p.h;
@@ -261,6 +297,8 @@ export function collectImages(caseData) {
     };
 
     add(global, caseData.assistantImg);            // 對話框左邊的助手立繪，一開場就會出現
+    add(global, DETECTIVE_ICONS.magnifier);
+    add(global, DETECTIVE_ICONS.dragHand);
     for (const [key, src] of Object.entries(caseData.skinAssets || {})) if (key !== 'font') add(global, src);
     for (const [id, sc] of Object.entries(caseData.scenes)) {
         const set = byScene[id] = new Set();
