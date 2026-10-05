@@ -1,5 +1,5 @@
 import type { App, Node, Sprite, Texture } from '../magic-workshop/scene-types';
-import { advance, EXIT, GHOST_ALPHA, initialState, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, WORLD_WIDTH, type ColorButton, type Platform, type WorldColor } from './model';
+import { advance, GHOST_ALPHA, initialState, LEVEL_THREE, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Platform, type WorldColor } from './model';
 
 import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type ArtPixi } from './art';
 
@@ -29,7 +29,8 @@ const ASSETS = ['background_clouds', 'background_fade_hills', 'background_fade_t
   'terrain_sand_block_top', 'terrain_sand_block_center', 'terrain_sand_horizontal_left',
   'terrain_sand_horizontal_middle', 'terrain_sand_horizontal_right'] as const;
 
-export async function createSideScroller(host: HTMLElement, signal: AbortSignal, onStatus: (status: SceneStatus) => void): Promise<SideScrollerScene> {
+export async function createSideScroller(host: HTMLElement, signal: AbortSignal, onStatus: (status: SceneStatus) => void, level: Level = LEVEL_THREE): Promise<SideScrollerScene> {
+  const { platforms: PLATFORMS, width: WORLD_WIDTH, exit: EXIT } = level;
   const P = await import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as ColorPixi;
   const [images, spriteImages] = await Promise.all([
     Promise.all(ASSETS.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.png`, signal))),
@@ -113,7 +114,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     const portal = art.create('portal'); portal.scale.set(0.8); portal.position.set(EXIT.x, EXIT.y); neutralWorld.addChild(portal);
     const milo = createMilo(P, art, neutralWorld), player = milo.sprite; player.visible = false;
     let tutorialOpen = true, finishAge = 0;
-    let state = initialState(), previous = state, accumulator = 0, camera = 0, viewportWidth = 1067, previewTravel = 0;
+    let state = initialState(level), previous = state, accumulator = 0, camera = 0, viewportWidth = 1067, previewTravel = 0;
     let mode: SceneMode = 'preview', paused = false, destroyed = false, lap = 1, lastStatus = '';
     const held = new Set<string>(); let tapTimer: number | undefined; let jumpPressed = false;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -166,11 +167,11 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     };
     const toggleLight = (button: ColorButton) => {
       if (destroyed || tutorialOpen || (mode === 'play' && (paused || state.completed))) return;
-      state = selectWorldColor(state, toggleColor(state.color, button)); previous = state;
+      state = selectWorldColor(state, toggleColor(state.color, button), PLATFORMS); previous = state;
       updateColors(); draw(); if (paused) app.render(); emit();
     };
     const togglePause = () => { if (destroyed || tutorialOpen) return; paused = !paused; release(); accumulator = 0; previous = state; emit(); };
-    const reset = (preserveColor = false) => { release(); milo.reset(); finishAge = 0; const color = state.color; state = initialState(); if (preserveColor) state.color = color; previous = state; paused = false; camera = previewTravel = accumulator = 0; lap = 1; updateColors(); draw(); emit(); };
+    const reset = (preserveColor = false) => { release(); milo.reset(); finishAge = 0; const color = state.color; state = initialState(level); if (preserveColor) state.color = color; previous = state; paused = false; camera = previewTravel = accumulator = 0; lap = 1; updateColors(); draw(); emit(); };
     const keydown = (event: KeyboardEvent) => {
       if (tutorialOpen || (event.target as HTMLElement).closest('button,a,input,select,dialog')) return;
       if (!event.repeat && ['1', '2'].includes(event.key)) { event.preventDefault(); toggleLight(event.key === '1' ? 'red' : 'blue'); }
@@ -199,7 +200,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
           accumulator += dt;
           while (accumulator >= PHYSICS.step) {
             previous = state;
-            state = advance(state, { jump: jumpPressed || held.size > 0 }, PHYSICS.step);
+            state = advance(state, { jump: jumpPressed || held.size > 0 }, PHYSICS.step, PLATFORMS, level);
             jumpPressed = false;
             if (state.falls !== previous.falls) { previous = state; milo.reset(); }
             accumulator -= PHYSICS.step;

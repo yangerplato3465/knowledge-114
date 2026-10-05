@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { SiteHeader } from '../../components/SiteHeader';
 import { ActivityTrail } from '../../components/ActivityTrail';
 import { createSideScroller, type SceneStatus, type SideScrollerScene } from './scene';
-import { isLightOn, type ColorButton } from './model';
+import { isLightOn, LEVELS, LEVEL_ZERO, levelSeconds, type ColorButton } from './model';
 import './side-scroller.css';
 import { Tutorial } from './Tutorial';
 
 export function SideScroller() {
   const host = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), shell = useRef<HTMLElement>(null);
   const scene = useRef<SideScrollerScene | null>(null);
+  const [level, setLevel] = useState(LEVEL_ZERO);
   const [manual, setManual] = useState(true), [started, setStarted] = useState(false);
   const manualRef = useRef(true); manualRef.current = manual;
   const [load, setLoad] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -18,13 +19,14 @@ export function SideScroller() {
     const controller = new AbortController();
     let active = true;
     setLoad('loading');
+    setStatus({ mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null });
     const timeout = window.setTimeout(() => { controller.abort(); if (active) setLoad('error'); }, 20000);
-    void createSideScroller(host.current!, controller.signal, next => { if (active && !controller.signal.aborted) setStatus(next); }).then(created => {
+    void createSideScroller(host.current!, controller.signal, next => { if (active && !controller.signal.aborted) setStatus(next); }, level).then(created => {
       if (!active || controller.signal.aborted) { created.destroy(); return; }
       window.clearTimeout(timeout); scene.current = created; created.setTutorial(manualRef.current); setLoad('ready');
     }).catch(() => { window.clearTimeout(timeout); if (active) setLoad('error'); });
     return () => { active = false; controller.abort(); window.clearTimeout(timeout); scene.current?.destroy(); scene.current = null; };
-  }, [attempt]);
+  }, [attempt, level]);
   useEffect(() => {
     const changed = () => setFullscreen(document.fullscreenElement === shell.current);
     document.addEventListener('fullscreenchange', changed);
@@ -54,6 +56,14 @@ export function SideScroller() {
         }}>{fullscreen ? '離開全螢幕' : '全螢幕'}</button>}
         {fullscreen && <a href={`${import.meta.env.BASE_URL}pages/activities.html#games`}>回冒險座</a>}
       </div></div>
+      <div className="ss-levels" role="group" aria-label="關卡難度">
+        {LEVELS.map(option => <button type="button" key={option.id} aria-pressed={level.id === option.id}
+          aria-label={`${option.difficulty} 星關卡：${option.name}，約 ${Math.round(levelSeconds(option))} 秒`}
+          onClick={() => { if (option.id === level.id) return; setLoad('loading'); setStarted(false); setManual(false); setLevel(option); }}>
+          <span className="ss-difficulty" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}assets/images/side-scroller/difficulty-star-v1.webp`} alt="" /><strong>{option.difficulty}</strong></span>
+          <span>{option.name}<small>約 {Math.round(levelSeconds(option))} 秒</small></span>
+        </button>)}
+      </div>
       <div className="ss-stage" ref={stage} tabIndex={0} role="region" aria-label="橫向遊戲世界" aria-describedby="ss-instructions">
         <div className="ss-host" ref={host} aria-hidden="true" />
         {load !== 'ready' && <div className="ss-loading" role="status"><p>{load === 'loading' ? '正在打開魔法禁書庫…' : '場景載入失敗，請重新載入。'}</p>
@@ -80,6 +90,6 @@ export function SideScroller() {
       </div>
       {manual && load === 'ready' && <Tutorial initial={!started} onClose={closeManual} onStart={start} />}
       <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。P 暫停。可開啟玩法手冊翻閱示範。</p>
-      <p className="ss-sr-status" role="status" aria-live="polite">{message}{colorMessage}。{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
+      <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
 }

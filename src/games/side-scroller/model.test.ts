@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_SECONDS, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
+import { advance, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_ONE, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, levelSeconds, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
@@ -11,7 +11,7 @@ function simulate(start: State, input: Input, seconds: number, platforms: readon
 // Acceptance route: one press for each required crossing, never an airborne second jump.
 const routeJumps = [994, 3572, 3856, 4212, 4496, 5492, 5812, 6132, 6432, 8740, 9030, 9296, 9652, 9972, 10256, 10576, 11982, 12516];
 // Change alternating platform colors only after leaving the previous support.
-const routeColors: [number, WorldColor][] = [[400, 'red'], [3380, 'blue'], [6000, 'purple'], [7600, 'blue'], [8400, 'red'], [8745, 'purple'], [9035, 'red'], [9301, 'blue'], [9657, 'red'], [9977, 'purple'], [10260, 'blue'], [10580, 'red'], [11500, 'blue'], [12290, 'red'], [12521, 'purple']];
+const routeColors: [number, WorldColor][] = [[400, 'red'], [3380, 'blue'], [6000, 'purple'], [7600, 'blue'], [8400, 'red'], [8745, 'purple'], [9035, 'blue'], [9301, 'purple'], [9657, 'red'], [9977, 'purple'], [10260, 'blue'], [10580, 'purple'], [11500, 'blue'], [12290, 'red'], [12521, 'purple']];
 function runRoute(platforms: readonly Platform[] = PLATFORMS, switchColors = true, timingOffset = 0) {
   const used = new Set<number>(), landed = new Set<Platform>();
   let s = initialState(), seconds = 0;
@@ -30,6 +30,80 @@ function runRoute(platforms: readonly Platform[] = PLATFORMS, switchColors = tru
   }
   return { state: s, seconds, landed, used };
 }
+describe('零星入門跑道', () => {
+  it('特殊地板彼此分隔，前半只教紅藍，後半才加入紫色', () => {
+    expect(LEVEL_ZERO.difficulty).toBe(0); expect(LEVEL_THREE.difficulty).toBe(3);
+    const sections = LEVEL_ZERO.platforms.filter(p => p.color);
+    expect(new Set(sections.filter(p => p.x < LEVEL_ZERO.exit.x / 2).map(p => p.color))).toEqual(new Set(['red', 'blue']));
+    expect(sections.filter(p => p.color === 'purple').every(p => p.x >= LEVEL_ZERO.exit.x / 2)).toBe(true);
+    sections.forEach((p, i) => {
+      expect(LEVEL_ZERO.platforms.find(other => other.x + other.w === p.x)?.color).toBeUndefined();
+      expect(LEVEL_ZERO.platforms.find(other => other.x === p.x + p.w)?.color).toBeUndefined();
+      if (i) expect(p.x - sections[i - 1].x - sections[i - 1].w).toBeGreaterThanOrEqual(PHYSICS.speed * 2);
+    });
+  });
+  it('兩次一段跳與獨立切燈可在約30秒無失誤通關，前後時機皆有餘裕', () => {
+    for (const offset of [-40, 0, 40]) {
+      const used = new Set<number>(); let state = initialState(LEVEL_ZERO), seconds = 0;
+      for (let i = 0; i < 120 * 33 && !state.completed && !state.falls; i++) {
+        const jump = [1680, 6480].find(x => state.x >= x + offset && !used.has(x));
+        if (jump !== undefined) used.add(jump);
+        const target = LEVEL_ZERO.platforms.filter(p => p.color && state.x >= p.x - PHYSICS.speed + offset).at(-1)?.color;
+        let color = state.color;
+        if (target) for (const button of ['red', 'blue'] as const) if (isLightOn(color, button) !== isLightOn(target, button)) color = toggleColor(color, button);
+        state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, LEVEL_ZERO.platforms, LEVEL_ZERO); seconds += PHYSICS.step;
+      }
+      expect(state.falls, `時機偏移 ${offset}`).toBe(0); expect(state.completed).toBe(true);
+      expect(used.size).toBe(2); expect(seconds).toBeGreaterThan(29); expect(seconds).toBeLessThan(31);
+      expect(Math.abs(seconds - levelSeconds(LEVEL_ZERO))).toBeLessThan(0.4);
+      expect(state.checkpoint).toBe(LEVEL_ZERO.checkpoints.length - 1);
+    }
+  });
+  it('重生與出口使用所選跑道，不會取用三星的座標', () => {
+    LEVEL_ZERO.checkpoints.forEach((x, checkpoint) => {
+      const s = advance({ ...initialState(LEVEL_ZERO), checkpoint, y: 830, grounded: false }, neutral, PHYSICS.step, LEVEL_ZERO.platforms, LEVEL_ZERO);
+      expect(s.x).toBe(x); expect(s.y).toBe(checkpointY(checkpoint, LEVEL_ZERO));
+      expect(s.falls).toBe(1); expect(s.completed).toBe(false);
+    });
+    expect(touchesExit({ x: LEVEL_ZERO.exit.x, y: 480 }, LEVEL_ZERO)).toBe(true);
+    expect(touchesExit({ x: LEVEL_ZERO.exit.x, y: 480 }, LEVEL_THREE)).toBe(false);
+  });
+});
+describe('一星浮空書徑', () => {
+  const run = (platforms: readonly Platform[] = LEVEL_ONE.platforms, offset = 0) => {
+    let state = initialState(LEVEL_ONE), seconds = 0; const used = new Set<number>(), landed = new Set<Platform>();
+    for (let i = 0; i < 120 * 38 && !state.completed && !state.falls; i++) {
+      const jump = [2384, 4020, 4340].find(x => state.x >= x + offset && !used.has(x));
+      if (jump !== undefined) used.add(jump);
+      const target = LEVEL_ONE.platforms.filter(p => p.color && state.x >= p.x - 144 + offset).at(-1)?.color;
+      let color = state.color;
+      if (target) for (const button of ['red', 'blue'] as const) if (isLightOn(color, button) !== isLightOn(target, button)) color = toggleColor(color, button);
+      state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, platforms, LEVEL_ONE); seconds += PHYSICS.step;
+      if (state.grounded) platforms.filter(p => p.kind === 'bridge' && state.x >= p.x && state.x < p.x + p.w && state.y === p.y).forEach(p => landed.add(p));
+    }
+    return { state, seconds, used, landed };
+  };
+  it('提高色塊頻率但不相鄰，紫色留在後半，落腳區維持正常地板', () => {
+    const special = LEVEL_ONE.platforms.filter(p => p.color), intro = LEVEL_ZERO.platforms.filter(p => p.color);
+    expect(special.length / levelSeconds(LEVEL_ONE)).toBeGreaterThan(intro.length / levelSeconds(LEVEL_ZERO) * 1.5);
+    special.forEach(p => expect(LEVEL_ONE.platforms.some(next => next.color && next.x === p.x + p.w)).toBe(false));
+    expect(special.filter(p => p.color === 'purple').every(p => p.x >= LEVEL_ONE.exit.x / 2)).toBe(true);
+    LEVEL_ONE.checkpoints.forEach(x => expect(LEVEL_ONE.platforms.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w)?.color).toBeUndefined());
+  });
+  it('三次一段跳能站遍跨洞平台，約35秒通關，前後時機皆有餘裕', () => {
+    for (const offset of [-16, 0, 16]) {
+      const result = run(LEVEL_ONE.platforms, offset);
+      expect(result.state.falls, `時機偏移 ${offset}`).toBe(0); expect(result.state.completed).toBe(true);
+      expect(result.used.size).toBe(3); expect(result.landed.size).toBe(2);
+      expect(result.seconds).toBeGreaterThan(34); expect(result.seconds).toBeLessThan(36);
+      expect(Math.abs(result.seconds - levelSeconds(LEVEL_ONE))).toBeLessThan(0.4);
+      expect(result.state.checkpoint).toBe(LEVEL_ONE.checkpoints.length - 1);
+    }
+    for (const platform of LEVEL_ONE.platforms.filter(p => p.kind === 'bridge')) {
+      expect(run(LEVEL_ONE.platforms.filter(p => p !== platform)).state.falls, `平台 ${platform.x}`).toBeGreaterThan(0);
+    }
+  });
+});
 describe('固定向前的一段跳世界', () => {
   it('不用輸入就固定向前跑，腳點穩定', () => {
     const s = simulate(initialState(), neutral, 1);

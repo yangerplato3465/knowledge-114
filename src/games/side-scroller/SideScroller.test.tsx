@@ -94,3 +94,29 @@ it('開場三頁手冊阻止跑道前進，可用鍵盤翻頁，開始後可重�
   expect(screen.getByRole('button', { name: '紅燈' }).textContent).toBe('紅燈 1');
   expect(screen.getByRole('button', { name: '藍燈' }).textContent).toBe('藍燈 2');
 });
+it('預設零星，選三星重建場景；過期的零星載入不可覆蓋三星', async () => {
+  let resolveIntro!: (scene: SideScrollerScene) => void;
+  const intro = fakeScene(), challenge = fakeScene();
+  vi.mocked(createSideScroller).mockImplementation((_host, _signal, _onStatus, level) => level?.difficulty === 0 ? new Promise(done => { resolveIntro = done; }) : Promise.resolve(challenge));
+  render(<ThemeProvider><SideScroller /></ThemeProvider>);
+  const firstSignal = vi.mocked(createSideScroller).mock.calls[0][1];
+  expect(vi.mocked(createSideScroller).mock.calls[0][3]?.difficulty).toBe(0);
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /3 星關卡/ })); });
+  expect(firstSignal.aborted).toBe(true);
+  expect(screen.getByRole('button', { name: /3 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(3);
+  await act(async () => resolveIntro(intro));
+  expect(intro.destroy).toHaveBeenCalledOnce(); expect(challenge.destroy).not.toHaveBeenCalled();
+  expect(challenge.setTutorial).toHaveBeenLastCalledWith(false);
+});
+it('可選一星平台跑道，原高難度顯示三星且不再顯示四星', async () => {
+  const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
+  expect(screen.queryByRole('button', { name: /4 星關卡/ })).toBeNull();
+  expect(screen.getByRole('button', { name: /3 星關卡/ })).toBeTruthy();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /1 星關卡/ })); });
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(1);
+  expect(screen.getByRole('button', { name: /1 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
+  expect(created.destroy).toHaveBeenCalledOnce();
+});

@@ -1,0 +1,36 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Asset type: ONE small difficulty star icon for the Magic Forbidden Library 2D platformer. Match Kenney New Platformer Pack's flat cartoon game assets: chunky rounded shapes, thick dark charcoal outline, bright golden yellow fill, one simple orange lower-right shade and a small cream upper-left highlight. One complete five-point star, rounded tips, symmetrical upright star with point at top, no face, eyes, lettering, numbers, badges, circles, ribbon, scenery, shadow, sparkle, glow or particles. Single static frame (1 column x 1 row), square requested1024x1024 RGBA with genuinely transparent background. Fixed center anchor(512,512); full star including outline fits within x128..896,y128..896, at least128px empty alpha padding on every edge. Simple readable silhouette at32px display size. The number0..6 will be HTML beside this reusable image, DO NOT include any numeral. Entire outline complete, nothing clipped. Flat raster cartoon, clean smooth edges, no painterly texture, realism, 3D, pixel art, ornamental detail, logos or text.",
+  "generation": "exec-b0cbd244-3a40-4609-baf1-c7bd6a68e461",
+  "source": "docs/world/art/side-scroller/difficulty-star-source-v1.png",
+  "runtime": "assets/images/side-scroller/difficulty-star-v1.webp",
+  "contract": {
+    "requestedCanvas": [
+      1024,
+      1024
+    ],
+    "actualCanvas": [
+      1254,
+      1254
+    ],
+    "frames": 1,
+    "columns": 1,
+    "rows": 1,
+    "anchor": [
+      627,
+      627
+    ],
+    "requestedPadding": 128,
+    "alpha": true
+  },
+  "processing": {
+    "resize": [
+      128,
+      128
+    ],
+    "crop": "none; preserve full fixed canvas",
+    "format": "webp quality 92"
+  },
+  "use": "A single reusable star image beside a DOM number; difficulty type supports 0–6. Available courses are defined by LEVELS in model.ts.",
+  "review": "Inspected original complete rounded five-point silhouette, charcoal border and transparent outside; no clipped outline or lettering."
+}
