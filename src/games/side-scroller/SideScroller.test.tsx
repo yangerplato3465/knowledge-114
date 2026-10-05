@@ -4,10 +4,11 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '../../features/theme/ThemeProvider';
 import { SideScroller } from './SideScroller';
 import { createSideScroller, type SceneStatus, type SideScrollerScene } from './scene';
+import { toggleColor } from './model';
 
 vi.mock('./scene', () => ({ createSideScroller: vi.fn() }));
 afterEach(() => { cleanup(); vi.resetAllMocks(); });
-const fakeScene = (): SideScrollerScene => ({ hold: vi.fn(), tap: vi.fn(), setMode: vi.fn(), setColor: vi.fn(), togglePause: vi.fn(), restart: vi.fn(), destroy: vi.fn() });
+const fakeScene = (): SideScrollerScene => ({ hold: vi.fn(), tap: vi.fn(), setMode: vi.fn(), toggleColor: vi.fn(), togglePause: vi.fn(), restart: vi.fn(), destroy: vi.fn() });
 it('提供回冒險座入口、可用鍵盤的控制與重試操作', async () => {
   const created = fakeScene();
   vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
@@ -31,23 +32,31 @@ it('提供回冒險座入口、可用鍵盤的控制與重試操作', async () =
   expect(screen.queryByRole('button', { name: '跳躍' })).toBeNull();
   cleanup(); expect(created.destroy).toHaveBeenCalledOnce();
 });
-it('紅藍控制互斥、切色後焦點回到場景，暫停巡覽仍可檢視顏色', async () => {
+it('兩按鈕可同時開啟紫色，保持獨立開關；暫停巡覽仍可檢視顏色', async () => {
   const created = fakeScene();
   vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
     let status: SceneStatus = { mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null };
-    created.setColor = vi.fn(color => { status = { ...status, color }; onStatus(status); });
+    created.toggleColor = vi.fn(button => { status = { ...status, color: toggleColor(status.color, button) }; onStatus(status); });
     created.togglePause = vi.fn(() => { status = { ...status, paused: !status.paused }; onStatus(status); });
     created.setMode = vi.fn(mode => { status = { ...status, mode, paused: false }; onStatus(status); });
     created.restart = vi.fn(() => { status = { ...status, color: null, paused: false }; onStatus(status); });
     return created;
   });
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
-  const red = screen.getByRole('button', { name: '紅色世界' }), blue = screen.getByRole('button', { name: '藍色世界' });
+  const red = screen.getByRole('button', { name: '紅燈' }), blue = screen.getByRole('button', { name: '藍燈' });
   expect(red.getAttribute('aria-pressed')).toBe('false'); expect(blue.getAttribute('aria-pressed')).toBe('false');
-  fireEvent.click(red); expect(created.setColor).toHaveBeenLastCalledWith('red'); expect(red.getAttribute('aria-pressed')).toBe('true');
+  act(() => {
+    fireEvent(red, new MouseEvent('pointerdown', { button: 0, bubbles: true, cancelable: true }));
+    fireEvent(blue, new MouseEvent('pointerdown', { button: 0, bubbles: true, cancelable: true }));
+  });
+  expect(created.toggleColor).toHaveBeenCalledTimes(2);
+  expect(red.getAttribute('aria-pressed')).toBe('true'); expect(blue.getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getByText('紅＋藍開啟 · 紫色 ◆ 實體')).toBeTruthy();
+  fireEvent.click(blue, { detail: 1 }); expect(created.toggleColor).toHaveBeenCalledTimes(2);
   expect(document.activeElement).toBe(screen.getByRole('region', { name: '橫向遊戲世界' }));
   fireEvent.click(screen.getByRole('button', { name: '暫停' })); expect(blue.hasAttribute('disabled')).toBe(false);
-  fireEvent.click(blue); expect(red.getAttribute('aria-pressed')).toBe('false'); expect(blue.getAttribute('aria-pressed')).toBe('true');
+  fireEvent.click(red); expect(red.getAttribute('aria-pressed')).toBe('false'); expect(blue.getAttribute('aria-pressed')).toBe('true');
+  fireEvent.click(blue); expect(blue.getAttribute('aria-pressed')).toBe('false');
   fireEvent.click(screen.getByRole('button', { name: '試跑' })); fireEvent.click(screen.getByRole('button', { name: '暫停' }));
   expect(red.hasAttribute('disabled')).toBe(true); expect(blue.hasAttribute('disabled')).toBe(true); expect(screen.getByRole('button', { name: '跳躍' }).hasAttribute('disabled')).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: '從頭開始' })); expect(red.getAttribute('aria-pressed')).toBe('false'); expect(blue.getAttribute('aria-pressed')).toBe('false');

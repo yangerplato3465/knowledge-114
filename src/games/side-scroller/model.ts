@@ -1,4 +1,11 @@
-export type WorldColor = 'red' | 'blue';
+export type WorldColor = 'red' | 'blue' | 'purple';
+export type ColorButton = 'red' | 'blue';
+export function isLightOn(color: WorldColor | null, button: ColorButton): boolean { return color === button || color === 'purple'; }
+export function toggleColor(color: WorldColor | null, button: ColorButton): WorldColor | null {
+  const red = button === 'red' ? !isLightOn(color, 'red') : isLightOn(color, 'red');
+  const blue = button === 'blue' ? !isLightOn(color, 'blue') : isLightOn(color, 'blue');
+  return red && blue ? 'purple' : red ? 'red' : blue ? 'blue' : null;
+}
 export interface Platform { x: number; y: number; w: number; h: number; kind: 'ground' | 'bridge'; endY?: number; color?: WorldColor }
 export interface Input { jump: boolean; color?: WorldColor | null }
 export const WORLD_WIDTH = 12800;
@@ -8,22 +15,25 @@ export const GHOST_ALPHA = 0.32;
 const ground = (x: number, y: number, w: number, endY = y, color?: WorldColor): Platform => ({ x, y, w, endY, color, h: 672 - y, kind: 'ground' });
 const bridge = (x: number, y: number, w: number, color?: WorldColor): Platform => ({ x, y, w, color, h: 32, kind: 'bridge' });
 export const PLATFORMS: Platform[] = [
-  // Warm-up: a small gap, a long climb, then a 160 px drop into the valley.
-  ground(0, 480, 640), ground(640, 480, 384, 480, 'red'), ground(1152, 480, 384, 480, 'blue'), ground(1536, 480, 512, 384),
-  ground(2048, 384, 384, 384, 'red'), ground(2432, 544, 1152),
-  // A broad ravine: the four platforms are the only crossing.
-  bridge(3712, 480, 192, 'red'), bridge(4032, 480, 192, 'blue'), bridge(4352, 416, 192, 'red'), bridge(4672, 416, 192, 'blue'),
+  // Easy opening: isolated red floors, normal ground between them, and one small gap.
+  ground(0, 480, 640), ground(640, 480, 256, 480, 'red'), ground(896, 480, 128), ground(1152, 480, 384), ground(1536, 480, 512, 384),
+  ground(2048, 384, 256, 384, 'red'), ground(2304, 384, 128), ground(2432, 544, 448),
+  ground(2880, 544, 320, 544, 'red'), ground(3200, 544, 384),
+  // Introduce blue in the ravine without midair color changes; normal platforms separate it.
+  bridge(3712, 480, 192, 'blue'), bridge(4032, 480, 192), bridge(4352, 416, 192, 'blue'), bridge(4672, 416, 192),
   ground(4864, 416, 640),
-  // Three successive jumps reach a ledge too high for a single jump from the approach.
-  bridge(5632, 352, 192, 'red'), bridge(5952, 288, 192, 'blue'), bridge(6272, 224, 192, 'red'),
-  ground(6528, 224, 640),
-  // Leave the summit and fall 320 px onto the broad, lower landing ground.
-  ground(7296, 544, 896), ground(8192, 544, 512, 416), ground(8704, 416, 320),
-  // A continuous sequence alternates descent and ascent with room to prepare each jump.
+  // Introduce purple after a normal landing platform, with a broad summit to recover.
+  bridge(5632, 352, 192, 'blue'), bridge(5952, 288, 192), bridge(6272, 224, 192, 'purple'),
+  ground(6528, 224, 384), ground(6912, 224, 256, 224, 'purple'),
+  // A 320 px drop, safe landing, then one isolated blue floor before the final climb.
+  ground(7296, 544, 512), ground(7808, 544, 256, 544, 'blue'), ground(8064, 544, 128), ground(8192, 544, 384, 416),
+  // Hard section: adjoining colors with longer approach/landing room before the next jump.
+  ground(8576, 416, 256, 416, 'red'), ground(8832, 416, 256, 416, 'purple'),
+  // Continuous airborne color changes alternate descent and ascent, with real gaps.
   bridge(9152, 352, 192, 'red'), bridge(9472, 416, 192, 'blue'), bridge(9792, 352, 192, 'red'),
-  bridge(10112, 288, 192), bridge(10432, 352, 192, 'blue'), bridge(10752, 416, 192, 'red'),
-  ground(10944, 416, 320), ground(11264, 416, 512, 480), ground(11776, 480, 192, 480, 'blue'),
-  ground(12160, 480, 640),
+  bridge(10112, 288, 192, 'purple'), bridge(10432, 352, 192, 'blue'), bridge(10752, 416, 192, 'red'),
+  ground(10944, 416, 320), ground(11264, 416, 512, 480), ground(11776, 480, 256, 480, 'blue'),
+  ground(12160, 480, 192), ground(12352, 480, 256, 480, 'red'), ground(12608, 480, 192, 480, 'purple'),
 ];
 export const CHECKPOINTS = [160, 2624, 5056, 7488, 11136];
 export const GOAL = WORLD_WIDTH - 160;

@@ -1,5 +1,5 @@
 import type { App, Node, Pixi, Sprite, Texture } from '../magic-workshop/scene-types';
-import { advance, BODY, GHOST_ALPHA, initialState, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, WORLD_WIDTH, type Platform, type WorldColor } from './model';
+import { advance, BODY, GHOST_ALPHA, initialState, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, WORLD_WIDTH, type ColorButton, type Platform, type WorldColor } from './model';
 
 export type SceneMode = 'preview' | 'play';
 type Action = 'jump';
@@ -8,16 +8,18 @@ export interface SideScrollerScene {
   hold(action: Action, held: boolean, source: string): void;
   tap(action: Action): void;
   setMode(mode: SceneMode): void;
-  setColor(color: WorldColor): void;
+  toggleColor(button: ColorButton): void;
   togglePause(): void;
   restart(): void;
   destroy(): void;
 }
 const HEIGHT = 600, TILE = 64;
+const LIGHT_ALPHA = 0.08;
+const LIGHT_COLORS = { red: 0xff596e, blue: 0x477dff, purple: 0xb968f0 };
 interface ColorFilter { matrix: number[]; destroy(): void }
 type ColorPixi = Pixi & { ColorMatrixFilter: new () => ColorFilter };
 function colorMatrix(color: WorldColor, alpha: number) {
-  const channels = color === 'red' ? [1.45, 0.34, 0.42] : [0.3, 0.76, 1.55];
+  const channels = color === 'red' ? [1.45, 0.34, 0.42] : color === 'blue' ? [0.3, 0.76, 1.55] : [1.0, 0.42, 1.5];
   return [...channels.flatMap(value => [0.299 * value, 0.587 * value, 0.114 * value, 0, 0]), 0, 0, 0, alpha, 0];
 }
 const ASSETS = ['background_clouds', 'background_fade_hills', 'background_fade_trees',
@@ -43,7 +45,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
   signal.throwIfAborted();
   const textures = Object.fromEntries(ASSETS.map((name, i) => [name, P.Texture.from(images[i])])) as Record<typeof ASSETS[number], Texture>;
   const app: App = new P.Application();
-  const filters = { red: new P.ColorMatrixFilter(), blue: new P.ColorMatrixFilter() };
+  const filters = { red: new P.ColorMatrixFilter(), blue: new P.ColorMatrixFilter(), purple: new P.ColorMatrixFilter() };
   let initialized = false;
   const dispose = () => { if (initialized) app.destroy({ removeView: true }, { children: true }); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
   try {
@@ -51,8 +53,9 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       sharedTicker: false, preference: 'webgl', resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true });
     initialized = true;
     signal.throwIfAborted();
-    const clouds = new P.Container(), hills = new P.Container(), trees = new P.Container(), world = new P.Container();
-    [clouds, hills, trees, world].forEach(layer => app.stage.addChild(layer));
+    const clouds = new P.Container(), hills = new P.Container(), trees = new P.Container(), neutralWorld = new P.Container(), light = new P.Graphics(), world = new P.Container();
+    // Full viewport light washes the scenery; special terrain stays above it, preserving its exact tint and opacity.
+    [clouds, hills, trees, neutralWorld, light, world].forEach(layer => app.stage.addChild(layer));
     // White areas of the original backgrounds let the lower layer show through.
     (hills as Node & { blendMode: string }).blendMode = 'multiply';
     (trees as Node & { blendMode: string }).blendMode = 'multiply';
@@ -68,13 +71,14 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       for (let x = p.x + TILE; x < p.x + p.w; x += TILE * 2) {
         const y = surfaceY(p, x) + 16;
         if (p.color === 'red') marks.poly([x, y - 7, x + 7, y + 6, x - 7, y + 6]);
-        else marks.circle(x, y, 7);
+        else if (p.color === 'blue') marks.circle(x, y, 7);
+        else marks.poly([x, y - 8, x + 8, y, x, y + 8, x - 8, y]);
         marks.fill(0xffffff).stroke({ color: 0x302943, width: 2 });
       }
       group.addChild(marks);
     };
     for (const p of PLATFORMS) {
-      const group = new P.Container(); world.addChild(group); terrainNodes.push({ node: group, x: p.x, end: p.x + p.w });
+      const group = new P.Container(); (p.color ? world : neutralWorld).addChild(group); terrainNodes.push({ node: group, x: p.x, end: p.x + p.w });
       // Filter the assembled terrain once, so overlapping tiles keep a uniform ghost opacity.
       if (p.color) (group as Node & { filters: ColorFilter[] }).filters = [filters[p.color]];
       if (p.kind === 'bridge') {
@@ -113,7 +117,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     }
     const player = new P.Graphics().roundRect(-BODY.half, -BODY.height, BODY.half * 2, BODY.height, 8).fill(0x686cb2)
       .stroke({ color: 0x353451, width: 3 }).poly([0, -36, 8, -30, 0, -24]).fill(0xffffff);
-    world.addChild(player); player.visible = false;
+    neutralWorld.addChild(player); player.visible = false;
     let state = initialState(), previous = state, accumulator = 0, camera = 0, viewportWidth = 1067, previewTravel = 0;
     let mode: SceneMode = 'preview', paused = false, destroyed = false, lap = 1, lastStatus = '';
     const held = new Set<string>(); let tapTimer: number | undefined; let jumpPressed = false;
@@ -131,7 +135,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     };
     const release = () => { held.clear(); jumpPressed = false; if (tapTimer !== undefined) window.clearTimeout(tapTimer); tapTimer = undefined; };
     const draw = () => {
-      world.x = -camera;
+      world.x = neutralWorld.x = -camera;
       terrainNodes.forEach(({ node, x, end }) => { node.visible = end >= camera - TILE && x <= camera + viewportWidth + TILE; });
       backgroundLayers.forEach(layer => layer.sprites.forEach((s, i) => {
         s.x = i * layer.width - (camera * (reduced ? 0 : layer.factor)) % layer.width;
@@ -139,6 +143,10 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       const mix = paused || state.completed ? 1 : accumulator / PHYSICS.step;
       player.position.set(previous.x + (state.x - previous.x) * mix, previous.y + (state.y - previous.y) * mix);
       player.visible = mode === 'play';
+    };
+    const paintLight = () => {
+      light.clear();
+      if (state.color) light.rect(0, 0, viewportWidth, HEIGHT).fill({ color: LIGHT_COLORS[state.color], alpha: LIGHT_ALPHA });
     };
     const resize = () => {
       const bounds = host.getBoundingClientRect();
@@ -148,22 +156,23 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
         layer.node.removeChildren().forEach(node => node.destroy());
         layer.sprites = Array.from({ length: Math.ceil(viewportWidth / layer.width) + 1 }, (_, i) => sprite(layer.name, i * layer.width, layer.y, layer.width + 1, layer.height, layer.node));
       });
-      camera = Math.max(0, Math.min(camera, WORLD_WIDTH - viewportWidth)); draw(); app.render();
+      camera = Math.max(0, Math.min(camera, WORLD_WIDTH - viewportWidth)); paintLight(); draw(); app.render();
     };
     const stage = host.parentElement!;
     const updateColors = () => {
-      for (const color of ['red', 'blue'] as const) filters[color].matrix = colorMatrix(color, state.color === color ? 1 : GHOST_ALPHA);
+      for (const color of ['red', 'blue', 'purple'] as const) filters[color].matrix = colorMatrix(color, state.color === color ? 1 : GHOST_ALPHA);
+      paintLight();
     };
-    const setColor = (color: WorldColor) => {
+    const toggleLight = (button: ColorButton) => {
       if (destroyed || (mode === 'play' && (paused || state.completed))) return;
-      state = selectWorldColor(state, color); previous = state;
+      state = selectWorldColor(state, toggleColor(state.color, button)); previous = state;
       updateColors(); draw(); if (paused) app.render(); emit();
     };
     const togglePause = () => { if (destroyed) return; paused = !paused; release(); accumulator = 0; previous = state; emit(); };
     const reset = (preserveColor = false) => { release(); const color = state.color; state = initialState(); if (preserveColor) state.color = color; previous = state; paused = false; camera = previewTravel = accumulator = 0; lap = 1; updateColors(); draw(); emit(); };
     const keydown = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest('button,a,input,select')) return;
-      if (!event.repeat && ['1', '2'].includes(event.key)) { event.preventDefault(); setColor(event.key === '1' ? 'red' : 'blue'); }
+      if (!event.repeat && ['1', '2'].includes(event.key)) { event.preventDefault(); toggleLight(event.key === '1' ? 'red' : 'blue'); }
       if (['Space', 'ArrowUp', 'KeyW'].includes(event.code)) {
         event.preventDefault();
         if (!paused && mode === 'play') { held.add(event.code); if (!event.repeat) jumpPressed = true; }
@@ -216,7 +225,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
         tapTimer = window.setTimeout(() => { held.delete('tap'); tapTimer = undefined; }, 100);
       },
       setMode(next) { if (destroyed) return; mode = next; reset(true); },
-      setColor,
+      toggleColor: toggleLight,
       togglePause,
       restart() { if (!destroyed) reset(); },
       destroy() {

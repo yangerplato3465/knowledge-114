@@ -25,6 +25,8 @@
 .ss-red[aria-pressed="true"] { background: #b33346; color: white; }
 .ss-blue[aria-pressed="true"] { background: #286bb5; color: white; }
 .ss-color:active { background: #e3e9f4; }
+.ss-red[aria-pressed="true"]:active { background: #962236; }
+.ss-blue[aria-pressed="true"]:active { background: #1c5797; }
 .ss-caption { position: absolute; top: 24px; left: 26px; color: #343c53; pointer-events: none; }
 .ss-caption span { display: block; font-size: 18px; font-weight: 800; }
 .ss-caption small { display: block; margin-top: 5px; font-size: 13px; }

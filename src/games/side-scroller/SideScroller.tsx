@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { SiteHeader } from '../../components/SiteHeader';
 import { ActivityTrail } from '../../components/ActivityTrail';
 import { createSideScroller, type SceneStatus, type SideScrollerScene } from './scene';
-import type { WorldColor } from './model';
+import { isLightOn, type ColorButton } from './model';
 import './side-scroller.css';
 
 export function SideScroller() {
@@ -28,9 +28,9 @@ export function SideScroller() {
     return () => document.removeEventListener('fullscreenchange', changed);
   }, []);
   const preview = status.mode === 'preview';
-  const colorMessage = status.color === 'red' ? '紅色實體 · 藍色透明' : status.color === 'blue' ? '藍色實體 · 紅色透明' : '紅藍透明 · 按 1／2 切色';
+  const colorMessage = status.color === 'purple' ? '紅＋藍開啟 · 紫色 ◆ 實體' : status.color === 'red' ? '紅燈開啟 · 紅色 ▲ 實體' : status.color === 'blue' ? '藍燈開啟 · 藍色 ● 實體' : '兩燈關閉 · 特殊地板皆透明';
   const colorDisabled = load !== 'ready' || (!preview && (status.paused || status.completed));
-  const changeColor = (color: WorldColor) => { scene.current?.setColor(color); stage.current?.focus({ preventScroll: true }); };
+  const changeColor = (button: ColorButton) => { scene.current?.toggleColor(button); stage.current?.focus({ preventScroll: true }); };
   const message = status.completed ? '試跑完成，可以從頭再跑。' : status.paused ? '已暫停。' : preview ? '正在自動巡覽地圖。' : `固定向前跑，空白鍵或跳躍按鈕起跳。位於落腳區 ${status.checkpoint + 1}。`;
   return <><SiteHeader navigation current="activities" /><ActivityTrail title="橫向遊戲框架" category="games" status="世界原型" />
     <main className="ss-game" ref={shell}>
@@ -52,8 +52,9 @@ export function SideScroller() {
         {(status.paused || status.completed) && <div className="ss-message"><strong>{status.completed ? '已跑完小徑' : '已暫停'}</strong><span>{status.completed ? '選擇「從頭開始」再跑一次' : '選擇「繼續」或按 P'}</span></div>}
         <div className="ss-controls" role="group" aria-label="遊戲操作">
           <div className="ss-colors" role="group" aria-label="世界顏色">
-            <button type="button" className="ss-control ss-color ss-red" aria-label="紅色世界" aria-keyshortcuts="1" aria-pressed={status.color === 'red'} disabled={colorDisabled} onClick={() => changeColor('red')}><span aria-hidden="true">▲</span><span>紅色 <small>1</small></span></button>
-            <button type="button" className="ss-control ss-color ss-blue" aria-label="藍色世界" aria-keyshortcuts="2" aria-pressed={status.color === 'blue'} disabled={colorDisabled} onClick={() => changeColor('blue')}><span aria-hidden="true">●</span><span>藍色 <small>2</small></span></button>
+            {(['red', 'blue'] as const).map(button => <button key={button} type="button" className={`ss-control ss-color ss-${button}`} aria-label={button === 'red' ? '紅燈' : '藍燈'} aria-keyshortcuts={button === 'red' ? '1' : '2'} aria-pressed={isLightOn(status.color, button)} disabled={colorDisabled}
+              onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); changeColor(button); }}
+              onClick={event => { if (event.detail === 0) changeColor(button); }}><span aria-hidden="true">{button === 'red' ? '▲' : '●'}</span><span>{button === 'red' ? '紅燈' : '藍燈'} <small>{button === 'red' ? '1' : '2'}</small></span></button>)}
           </div>
           {!preview && <button type="button" aria-label="跳躍" disabled={load !== 'ready' || status.paused || status.completed}
           className="ss-control ss-jump"
@@ -68,7 +69,7 @@ export function SideScroller() {
         >跳躍 ↑</button>}
         </div>
       </div>
-      <p className="ss-help" id="ss-help">{preview ? '世界會自動向前捲動，可切色查看地形；選擇「試跑」即可開始。' : '自動往右跑，空白鍵、↑ 或 W 一段跳；按住不會連跳。先起跳，再切換下一座平台的顏色。跌落會回到最近落腳區。'} 1／紅色 ▲、2／藍色 ●：選中的顏色可踩，另一色透明不可踩，正常地板始終可踩。P 暫停／繼續。</p>
+      <p className="ss-help" id="ss-help">{preview ? '世界會自動向前捲動，可切色查看地形；選擇「試跑」即可開始。' : '自動往右跑，空白鍵、↑ 或 W 一段跳；按住不會連跳。先起跳，再切換下一段地板的顏色。跌落會回到最近落腳區。'} 1／紅燈、2／藍燈：按一下開啟，再按關閉。只有紅燈亮＝紅色 ▲、只有藍燈亮＝藍色 ●、兩燈都亮＝紫色 ◆；對應色可踩，其他特殊地板透明，正常地板始終可踩。P 暫停／繼續。</p>
       <p className="ss-sr-status" role="status" aria-live="polite">{message}{colorMessage}。{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
 }
