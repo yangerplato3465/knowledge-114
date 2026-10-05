@@ -31,7 +31,7 @@ it('星圖按分類收納活動，星座內立即列出每個有名稱的入口'
   vi.useFakeTimers();
   render(<ThemeProvider><Activities /></ThemeProvider>);
   const main = screen.getByRole('main');
-  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'magic-workshop', 'detective-golden-owl', 'detective-new']);
+  expect(categories.flatMap(category => category.items).map(item => item.path)).toEqual(['water-acid-base', 'magic-ink', 'math-rpg', 'magic-workshop', 'side-scroller', 'detective-golden-owl', 'detective-new']);
   expect(within(main).getByRole('heading', { name: '星燈星圖' })).toBeTruthy();
   expect(within(main).queryByText('魔法工坊')).toBeNull();
   for (const category of categories) {
