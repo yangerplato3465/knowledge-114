@@ -120,3 +120,12 @@ it('可選一星平台跑道，原高難度顯示三星且不再顯示四星', a
   expect(screen.getByRole('button', { name: /1 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
   expect(created.destroy).toHaveBeenCalledOnce();
 });
+it('提供0至3星四個關卡，可選二星雙光迴廊', async () => {
+  const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
+  for (const stars of [0, 1, 2, 3]) expect(screen.getByRole('button', { name: new RegExp(`${stars} 星關卡`) })).toBeTruthy();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /2 星關卡/ })); });
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(2);
+  expect(screen.getByRole('button', { name: /2 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
+});

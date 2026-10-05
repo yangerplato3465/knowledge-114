@@ -10,7 +10,7 @@ export interface Platform { x: number; y: number; w: number; h: number; kind: 'g
 export interface Input { jump: boolean; color?: WorldColor | null }
 export type Difficulty = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Level {
-  id: 'intro' | 'platforms' | 'challenge'; name: string; difficulty: Difficulty;
+  id: 'intro' | 'platforms' | 'fusion' | 'challenge'; name: string; difficulty: Difficulty;
   width: number; platforms: readonly Platform[]; checkpoints: readonly number[];
   exit: { x: number; y: number; radius: number };
 }
@@ -87,7 +87,30 @@ export const LEVEL_ONE: Level = {
     ground(9024, 480, 256, 480, 'blue'), ground(9280, 480, 832),
   ],
 };
-export const LEVELS: readonly Level[] = [LEVEL_ZERO, LEVEL_ONE, LEVEL_THREE];
+export const LEVEL_TWO: Level = {
+  id: 'fusion', name: '雙光迴廊', difficulty: 2, width: 12160,
+  checkpoints: [160, 2656, 4864, 7072, 10208], exit: { x: 11936, y: 408, radius: 54 },
+  platforms: [
+    // Keep the opening and platform lesson familiar, with one-star color frequency.
+    ground(0, 480, 704), ground(704, 480, 256, 480, 'red'), ground(960, 480, 448),
+    ground(1408, 480, 256, 480, 'blue'), ground(1664, 480, 320),
+    ground(1984, 480, 256, 480, 'red'), ground(2240, 480, 192),
+    ground(2528, 480, 352), ground(2880, 480, 256, 480, 'blue'), ground(3136, 480, 512),
+    ground(3648, 480, 256, 480, 'blue'), ground(3904, 480, 128),
+    bridge(4160, 416, 192, 'blue'), bridge(4480, 352, 192), ground(4672, 352, 1088),
+    // Pair 1: blue -> purple. Jump before the seam, then turn the red lamp on.
+    ground(5760, 352, 256, 352, 'blue'), ground(6016, 352, 256, 352, 'purple'),
+    ground(6272, 352, 320), ground(6592, 352, 256, 352, 'red'), ground(6848, 352, 512, 480),
+    ground(7360, 480, 256, 480, 'blue'), ground(7616, 480, 512),
+    ground(8128, 480, 256, 480, 'purple'), ground(8384, 480, 384),
+    ground(8768, 480, 256, 480, 'blue'), ground(9024, 480, 256),
+    // Pair 2: purple -> red. Jump before the seam, then turn the blue lamp off.
+    ground(9280, 480, 256, 480, 'purple'), ground(9536, 480, 256, 480, 'red'),
+    ground(9792, 480, 576), ground(10368, 480, 256, 480, 'blue'), ground(10624, 480, 448),
+    ground(11072, 480, 256, 480, 'red'), ground(11328, 480, 832),
+  ],
+};
+export const LEVELS: readonly Level[] = [LEVEL_ZERO, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE];
 export const levelSeconds = (level: Level) => (level.exit.x - level.checkpoints[0]) / PHYSICS.speed;
 // The existing three-star course remains the default for callers without an explicit level.
 export const WORLD_WIDTH = LEVEL_THREE.width, PLATFORMS = LEVEL_THREE.platforms, CHECKPOINTS = LEVEL_THREE.checkpoints;

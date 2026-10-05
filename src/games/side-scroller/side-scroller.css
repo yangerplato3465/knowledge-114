@@ -7,7 +7,7 @@
 .ss-toolbar button, .ss-toolbar a { min-height: 44px; padding: 8px 15px; border: 1px solid var(--frame-border-strong); border-radius: 999px; color: var(--frame-ink); background: var(--frame-surface); font-weight: 700; cursor: pointer; }
 .ss-toolbar button:disabled { opacity: .55; cursor: default; }
 .ss-toolbar button[aria-pressed="true"] { background: var(--frame-ink); color: var(--frame-surface); }
-.ss-levels { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.ss-levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
 .ss-levels button { display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 6px 16px 6px 8px; border: 2px solid var(--frame-border-strong); border-radius: 14px; background: var(--frame-surface); color: var(--frame-ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .ss-levels button[aria-pressed="true"] { border-color: #ac6a24; background: #ffecb9; color: #483349; box-shadow: inset 0 -3px #e2b975; }
 .ss-levels button > span:last-child { text-align: left; }
@@ -43,17 +43,19 @@
 .ss-loading button { min-height: 48px; padding: 10px 20px; color: #302943; background: #ffedcc; border: 0; border-radius: 12px; }
 .ss-sr-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ss-game:fullscreen { width: 100%; height: 100%; max-width: none; padding: 12px 20px; margin: 0; background: var(--frame-bg); display: flex; flex-direction: column; align-items: center; }
-.ss-game:fullscreen .ss-toolbar { width: 100%; max-width: 1500px; }
+.ss-game:fullscreen .ss-toolbar { width: 100%; max-width: 1500px; flex-shrink: 0; }
+.ss-game:fullscreen .ss-levels { width: 100%; max-width: 1500px; flex-shrink: 0; }
 .ss-game:fullscreen .ss-stage { width: min(100%, calc((100dvh - 206px) * 16 / 9)); flex: 0 0 auto; }
 @media (max-width: 650px) and (orientation: portrait) {
   .ss-game { width: calc(100% - 20px); }
   .ss-toolbar { align-items: flex-start; flex-direction: column; }
   .ss-toolbar h1 { font-size: 17px; padding-top: 10px; }
-  .ss-levels { gap: 8px; }.ss-levels button { flex: 1; min-width: 0; padding-right: 8px; gap: 7px; font-size: 13px; }.ss-difficulty img { width: 38px; height: 38px; }
+  .ss-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.ss-levels button { min-width: 0; padding-right: 8px; gap: 7px; font-size: 13px; }.ss-difficulty img { width: 38px; height: 38px; }
   .ss-toolbar button { font-size: 13px; padding-inline: 12px; }
   .ss-stage { aspect-ratio: 4 / 5; border-radius: 15px; }
   .ss-controls { inset: auto 12px 16px; gap: 8px; }
-  .ss-game:fullscreen .ss-stage { width: min(100%, calc((100dvh - 264px) * 4 / 5)); }
+  .ss-game:fullscreen .ss-stage { width: 100%; min-height: 0; height: 0; aspect-ratio: auto; flex: 1 1 0; }
+  .ss-game:fullscreen .ss-levels { width: 100%; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
   body:has(.ss-game) { padding: 8px 12px; }
@@ -67,7 +69,7 @@
   .ss-toolbar { margin-bottom: 6px; }
   .ss-levels { margin-bottom: 6px; }.ss-levels button { min-height: 48px; padding-block: 2px; }
   .ss-levels button { flex: 1; min-width: 0; gap: 4px; padding-inline: 4px; font-size: 12px; }.ss-difficulty img { width: 30px; height: 30px; }.ss-difficulty strong { font-size: 20px; }
-  .ss-game:fullscreen .ss-stage { width: 100%; height: max(150px, calc(100dvh - 144px)); }
+  .ss-game:fullscreen .ss-stage { width: 100%; min-height: 0; height: 0; flex: 1 1 0; }
 }
 .ss-manual { width: min(780px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 24px); border: 0; padding: 0; color: #302a3c; background: transparent; overflow: hidden; }
 .ss-manual::backdrop { background: #221c37ad; }

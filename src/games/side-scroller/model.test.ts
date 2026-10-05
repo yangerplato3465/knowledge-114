@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_ONE, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, levelSeconds, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
+import { advance, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, levelSeconds, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
@@ -102,6 +102,51 @@ describe('一星浮空書徑', () => {
     for (const platform of LEVEL_ONE.platforms.filter(p => p.kind === 'bridge')) {
       expect(run(LEVEL_ONE.platforms.filter(p => p !== platform)).state.falls, `平台 ${platform.x}`).toBeGreaterThan(0);
     }
+  });
+});
+describe('二星雙光迴廊', () => {
+  const run = (offset = 0, missedSeam?: number) => {
+    let state = initialState(LEVEL_TWO), seconds = 0; const used = new Set<number>(), pairLandings = new Set<number>();
+    for (let i = 0; i < 120 * 45 && !state.completed && !state.falls; i++) {
+      const jump = [2384, 4020, 4340, 5916, 9436].find(x => state.x >= x + offset && !used.has(x));
+      if (jump !== undefined) used.add(jump);
+      // On adjoining floors, change one lamp after takeoff, rather than while still standing.
+      const target = LEVEL_TWO.platforms.filter(p => {
+        const trigger = p.x === 6016 ? 5921 : p.x === 9536 ? 9441 : p.x - 144;
+        return p.color && p.x !== missedSeam && state.x >= trigger + offset;
+      }).at(-1)?.color;
+      let color = state.color;
+      if (target) for (const button of ['red', 'blue'] as const) if (isLightOn(color, button) !== isLightOn(target, button)) color = toggleColor(color, button);
+      state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, LEVEL_TWO.platforms, LEVEL_TWO); seconds += PHYSICS.step;
+      if (state.grounded) for (const x of [6016, 9536]) if (state.x >= x && state.x < x + 256) pairLandings.add(x);
+    }
+    return { state, seconds, used, pairLandings };
+  };
+  it('頻率接近一星，恰有兩處雙色相接，皆只需切換一盞燈', () => {
+    const rate = (level: typeof LEVEL_TWO) => level.platforms.filter(p => p.color).length / levelSeconds(level);
+    expect(rate(LEVEL_TWO) / rate(LEVEL_ONE)).toBeGreaterThan(0.95);
+    expect(rate(LEVEL_TWO) / rate(LEVEL_ONE)).toBeLessThan(1.05);
+    const pairs = LEVEL_TWO.platforms.flatMap(p => {
+      const next = LEVEL_TWO.platforms.find(next => p.color && next.color && next.x === p.x + p.w);
+      return next ? [[p, next]] : [];
+    });
+    expect(pairs.map(([a, b]) => [a.color, b.color])).toEqual([['blue', 'purple'], ['purple', 'red']]);
+    pairs.forEach(([a, b]) => {
+      expect(['red', 'blue'].filter(button => isLightOn(a.color!, button as 'red' | 'blue') !== isLightOn(b.color!, button as 'red' | 'blue')).length).toBe(1);
+      expect(LEVEL_TWO.platforms.find(p => p.x + p.w === a.x)?.color).toBeUndefined();
+      expect(LEVEL_TWO.platforms.find(p => p.x === b.x + b.w)?.color).toBeUndefined();
+    });
+  });
+  it('一段跳配合單燈切換能在約42秒無失誤通關，兩處皆落在第二色塊', () => {
+    for (const offset of [-16, 0, 16]) {
+      const result = run(offset);
+      expect(result.state.falls, `時機偏移 ${offset}`).toBe(0); expect(result.state.completed).toBe(true);
+      expect(result.used.size).toBe(5); expect(result.pairLandings.size).toBe(2);
+      expect(result.seconds).toBeGreaterThan(41); expect(result.seconds).toBeLessThan(43);
+      expect(Math.abs(result.seconds - levelSeconds(LEVEL_TWO))).toBeLessThan(0.4);
+      expect(result.state.checkpoint).toBe(LEVEL_TWO.checkpoints.length - 1);
+    }
+    for (const seam of [6016, 9536]) expect(run(0, seam).state.falls, `未切換接縫 ${seam}`).toBeGreaterThan(0);
   });
 });
 describe('固定向前的一段跳世界', () => {
