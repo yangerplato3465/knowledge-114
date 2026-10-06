@@ -2,6 +2,7 @@ import type { App, Node, Sprite, Texture } from '../magic-workshop/scene-types';
 import { advance, GHOST_ALPHA, initialState, LEVEL_THREE, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Platform, type WorldColor } from './model';
 
 import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type ArtPixi } from './art';
+import { CONTROL_IMAGES, createTouchControls, type ControlId, type ControlPixi, type TouchControls } from './controls';
 
 export type SceneMode = 'preview' | 'play';
 type Action = 'jump';
@@ -11,6 +12,7 @@ export interface SideScrollerScene {
   tap(action: Action): void;
   setMode(mode: SceneMode): void;
   toggleColor(button: ColorButton): void;
+  pressControl(control: ControlId, pressed: boolean, source: string): void;
   togglePause(): void;
   setTutorial(open: boolean): void;
   restart(): void;
@@ -20,7 +22,7 @@ const HEIGHT = 600, TILE = 64;
 const LIGHT_ALPHA = 0.08;
 const LIGHT_COLORS = { red: 0xff596e, blue: 0x477dff, purple: 0xb968f0 };
 interface ColorFilter { matrix: number[]; destroy(): void }
-export type ColorPixi = ArtPixi & { ColorMatrixFilter: new () => ColorFilter };
+export type ColorPixi = ArtPixi & ControlPixi & { ColorMatrixFilter: new () => ColorFilter };
 export function colorMatrix(color: WorldColor, alpha: number) {
   const channels = color === 'red' ? [1.45, 0.34, 0.42] : color === 'blue' ? [0.3, 0.76, 1.55] : [1.0, 0.42, 1.5];
   return [...channels.flatMap(value => [0.299 * value, 0.587 * value, 0.114 * value, 0, 0]), 0, 0, 0, alpha, 0];
@@ -32,9 +34,10 @@ const ASSETS = ['background_clouds', 'background_fade_hills', 'background_fade_t
 export async function createSideScroller(host: HTMLElement, signal: AbortSignal, onStatus: (status: SceneStatus) => void, level: Level = LEVEL_THREE): Promise<SideScrollerScene> {
   const { platforms: PLATFORMS, width: WORLD_WIDTH, exit: EXIT } = level;
   const P = await import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as ColorPixi;
-  const [images, spriteImages] = await Promise.all([
+  const [images, spriteImages, controlImages] = await Promise.all([
     Promise.all(ASSETS.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.png`, signal))),
     loadSpriteImages(signal),
+    Promise.all(CONTROL_IMAGES.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney-ui/${name}.png`, signal))),
   ]);
   signal.throwIfAborted();
   const textures = {} as Record<typeof ASSETS[number], Texture>;
@@ -43,7 +46,8 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
   const app: App = new P.Application();
   const filters = { red: new P.ColorMatrixFilter(), blue: new P.ColorMatrixFilter(), purple: new P.ColorMatrixFilter() };
   let initialized = false;
-  const dispose = () => { if (initialized) app.destroy({ removeView: true }, { children: true }); art.destroy(); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
+  let controls: TouchControls | undefined;
+  const dispose = () => { if (initialized) app.destroy({ removeView: true }, { children: true }); controls?.destroy(); art.destroy(); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
   try {
     await app.init({ width: 1067, height: HEIGHT, background: 0xc3e3ff, antialias: true, autoStart: false,
       sharedTicker: false, preference: 'webgl', resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true });
@@ -119,6 +123,8 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     const held = new Set<string>(); let tapTimer: number | undefined; let jumpPressed = false;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let reduced = motion.matches;
+    controls = createTouchControls(P, controlImages, app.stage, host);
+    const ui = controls;
     const backgroundLayers = [
       { node: clouds, name: 'background_clouds' as const, width: 768, height: 600, y: 0, factor: 0.12, sprites: [] as Sprite[] },
       { node: hills, name: 'background_fade_hills' as const, width: 768, height: 380, y: 250, factor: 0.22, sprites: [] as Sprite[] },
@@ -129,7 +135,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       const serialized = JSON.stringify(status);
       if (serialized !== lastStatus) { lastStatus = serialized; onStatus(status); }
     };
-    const release = () => { held.clear(); jumpPressed = false; if (tapTimer !== undefined) window.clearTimeout(tapTimer); tapTimer = undefined; };
+    const release = () => { held.clear(); jumpPressed = false; ui.clear(); if (tapTimer !== undefined) window.clearTimeout(tapTimer); tapTimer = undefined; };
     const draw = () => {
       world.x = neutralWorld.x = -camera;
       terrainNodes.forEach(({ node, x, end }) => { node.visible = end >= camera - TILE && x <= camera + viewportWidth + TILE; });
@@ -145,6 +151,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       }
       portal.visible = EXIT.x + 110 >= camera && EXIT.x - 110 <= camera + viewportWidth;
       player.visible = mode === 'play';
+      ui.sync({ mode, paused, completed: state.completed, color: state.color, tutorialOpen });
     };
     const paintLight = () => {
       light.clear();
@@ -154,6 +161,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       const bounds = host.getBoundingClientRect();
       viewportWidth = HEIGHT * bounds.width / Math.max(1, bounds.height);
       app.renderer.resize(viewportWidth, HEIGHT); app.canvas.style.width = app.canvas.style.height = '100%';
+      ui.layout();
       backgroundLayers.forEach(layer => {
         layer.node.removeChildren().forEach(node => node.destroy());
         layer.sprites = Array.from({ length: Math.ceil(viewportWidth / layer.width) + 1 }, (_, i) => sprite(layer.name, i * layer.width, layer.y, layer.width + 1, layer.height, layer.node));
@@ -168,20 +176,25 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     const toggleLight = (button: ColorButton) => {
       if (destroyed || tutorialOpen || (mode === 'play' && (paused || state.completed))) return;
       state = selectWorldColor(state, toggleColor(state.color, button), PLATFORMS); previous = state;
+      ui.pulse(button);
       updateColors(); draw(); if (paused) app.render(); emit();
     };
     const togglePause = () => { if (destroyed || tutorialOpen) return; paused = !paused; release(); accumulator = 0; previous = state; emit(); };
     const reset = (preserveColor = false) => { release(); milo.reset(); finishAge = 0; const color = state.color; state = initialState(level); if (preserveColor) state.color = color; previous = state; paused = false; camera = previewTravel = accumulator = 0; lap = 1; updateColors(); draw(); emit(); };
     const keydown = (event: KeyboardEvent) => {
       if (tutorialOpen || (event.target as HTMLElement).closest('button,a,input,select,dialog')) return;
-      if (!event.repeat && ['1', '2'].includes(event.key)) { event.preventDefault(); toggleLight(event.key === '1' ? 'red' : 'blue'); }
+      if (!event.repeat && ['1', '2'].includes(event.key)) { event.preventDefault(); const button = event.key === '1' ? 'red' : 'blue'; ui.press(button, true, `key-${event.key}`); toggleLight(button); }
       if (['Space', 'ArrowUp', 'KeyW'].includes(event.code) || [' ', 'Space', 'ArrowUp', 'w', 'W'].includes(event.key)) {
         event.preventDefault();
-        if (!paused && mode === 'play') { held.add(event.code || event.key); if (!event.repeat) jumpPressed = true; }
+        if (!paused && mode === 'play') { held.add(event.code || event.key); ui.press('jump', true, event.code || event.key); if (!event.repeat) jumpPressed = true; }
       }
       if ((event.code === 'KeyP' || event.key === 'p' || event.key === 'P' || event.key === 'Escape') && !event.repeat) { event.preventDefault(); togglePause(); }
     };
-    const keyup = (event: KeyboardEvent) => { if (held.delete(event.code || event.key)) event.preventDefault(); };
+    const keyup = (event: KeyboardEvent) => {
+      if (held.delete(event.code || event.key)) event.preventDefault();
+      ui.press('jump', false, event.code || event.key);
+      if (['1', '2'].includes(event.key)) ui.press(event.key === '1' ? 'red' : 'blue', false, `key-${event.key}`);
+    };
     const focus = (event: PointerEvent) => { if (!(event.target as HTMLElement).closest('button,a')) stage.focus({ preventScroll: true }); };
     const focusout = (event: FocusEvent) => { if (!stage.contains(event.relatedTarget as globalThis.Node | null)) release(); };
     const blur = () => { release(); paused = true; accumulator = 0; previous = state; emit(); };
@@ -215,7 +228,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
           else milo.update(state, dt, reduced);
         }
       }
-      draw(); emit();
+      draw(); ui.update(dt, reduced); emit();
     };
     updateColors(); host.append(app.canvas); resize(); observer.observe(host);
     stage.addEventListener('keydown', keydown); stage.addEventListener('keyup', keyup); stage.addEventListener('pointerdown', focus);
@@ -225,17 +238,20 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     return {
       hold(_action, active, source) {
         if (destroyed) return;
+        ui.press('jump', active, source);
         if (active && !tutorialOpen && !paused && !state.completed && mode === 'play') { if (!held.has(source)) jumpPressed = true; held.add(source); }
         else held.delete(source);
       },
       tap() {
         if (destroyed || tutorialOpen || paused || state.completed || mode !== 'play') return;
         jumpPressed = true; held.add('tap'); if (tapTimer !== undefined) window.clearTimeout(tapTimer);
+        ui.pulse('jump');
         tapTimer = window.setTimeout(() => { held.delete('tap'); tapTimer = undefined; }, 100);
       },
       setMode(next) { if (destroyed) return; mode = next; reset(true); },
       setTutorial(open) { if (destroyed) return; tutorialOpen = open; release(); accumulator = 0; previous = state; },
       toggleColor: toggleLight,
+      pressControl(control, pressed, source) { if (!destroyed) ui.press(control, pressed, source); },
       togglePause,
       restart() { if (!destroyed) reset(); },
       destroy() {

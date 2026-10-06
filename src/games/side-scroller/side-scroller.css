@@ -15,30 +15,20 @@
 .ss-difficulty { display: inline-flex; align-items: center; gap: 1px; }
 .ss-difficulty img { width: 44px; height: 44px; object-fit: contain; }
 .ss-difficulty strong { font-size: 25px; line-height: 1; }
-.ss-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; border: 1px solid var(--frame-border-strong); background: #c3e3ff; box-shadow: 0 10px 32px var(--frame-shadow); }
+.ss-stage { position: relative; container-type: inline-size; width: 100%; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; border: 1px solid var(--frame-border-strong); background: #c3e3ff; box-shadow: 0 10px 32px var(--frame-shadow); }
 .ss-host, .ss-host canvas { display: block; width: 100%; height: 100%; }
 .ss-host { position: absolute; inset: 0; }
 .ss-host canvas { touch-action: none; }
 .ss-stage:focus-visible, .ss-game button:focus-visible, .ss-game a:focus-visible { outline: 3px solid #54baa9; outline-offset: 3px; }
-.ss-controls { position: absolute; inset: auto 18px 18px; display: flex; gap: 10px; pointer-events: none; }
-.ss-control { pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; width: 56px; height: 52px; border: 1px solid #d6baa0; border-radius: 15px; background: #302943e8; color: #ffedcc; font-size: 24px; font-weight: 700; cursor: pointer; }
-.ss-control:active { background: #69567a; transform: translateY(2px); }
-.ss-jump { margin-left: auto; width: 92px; font-size: 17px; background: #4d507fee; }
-.ss-colors { display: flex; gap: 8px; }
-.ss-color { width: 72px; display: grid; justify-items: center; align-content: center; gap: 2px; font-size: 15px; border-width: 2px; background: #fffffff2; }
-.ss-color > span { font-size: 16px; line-height: 1.2; }
-.ss-color small { font-size: 11px; }
-.ss-red { border-color: #b33346; color: #9f2436; }
-.ss-blue { border-color: #286bb5; color: #205b99; }
-.ss-red[aria-pressed="true"] { background: #b33346; color: white; }
-.ss-blue[aria-pressed="true"] { background: #286bb5; color: white; }
-.ss-color:active { background: #e3e9f4; }
-.ss-red[aria-pressed="true"]:active { background: #962236; }
-.ss-blue[aria-pressed="true"]:active { background: #1c5797; }
+.ss-controls { position: absolute; inset: auto max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); display: flex; gap: clamp(12px, 2cqw, 32px); pointer-events: none; }
+/* Transparent semantic hit targets align with the artwork and press animation drawn by Pixi. */
+.ss-control { pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; flex: 0 1 auto; min-width: 0; width: clamp(80px, 18cqw, 220px); height: clamp(64px, 8cqw, 132px); padding: 0; border: 0; border-radius: 12px; background: transparent; color: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ss-jump { margin-right: auto; }
+.ss-control-copy { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ss-message { position: absolute; top: 30%; left: 50%; transform: translateX(-50%); display: grid; gap: 8px; padding: 20px 28px; border-radius: 16px; background: #fffffff2; color: #343c53; text-align: center; width: max-content; max-width: calc(100% - 24px); }
 .ss-message strong { font-size: 24px; }
 .ss-message span { font-size: 14px; }
-.ss-control:disabled { opacity: .4; cursor: default; }
+.ss-control:disabled { cursor: default; }
 .ss-loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 20px; background: #242743; color: #ffedcc; z-index: 2; text-align: center; }
 .ss-loading button { min-height: 48px; padding: 10px 20px; color: #302943; background: #ffedcc; border: 0; border-radius: 12px; }
 .ss-sr-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -53,7 +43,7 @@
   .ss-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.ss-levels button { min-width: 0; padding-right: 8px; gap: 7px; font-size: 13px; }.ss-difficulty img { width: 38px; height: 38px; }
   .ss-toolbar button { font-size: 13px; padding-inline: 12px; }
   .ss-stage { aspect-ratio: 4 / 5; border-radius: 15px; }
-  .ss-controls { inset: auto 12px 16px; gap: 8px; }
+  .ss-controls { inset: auto max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); gap: 12px; }
   .ss-game:fullscreen .ss-stage { width: 100%; min-height: 0; height: 0; aspect-ratio: auto; flex: 1 1 0; }
   .ss-game:fullscreen .ss-levels { width: 100%; }
 }
@@ -65,6 +55,8 @@
   body:has(.ss-game) .activity-trail strong, body:has(.ss-game) .activity-trail-status { display: none; }
   .ss-game { width: min(100%, 1120px); margin-bottom: 0; }
   .ss-stage { aspect-ratio: auto; height: max(150px, calc(100dvh - 180px)); }
+  .ss-control { height: clamp(56px, 18dvh, 84px); }
+  .ss-controls { bottom: max(10px, env(safe-area-inset-bottom)); }
   .ss-toolbar h1 { font-size: 16px; }
   .ss-toolbar { margin-bottom: 6px; }
   .ss-levels { margin-bottom: 6px; }.ss-levels button { min-height: 48px; padding-block: 2px; }

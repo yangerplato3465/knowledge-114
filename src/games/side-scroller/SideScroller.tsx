@@ -70,22 +70,27 @@ export function SideScroller() {
           {load === 'error' && <button type="button" onClick={() => setAttempt(value => value + 1)}>重新載入</button>}</div>}
         {(status.paused || status.completed) && <div className="ss-message"><strong>{status.completed ? '找到傳送出口了！' : '已暫停'}</strong><span>{status.completed ? '選擇「從頭開始」再跑一次' : '選擇「繼續」或按 P'}</span></div>}
         <div className="ss-controls" role="group" aria-label="遊戲操作">
-          <div className="ss-colors" role="group" aria-label="世界顏色">
+          <button type="button" data-control="jump" aria-label="跳躍" aria-keyshortcuts="Space ArrowUp W" disabled={load !== 'ready' || manual || preview || status.paused || status.completed}
+            className="ss-control ss-jump"
+            onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); event.currentTarget.setPointerCapture?.(event.pointerId); scene.current?.hold('jump', true, `pointer-${event.pointerId}`); }}
+            onPointerUp={event => scene.current?.hold('jump', false, `pointer-${event.pointerId}`)}
+            onPointerCancel={event => scene.current?.hold('jump', false, `pointer-${event.pointerId}`)}
+            onLostPointerCapture={event => scene.current?.hold('jump', false, `pointer-${event.pointerId}`)}
+            onKeyDown={event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); scene.current?.hold('jump', true, 'button-jump'); } }}
+            onKeyUp={event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); scene.current?.hold('jump', false, 'button-jump'); } }}
+            onBlur={() => scene.current?.hold('jump', false, 'button-jump')}
+            onClick={event => { if (event.detail === 0) scene.current?.tap('jump'); }}
+          ><span className="ss-control-copy">跳躍</span></button>
             {(['red', 'blue'] as const).map(button => <button key={button} type="button" className={`ss-control ss-color ss-${button}`} aria-label={button === 'red' ? '紅燈' : '藍燈'} aria-keyshortcuts={button === 'red' ? '1' : '2'} aria-pressed={isLightOn(status.color, button)} disabled={colorDisabled}
-              onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); changeColor(button); }}
-              onClick={event => { if (event.detail === 0) changeColor(button); }}><span>{button === 'red' ? '紅燈' : '藍燈'} <small>{button === 'red' ? '1' : '2'}</small></span></button>)}
-          </div>
-          {!preview && <button type="button" aria-label="跳躍" disabled={load !== 'ready' || status.paused || status.completed}
-          className="ss-control ss-jump"
-          onPointerDown={event => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); scene.current?.hold('jump', true, `pointer-${event.pointerId}`); }}
-          onPointerUp={event => scene.current?.hold('jump', false, `pointer-${event.pointerId}`)}
-          onPointerCancel={event => scene.current?.hold('jump', false, `pointer-${event.pointerId}`)}
-          onLostPointerCapture={event => scene.current?.hold('jump', false, `pointer-${event.pointerId}`)}
-          onKeyDown={event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); scene.current?.hold('jump', true, 'button-jump'); } }}
-          onKeyUp={event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); scene.current?.hold('jump', false, 'button-jump'); } }}
-          onBlur={() => scene.current?.hold('jump', false, 'button-jump')}
-          onClick={event => { if (event.detail === 0) scene.current?.tap('jump'); }}
-        >跳躍 ↑</button>}
+              data-control={button}
+              onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); event.currentTarget.setPointerCapture?.(event.pointerId); scene.current?.pressControl(button, true, `pointer-${event.pointerId}`); changeColor(button); }}
+              onPointerUp={event => scene.current?.pressControl(button, false, `pointer-${event.pointerId}`)}
+              onPointerCancel={event => scene.current?.pressControl(button, false, `pointer-${event.pointerId}`)}
+              onLostPointerCapture={event => scene.current?.pressControl(button, false, `pointer-${event.pointerId}`)}
+              onKeyDown={event => { if (event.key === ' ' || event.key === 'Enter') { if (event.repeat) event.preventDefault(); else scene.current?.pressControl(button, true, `button-${button}`); } }}
+              onKeyUp={() => scene.current?.pressControl(button, false, `button-${button}`)}
+              onBlur={() => scene.current?.pressControl(button, false, `button-${button}`)}
+              onClick={event => { if (event.detail === 0) changeColor(button); }}><span className="ss-control-copy">{button === 'red' ? '紅燈' : '藍燈'}</span></button>)}
         </div>
       </div>
       {manual && load === 'ready' && <Tutorial initial={!started} onClose={closeManual} onStart={start} />}

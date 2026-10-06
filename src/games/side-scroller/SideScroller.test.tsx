@@ -9,7 +9,7 @@ import { toggleColor } from './model';
 vi.mock('./scene', () => ({ createSideScroller: vi.fn() }));
 vi.mock('./TutorialDemo', () => ({ TutorialDemo: () => <div>玩法動畫示範</div> }));
 afterEach(() => { cleanup(); vi.resetAllMocks(); });
-const fakeScene = (): SideScrollerScene => ({ hold: vi.fn(), tap: vi.fn(), setMode: vi.fn(), toggleColor: vi.fn(), togglePause: vi.fn(), setTutorial: vi.fn(), restart: vi.fn(), destroy: vi.fn() });
+const fakeScene = (): SideScrollerScene => ({ hold: vi.fn(), tap: vi.fn(), setMode: vi.fn(), toggleColor: vi.fn(), pressControl: vi.fn(), togglePause: vi.fn(), setTutorial: vi.fn(), restart: vi.fn(), destroy: vi.fn() });
 it('提供回冒險座入口、可用鍵盤的控制與重試操作', async () => {
   const created = fakeScene();
   vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
@@ -21,7 +21,7 @@ it('提供回冒險座入口、可用鍵盤的控制與重試操作', async () =
   fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
   expect(screen.getByRole('link', { name: '← 回冒險座' }).getAttribute('href')).toBe('/pages/activities.html#games');
   expect(screen.getByRole('button', { name: '世界巡覽' }).getAttribute('aria-pressed')).toBe('true');
-  expect(screen.queryByRole('button', { name: '跳躍' })).toBeNull();
+  expect(screen.getByRole('button', { name: '跳躍' }).hasAttribute('disabled')).toBe(true);
   expect(screen.queryByRole('button', { name: '向左移動' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: '開始冒險' })); expect(created.setMode).toHaveBeenCalledWith('play');
   const jump = screen.getByRole('button', { name: '跳躍' });
@@ -31,7 +31,7 @@ it('提供回冒險座入口、可用鍵盤的控制與重試操作', async () =
   fireEvent.click(screen.getByRole('button', { name: '從頭開始' })); expect(created.restart).toHaveBeenCalledOnce();
   expect(document.activeElement).toBe(screen.getByRole('region', { name: '橫向遊戲世界' }));
   fireEvent.click(screen.getByRole('button', { name: '世界巡覽' })); expect(created.setMode).toHaveBeenLastCalledWith('preview');
-  expect(screen.queryByRole('button', { name: '跳躍' })).toBeNull();
+  expect(screen.getByRole('button', { name: '跳躍' }).hasAttribute('disabled')).toBe(true);
   cleanup(); expect(created.destroy).toHaveBeenCalledOnce();
 });
 it('兩按鈕可同時開啟紫色，保持獨立開關；暫停巡覽仍可檢視顏色', async () => {
@@ -91,8 +91,9 @@ it('開場三頁手冊阻止跑道前進，可用鍵盤翻頁，開始後可重�
   expect(created.setTutorial).toHaveBeenLastCalledWith(true);
   fireEvent.click(screen.getByRole('button', { name: '返回遊戲' }));
   expect(created.setTutorial).toHaveBeenLastCalledWith(false); expect(created.setMode).toHaveBeenCalledTimes(1);
-  expect(screen.getByRole('button', { name: '紅燈' }).textContent).toBe('紅燈 1');
-  expect(screen.getByRole('button', { name: '藍燈' }).textContent).toBe('藍燈 2');
+  expect(screen.getByRole('button', { name: '跳躍' }).textContent).toBe('跳躍');
+  expect(screen.getByRole('button', { name: '紅燈' }).textContent).toBe('紅燈');
+  expect(screen.getByRole('button', { name: '藍燈' }).textContent).toBe('藍燈');
 });
 it('預設零星，選三星重建場景；過期的零星載入不可覆蓋三星', async () => {
   let resolveIntro!: (scene: SideScrollerScene) => void;
@@ -128,4 +129,31 @@ it('提供0至3星四個關卡，可選二星雙光迴廊', async () => {
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /2 星關卡/ })); });
   expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(2);
   expect(screen.getByRole('button', { name: /2 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
+});
+it('三個觸控區依序為跳躍、紅燈、藍燈；多指切燈不會放開跳躍，取消接觸會釋放各自按壓', async () => {
+  const created = fakeScene();
+  vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
+    created.setMode = vi.fn(mode => onStatus({ mode, paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null }));
+    return created;
+  });
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
+  fireEvent.click(screen.getByRole('button', { name: '開始冒險' }));
+  const jump = screen.getByRole('button', { name: '跳躍' }), red = screen.getByRole('button', { name: '紅燈' }), blue = screen.getByRole('button', { name: '藍燈' });
+  expect([...jump.parentElement!.querySelectorAll('button')].map(button => button.dataset.control)).toEqual(['jump', 'red', 'blue']);
+  const pointer = (button: HTMLElement, type: string, pointerId: number) => {
+    const event = new MouseEvent(type, { button: 0, bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'pointerId', { value: pointerId }); fireEvent(button, event);
+  };
+  pointer(jump, 'pointerdown', 11); pointer(red, 'pointerdown', 12); pointer(blue, 'pointerdown', 13);
+  expect(created.hold).toHaveBeenCalledWith('jump', true, 'pointer-11');
+  expect(created.hold).not.toHaveBeenCalledWith('jump', false, 'pointer-11');
+  expect(created.toggleColor).toHaveBeenNthCalledWith(1, 'red'); expect(created.toggleColor).toHaveBeenNthCalledWith(2, 'blue');
+  expect(created.pressControl).toHaveBeenCalledWith('red', true, 'pointer-12');
+  expect(created.pressControl).toHaveBeenCalledWith('blue', true, 'pointer-13');
+  pointer(red, 'pointercancel', 12); pointer(blue, 'lostpointercapture', 13); pointer(jump, 'pointerup', 11);
+  expect(created.pressControl).toHaveBeenCalledWith('red', false, 'pointer-12');
+  expect(created.pressControl).toHaveBeenCalledWith('blue', false, 'pointer-13');
+  expect(created.hold).toHaveBeenCalledWith('jump', false, 'pointer-11');
+  fireEvent.click(red, { detail: 1 }); expect(created.toggleColor).toHaveBeenCalledTimes(2);
 });
