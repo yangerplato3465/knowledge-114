@@ -54,7 +54,7 @@ it('兩按鈕可同時開啟紫色，保持獨立開關；暫停巡覽仍可檢�
   });
   expect(created.toggleColor).toHaveBeenCalledTimes(2);
   expect(red.getAttribute('aria-pressed')).toBe('true'); expect(blue.getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByRole('status').textContent).toContain('紅＋藍開啟 · 紫色實體');
+  expect(screen.getByRole('status').textContent).toContain('紅＋藍開啟 · 紫色地板實體');
   fireEvent.click(blue, { detail: 1 }); expect(created.toggleColor).toHaveBeenCalledTimes(2);
   expect(document.activeElement).toBe(screen.getByRole('region', { name: '橫向遊戲世界' }));
   fireEvent.click(screen.getByRole('button', { name: '暫停' })); expect(blue.hasAttribute('disabled')).toBe(false);
@@ -110,25 +110,38 @@ it('預設零星，選三星重建場景；過期的零星載入不可覆蓋三�
   expect(intro.destroy).toHaveBeenCalledOnce(); expect(challenge.destroy).not.toHaveBeenCalled();
   expect(challenge.setTutorial).toHaveBeenLastCalledWith(false);
 });
-it('可選一星平台跑道，原高難度顯示三星且不再顯示四星', async () => {
+it('可選一星平台跑道，原高難度保留三星', async () => {
   const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
   fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
-  expect(screen.queryByRole('button', { name: /4 星關卡/ })).toBeNull();
+  expect(screen.getByRole('button', { name: /4 星關卡/ })).toBeTruthy();
   expect(screen.getByRole('button', { name: /3 星關卡/ })).toBeTruthy();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /1 星關卡/ })); });
   expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(1);
   expect(screen.getByRole('button', { name: /1 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
   expect(created.destroy).toHaveBeenCalledOnce();
 });
-it('提供0至3星四個關卡，可選二星雙光迴廊', async () => {
+it('提供0至4星五個關卡，可選二星雙光迴廊', async () => {
   const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
   fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
-  for (const stars of [0, 1, 2, 3]) expect(screen.getByRole('button', { name: new RegExp(`${stars} 星關卡`) })).toBeTruthy();
+  for (const stars of [0, 1, 2, 3, 4]) expect(screen.getByRole('button', { name: new RegExp(`${stars} 星關卡`) })).toBeTruthy();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /2 星關卡/ })); });
   expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(2);
   expect(screen.getByRole('button', { name: /2 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
+});
+it('選四星會先顯示消散障礙與上下分岔教學，開始後釋放場景', async () => {
+  const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /4 星關卡：晶石岔路，約 50 秒/ })); });
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(4);
+  expect(created.setTutorial).toHaveBeenLastCalledWith(true);
+  expect(screen.getByRole('heading', { name: '消散方塊，選擇岔路' })).toBeTruthy();
+  expect(screen.getByText(/方塊與地板規則不同/)).toBeTruthy();
+  fireEvent.click(screen.getAllByRole('button', { name: '開始冒險' }).at(-1)!);
+  expect(created.setTutorial).toHaveBeenLastCalledWith(false); expect(created.setMode).toHaveBeenLastCalledWith('play');
+  expect(screen.queryByRole('dialog')).toBeNull();
 });
 it('三個觸控區依序為跳躍、紅燈、藍燈；多指切燈不會放開跳躍，取消接觸會釋放各自按壓', async () => {
   const created = fakeScene();

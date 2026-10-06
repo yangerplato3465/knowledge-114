@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, levelSeconds, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
+import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_FOUR, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
@@ -149,6 +149,79 @@ describe('二星雙光迴廊', () => {
     for (const seam of [6016, 9536]) expect(run(0, seam).state.falls, `未切換接縫 ${seam}`).toBeGreaterThan(0);
   });
 });
+describe('四星晶石岔路', () => {
+  function run(upperFirst: boolean, upperSecond: boolean, offset = 0, missedWall = false) {
+    const jumps = [1000, 1960, 2920,
+      ...(upperFirst ? [3740, 3992, 4312, 4632, 4952, 5272] : [4218, 4794, 5370]), 6952,
+      ...(upperSecond ? [8732, 8984, 9304, 9624, 9944, 10264] : [9210, 9786, 10362]), 12264, 12840, 13416];
+    const colors: [number, WorldColor][] = [[800, missedWall ? 'blue' : 'red'], [1760, 'blue'], [2720, 'purple'],
+      ...(upperFirst ? [[4010, 'blue'], [4750, 'purple'], [4960, 'red']] as [number, WorldColor][] : [[4050, 'red'], [4630, 'blue']] as [number, WorldColor][]),
+      [6200, 'red'], [6800, 'purple'],
+      ...(upperSecond ? [[9000, 'red'], [9740, 'purple'], [9952, 'blue']] as [number, WorldColor][] : [[9050, 'purple'], [9600, 'red']] as [number, WorldColor][]),
+      [11580, 'blue'], [12140, 'red'], [12720, 'blue'], [13300, 'purple']];
+    let state = initialState(LEVEL_FOUR), seconds = 0;
+    const used = new Set<number>(), landed = new Set<Platform>();
+    for (let i = 0; i < 120 * 53 && !state.completed && !state.falls; i++) {
+      const jump = jumps.find(x => state.x >= x + offset && !used.has(x));
+      if (jump !== undefined) used.add(jump);
+      const target = colors.filter(([x]) => state.x >= x + offset).at(-1)?.[1];
+      let color = state.color;
+      if (target) for (const button of ['red', 'blue'] as const) if (isLightOn(color, button) !== isLightOn(target, button)) color = toggleColor(color, button);
+      state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, LEVEL_FOUR.platforms, LEVEL_FOUR); seconds += PHYSICS.step;
+      if (state.grounded) LEVEL_FOUR.platforms.filter(p => p.kind === 'bridge' && state.x >= p.x && state.x < p.x + p.w && state.y === p.y).forEach(p => landed.add(p));
+    }
+    return { state, seconds, landed, jumps: used.size };
+  }
+  it('上下兩路皆可選；四種組合與前後偏移都能約50秒無失誤通關', () => {
+    for (const first of [false, true]) for (const second of [false, true]) for (const offset of [-12, 0, 12]) {
+      const result = run(first, second, offset);
+      expect(result.state.falls, `路線 ${first}/${second}，偏移 ${offset}`).toBe(0); expect(result.state.completed).toBe(true);
+      expect(result.seconds).toBeGreaterThan(49); expect(result.seconds).toBeLessThan(51);
+      expect(Math.abs(result.seconds - levelSeconds(LEVEL_FOUR))).toBeLessThan(0.4);
+      expect(result.jumps).toBe(13 + (first ? 3 : 0) + (second ? 3 : 0));
+      const branch = (start: number, upper: boolean, lowY: number) => {
+        const platforms = LEVEL_FOUR.platforms.filter(p => p.kind === 'bridge' && p.x >= start && p.x < start + 1728 && (upper ? p.y < lowY : p.y === lowY));
+        expect(platforms.length).toBe(upper ? 6 : 3);
+        platforms.forEach(p => expect(result.landed.has(p), `落在 ${p.x}/${p.y}`).toBe(true));
+      };
+      branch(3840, first, 480); branch(8832, second, 416);
+      expect(result.state.checkpoint).toBe(LEVEL_FOUR.checkpoints.length - 1);
+    }
+  });
+  it('紅藍紫障礙與地板規則相反；僅精確同色光使方塊淡出及取消碰撞', () => {
+    expect(new Set(LEVEL_FOUR.obstacles!.map(p => p.color))).toEqual(new Set(['red', 'blue', 'purple']));
+    for (const wall of LEVEL_FOUR.obstacles!) for (const color of [null, 'red', 'blue', 'purple'] as const) {
+      expect(blocksPath(wall, color)).toBe(color !== wall.color);
+      expect(obstacleAlpha(wall, color)).toBe(color === wall.color ? OBSTACLE_GHOST_ALPHA : 1);
+      expect(isSolid({ ...wall, kind: 'bridge' }, color)).toBe(color === wall.color);
+    }
+    LEVEL_FOUR.checkpoints.forEach(x => expect(LEVEL_FOUR.platforms.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w)?.color).toBeUndefined());
+  });
+  it('撞牆後即使再換色或跳躍也會落入洞底；重生恢復跑速並保留燈光', () => {
+    expect(run(false, false, 0, true).state.falls).toBe(1);
+    const wall = LEVEL_FOUR.obstacles![0];
+    let state = advance({ ...initialState(LEVEL_FOUR), x: wall.x - BODY.half - 1, y: 400, grounded: false, coyote: 0, vy: -300 }, neutral, PHYSICS.step, LEVEL_FOUR.platforms, LEVEL_FOUR);
+    expect(state.knockedDown).toBe(true); expect(state.vx).toBe(0); expect(state.vy).toBeGreaterThan(0);
+    const hitX = state.x;
+    state = advance(state, { jump: true, color: 'red' }, PHYSICS.step, LEVEL_FOUR.platforms, LEVEL_FOUR);
+    expect(state.x).toBe(hitX); expect(state.grounded).toBe(false); expect(state.vy).toBeGreaterThan(0);
+    for (let n = 0; n < 240 && !state.falls; n++) state = advance(state, { jump: true }, PHYSICS.step, LEVEL_FOUR.platforms, LEVEL_FOUR);
+    expect(state.falls).toBe(1); expect(state.x).toBe(160); expect(state.y).toBe(480);
+    expect(state.knockedDown).toBe(false); expect(state.vx).toBe(PHYSICS.speed); expect(state.color).toBe('red');
+  });
+  it('障礙有四面碰撞，跨步不穿牆；從障礙上方通過的上路不受影響', () => {
+    const wall = { x: 100, y: 200, w: 64, h: 192, color: 'red' as const };
+    expect(obstacleContact({ x: 0, y: 250 }, { x: 220, y: 250 }, wall)).toBeGreaterThan(0);
+    expect(obstacleContact({ x: 130, y: 100 }, { x: 130, y: 250 }, wall)).toBeGreaterThan(0);
+    expect(obstacleContact({ x: 130, y: 500 }, { x: 130, y: 350 }, wall)).toBeGreaterThan(0);
+    expect(obstacleContact({ x: 0, y: 199 }, { x: 220, y: 199 }, wall)).toBeNull();
+    const start = { ...initialState(LEVEL_FOUR), x: 65, y: 250, grounded: false, coyote: 0 };
+    const level = { ...LEVEL_FOUR, obstacles: [wall] };
+    expect(advance(start, neutral, 0.1, [], level).knockedDown).toBe(true);
+    expect(advance(start, { jump: false, color: 'red' }, 0.1, [], level).knockedDown).toBe(false);
+  });
+});
+
 describe('固定向前的一段跳世界', () => {
   it('不用輸入就固定向前跑，腳點穩定', () => {
     const s = simulate(initialState(), neutral, 1);

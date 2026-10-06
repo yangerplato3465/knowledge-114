@@ -39,7 +39,9 @@ export function SideScroller() {
   const closeManual = () => { setManual(false); stage.current?.focus({ preventScroll: true }); };
   const start = () => { setManual(false); setStarted(true); scene.current?.setTutorial(false); scene.current?.setMode('play'); stage.current?.focus({ preventScroll: true }); };
   const preview = status.mode === 'preview';
-  const colorMessage = status.color === 'purple' ? '紅＋藍開啟 · 紫色實體' : status.color === 'red' ? '紅燈開啟 · 紅色實體' : status.color === 'blue' ? '藍燈開啟 · 藍色實體' : '兩燈關閉 · 特殊地板皆透明';
+  const crossroads = level.id === 'crossroads';
+  const colorMessage = (status.color === 'purple' ? '紅＋藍開啟 · 紫色地板實體' : status.color === 'red' ? '紅燈開啟 · 紅色地板實體' : status.color === 'blue' ? '藍燈開啟 · 藍色地板實體' : '兩燈關閉 · 特殊地板皆透明')
+    + (crossroads ? status.color ? '、同色直立方塊消散' : '、直立方塊皆會阻擋' : '');
   const colorDisabled = load !== 'ready' || manual || (!preview && (status.paused || status.completed));
   const changeColor = (button: ColorButton) => { scene.current?.toggleColor(button); stage.current?.focus({ preventScroll: true }); };
   const message = status.completed ? '已找到傳送出口，可以重新冒險。' : status.paused ? '已暫停。' : preview ? '正在自動巡覽地圖。' : `固定向前跑，空白鍵或跳躍按鈕起跳。位於落腳區 ${status.checkpoint + 1}。`;
@@ -59,7 +61,7 @@ export function SideScroller() {
       <div className="ss-levels" role="group" aria-label="關卡難度">
         {LEVELS.map(option => <button type="button" key={option.id} aria-pressed={level.id === option.id}
           aria-label={`${option.difficulty} 星關卡：${option.name}，約 ${Math.round(levelSeconds(option))} 秒`}
-          onClick={() => { if (option.id === level.id) return; setLoad('loading'); setStarted(false); setManual(false); setLevel(option); }}>
+          onClick={() => { if (option.id === level.id) return; setLoad('loading'); setStarted(false); setManual(option.id === 'crossroads'); setLevel(option); }}>
           <span className="ss-difficulty" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}assets/images/side-scroller/difficulty-star-v1.webp`} alt="" /><strong>{option.difficulty}</strong></span>
           <span>{option.name}<small>約 {Math.round(levelSeconds(option))} 秒</small></span>
         </button>)}
@@ -93,8 +95,8 @@ export function SideScroller() {
               onClick={event => { if (event.detail === 0) changeColor(button); }}><span className="ss-control-copy">{button === 'red' ? '紅燈' : '藍燈'}</span></button>)}
         </div>
       </div>
-      {manual && load === 'ready' && <Tutorial initial={!started} onClose={closeManual} onStart={start} />}
-      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。P 暫停。可開啟玩法手冊翻閱示範。</p>
+      {manual && load === 'ready' && <Tutorial initial={!started} crossroads={crossroads} onClose={closeManual} onStart={start} />}
+      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊遇到相同光色才消散，否則撞上掉落。下路平台較寬；提早起跳可選上路連跳換色。'}P 暫停。可開啟玩法手冊翻閱示範。</p>
       <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
 }

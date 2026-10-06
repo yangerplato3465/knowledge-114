@@ -7,16 +7,21 @@ export function toggleColor(color: WorldColor | null, button: ColorButton): Worl
   return red && blue ? 'purple' : red ? 'red' : blue ? 'blue' : null;
 }
 export interface Platform { x: number; y: number; w: number; h: number; kind: 'ground' | 'bridge'; endY?: number; color?: WorldColor }
+export interface Obstacle { x: number; y: number; w: number; h: number; color: WorldColor }
 export interface Input { jump: boolean; color?: WorldColor | null }
 export type Difficulty = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Level {
-  id: 'intro' | 'platforms' | 'fusion' | 'challenge'; name: string; difficulty: Difficulty;
+  id: 'intro' | 'platforms' | 'fusion' | 'challenge' | 'crossroads'; name: string; difficulty: Difficulty;
   width: number; platforms: readonly Platform[]; checkpoints: readonly number[];
+  terrain?: 'stone'; obstacles?: readonly Obstacle[];
   exit: { x: number; y: number; radius: number };
 }
 export const BODY = { half: 19, height: 60 };
 export const PHYSICS = { speed: 280, gravity: 1800, jump: 680, maxFall: 1000, grace: 0.1, buffer: 0.12, step: 1 / 120 };
 export const GHOST_ALPHA = 0.32;
+export const OBSTACLE_GHOST_ALPHA = 0.14;
+export function blocksPath(obstacle: Obstacle, color: WorldColor | null): boolean { return obstacle.color !== color; }
+export function obstacleAlpha(obstacle: Obstacle, color: WorldColor | null): number { return blocksPath(obstacle, color) ? 1 : OBSTACLE_GHOST_ALPHA; }
 const ground = (x: number, y: number, w: number, endY = y, color?: WorldColor): Platform => ({ x, y, w, endY, color, h: 672 - y, kind: 'ground' });
 const bridge = (x: number, y: number, w: number, color?: WorldColor): Platform => ({ x, y, w, color, h: 32, kind: 'bridge' });
 export const LEVEL_THREE: Level = {
@@ -110,7 +115,41 @@ export const LEVEL_TWO: Level = {
     ground(11072, 480, 256, 480, 'red'), ground(11328, 480, 832),
   ],
 };
-export const LEVELS: readonly Level[] = [LEVEL_ZERO, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE];
+export const LEVEL_FOUR: Level = {
+  id: 'crossroads', name: '晶石岔路', difficulty: 4, terrain: 'stone', width: 14336,
+  checkpoints: [160, 1376, 3296, 5760, 7360, 10752, 12640], exit: { x: 14144, y: 408, radius: 54 },
+  platforms: [
+    // Three isolated wall crossings teach the inverse rule on neutral landings.
+    ground(0, 480, 1024), ground(1216, 480, 768), ground(2176, 480, 768), ground(3136, 480, 704),
+    // Lower route: broad neutral platforms. Upper route: short, alternating-color steps.
+    bridge(3840, 480, 448), bridge(4416, 480, 448), bridge(4992, 480, 448),
+    bridge(3840, 368, 192), bridge(4160, 304, 192, 'blue'), bridge(4480, 304, 192),
+    bridge(4800, 304, 192, 'purple'), bridge(5120, 368, 192, 'red'), bridge(5440, 416, 192),
+    ground(5568, 480, 832), ground(6400, 480, 256, 480, 'red'), ground(6656, 480, 320),
+    ground(7168, 480, 704), ground(7872, 480, 512, 416), ground(8384, 416, 448),
+    // Second choice is higher in the scenery, with the same reachable two-lane spacing.
+    bridge(8832, 416, 448), bridge(9408, 416, 448), bridge(9984, 416, 448),
+    bridge(8832, 304, 192), bridge(9152, 240, 192, 'red'), bridge(9472, 240, 192),
+    bridge(9792, 240, 192, 'purple'), bridge(10112, 304, 192, 'blue'), bridge(10432, 352, 192),
+    ground(10560, 416, 704), ground(11264, 416, 512, 480), ground(11776, 480, 256, 480, 'blue'), ground(12032, 480, 256),
+    // Final red/blue/purple wall sequence, then a quiet neutral approach to the portal.
+    ground(12480, 480, 384), ground(13056, 480, 384), ground(13632, 480, 704),
+  ],
+  obstacles: [
+    { x: 1088, y: 224, w: 64, h: 256, color: 'red' },
+    { x: 2048, y: 224, w: 64, h: 256, color: 'blue' },
+    { x: 3008, y: 224, w: 64, h: 256, color: 'purple' },
+    { x: 4320, y: 352, w: 64, h: 192, color: 'red' },
+    { x: 4896, y: 352, w: 64, h: 192, color: 'blue' },
+    { x: 7040, y: 224, w: 64, h: 256, color: 'purple' },
+    { x: 9312, y: 288, w: 64, h: 192, color: 'purple' },
+    { x: 9888, y: 288, w: 64, h: 192, color: 'red' },
+    { x: 12352, y: 224, w: 64, h: 256, color: 'red' },
+    { x: 12928, y: 224, w: 64, h: 256, color: 'blue' },
+    { x: 13504, y: 224, w: 64, h: 256, color: 'purple' },
+  ],
+};
+export const LEVELS: readonly Level[] = [LEVEL_ZERO, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_FOUR];
 export const levelSeconds = (level: Level) => (level.exit.x - level.checkpoints[0]) / PHYSICS.speed;
 // The existing three-star course remains the default for callers without an explicit level.
 export const WORLD_WIDTH = LEVEL_THREE.width, PLATFORMS = LEVEL_THREE.platforms, CHECKPOINTS = LEVEL_THREE.checkpoints;
@@ -130,13 +169,31 @@ export interface State {
   x: number; y: number; vx: number; vy: number; grounded: boolean;
   coyote: number; buffer: number; jumpHeld: boolean; checkpoint: number;
   completed: boolean; falls: number; color: WorldColor | null;
+  knockedDown: boolean;
 }
 export function surfaceY(p: Platform, x: number): number {
   return p.y + ((p.endY ?? p.y) - p.y) * Math.max(0, Math.min(1, (x - p.x) / p.w));
 }
 export function initialState(level: Level = LEVEL_THREE): State {
   return { x: level.checkpoints[0], y: checkpointY(0, level), vx: PHYSICS.speed, vy: 0, grounded: true,
-    coyote: PHYSICS.grace, buffer: 0, jumpHeld: false, checkpoint: 0, completed: false, falls: 0, color: null };
+    coyote: PHYSICS.grace, buffer: 0, jumpHeld: false, checkpoint: 0, completed: false, falls: 0, color: null, knockedDown: false };
+}
+
+/** Sweep the feet through the wall expanded by the player's body; all four faces block. */
+export function obstacleContact(old: Pick<State, 'x' | 'y'>, next: Pick<State, 'x' | 'y'>, wall: Obstacle): number | null {
+  let entry = 0, leave = 1;
+  for (const [start, delta, min, max] of [
+    [old.x, next.x - old.x, wall.x - BODY.half, wall.x + wall.w + BODY.half],
+    [old.y, next.y - old.y, wall.y, wall.y + wall.h + BODY.height],
+  ]) {
+    if (delta === 0) { if (start <= min || start >= max) return null; }
+    else {
+      const a = (min - start) / delta, b = (max - start) / delta;
+      entry = Math.max(entry, Math.min(a, b)); leave = Math.min(leave, Math.max(a, b));
+      if (entry >= leave) return null;
+    }
+  }
+  return entry < leave ? entry : null;
 }
 
 export function isSolid(p: Platform, color: WorldColor | null): boolean { return !p.color || p.color === color; }
@@ -154,19 +211,32 @@ export function selectWorldColor(state: State, color: WorldColor | null, platfor
 export function advance(state: State, input: Input, dt: number, platforms: readonly Platform[] = PLATFORMS, level: Level = LEVEL_THREE): State {
   const s = { ...(input.color !== undefined ? selectWorldColor(state, input.color, platforms) : state) };
   if (s.completed) return s;
-  s.vx = PHYSICS.speed;
+  s.vx = s.knockedDown ? 0 : PHYSICS.speed;
   s.coyote = s.grounded ? PHYSICS.grace : Math.max(0, s.coyote - dt);
   s.buffer = input.jump && !s.jumpHeld ? PHYSICS.buffer : Math.max(0, s.buffer - dt);
   s.jumpHeld = input.jump;
-  const jumped = s.buffer > 0 && s.coyote > 0;
+  const jumped = !s.knockedDown && s.buffer > 0 && s.coyote > 0;
   if (jumped) { s.vy = -PHYSICS.jump; s.grounded = false; s.coyote = 0; s.buffer = 0; }
   const oldX = s.x, oldY = s.y, wasGrounded = s.grounded;
   s.x = Math.min(level.width - BODY.half, s.x + s.vx * dt);
   s.vy = Math.min(PHYSICS.maxFall, s.vy + PHYSICS.gravity * dt);
   s.y += s.vy * dt;
   s.grounded = false;
+  if (!s.knockedDown) {
+    let contact = Infinity;
+    for (const wall of level.obstacles ?? []) {
+      if (!blocksPath(wall, s.color)) continue;
+      const at = obstacleContact({ x: oldX, y: oldY }, s, wall);
+      if (at !== null) contact = Math.min(contact, at);
+    }
+    if (contact < Infinity) {
+      s.x = oldX + (s.x - oldX) * contact; s.y = oldY + (s.y - oldY) * contact;
+      s.knockedDown = true; s.vx = 0; s.vy = Math.max(220, s.vy); s.coyote = s.buffer = 0;
+    }
+  }
   let landingY = Infinity;
   for (const p of platforms) {
+    if (s.knockedDown) break;
     if (!isSolid(p, s.color)) continue;
     if (s.x + BODY.half <= p.x || s.x - BODY.half >= p.x + p.w) continue;
     // Joined sections use the surface under the feet, rather than a higher neighbouring tile.
@@ -184,6 +254,7 @@ export function advance(state: State, input: Input, dt: number, platforms: reado
   if (s.y > 820) {
     s.x = level.checkpoints[s.checkpoint]; s.y = checkpointY(s.checkpoint, level); s.vx = PHYSICS.speed; s.vy = 0; s.grounded = true;
     s.coyote = PHYSICS.grace; s.buffer = 0; s.falls++;
+    s.knockedDown = false;
   }
   if (touchesExit(s, level)) { s.completed = true; s.vx = 0; }
   return s;

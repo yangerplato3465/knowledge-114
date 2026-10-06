@@ -1,5 +1,5 @@
 import type { App, Node, Sprite, Texture } from '../magic-workshop/scene-types';
-import { advance, GHOST_ALPHA, initialState, LEVEL_THREE, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Platform, type WorldColor } from './model';
+import { advance, GHOST_ALPHA, initialState, LEVEL_THREE, obstacleAlpha, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Platform, type WorldColor } from './model';
 
 import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type ArtPixi } from './art';
 import { CONTROL_IMAGES, createTouchControls, type ControlId, type ControlPixi, type TouchControls } from './controls';
@@ -29,37 +29,46 @@ export function colorMatrix(color: WorldColor, alpha: number) {
 }
 const ASSETS = ['background_clouds', 'background_fade_hills', 'background_fade_trees',
   'terrain_sand_block_top', 'terrain_sand_block_center', 'terrain_sand_horizontal_left',
-  'terrain_sand_horizontal_middle', 'terrain_sand_horizontal_right'] as const;
+  'terrain_sand_horizontal_middle', 'terrain_sand_horizontal_right',
+  'terrain_stone_block_top', 'terrain_stone_block_center', 'terrain_stone_horizontal_left',
+  'terrain_stone_horizontal_middle', 'terrain_stone_horizontal_right', 'block_red', 'block_blue'] as const;
 
 export async function createSideScroller(host: HTMLElement, signal: AbortSignal, onStatus: (status: SceneStatus) => void, level: Level = LEVEL_THREE): Promise<SideScrollerScene> {
   const { platforms: PLATFORMS, width: WORLD_WIDTH, exit: EXIT } = level;
+  const stone = level.terrain === 'stone';
+  const terrain = stone ? 'stone' : 'sand';
+  const assets = ASSETS.filter(name => name.startsWith('background_') || (name.startsWith(`terrain_${terrain}_`)) || (stone && name.startsWith('block_')));
   const P = await import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as ColorPixi;
   const [images, spriteImages, controlImages] = await Promise.all([
-    Promise.all(ASSETS.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.png`, signal))),
+    Promise.all(assets.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.png`, signal))),
     loadSpriteImages(signal),
     Promise.all(CONTROL_IMAGES.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney-ui/${name}.png`, signal))),
   ]);
   signal.throwIfAborted();
   const textures = {} as Record<typeof ASSETS[number], Texture>;
-  ASSETS.forEach((name, i) => { textures[name] = P.Texture.from(images[i]); });
+  assets.forEach((name, i) => { textures[name] = P.Texture.from(images[i]); });
   const art = createSpriteArt(P, spriteImages);
   const app: App = new P.Application();
   const filters = { red: new P.ColorMatrixFilter(), blue: new P.ColorMatrixFilter(), purple: new P.ColorMatrixFilter() };
+  const purpleWall = new P.ColorMatrixFilter(); purpleWall.matrix = colorMatrix('purple', 1);
   let initialized = false;
   let controls: TouchControls | undefined;
-  const dispose = () => { if (initialized) app.destroy({ removeView: true }, { children: true }); controls?.destroy(); art.destroy(); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
+  const dispose = () => { if (initialized) app.destroy({ removeView: true }, { children: true }); controls?.destroy(); art.destroy(); purpleWall.destroy(); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
   try {
-    await app.init({ width: 1067, height: HEIGHT, background: 0xc3e3ff, antialias: true, autoStart: false,
+    await app.init({ width: 1067, height: HEIGHT, background: stone ? 0x999ac6 : 0xc3e3ff, antialias: true, autoStart: false,
       sharedTicker: false, preference: 'webgl', resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true });
     initialized = true;
     signal.throwIfAborted();
-    const clouds = new P.Container(), hills = new P.Container(), trees = new P.Container(), neutralWorld = new P.Container(), light = new P.Graphics(), world = new P.Container();
+    const clouds = new P.Container(), sky = new P.Graphics(), hills = new P.Container(), trees = new P.Container(), neutralWorld = new P.Container(), light = new P.Graphics(), world = new P.Container();
     // Full viewport light washes the scenery; special terrain stays above it, preserving its exact tint and opacity.
-    [clouds, hills, trees, neutralWorld, light, world].forEach(layer => app.stage.addChild(layer));
+    [clouds, sky, hills, trees, neutralWorld, light, world].forEach(layer => app.stage.addChild(layer));
     // White areas of the original backgrounds let the lower layer show through.
     (hills as Node & { blendMode: string }).blendMode = 'multiply';
     (trees as Node & { blendMode: string }).blendMode = 'multiply';
-    hills.alpha = 0.55; trees.alpha = 0.7;
+    hills.alpha = stone ? 0.45 : 0.55; trees.alpha = stone ? 0.55 : 0.7;
+    if (stone) {
+      (clouds as Node & { tint: number }).tint = 0xaaa7dc;
+    }
     const terrainNodes: { node: Node; x: number; end: number }[] = [];
     const sprite = (name: typeof ASSETS[number], x: number, y: number, w: number, h: number, parent: Node) => {
       const s = new P.Sprite(textures[name]); s.position.set(x, y); s.width = w; s.height = h; parent.addChild(s); return s;
@@ -84,7 +93,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       if (p.kind === 'bridge') {
         for (let x = p.x; x < p.x + p.w; x += TILE) {
           const part = x === p.x ? 'left' : x + TILE >= p.x + p.w ? 'right' : 'middle';
-          sprite(`terrain_sand_horizontal_${part}`, x, p.y, TILE, p.h, group);
+          sprite(`terrain_${terrain}_horizontal_${part}`, x, p.y, TILE, p.h, group);
         }
         markColor(p, group); continue;
       }
@@ -93,12 +102,12 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       group.addChild(clip);
       const tiles = new P.Container(); tiles.mask = clip; group.addChild(tiles);
       for (let y = Math.min(p.y, endY); y < bottom; y += TILE) {
-        for (let x = p.x; x < p.x + p.w; x += TILE) sprite('terrain_sand_block_center', x, y, TILE, TILE, tiles);
+        for (let x = p.x; x < p.x + p.w; x += TILE) sprite(`terrain_${terrain}_block_center`, x, y, TILE, TILE, tiles);
       }
       // Shear each top tile along the exact collision surface, including gentle slopes.
       for (let x = p.x; x < p.x + p.w; x += TILE) {
         const left = surfaceY(p, x), right = surfaceY(p, x + TILE);
-        const top = new P.MeshSimple({ texture: textures.terrain_sand_block_top,
+        const top = new P.MeshSimple({ texture: textures[`terrain_${terrain}_block_top`],
           vertices: new Float32Array([x, left, x + TILE, right, x + TILE, right + TILE, x, left + TILE]),
           uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]), indices: new Uint32Array([0, 1, 2, 0, 2, 3]) });
         tiles.addChild(top);
@@ -114,6 +123,33 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       }
       group.addChild(edges);
       markColor(p, group);
+    }
+    const obstacleNodes = (level.obstacles ?? []).map(wall => {
+      const group = world.addChild(new P.Container());
+      terrainNodes.push({ node: group, x: wall.x, end: wall.x + wall.w });
+      const tiles = group.addChild(new P.Container());
+      if (wall.color === 'purple') (tiles as Node & { filters: ColorFilter[] }).filters = [purpleWall];
+      for (let y = wall.y; y < wall.y + wall.h; y += TILE) {
+        sprite(wall.color === 'red' ? 'block_red' : 'block_blue', wall.x, y, wall.w, TILE, tiles);
+        const mark = new P.Graphics(), x = wall.x + wall.w / 2, cy = y + TILE / 2;
+        if (wall.color === 'red') mark.poly([x, cy - 8, x + 8, cy + 7, x - 8, cy + 7]);
+        else if (wall.color === 'blue') mark.circle(x, cy, 8);
+        else mark.poly([x, cy - 9, x + 9, cy, x, cy + 9, x - 9, cy]);
+        mark.fill(0xffffff).stroke({ color: 0x302943, width: 2 }); group.addChild(mark);
+      }
+      return { wall, group };
+    });
+    if (stone) {
+      const sign = (text: string, x: number, y: number) => {
+        const label = new P.Text({ text, style: { fontFamily: 'Microsoft JhengHei, sans-serif', fontSize: 22, fontWeight: '800', fill: 0xffedcb, stroke: { color: 0x39334c, width: 4 } } });
+        label.position.set(x, y); neutralWorld.addChild(label);
+        terrainNodes.push({ node: label, x, end: x + label.width });
+      };
+      sign('同色光 → 方塊消散', 680, 160);
+      for (const [x, y] of [[3840, 304], [8832, 240]]) {
+        sign('↑ 上路・連跳換色', x - 180, y - 90);
+        sign('→ 下路・寬臺跨洞', x - 180, y + 92);
+      }
     }
     const portal = art.create('portal'); portal.scale.set(0.8); portal.position.set(EXIT.x, EXIT.y); neutralWorld.addChild(portal);
     const milo = createMilo(P, art, neutralWorld), player = milo.sprite; player.visible = false;
@@ -161,6 +197,17 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       const bounds = host.getBoundingClientRect();
       viewportWidth = HEIGHT * bounds.width / Math.max(1, bounds.height);
       app.renderer.resize(viewportWidth, HEIGHT); app.canvas.style.width = app.canvas.style.height = '100%';
+      sky.clear();
+      if (stone) {
+        const moonX = viewportWidth * 0.82;
+        sky.circle(moonX, 88, 34).fill({ color: 0xffedca, alpha: 0.9 });
+        sky.circle(moonX - 9, 80, 7).circle(moonX + 12, 99, 5).fill({ color: 0xdbd1bb, alpha: 0.45 });
+        for (let i = 0; i < 15; i++) {
+          const x = (i * 137 + 38) % viewportWidth, y = 32 + (i * 47) % 145;
+          if (Math.abs(x - moonX) < 50 && Math.abs(y - 88) < 50) continue;
+          sky.circle(x, y, i % 3 === 0 ? 2.5 : 1.5).fill({ color: 0xffedca, alpha: 0.65 });
+        }
+      }
       ui.layout();
       backgroundLayers.forEach(layer => {
         layer.node.removeChildren().forEach(node => node.destroy());
@@ -171,6 +218,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     const stage = host.parentElement!;
     const updateColors = () => {
       for (const color of ['red', 'blue', 'purple'] as const) filters[color].matrix = colorMatrix(color, state.color === color ? 1 : GHOST_ALPHA);
+      obstacleNodes.forEach(({ wall, group }) => { group.alpha = obstacleAlpha(wall, state.color); });
       paintLight();
     };
     const toggleLight = (button: ColorButton) => {
