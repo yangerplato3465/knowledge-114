@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_FOUR, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
+import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
@@ -188,7 +188,9 @@ describe('四星晶石岔路', () => {
       expect(result.state.checkpoint).toBe(LEVEL_FOUR.checkpoints.length - 1);
     }
   });
-  it('紅藍紫障礙與地板規則相反；僅精確同色光使方塊淡出及取消碰撞', () => {
+  it('紅藍紫障礙與地板規則相反；僅精確同色光使方塊半透明及取消碰撞', () => {
+    expect(OBSTACLE_GHOST_ALPHA).toBeGreaterThan(0);
+    expect(OBSTACLE_GHOST_ALPHA).toBeLessThan(1);
     expect(new Set(LEVEL_FOUR.obstacles!.map(p => p.color))).toEqual(new Set(['red', 'blue', 'purple']));
     for (const wall of LEVEL_FOUR.obstacles!) for (const color of [null, 'red', 'blue', 'purple'] as const) {
       expect(blocksPath(wall, color)).toBe(color !== wall.color);
@@ -197,7 +199,7 @@ describe('四星晶石岔路', () => {
     }
     LEVEL_FOUR.checkpoints.forEach(x => expect(LEVEL_FOUR.platforms.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w)?.color).toBeUndefined());
   });
-  it('三色障礙未點燈時阻擋；用燈消散後可通過，關燈或換色即恢復碰撞', () => {
+  it('三色障礙未點燈時阻擋；用燈淡化後可通過，關燈或換色即恢復碰撞', () => {
     for (const target of ['red', 'blue', 'purple'] as const) {
       const wall = { x: 100, y: 200, w: 64, h: 192, color: target };
       const level = { ...LEVEL_FOUR, obstacles: [wall] };
@@ -235,6 +237,62 @@ describe('四星晶石岔路', () => {
     const level = { ...LEVEL_FOUR, obstacles: [wall] };
     expect(advance(start, neutral, 0.1, [], level).knockedDown).toBe(true);
     expect(advance(start, { jump: false, color: 'red' }, 0.1, [], level).knockedDown).toBe(false);
+  });
+});
+
+describe('五星晶光試煉', () => {
+  function run(first: boolean, second: boolean, offset = 0, missedSeam?: number) {
+    const jumps = [1000, 1372, 1960, 2332, 2920,
+      ...(first ? [3740, 3992, 4312, 4632] : [4218, 4794]), 5352, 5928, 6952,
+      ...(second ? [8732, 8984, 9304, 9624] : [9210, 9786]), 10408, 10984, 12264, 12840, 13416, 13928, 14504];
+    const colors: [number, WorldColor][] = [[400, 'blue'], [800, 'red'], [1377, 'blue'], [2337, 'purple'],
+      ...(first ? [[4010, 'blue'], [4330, 'purple'], [4640, 'blue']] as [number, WorldColor][] : [[4050, 'red'], [4630, 'blue']] as [number, WorldColor][]),
+      [5200, 'red'], [5770, 'blue'], [6200, 'red'], [6800, 'purple'], [7350, 'red'],
+      ...(second ? [[9000, 'red'], [9322, 'purple'], [9632, 'red']] as [number, WorldColor][] : [[9050, 'purple'], [9600, 'red']] as [number, WorldColor][]),
+      [10250, 'blue'], [10860, 'purple'], [11580, 'blue'], [12140, 'red'], [12720, 'blue'], [13300, 'purple'], [13770, 'blue'], [14340, 'red']];
+    let state = initialState(LEVEL_FIVE), seconds = 0, toggles = 0;
+    const used = new Set<number>(), landed = new Set<Platform>(), seamLandings = new Set<number>();
+    for (let i = 0; i < 120 * 56 && !state.completed && !state.falls; i++) {
+      const jump = jumps.find(x => state.x >= x + offset && !used.has(x));
+      if (jump !== undefined) used.add(jump);
+      const target = colors.filter(([x]) => x !== missedSeam && state.x >= x + offset).at(-1)?.[1];
+      let color = state.color;
+      if (target) for (const button of ['red', 'blue'] as const) if (isLightOn(color, button) !== isLightOn(target, button)) { color = toggleColor(color, button); toggles++; }
+      state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, LEVEL_FIVE.platforms, LEVEL_FIVE); seconds += PHYSICS.step;
+      if (state.grounded) {
+        LEVEL_FIVE.platforms.filter(p => p.kind === 'bridge' && state.x >= p.x && state.x < p.x + p.w && state.y === p.y).forEach(p => landed.add(p));
+        for (const x of [1472, 2432]) if (state.x >= x && state.x < x + 256) seamLandings.add(x);
+      }
+    }
+    return { state, seconds, used, landed, seamLandings, toggles };
+  }
+  it('四種上下路組合、前後起跳偏移皆可約53秒通關，實際跳躍頻率高於四星', () => {
+    for (const first of [false, true]) for (const second of [false, true]) for (const offset of [-12, 0, 12]) {
+      const result = run(first, second, offset);
+      expect(result.state.falls, `路線 ${first}/${second}，偏移 ${offset}，位置 ${result.state.x}`).toBe(0);
+      expect(result.state.completed).toBe(true);
+      expect(result.seconds).toBeGreaterThan(52); expect(result.seconds).toBeLessThan(54);
+      expect(Math.abs(result.seconds - levelSeconds(LEVEL_FIVE))).toBeLessThan(0.4);
+      expect(result.used.size).toBe(19 + (first ? 2 : 0) + (second ? 2 : 0));
+      expect(result.used.size / result.seconds).toBeGreaterThan((11 + (first ? 2 : 0) + (second ? 2 : 0)) / levelSeconds(LEVEL_FOUR) * 1.4);
+      expect(result.toggles).toBeGreaterThanOrEqual(30);
+      expect(result.seamLandings.size).toBe(2);
+      for (const [x, upper, y] of [[3840, first, 480], [8832, second, 416]] as const) {
+        const path = LEVEL_FIVE.platforms.filter(p => p.kind === 'bridge' && p.x >= x && p.x < x + 1152 && (upper ? p.y < y : p.y === y));
+        expect(path.length).toBe(upper ? 4 : 2);
+        path.forEach(p => expect(result.landed.has(p), `必要平台 ${p.x}/${p.y}`).toBe(true));
+      }
+      expect(result.state.checkpoint).toBe(LEVEL_FIVE.checkpoints.length - 1);
+    }
+  });
+  it('新增接縫確實需要空中換燈；增加三色障礙，落腳區仍為正常地面', () => {
+    for (const seam of [1377, 2337]) expect(run(false, false, 0, seam).state.falls).toBeGreaterThan(0);
+    expect(LEVEL_FIVE.obstacles!.length / levelSeconds(LEVEL_FIVE)).toBeGreaterThan(LEVEL_FOUR.obstacles!.length / levelSeconds(LEVEL_FOUR) * 1.4);
+    LEVEL_FIVE.checkpoints.forEach((x, checkpoint) => {
+      expect(LEVEL_FIVE.platforms.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w)?.color).toBeUndefined();
+      const respawn = advance({ ...initialState(LEVEL_FIVE), checkpoint, y: 830, grounded: false }, neutral, PHYSICS.step, LEVEL_FIVE.platforms, LEVEL_FIVE);
+      expect(respawn.x).toBe(x); expect(respawn.y).toBe(checkpointY(checkpoint, LEVEL_FIVE)); expect(respawn.falls).toBe(1);
+    });
   });
 });
 

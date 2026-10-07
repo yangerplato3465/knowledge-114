@@ -1,5 +1,5 @@
 import type { App, Node, Sprite, Texture } from '../magic-workshop/scene-types';
-import { advance, blocksPath, GHOST_ALPHA, initialState, LEVEL_THREE, obstacleAlpha, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Obstacle, type Platform, type WorldColor } from './model';
+import { advance, GHOST_ALPHA, initialState, LEVEL_THREE, obstacleAlpha, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Obstacle, type Platform, type WorldColor } from './model';
 
 import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type ArtPixi } from './art';
 import { CONTROL_IMAGES, createTouchControls, type ControlId, type ControlPixi, type TouchControls } from './controls';
@@ -25,7 +25,7 @@ export function syncTerrainVisibility(nodes: readonly TerrainNode[], camera: num
   for (const { node, x, end, obstacle } of nodes) {
     const inView = end >= camera - TILE && x <= camera + viewportWidth + TILE;
     if (obstacle) node.alpha = obstacleAlpha(obstacle, color);
-    node.visible = inView && (!obstacle || blocksPath(obstacle, color));
+    node.visible = inView;
   }
 }
 const LIGHT_ALPHA = 0.08;
@@ -153,7 +153,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
         label.position.set(x, y); neutralWorld.addChild(label);
         terrainNodes.push({ node: label, x, end: x + label.width });
       };
-      sign('同色光 → 方塊消散', 680, 160);
+      sign('同色光 → 方塊變淡', 680, 160);
       for (const [x, y] of [[3840, 304], [8832, 240]]) {
         sign('↑ 上路・連跳換色', x - 180, y - 90);
         sign('→ 下路・寬臺跨洞', x - 180, y + 92);

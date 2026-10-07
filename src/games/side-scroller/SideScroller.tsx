@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { SiteHeader } from '../../components/SiteHeader';
 import { ActivityTrail } from '../../components/ActivityTrail';
 import { createSideScroller, type SceneStatus, type SideScrollerScene } from './scene';
-import { isLightOn, LEVELS, LEVEL_ZERO, levelSeconds, type ColorButton } from './model';
+import { isLightOn, LEVELS, LEVEL_ZERO, type ColorButton } from './model';
 import './side-scroller.css';
 import { Tutorial } from './Tutorial';
 
@@ -39,9 +39,9 @@ export function SideScroller() {
   const closeManual = () => { setManual(false); stage.current?.focus({ preventScroll: true }); };
   const start = () => { setManual(false); setStarted(true); scene.current?.setTutorial(false); scene.current?.setMode('play'); stage.current?.focus({ preventScroll: true }); };
   const preview = status.mode === 'preview';
-  const crossroads = level.id === 'crossroads';
+  const crossroads = Boolean(level.obstacles?.length);
   const colorMessage = (status.color === 'purple' ? '紅＋藍開啟 · 紫色地板實體' : status.color === 'red' ? '紅燈開啟 · 紅色地板實體' : status.color === 'blue' ? '藍燈開啟 · 藍色地板實體' : '兩燈關閉 · 特殊地板皆透明')
-    + (crossroads ? status.color ? '、同色直立方塊消散' : '、直立方塊皆會阻擋' : '');
+    + (crossroads ? status.color ? '、同色直立方塊淡化' : '、直立方塊皆會阻擋' : '');
   const colorDisabled = load !== 'ready' || manual || (!preview && (status.paused || status.completed));
   const changeColor = (button: ColorButton) => { scene.current?.toggleColor(button); stage.current?.focus({ preventScroll: true }); };
   const message = status.completed ? '已找到傳送出口，可以重新冒險。' : status.paused ? `已暫停。${preview ? `巡覽第 ${status.lap} 輪。` : ''}` : preview ? `正在自動巡覽地圖，第 ${status.lap} 輪。` : `固定向前跑，空白鍵或跳躍按鈕起跳。位於落腳區 ${status.checkpoint + 1}。`;
@@ -60,10 +60,10 @@ export function SideScroller() {
       </div></div>
       <div className="ss-levels" role="group" aria-label="關卡難度">
         {LEVELS.map(option => <button type="button" key={option.id} aria-pressed={level.id === option.id}
-          aria-label={`${option.difficulty} 星關卡：${option.name}，約 ${Math.round(levelSeconds(option))} 秒`}
-          onClick={() => { if (option.id === level.id) return; setLoad('loading'); setStarted(false); setManual(option.id === 'crossroads'); setLevel(option); }}>
+          aria-label={`${option.difficulty} 星關卡：${option.name}`}
+          onClick={() => { if (option.id === level.id) return; setLoad('loading'); setStarted(false); setManual(Boolean(option.obstacles?.length)); setLevel(option); }}>
           <span className="ss-difficulty" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}assets/images/side-scroller/difficulty-star-v1.webp`} alt="" /><strong>{option.difficulty}</strong></span>
-          <span>{option.name}<small>約 {Math.round(levelSeconds(option))} 秒</small></span>
+          <span>{option.name}</span>
         </button>)}
       </div>
       <div className="ss-stage" ref={stage} tabIndex={0} role="region" aria-label="橫向遊戲世界" aria-describedby="ss-instructions">
@@ -95,8 +95,8 @@ export function SideScroller() {
               onClick={event => { if (event.detail === 0) changeColor(button); }}><span className="ss-control-copy">{button === 'red' ? '紅燈' : '藍燈'}</span></button>)}
         </div>
       </div>
-      {manual && load === 'ready' && <Tutorial initial={!started} crossroads={crossroads} onClose={closeManual} onStart={start} />}
-      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才消散；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}P 暫停。可開啟玩法手冊翻閱示範。</p>
+      {manual && load === 'ready' && <Tutorial initial={!started} crossroads={crossroads} advanced={level.difficulty === 5} onClose={closeManual} onStart={start} />}
+      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才淡化；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}P 暫停。可開啟玩法手冊翻閱示範。</p>
       <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
 }

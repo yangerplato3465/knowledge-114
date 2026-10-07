@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '../../features/theme/ThemeProvider';
 import { SideScroller } from './SideScroller';
@@ -130,19 +130,35 @@ it('提供0至4星五個關卡，可選二星雙光迴廊', async () => {
   expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(2);
   expect(screen.getByRole('button', { name: /2 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
 });
-it('選四星會先顯示消散障礙與上下分岔教學，開始後釋放場景', async () => {
+it.each([[4, '晶石岔路'], [5, '晶光試煉']] as const)('選 %i 星 %s 會先顯示淡化障礙與上下分岔教學，開始後釋放場景', async (difficulty, name) => {
   const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
   fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /4 星關卡：晶石岔路，約 50 秒/ })); });
-  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(4);
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: `${difficulty} 星關卡：${name}` })); });
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(difficulty);
   expect(created.setTutorial).toHaveBeenLastCalledWith(true);
-  expect(screen.getByRole('heading', { name: '消散方塊，選擇岔路' })).toBeTruthy();
-  expect(screen.getByText(/方塊與地板規則相反/)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: '淡化方塊，選擇岔路' })).toBeTruthy();
+  expect(screen.getByText(difficulty === 5 ? /增加連續跨洞與換燈/ : /方塊與地板規則相反/)).toBeTruthy();
+  expect(screen.getByText(`${difficulty === 5 ? '五星' : '四星'}・${name}`)).toBeTruthy();
   expect(screen.getByText(/沒有點燈時，直立方塊會一直存在/)).toBeTruthy();
+  expect(screen.getByText(/變成半透明、可以穿過/)).toBeTruthy();
   fireEvent.click(screen.getAllByRole('button', { name: '開始冒險' }).at(-1)!);
   expect(created.setTutorial).toHaveBeenLastCalledWith(false); expect(created.setMode).toHaveBeenLastCalledWith('play');
   expect(screen.queryByRole('dialog')).toBeNull();
+});
+it('六個關卡選項只顯示難度與名稱，畫面及輔助科技名稱都不包含秒數', async () => {
+  vi.mocked(createSideScroller).mockResolvedValue(fakeScene());
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
+  const menu = screen.getByRole('group', { name: '關卡難度' });
+  const buttons = within(menu).getAllByRole('button');
+  expect(buttons).toHaveLength(6);
+  expect(menu.textContent).not.toMatch(/秒|約/);
+  buttons.forEach((button, index) => {
+    expect(button.getAttribute('aria-label')).toMatch(new RegExp(`^${index} 星關卡：`));
+    expect(button.getAttribute('aria-label')).not.toContain('秒');
+  });
+  expect(within(menu).getByRole('button', { name: '5 星關卡：晶光試煉' })).toBeTruthy();
 });
 it('三個觸控區依序為跳躍、紅燈、藍燈；多指切燈不會放開跳躍，取消接觸會釋放各自按壓', async () => {
   const created = fakeScene();

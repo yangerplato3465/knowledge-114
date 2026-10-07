@@ -89,9 +89,9 @@ export function TutorialDemo({ page }: { page: number }) {
   }, [page]);
   return <div className="ss-demo">
     {page === 1 && <div className="ss-demo-labels"><span className="ss-demo-red">紅燈開啟 · 站穩</span><span>紅燈關閉 · 掉落</span></div>}
-    {page === 3 && <div className="ss-demo-labels"><span className="ss-demo-red">同色光 · 方塊消散</span><span>光色不同 · 撞上掉落</span></div>}
+    {page === 3 && <div className="ss-demo-labels"><span className="ss-demo-red">同色光 · 方塊變淡</span><span>光色不同 · 撞上掉落</span></div>}
     {page === 2 && <div className="ss-demo-lights" aria-hidden="true"><span data-lit={isLightOn(color, 'red')} className="ss-demo-red">紅燈</span><b>＋</b><span data-lit={isLightOn(color, 'blue')} className="ss-demo-blue">藍燈</span><b>＝</b><span className="ss-demo-purple">{color === 'purple' ? '紫色實體' : '紫色透明'}</span></div>}
     <div className="ss-demo-canvas" ref={host} aria-hidden="true" />
-    {failed && <p role="status">{page === 3 ? '光色相同時直立方塊消散，可以跳過坑洞；光色不同會撞上方塊並掉落。' : page === 1 ? '紅燈開啟：紅地板可站；紅燈關閉：地板透明，米洛會掉落。' : page === 2 ? '紅燈和藍燈一起開啟，紫色地板就能站立。' : '跟著米洛一路向右，碰到傳送門就能離開。'}</p>}
+    {failed && <p role="status">{page === 3 ? '光色相同時直立方塊淡化，可以跳過坑洞；光色不同會撞上方塊並掉落。' : page === 1 ? '紅燈開啟：紅地板可站；紅燈關閉：地板透明，米洛會掉落。' : page === 2 ? '紅燈和藍燈一起開啟，紫色地板就能站立。' : '跟著米洛一路向右，碰到傳送門就能離開。'}</p>}
   </div>;
 }

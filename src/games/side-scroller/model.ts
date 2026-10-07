@@ -11,7 +11,7 @@ export interface Obstacle { x: number; y: number; w: number; h: number; color: W
 export interface Input { jump: boolean; color?: WorldColor | null }
 export type Difficulty = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Level {
-  id: 'intro' | 'platforms' | 'fusion' | 'challenge' | 'crossroads'; name: string; difficulty: Difficulty;
+  id: 'intro' | 'platforms' | 'fusion' | 'challenge' | 'crossroads' | 'gauntlet'; name: string; difficulty: Difficulty;
   width: number; platforms: readonly Platform[]; checkpoints: readonly number[];
   terrain?: 'stone'; obstacles?: readonly Obstacle[];
   exit: { x: number; y: number; radius: number };
@@ -19,7 +19,7 @@ export interface Level {
 export const BODY = { half: 19, height: 60 };
 export const PHYSICS = { speed: 280, gravity: 1800, jump: 680, maxFall: 1000, grace: 0.1, buffer: 0.12, step: 1 / 120 };
 export const GHOST_ALPHA = 0.32;
-export const OBSTACLE_GHOST_ALPHA = 0;
+export const OBSTACLE_GHOST_ALPHA = 0.3;
 export function blocksPath(obstacle: Obstacle, color: WorldColor | null): boolean { return obstacle.color !== color; }
 export function obstacleAlpha(obstacle: Obstacle, color: WorldColor | null): number { return blocksPath(obstacle, color) ? 1 : OBSTACLE_GHOST_ALPHA; }
 const ground = (x: number, y: number, w: number, endY = y, color?: WorldColor): Platform => ({ x, y, w, endY, color, h: 672 - y, kind: 'ground' });
@@ -149,7 +149,43 @@ export const LEVEL_FOUR: Level = {
     { x: 13504, y: 224, w: 64, h: 256, color: 'purple' },
   ],
 };
-export const LEVELS: readonly Level[] = [LEVEL_ZERO, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_FOUR];
+export const LEVEL_FIVE: Level = {
+  id: 'gauntlet', name: '晶光試煉', difficulty: 5, terrain: 'stone', width: 15232,
+  checkpoints: [160, 1792, 3296, 5760, 7360, 10752, 12640, 14848], exit: { x: 15040, y: 408, radius: 54 },
+  platforms: [
+    // The same wall lesson now leads into adjoining floors that require an extra jump and lamp change.
+    ground(0, 480, 576), ground(576, 480, 192, 480, 'blue'), ground(768, 480, 256),
+    ground(1216, 480, 256, 480, 'red'), ground(1472, 480, 256, 480, 'blue'), ground(1728, 480, 256),
+    ground(2176, 480, 256, 480, 'blue'), ground(2432, 480, 256, 480, 'purple'), ground(2688, 480, 256),
+    ground(3136, 480, 704),
+    // Preserve the short, independently selectable two-lane sections from the four-star course.
+    bridge(3840, 480, 448), bridge(4416, 480, 448),
+    bridge(3840, 368, 192), bridge(4160, 304, 192, 'blue'),
+    bridge(4480, 304, 192, 'purple'), bridge(4800, 368, 192, 'blue'),
+    // Shorter neutral runs increase the frequency of wall crossings without changing forward speed.
+    ground(4992, 480, 384), ground(5568, 480, 384), ground(6144, 480, 256),
+    ground(6400, 480, 256, 480, 'red'), ground(6656, 480, 320),
+    ground(7168, 480, 320), ground(7488, 480, 256, 480, 'red'), ground(7744, 480, 128),
+    ground(7872, 480, 512, 416), ground(8384, 416, 448),
+    bridge(8832, 416, 448), bridge(9408, 416, 448),
+    bridge(8832, 304, 192), bridge(9152, 240, 192, 'red'),
+    bridge(9472, 240, 192, 'purple'), bridge(9792, 304, 192, 'red'),
+    ground(9984, 416, 448), ground(10624, 416, 384), ground(11200, 416, 64),
+    ground(11264, 416, 512, 480), ground(11776, 480, 256, 480, 'blue'), ground(12032, 480, 256),
+    ground(12480, 480, 384), ground(13056, 480, 384), ground(13632, 480, 320),
+    ground(14144, 480, 384), ground(14720, 480, 512),
+  ],
+  obstacles: [
+    ...LEVEL_FOUR.obstacles!,
+    { x: 5440, y: 224, w: 64, h: 256, color: 'red' },
+    { x: 6016, y: 224, w: 64, h: 256, color: 'blue' },
+    { x: 10496, y: 160, w: 64, h: 256, color: 'blue' },
+    { x: 11072, y: 160, w: 64, h: 256, color: 'purple' },
+    { x: 14016, y: 224, w: 64, h: 256, color: 'blue' },
+    { x: 14592, y: 224, w: 64, h: 256, color: 'red' },
+  ],
+};
+export const LEVELS: readonly Level[] = [LEVEL_ZERO, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_FOUR, LEVEL_FIVE];
 export const levelSeconds = (level: Level) => (level.exit.x - level.checkpoints[0]) / PHYSICS.speed;
 // The existing three-star course remains the default for callers without an explicit level.
 export const WORLD_WIDTH = LEVEL_THREE.width, PLATFORMS = LEVEL_THREE.platforms, CHECKPOINTS = LEVEL_THREE.checkpoints;
