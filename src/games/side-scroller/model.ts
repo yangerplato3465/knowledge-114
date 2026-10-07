@@ -8,12 +8,18 @@ export function toggleColor(color: WorldColor | null, button: ColorButton): Worl
 }
 export interface Platform { x: number; y: number; w: number; h: number; kind: 'ground' | 'bridge'; endY?: number; color?: WorldColor }
 export interface Obstacle { x: number; y: number; w: number; h: number; color: WorldColor }
+export const GEM_COLORS = ['yellow', 'green', 'red', 'blue'] as const;
+export type GemColor = typeof GEM_COLORS[number];
+export const GEM_NAMES: Record<GemColor, string> = { yellow: '黃', green: '綠', red: '紅', blue: '藍' };
+export interface Gem { color: GemColor; x: number; y: number }
+export const GEM_RADIUS = 18;
 export interface Input { jump: boolean; color?: WorldColor | null }
 export type Difficulty = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Level {
   id: 'intro' | 'platforms' | 'fusion' | 'challenge' | 'crossroads' | 'gauntlet'; name: string; difficulty: Difficulty;
   width: number; platforms: readonly Platform[]; checkpoints: readonly number[];
   terrain?: 'stone'; obstacles?: readonly Obstacle[];
+  gems: readonly Gem[];
   exit: { x: number; y: number; radius: number };
 }
 export const BODY = { half: 19, height: 60 };
@@ -27,6 +33,7 @@ const bridge = (x: number, y: number, w: number, color?: WorldColor): Platform =
 export const LEVEL_THREE: Level = {
   id: 'challenge', name: '深層小徑', difficulty: 3, width: 13632,
   checkpoints: [160, 2624, 5056, 7488, 11136], exit: { x: 13408, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1900, y: 382 }, { color: 'green', x: 4890, y: 386 }, { color: 'red', x: 8300, y: 478 }, { color: 'blue', x: 11880, y: 450 }],
   platforms: [
   // Easy opening: isolated red floors, normal ground between them, and one small gap.
   ground(0, 480, 640), ground(640, 480, 256, 480, 'red'), ground(896, 480, 128), ground(1152, 480, 384), ground(1536, 480, 512, 384),
@@ -54,6 +61,7 @@ export const LEVEL_THREE: Level = {
 export const LEVEL_ZERO: Level = {
   id: 'intro', name: '初探禁書庫', difficulty: 0, width: 8832,
   checkpoints: [160, 1984, 4480, 6912], exit: { x: 8608, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1980, y: 450 }, { color: 'green', x: 3300, y: 386 }, { color: 'red', x: 5500, y: 450 }, { color: 'blue', x: 7600, y: 450 }],
   platforms: [
     // Long normal approaches teach single colors before any combined light.
     ground(0, 480, 1024), ground(1024, 480, 256, 480, 'red'), ground(1280, 480, 448),
@@ -72,6 +80,7 @@ export const LEVEL_ZERO: Level = {
 export const LEVEL_ONE: Level = {
   id: 'platforms', name: '浮空書徑', difficulty: 1, width: 10112,
   checkpoints: [160, 2656, 4864, 6976, 9408], exit: { x: 9888, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1840, y: 450 }, { color: 'green', x: 3880, y: 450 }, { color: 'red', x: 6000, y: 322 }, { color: 'blue', x: 8500, y: 450 }],
   platforms: [
     // Shorter normal intervals increase light decisions without adjoining colored floors.
     ground(0, 480, 704), ground(704, 480, 256, 480, 'red'), ground(960, 480, 448),
@@ -95,6 +104,7 @@ export const LEVEL_ONE: Level = {
 export const LEVEL_TWO: Level = {
   id: 'fusion', name: '雙光迴廊', difficulty: 2, width: 12160,
   checkpoints: [160, 2656, 4864, 7072, 10208], exit: { x: 11936, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1840, y: 450 }, { color: 'green', x: 5000, y: 322 }, { color: 'red', x: 7800, y: 450 }, { color: 'blue', x: 10450, y: 450 }],
   platforms: [
     // Keep the opening and platform lesson familiar, with one-star color frequency.
     ground(0, 480, 704), ground(704, 480, 256, 480, 'red'), ground(960, 480, 448),
@@ -118,6 +128,7 @@ export const LEVEL_TWO: Level = {
 export const LEVEL_FOUR: Level = {
   id: 'crossroads', name: '晶石岔路', difficulty: 4, terrain: 'stone', width: 14336,
   checkpoints: [160, 1376, 3296, 5760, 7360, 10752, 12640], exit: { x: 14144, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1800, y: 450 }, { color: 'green', x: 4608, y: 274 }, { color: 'red', x: 8928, y: 274 }, { color: 'blue', x: 12672, y: 450 }],
   platforms: [
     // Three isolated wall crossings teach the inverse rule on neutral landings.
     ground(0, 480, 1024), ground(1216, 480, 768), ground(2176, 480, 768), ground(3136, 480, 704),
@@ -152,6 +163,7 @@ export const LEVEL_FOUR: Level = {
 export const LEVEL_FIVE: Level = {
   id: 'gauntlet', name: '晶光試煉', difficulty: 5, terrain: 'stone', width: 15232,
   checkpoints: [160, 1792, 3296, 5760, 7360, 10752, 12640, 14848], exit: { x: 15040, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1820, y: 450 }, { color: 'green', x: 4608, y: 274 }, { color: 'red', x: 8928, y: 274 }, { color: 'blue', x: 13300, y: 450 }],
   platforms: [
     // The same wall lesson now leads into adjoining floors that require an extra jump and lamp change.
     ground(0, 480, 576), ground(576, 480, 192, 480, 'blue'), ground(768, 480, 256),
@@ -206,13 +218,20 @@ export interface State {
   coyote: number; buffer: number; jumpHeld: boolean; checkpoint: number;
   completed: boolean; falls: number; color: WorldColor | null;
   knockedDown: boolean;
+  collectedGems: readonly GemColor[];
 }
 export function surfaceY(p: Platform, x: number): number {
   return p.y + ((p.endY ?? p.y) - p.y) * Math.max(0, Math.min(1, (x - p.x) / p.w));
 }
 export function initialState(level: Level = LEVEL_THREE): State {
   return { x: level.checkpoints[0], y: checkpointY(0, level), vx: PHYSICS.speed, vy: 0, grounded: true,
-    coyote: PHYSICS.grace, buffer: 0, jumpHeld: false, checkpoint: 0, completed: false, falls: 0, color: null, knockedDown: false };
+    coyote: PHYSICS.grace, buffer: 0, jumpHeld: false, checkpoint: 0, completed: false, falls: 0, color: null, knockedDown: false, collectedGems: [] };
+}
+
+export function touchesGem(state: Pick<State, 'x' | 'y'>, gem: Gem): boolean {
+  const x = Math.max(state.x - BODY.half, Math.min(gem.x, state.x + BODY.half));
+  const y = Math.max(state.y - BODY.height, Math.min(gem.y, state.y));
+  return (x - gem.x) ** 2 + (y - gem.y) ** 2 <= GEM_RADIUS ** 2;
 }
 
 /** Sweep the feet through the wall expanded by the player's body; all four faces block. */
@@ -286,6 +305,10 @@ export function advance(state: State, input: Input, dt: number, platforms: reado
   if (landingY < Infinity) { s.y = landingY; s.vy = 0; s.grounded = true; }
   // A new press just before landing is consumed once; holding never causes repeated jumps.
   if (s.grounded && s.buffer > 0) { s.vy = -PHYSICS.jump; s.grounded = false; s.buffer = 0; s.coyote = 0; }
+  if (!s.knockedDown) {
+    const found = level.gems.filter(gem => !s.collectedGems.includes(gem.color) && touchesGem(s, gem));
+    if (found.length) s.collectedGems = [...s.collectedGems, ...found.map(gem => gem.color)];
+  }
   level.checkpoints.forEach((x, index) => { if (s.grounded && s.x >= x && index > s.checkpoint) s.checkpoint = index; });
   if (s.y > 820) {
     s.x = level.checkpoints[s.checkpoint]; s.y = checkpointY(s.checkpoint, level); s.vx = PHYSICS.speed; s.vy = 0; s.grounded = true;

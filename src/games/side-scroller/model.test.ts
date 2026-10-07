@@ -1,8 +1,41 @@
 import { describe, expect, it } from 'vitest';
-import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
+import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GEM_COLORS, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, LEVELS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, touchesGem, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
+describe('四顆寶石彩蛋', () => {
+  it('每關四種顏色各一顆，四段路各有一顆，位置在可達平台上方', () => {
+    for (const level of LEVELS) {
+      expect(level.gems.map(gem => gem.color)).toEqual([...GEM_COLORS]);
+      const start = level.checkpoints[0], length = level.exit.x - start;
+      level.gems.forEach((gem, index) => {
+        expect((gem.x - start) / length).toBeGreaterThan(index / 4);
+        expect((gem.x - start) / length).toBeLessThan((index + 1) / 4);
+        expect(level.platforms.some(p => gem.x >= p.x && gem.x <= p.x + p.w && touchesGem({ x: gem.x, y: surfaceY(p, gem.x) }, gem))).toBe(true);
+      });
+    }
+  });
+  it('碰到才收集，不需配合燈色；同一顆不重複收集且不修改舊狀態', () => {
+    const gem = { color: 'yellow' as const, x: 180, y: 450 };
+    const level = { ...LEVEL_ZERO, gems: [gem] };
+    const start = { ...initialState(level), color: 'blue' as const };
+    const collected = advance(start, neutral, PHYSICS.step, floor, level);
+    expect(start.collectedGems).toEqual([]); expect(collected.collectedGems).toEqual(['yellow']);
+    expect(advance(collected, neutral, PHYSICS.step, floor, level).collectedGems).toEqual(['yellow']);
+    expect(touchesGem({ x: gem.x, y: 380 }, gem)).toBe(false);
+    expect(touchesGem({ x: gem.x + 80, y: 480 }, gem)).toBe(false);
+    expect(advance({ ...start, knockedDown: true }, neutral, PHYSICS.step, floor, level).collectedGems).toEqual([]);
+  });
+  it('重生與換燈保留收藏；新冒險清空，沒集齊仍能碰出口通關', () => {
+    const collected = { ...initialState(LEVEL_ZERO), collectedGems: ['green'] as const, y: 830, grounded: false };
+    const respawn = advance(collected, neutral, PHYSICS.step, LEVEL_ZERO.platforms, LEVEL_ZERO);
+    expect(respawn.falls).toBe(1); expect(respawn.collectedGems).toEqual(['green']);
+    expect(selectWorldColor(respawn, 'purple', LEVEL_ZERO.platforms).collectedGems).toEqual(['green']);
+    expect(initialState(LEVEL_ZERO).collectedGems).toEqual([]); expect(initialState(LEVEL_FIVE).collectedGems).toEqual([]);
+    const finish = advance({ ...initialState(LEVEL_ZERO), x: LEVEL_ZERO.exit.x }, neutral, PHYSICS.step, LEVEL_ZERO.platforms, LEVEL_ZERO);
+    expect(finish.completed).toBe(true); expect(finish.collectedGems).toEqual([]);
+  });
+});
 function simulate(start: State, input: Input, seconds: number, platforms: readonly Platform[] = floor) {
   let state = start;
   for (let i = 0; i < Math.round(seconds / PHYSICS.step); i++) state = advance(state, input, PHYSICS.step, platforms);
@@ -54,6 +87,7 @@ describe('零星入門跑道', () => {
         state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, LEVEL_ZERO.platforms, LEVEL_ZERO); seconds += PHYSICS.step;
       }
       expect(state.falls, `時機偏移 ${offset}`).toBe(0); expect(state.completed).toBe(true);
+      expect(new Set(state.collectedGems)).toEqual(new Set(GEM_COLORS));
       expect(used.size).toBe(2); expect(seconds).toBeGreaterThan(29); expect(seconds).toBeLessThan(31);
       expect(Math.abs(seconds - levelSeconds(LEVEL_ZERO))).toBeLessThan(0.4);
       expect(state.checkpoint).toBe(LEVEL_ZERO.checkpoints.length - 1);
@@ -93,6 +127,7 @@ describe('一星浮空書徑', () => {
   it('三次一段跳能站遍跨洞平台，約35秒通關，前後時機皆有餘裕', () => {
     for (const offset of [-16, 0, 16]) {
       const result = run(LEVEL_ONE.platforms, offset);
+      expect(new Set(result.state.collectedGems)).toEqual(new Set(GEM_COLORS));
       expect(result.state.falls, `時機偏移 ${offset}`).toBe(0); expect(result.state.completed).toBe(true);
       expect(result.used.size).toBe(3); expect(result.landed.size).toBe(2);
       expect(result.seconds).toBeGreaterThan(34); expect(result.seconds).toBeLessThan(36);
@@ -140,6 +175,7 @@ describe('二星雙光迴廊', () => {
   it('一段跳配合單燈切換能在約42秒無失誤通關，兩處皆落在第二色塊', () => {
     for (const offset of [-16, 0, 16]) {
       const result = run(offset);
+      expect(new Set(result.state.collectedGems)).toEqual(new Set(GEM_COLORS));
       expect(result.state.falls, `時機偏移 ${offset}`).toBe(0); expect(result.state.completed).toBe(true);
       expect(result.used.size).toBe(5); expect(result.pairLandings.size).toBe(2);
       expect(result.seconds).toBeGreaterThan(41); expect(result.seconds).toBeLessThan(43);
@@ -175,6 +211,9 @@ describe('四星晶石岔路', () => {
   it('上下兩路皆可選；四種組合與前後偏移都能約50秒無失誤通關', () => {
     for (const first of [false, true]) for (const second of [false, true]) for (const offset of [-12, 0, 12]) {
       const result = run(first, second, offset);
+      expect(result.state.collectedGems.includes('green')).toBe(first);
+      expect(result.state.collectedGems.includes('red')).toBe(second);
+      expect(result.state.collectedGems).toContain('yellow'); expect(result.state.collectedGems).toContain('blue');
       expect(result.state.falls, `路線 ${first}/${second}，偏移 ${offset}`).toBe(0); expect(result.state.completed).toBe(true);
       expect(result.seconds).toBeGreaterThan(49); expect(result.seconds).toBeLessThan(51);
       expect(Math.abs(result.seconds - levelSeconds(LEVEL_FOUR))).toBeLessThan(0.4);
@@ -269,6 +308,9 @@ describe('五星晶光試煉', () => {
   it('四種上下路組合、前後起跳偏移皆可約53秒通關，實際跳躍頻率高於四星', () => {
     for (const first of [false, true]) for (const second of [false, true]) for (const offset of [-12, 0, 12]) {
       const result = run(first, second, offset);
+      expect(result.state.collectedGems.includes('green')).toBe(first);
+      expect(result.state.collectedGems.includes('red')).toBe(second);
+      expect(result.state.collectedGems).toContain('yellow'); expect(result.state.collectedGems).toContain('blue');
       expect(result.state.falls, `路線 ${first}/${second}，偏移 ${offset}，位置 ${result.state.x}`).toBe(0);
       expect(result.state.completed).toBe(true);
       expect(result.seconds).toBeGreaterThan(52); expect(result.seconds).toBeLessThan(54);
@@ -357,6 +399,7 @@ describe('固定向前的一段跳世界', () => {
   });
   it('一段跳配合切色能站遍必要平台，無失誤通關時間為 40–50 秒', () => {
     const { state: s, seconds, landed, used } = runRoute();
+    expect(new Set(s.collectedGems)).toEqual(new Set(GEM_COLORS));
     expect(s.completed).toBe(true); expect(s.falls).toBe(0); expect(used.size).toBe(routeJumps.length);
     expect(landed.size).toBe(PLATFORMS.filter(p => p.kind === 'bridge').length);
     expect(s.checkpoint).toBe(CHECKPOINTS.length - 1);

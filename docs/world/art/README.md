@@ -12,7 +12,7 @@
 | 尺寸、格位、錨點、留白、產圖提示與生成紀錄 | [製作清單](#製作清單與重建)，不在多個 MD 重複抄寫規格 |
 | 實際載入的 WebP | [工坊 display](../../../assets/images/magic-workshop/display/)；程式使用原 URL，未複製第二份共用素材 |
 | 偵探共用圖示 | [圖示來源與輸出](manifests/detective-icons-manifest.json)；黃金貓頭鷹案件共用放大鏡與拖曳手勢 |
-| 橫向遊戲的米洛與旋轉終點 | [動畫製作清單](manifests/side-scroller-sprites-manifest.json)；米洛原稿在 `characters/milo/`，傳送門原稿在 `side-scroller/`；[手冊外框](side-scroller/manual-frame-manifest.json)、[難度星星](side-scroller/difficulty-star-manifest.json)、[Kenney 觸控按鈕](side-scroller/touch-controls-manifest.json) |
+| 橫向遊戲的米洛與旋轉終點 | [動畫製作清單](manifests/side-scroller-sprites-manifest.json)；米洛原稿在 `characters/milo/`，傳送門原稿在 `side-scroller/`；[手冊外框](side-scroller/manual-frame-manifest.json)、[難度星星](side-scroller/difficulty-star-manifest.json)、[Kenney 觸控按鈕](side-scroller/touch-controls-manifest.json)、[四種寶石](../../games/side-scroller/design.md#寶石彩蛋) |
 
 **原稿與執行圖分工**：此資料夾保留完整原圖供後續產製，不隨網站發布。中間切幀不另存入美術庫，加工直接使用完整母圖。PNG 檔名沿用生成版本便於追溯，人物資料夾與圖鑑提供可讀名稱。WebP 是縮圖／切幀的遊戲素材，不等於另一份原稿。歷史版本有不同像素與構圖，保留作來源比對，不能因版本號大就直接更換遊戲圖。
 

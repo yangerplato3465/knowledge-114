@@ -1,12 +1,12 @@
 import type { App, Node, Sprite, Texture } from '../magic-workshop/scene-types';
-import { advance, GHOST_ALPHA, initialState, LEVEL_THREE, obstacleAlpha, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Obstacle, type Platform, type WorldColor } from './model';
+import { advance, GEM_COLORS, GHOST_ALPHA, initialState, LEVEL_THREE, obstacleAlpha, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type GemColor, type Level, type Obstacle, type Platform, type WorldColor } from './model';
 
 import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type ArtPixi } from './art';
 import { CONTROL_IMAGES, createFrameControls, createTouchControls, type ControlId, type ControlPixi, type TouchControls } from './controls';
 
 export type SceneMode = 'preview' | 'play';
 type Action = 'jump';
-export interface SceneStatus { mode: SceneMode; paused: boolean; completed: boolean; checkpoint: number; falls: number; lap: number; color: WorldColor | null }
+export interface SceneStatus { mode: SceneMode; paused: boolean; completed: boolean; checkpoint: number; falls: number; lap: number; color: WorldColor | null; collectedGems: readonly GemColor[] }
 export interface SideScrollerScene {
   hold(action: Action, held: boolean, source: string): void;
   tap(action: Action): void;
@@ -38,13 +38,14 @@ const ASSETS = ['background_clouds', 'background_fade_hills', 'background_fade_t
   'terrain_sand_block_top', 'terrain_sand_block_center', 'terrain_sand_horizontal_left',
   'terrain_sand_horizontal_middle', 'terrain_sand_horizontal_right',
   'terrain_stone_block_top', 'terrain_stone_block_center', 'terrain_stone_horizontal_left',
-  'terrain_stone_horizontal_middle', 'terrain_stone_horizontal_right', 'block_red', 'block_blue'] as const;
+  'terrain_stone_horizontal_middle', 'terrain_stone_horizontal_right', 'block_red', 'block_blue',
+  'gem_yellow', 'gem_green', 'gem_red', 'gem_blue'] as const;
 
 export async function createSideScroller(host: HTMLElement, signal: AbortSignal, onStatus: (status: SceneStatus) => void, level: Level = LEVEL_THREE): Promise<SideScrollerScene> {
   const { platforms: PLATFORMS, width: WORLD_WIDTH, exit: EXIT } = level;
   const stone = level.terrain === 'stone';
   const terrain = stone ? 'stone' : 'sand';
-  const assets = ASSETS.filter(name => name.startsWith('background_') || (name.startsWith(`terrain_${terrain}_`)) || (stone && name.startsWith('block_')));
+  const assets = ASSETS.filter(name => name.startsWith('background_') || name.startsWith('gem_') || (name.startsWith(`terrain_${terrain}_`)) || (stone && name.startsWith('block_')));
   const P = await import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as ColorPixi;
   const [images, spriteImages, controlImages, starImage] = await Promise.all([
     Promise.all(assets.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.png`, signal))),
@@ -162,6 +163,12 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     }
     const portal = art.create('portal'); portal.scale.set(0.8); portal.position.set(EXIT.x, EXIT.y); neutralWorld.addChild(portal);
     const milo = createMilo(P, art, neutralWorld), player = milo.sprite; player.visible = false;
+    const gemWorld = gameRoot.addChild(new P.Container());
+    const gemViews = level.gems.map(gem => {
+      const icon = gemWorld.addChild(new P.Sprite(textures[`gem_${gem.color}`]));
+      icon.anchor.set(0.5); icon.position.set(gem.x, gem.y); icon.width = icon.height = 64;
+      return { gem, icon };
+    });
     let tutorialOpen = true, finishAge = 0;
     let state = initialState(level), previous = state, accumulator = 0, camera = 0, viewportWidth = 1067, previewTravel = 0;
     let mode: SceneMode = 'preview', paused = false, destroyed = false, lap = 1, lastStatus = '';
@@ -170,6 +177,14 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     let reduced = motion.matches;
     const playfield = host.parentElement!.querySelector<HTMLElement>('.ss-playfield')!;
     controls = createTouchControls(P, controlImages, gameRoot, playfield);
+    const gemHud = gameRoot.addChild(new P.Container());
+    const gemHudPanel = gemHud.addChild(new P.Graphics());
+    const gemHudTarget = playfield.querySelector<HTMLElement>('.ss-gems')!;
+    const gemHudViews = GEM_COLORS.map(color => {
+      const target = gemHudTarget.querySelector<HTMLElement>(`[data-gem="${color}"]`)!;
+      const icon = gemHud.addChild(new P.Sprite(textures[`gem_${color}`])); icon.anchor.set(0.5);
+      return { color, target, icon };
+    });
     frameControls = createFrameControls(P, starImage, app.stage, host, playfield);
     const ui = controls;
     const backgroundLayers = [
@@ -178,13 +193,16 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       { node: trees, name: 'background_fade_trees' as const, width: 640, height: 340, y: 300, factor: 0.38, sprites: [] as Sprite[] },
     ];
     const emit = () => {
-      const status = { mode, paused, completed: mode === 'play' && state.completed && finishAge >= 0.6, checkpoint: state.checkpoint, falls: state.falls, lap, color: state.color };
+      const status = { mode, paused, completed: mode === 'play' && state.completed && finishAge >= 0.6, checkpoint: state.checkpoint, falls: state.falls, lap, color: state.color, collectedGems: state.collectedGems };
       const serialized = JSON.stringify(status);
       if (serialized !== lastStatus) { lastStatus = serialized; onStatus(status); }
     };
     const release = () => { held.clear(); jumpPressed = false; ui.clear(); if (tapTimer !== undefined) window.clearTimeout(tapTimer); tapTimer = undefined; };
     const draw = () => {
       world.x = neutralWorld.x = -camera;
+      gemWorld.x = -camera;
+      for (const { gem, icon } of gemViews) icon.visible = !state.collectedGems.includes(gem.color) && gem.x + 32 >= camera && gem.x - 32 <= camera + viewportWidth;
+      for (const { color, icon } of gemHudViews) icon.alpha = state.collectedGems.includes(color) ? 1 : 0.25;
       syncTerrainVisibility(terrainNodes, camera, viewportWidth, state.color);
       backgroundLayers.forEach(layer => layer.sprites.forEach((s, i) => {
         s.x = i * layer.width - (camera * (reduced ? 0 : layer.factor)) % layer.width;
@@ -223,6 +241,13 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
         }
       }
       ui.layout();
+      const hudBounds = gemHudTarget.getBoundingClientRect();
+      gemHudPanel.clear().roundRect((hudBounds.left - field.left) * scale, (hudBounds.top - field.top) * scale, hudBounds.width * scale, hudBounds.height * scale, 10 * scale).fill({ color: 0xfff3d9, alpha: 0.8 });
+      for (const { target, icon } of gemHudViews) {
+        const rect = target.getBoundingClientRect();
+        icon.position.set((rect.left - field.left + rect.width / 2) * scale, (rect.top - field.top + rect.height / 2) * scale);
+        icon.width = rect.width * scale; icon.height = rect.height * scale;
+      }
       frameControls!.layout();
       backgroundLayers.forEach(layer => {
         layer.node.removeChildren().forEach(node => node.destroy());

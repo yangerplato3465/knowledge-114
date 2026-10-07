@@ -13,7 +13,7 @@ const fakeScene = (): SideScrollerScene => ({ hold: vi.fn(), tap: vi.fn(), setMo
 it('開始入口只在巡覽中央，功能列只接受點擊且焦點回遊戲，沒有暫停或重啟操作', async () => {
   const created = fakeScene();
   vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
-    created.setMode = vi.fn(mode => onStatus({ mode, paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null }));
+    created.setMode = vi.fn(mode => onStatus({ mode, paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] }));
     return created;
   });
   render(<ThemeProvider><SideScroller /></ThemeProvider>);
@@ -48,7 +48,7 @@ it('開始入口只在巡覽中央，功能列只接受點擊且焦點回遊戲�
 it('兩按鈕可同時開啟紫色並獨立關閉；重看手冊只凍結場景、不重啟冒險', async () => {
   const created = fakeScene();
   vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
-    let status: SceneStatus = { mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null };
+    let status: SceneStatus = { mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] };
     created.toggleColor = vi.fn(button => { status = { ...status, color: toggleColor(status.color, button) }; onStatus(status); });
     created.setMode = vi.fn(mode => { status = { ...status, mode, paused: false }; onStatus(status); });
     return created;
@@ -146,10 +146,10 @@ it('巡覽開始前先置中，跌落重生不顯示開始入口；切換難度�
   stage.scrollIntoView = vi.fn();
   created.setMode = vi.fn(mode => {
     expect(stage.scrollIntoView).toHaveBeenCalledOnce(); expect(document.activeElement).toBe(stage);
-    emit({ mode, paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null });
+    emit({ mode, paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] });
   });
   fireEvent.click(screen.getByRole('button', { name: '開始冒險' }));
-  act(() => emit({ mode: 'play', paused: false, completed: false, checkpoint: 2, falls: 1, lap: 1, color: null }));
+  act(() => emit({ mode: 'play', paused: false, completed: false, checkpoint: 2, falls: 1, lap: 1, color: null, collectedGems: [] }));
   expect(screen.queryByRole('button', { name: '開始冒險' })).toBeNull();
   expect(created.setMode).toHaveBeenCalledOnce();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /5 星關卡/ })); });
@@ -189,12 +189,33 @@ it.each([[4, '晶石岔路'], [5, '晶光試煉']] as const)('選 %i 星 %s 直�
   expect(screen.getByRole('heading', { name: '歡迎來到魔法禁書庫' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: '前往第 4 頁' }));
   expect(screen.getByRole('heading', { name: '淡化方塊，選擇岔路' })).toBeTruthy();
-  expect(screen.getByText(/方塊與地板規則相反/)).toBeTruthy();
-  expect(screen.getByText(/沒有點燈時，直立方塊會一直存在/)).toBeTruthy();
-  expect(screen.getByText(/變成半透明、可以穿過/)).toBeTruthy();
+  expect(screen.getByText(/點亮同色燈就能穿過/)).toBeTruthy();
+  expect(screen.getByText(/沒點對顏色，撞上就會掉落/)).toBeTruthy();
+  expect(screen.getByText(/兩條路都通往出口/)).toBeTruthy();
   fireEvent.click(screen.getAllByRole('button', { name: '開始冒險' }).at(-1)!);
   expect(created.setTutorial).toHaveBeenLastCalledWith(false); expect(created.setMode).toHaveBeenLastCalledWith('play');
   expect(screen.queryByRole('dialog')).toBeNull();
+});
+it('四種寶石收藏同步收集狀態，切關清空；手冊每頁皆不介紹彩蛋', async () => {
+  let emit!: (status: SceneStatus) => void;
+  vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => { emit = onStatus; return fakeScene(); });
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  for (let page = 0; page < 4; page++) {
+    expect(screen.getByRole('dialog').textContent).not.toMatch(/寶石|收集|蒐集/);
+    expect(document.querySelector('#ss-manual-body')!.textContent!.length).toBeLessThan(70);
+    expect(document.querySelector('.ss-manual-hint')!.textContent!.length).toBeLessThan(70);
+    if (page < 3) fireEvent.click(screen.getByRole('button', { name: '下一頁' }));
+  }
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
+  const gems = screen.getByRole('group', { name: '寶石收藏' });
+  expect(within(gems).getAllByRole('img')).toHaveLength(4);
+  expect(within(gems).getByRole('img', { name: '黃寶石：未收集' })).toBeTruthy();
+  act(() => emit({ mode: 'play', paused: false, completed: false, checkpoint: 1, falls: 1, lap: 1, color: null, collectedGems: ['yellow', 'red'] }));
+  expect(within(gems).getByRole('img', { name: '黃寶石：已收集' })).toBeTruthy();
+  expect(within(gems).getByRole('img', { name: '紅寶石：已收集' })).toBeTruthy();
+  expect(within(gems).getByRole('img', { name: '綠寶石：未收集' })).toBeTruthy();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: /5 星關卡/ })); });
+  expect(within(gems).getAllByRole('img', { name: /未收集/ })).toHaveLength(4);
 });
 it('六個關卡選項只顯示難度與名稱，畫面及輔助科技名稱都不包含秒數', async () => {
   vi.mocked(createSideScroller).mockResolvedValue(fakeScene());
@@ -213,7 +234,7 @@ it('六個關卡選項只顯示難度與名稱，畫面及輔助科技名稱都�
 it('三個觸控區依序為跳躍、紅燈、藍燈；多指切燈不會放開跳躍，取消接觸會釋放各自按壓', async () => {
   const created = fakeScene();
   vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
-    created.setMode = vi.fn(mode => onStatus({ mode, paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null }));
+    created.setMode = vi.fn(mode => onStatus({ mode, paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] }));
     return created;
   });
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});

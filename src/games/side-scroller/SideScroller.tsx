@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { SiteHeader } from '../../components/SiteHeader';
 import { ActivityTrail } from '../../components/ActivityTrail';
 import { createSideScroller, type SceneStatus, type SideScrollerScene } from './scene';
-import { isLightOn, LEVELS, LEVEL_ZERO, type ColorButton } from './model';
+import { GEM_COLORS, GEM_NAMES, isLightOn, LEVELS, LEVEL_ZERO, type ColorButton } from './model';
 import './side-scroller.css';
 import { Tutorial } from './Tutorial';
 
@@ -15,12 +15,12 @@ export function SideScroller() {
   const manualRef = useRef(true); manualRef.current = manual;
   const [load, setLoad] = useState<'loading' | 'ready' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0), [fullscreen, setFullscreen] = useState(false);
-  const [status, setStatus] = useState<SceneStatus>({ mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null });
+  const [status, setStatus] = useState<SceneStatus>({ mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] });
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
     setLoad('loading');
-    setStatus({ mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null });
+    setStatus({ mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] });
     const timeout = window.setTimeout(() => { controller.abort(); if (active) setLoad('error'); }, 20000);
     void createSideScroller(host.current!, controller.signal, next => { if (active && !controller.signal.aborted) setStatus(next); }, level).then(created => {
       if (!active || controller.signal.aborted) { created.destroy(); return; }
@@ -90,6 +90,9 @@ export function SideScroller() {
         {load !== 'ready' && <div className="ss-loading" role="status"><p>{load === 'loading' ? '正在打開魔法禁書庫…' : '場景載入失敗，請重新載入。'}</p>
           {load === 'error' && <button type="button" onClick={() => setAttempt(value => value + 1)}>重新載入</button>}</div>}
         <div className="ss-playfield">
+        <div className="ss-gems" role="group" aria-label="寶石收藏">
+          {GEM_COLORS.map(color => <span key={color} data-gem={color} role="img" aria-label={`${GEM_NAMES[color]}寶石：${status.collectedGems.includes(color) ? '已收集' : '未收集'}`} />)}
+        </div>
         <button data-frame-control data-frame-primary tabIndex={-1} type="button" className="ss-preview-start"
           hidden={!preview || manual || load !== 'ready'} onPointerDown={event => { if (event.button === 0) event.preventDefault(); }} onClick={start}>
           <span className="ss-menu-label">開始冒險</span>
@@ -122,6 +125,6 @@ export function SideScroller() {
       </div>
       {manual && load === 'ready' && <Tutorial initial={!started} onClose={closeManual} onStart={start} />}
       <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才淡化；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}可開啟玩法手冊翻閱示範。</p>
-      <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
+      <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.collectedGems.length > 0 ? `寶石 ${status.collectedGems.length} / 4。` : ''}{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
 }

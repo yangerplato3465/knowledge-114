@@ -17,6 +17,8 @@
 .ss-difficulty strong { font-size: 20px; line-height: 1; }
 .ss-stage { --ss-menu-height: 136px; position: relative; container-type: inline-size; width: 100%; aspect-ratio: 16 / 11; border-radius: 20px; overflow: hidden; border: 3px solid #665064; background: #c3e3ff; box-shadow: 0 10px 32px var(--frame-shadow); }
 .ss-playfield { position: absolute; inset: var(--ss-menu-height) 0 0; pointer-events: none; }
+.ss-gems { position: absolute; top: 12px; left: 12px; display: flex; padding: 2px 4px; gap: 2px; pointer-events: none; }
+.ss-gems [data-gem] { width: clamp(40px, 4.5cqw, 52px); height: clamp(40px, 4.5cqw, 52px); }
 .ss-host, .ss-host canvas { display: block; width: 100%; height: 100%; }
 .ss-host { position: absolute; inset: 0; }
 .ss-host canvas { touch-action: none; }
