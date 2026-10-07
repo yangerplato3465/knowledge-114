@@ -1,0 +1,16 @@
+{
+  "source": "Kenney UI Pack 2.0, user-provided C:/Users/nini9/Downloads/kenney_ui-pack",
+  "license": "CC0; assets/images/side-scroller/kenney-ui/license.txt",
+  "runtimeDirectory": "assets/images/side-scroller/kenney-ui/",
+  "files": [
+    { "runtime": "jump-raised.webp", "original": "PNG/Yellow/Double/button_rectangle_depth_gloss.png" },
+    { "runtime": "jump-pressed.webp", "original": "PNG/Yellow/Double/button_rectangle_gloss.png" },
+    { "runtime": "red-raised.webp", "original": "PNG/Red/Double/button_rectangle_depth_gloss.png" },
+    { "runtime": "red-pressed.webp", "original": "PNG/Red/Double/button_rectangle_gloss.png" },
+    { "runtime": "blue-raised.webp", "original": "PNG/Blue/Double/button_rectangle_depth_gloss.png" },
+    { "runtime": "blue-pressed.webp", "original": "PNG/Blue/Double/button_rectangle_gloss.png" }
+  ],
+  "processing": "Lossless WebP from the original 384x128 transparent PNGs; dimensions, alpha and visible pixels verified unchanged. No cropping or sprite-sheet slicing.",
+  "display": "Pixi NineSliceSprite faces with Pixi text. controls.ts owns the borders, centered main labels, down/up interpolation and persistent pressed faces for enabled lamps. DOM buttons provide aligned semantic targets and multi-pointer capture; CSS controls responsive sizes and spacing.",
+  "review": "All six complete source images inspected; four corners remain inside the images. Each face is one static image, positioned at the top-left of its own hit target."
+}

@@ -1,0 +1,117 @@
+{
+  "cell": [
+    256,
+    256
+  ],
+  "order": "row-major",
+  "animations": {
+    "run": {
+      "frames": 12,
+      "columns": 4,
+      "rows": 3,
+      "durationsMs": [
+        50,
+        50,
+        40,
+        50,
+        50,
+        40,
+        50,
+        50,
+        40,
+        50,
+        50,
+        40
+      ],
+      "loop": true,
+      "file": "assets/images/side-scroller/milo-run-v1.webp",
+      "sourceSize": [
+        1448,
+        1086
+      ],
+      "size": [
+        1024,
+        768
+      ],
+      "anchor": [
+        128,
+        216
+      ]
+    },
+    "jump": {
+      "frames": 8,
+      "columns": 4,
+      "rows": 2,
+      "durationsMs": [
+        60,
+        90,
+        100,
+        110,
+        100,
+        120,
+        50,
+        50
+      ],
+      "loop": false,
+      "phases": [
+        "takeoff",
+        "early-rise",
+        "tuck",
+        "apex",
+        "early-fall",
+        "extend",
+        "landing-compression",
+        "recover"
+      ],
+      "playback": "Physics-phase driven in game; durations are preview only.",
+      "file": "assets/images/side-scroller/milo-jump-v1.webp",
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "size": [
+        1024,
+        512
+      ],
+      "anchor": [
+        128,
+        216
+      ]
+    },
+    "portal": {
+      "frames": 8,
+      "columns": 4,
+      "rows": 2,
+      "durationsMs": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "loop": true,
+      "anglesDegrees": [
+        0,
+        45,
+        90,
+        135,
+        180,
+        225,
+        270,
+        315
+      ],
+      "file": "assets/images/side-scroller/finish-portal-v1.webp",
+      "size": [
+        1024,
+        512
+      ],
+      "anchor": [
+        128,
+        128
+      ]
+    }
+  }
+}
