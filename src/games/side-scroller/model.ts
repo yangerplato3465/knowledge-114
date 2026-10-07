@@ -19,7 +19,7 @@ export interface Level {
 export const BODY = { half: 19, height: 60 };
 export const PHYSICS = { speed: 280, gravity: 1800, jump: 680, maxFall: 1000, grace: 0.1, buffer: 0.12, step: 1 / 120 };
 export const GHOST_ALPHA = 0.32;
-export const OBSTACLE_GHOST_ALPHA = 0.14;
+export const OBSTACLE_GHOST_ALPHA = 0;
 export function blocksPath(obstacle: Obstacle, color: WorldColor | null): boolean { return obstacle.color !== color; }
 export function obstacleAlpha(obstacle: Obstacle, color: WorldColor | null): number { return blocksPath(obstacle, color) ? 1 : OBSTACLE_GHOST_ALPHA; }
 const ground = (x: number, y: number, w: number, endY = y, color?: WorldColor): Platform => ({ x, y, w, endY, color, h: 672 - y, kind: 'ground' });
@@ -122,16 +122,16 @@ export const LEVEL_FOUR: Level = {
     // Three isolated wall crossings teach the inverse rule on neutral landings.
     ground(0, 480, 1024), ground(1216, 480, 768), ground(2176, 480, 768), ground(3136, 480, 704),
     // Lower route: broad neutral platforms. Upper route: short, alternating-color steps.
-    bridge(3840, 480, 448), bridge(4416, 480, 448), bridge(4992, 480, 448),
-    bridge(3840, 368, 192), bridge(4160, 304, 192, 'blue'), bridge(4480, 304, 192),
-    bridge(4800, 304, 192, 'purple'), bridge(5120, 368, 192, 'red'), bridge(5440, 416, 192),
-    ground(5568, 480, 832), ground(6400, 480, 256, 480, 'red'), ground(6656, 480, 320),
+    bridge(3840, 480, 448), bridge(4416, 480, 448),
+    bridge(3840, 368, 192), bridge(4160, 304, 192, 'blue'),
+    bridge(4480, 304, 192, 'purple'), bridge(4800, 368, 192, 'blue'),
+    ground(4992, 480, 1408), ground(6400, 480, 256, 480, 'red'), ground(6656, 480, 320),
     ground(7168, 480, 704), ground(7872, 480, 512, 416), ground(8384, 416, 448),
     // Second choice is higher in the scenery, with the same reachable two-lane spacing.
-    bridge(8832, 416, 448), bridge(9408, 416, 448), bridge(9984, 416, 448),
-    bridge(8832, 304, 192), bridge(9152, 240, 192, 'red'), bridge(9472, 240, 192),
-    bridge(9792, 240, 192, 'purple'), bridge(10112, 304, 192, 'blue'), bridge(10432, 352, 192),
-    ground(10560, 416, 704), ground(11264, 416, 512, 480), ground(11776, 480, 256, 480, 'blue'), ground(12032, 480, 256),
+    bridge(8832, 416, 448), bridge(9408, 416, 448),
+    bridge(8832, 304, 192), bridge(9152, 240, 192, 'red'),
+    bridge(9472, 240, 192, 'purple'), bridge(9792, 304, 192, 'red'),
+    ground(9984, 416, 1280), ground(11264, 416, 512, 480), ground(11776, 480, 256, 480, 'blue'), ground(12032, 480, 256),
     // Final red/blue/purple wall sequence, then a quiet neutral approach to the portal.
     ground(12480, 480, 384), ground(13056, 480, 384), ground(13632, 480, 704),
   ],

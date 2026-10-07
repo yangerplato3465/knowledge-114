@@ -152,12 +152,12 @@ describe('二星雙光迴廊', () => {
 describe('四星晶石岔路', () => {
   function run(upperFirst: boolean, upperSecond: boolean, offset = 0, missedWall = false) {
     const jumps = [1000, 1960, 2920,
-      ...(upperFirst ? [3740, 3992, 4312, 4632, 4952, 5272] : [4218, 4794, 5370]), 6952,
-      ...(upperSecond ? [8732, 8984, 9304, 9624, 9944, 10264] : [9210, 9786, 10362]), 12264, 12840, 13416];
+      ...(upperFirst ? [3740, 3992, 4312, 4632] : [4218, 4794]), 6952,
+      ...(upperSecond ? [8732, 8984, 9304, 9624] : [9210, 9786]), 12264, 12840, 13416];
     const colors: [number, WorldColor][] = [[800, missedWall ? 'blue' : 'red'], [1760, 'blue'], [2720, 'purple'],
-      ...(upperFirst ? [[4010, 'blue'], [4750, 'purple'], [4960, 'red']] as [number, WorldColor][] : [[4050, 'red'], [4630, 'blue']] as [number, WorldColor][]),
+      ...(upperFirst ? [[4010, 'blue'], [4330, 'purple'], [4640, 'blue']] as [number, WorldColor][] : [[4050, 'red'], [4630, 'blue']] as [number, WorldColor][]),
       [6200, 'red'], [6800, 'purple'],
-      ...(upperSecond ? [[9000, 'red'], [9740, 'purple'], [9952, 'blue']] as [number, WorldColor][] : [[9050, 'purple'], [9600, 'red']] as [number, WorldColor][]),
+      ...(upperSecond ? [[9000, 'red'], [9322, 'purple'], [9632, 'red']] as [number, WorldColor][] : [[9050, 'purple'], [9600, 'red']] as [number, WorldColor][]),
       [11580, 'blue'], [12140, 'red'], [12720, 'blue'], [13300, 'purple']];
     let state = initialState(LEVEL_FOUR), seconds = 0;
     const used = new Set<number>(), landed = new Set<Platform>();
@@ -178,10 +178,10 @@ describe('四星晶石岔路', () => {
       expect(result.state.falls, `路線 ${first}/${second}，偏移 ${offset}`).toBe(0); expect(result.state.completed).toBe(true);
       expect(result.seconds).toBeGreaterThan(49); expect(result.seconds).toBeLessThan(51);
       expect(Math.abs(result.seconds - levelSeconds(LEVEL_FOUR))).toBeLessThan(0.4);
-      expect(result.jumps).toBe(13 + (first ? 3 : 0) + (second ? 3 : 0));
+      expect(result.jumps).toBe(11 + (first ? 2 : 0) + (second ? 2 : 0));
       const branch = (start: number, upper: boolean, lowY: number) => {
-        const platforms = LEVEL_FOUR.platforms.filter(p => p.kind === 'bridge' && p.x >= start && p.x < start + 1728 && (upper ? p.y < lowY : p.y === lowY));
-        expect(platforms.length).toBe(upper ? 6 : 3);
+        const platforms = LEVEL_FOUR.platforms.filter(p => p.kind === 'bridge' && p.x >= start && p.x < start + 1152 && (upper ? p.y < lowY : p.y === lowY));
+        expect(platforms.length).toBe(upper ? 4 : 2);
         platforms.forEach(p => expect(result.landed.has(p), `落在 ${p.x}/${p.y}`).toBe(true));
       };
       branch(3840, first, 480); branch(8832, second, 416);
@@ -196,6 +196,22 @@ describe('四星晶石岔路', () => {
       expect(isSolid({ ...wall, kind: 'bridge' }, color)).toBe(color === wall.color);
     }
     LEVEL_FOUR.checkpoints.forEach(x => expect(LEVEL_FOUR.platforms.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w)?.color).toBeUndefined());
+  });
+  it('三色障礙未點燈時阻擋；用燈消散後可通過，關燈或換色即恢復碰撞', () => {
+    for (const target of ['red', 'blue', 'purple'] as const) {
+      const wall = { x: 100, y: 200, w: 64, h: 192, color: target };
+      const level = { ...LEVEL_FOUR, obstacles: [wall] };
+      const start = { ...initialState(level), x: 65, y: 250, grounded: false, coyote: 0 };
+      let lit: WorldColor | null = null;
+      for (const button of ['red', 'blue'] as const) if (isLightOn(target, button)) lit = toggleColor(lit, button);
+      const switched = selectWorldColor(start, lit, []);
+      expect(advance(start, neutral, 0.1, [], level).knockedDown).toBe(true);
+      expect(advance(switched, neutral, 0.1, [], level).knockedDown).toBe(false);
+      let off = lit;
+      for (const button of ['red', 'blue'] as const) if (isLightOn(off, button)) off = toggleColor(off, button);
+      expect(advance(selectWorldColor(switched, off, []), neutral, 0.1, [], level).knockedDown).toBe(true);
+      expect(advance(selectWorldColor(switched, toggleColor(lit, 'red'), []), neutral, 0.1, [], level).knockedDown).toBe(true);
+    }
   });
   it('撞牆後即使再換色或跳躍也會落入洞底；重生恢復跑速並保留燈光', () => {
     expect(run(false, false, 0, true).state.falls).toBe(1);

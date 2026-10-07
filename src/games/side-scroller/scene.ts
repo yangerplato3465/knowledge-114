@@ -1,5 +1,5 @@
 import type { App, Node, Sprite, Texture } from '../magic-workshop/scene-types';
-import { advance, GHOST_ALPHA, initialState, LEVEL_THREE, obstacleAlpha, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Platform, type WorldColor } from './model';
+import { advance, blocksPath, GHOST_ALPHA, initialState, LEVEL_THREE, obstacleAlpha, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type Level, type Obstacle, type Platform, type WorldColor } from './model';
 
 import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type ArtPixi } from './art';
 import { CONTROL_IMAGES, createTouchControls, type ControlId, type ControlPixi, type TouchControls } from './controls';
@@ -19,6 +19,15 @@ export interface SideScrollerScene {
   destroy(): void;
 }
 const HEIGHT = 600, TILE = 64;
+interface TerrainNode { node: Pick<Node, 'visible' | 'alpha'>; x: number; end: number; obstacle?: Obstacle }
+/** Reconcile light state with viewport culling, including objects returning on a later preview lap. */
+export function syncTerrainVisibility(nodes: readonly TerrainNode[], camera: number, viewportWidth: number, color: WorldColor | null) {
+  for (const { node, x, end, obstacle } of nodes) {
+    const inView = end >= camera - TILE && x <= camera + viewportWidth + TILE;
+    if (obstacle) node.alpha = obstacleAlpha(obstacle, color);
+    node.visible = inView && (!obstacle || blocksPath(obstacle, color));
+  }
+}
 const LIGHT_ALPHA = 0.08;
 const LIGHT_COLORS = { red: 0xff596e, blue: 0x477dff, purple: 0xb968f0 };
 interface ColorFilter { matrix: number[]; destroy(): void }
@@ -69,7 +78,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     if (stone) {
       (clouds as Node & { tint: number }).tint = 0xaaa7dc;
     }
-    const terrainNodes: { node: Node; x: number; end: number }[] = [];
+    const terrainNodes: TerrainNode[] = [];
     const sprite = (name: typeof ASSETS[number], x: number, y: number, w: number, h: number, parent: Node) => {
       const s = new P.Sprite(textures[name]); s.position.set(x, y); s.width = w; s.height = h; parent.addChild(s); return s;
     };
@@ -124,9 +133,9 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       group.addChild(edges);
       markColor(p, group);
     }
-    const obstacleNodes = (level.obstacles ?? []).map(wall => {
+    for (const wall of level.obstacles ?? []) {
       const group = world.addChild(new P.Container());
-      terrainNodes.push({ node: group, x: wall.x, end: wall.x + wall.w });
+      terrainNodes.push({ node: group, x: wall.x, end: wall.x + wall.w, obstacle: wall });
       const tiles = group.addChild(new P.Container());
       if (wall.color === 'purple') (tiles as Node & { filters: ColorFilter[] }).filters = [purpleWall];
       for (let y = wall.y; y < wall.y + wall.h; y += TILE) {
@@ -137,8 +146,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
         else mark.poly([x, cy - 9, x + 9, cy, x, cy + 9, x - 9, cy]);
         mark.fill(0xffffff).stroke({ color: 0x302943, width: 2 }); group.addChild(mark);
       }
-      return { wall, group };
-    });
+    }
     if (stone) {
       const sign = (text: string, x: number, y: number) => {
         const label = new P.Text({ text, style: { fontFamily: 'Microsoft JhengHei, sans-serif', fontSize: 22, fontWeight: '800', fill: 0xffedcb, stroke: { color: 0x39334c, width: 4 } } });
@@ -174,7 +182,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     const release = () => { held.clear(); jumpPressed = false; ui.clear(); if (tapTimer !== undefined) window.clearTimeout(tapTimer); tapTimer = undefined; };
     const draw = () => {
       world.x = neutralWorld.x = -camera;
-      terrainNodes.forEach(({ node, x, end }) => { node.visible = end >= camera - TILE && x <= camera + viewportWidth + TILE; });
+      syncTerrainVisibility(terrainNodes, camera, viewportWidth, state.color);
       backgroundLayers.forEach(layer => layer.sprites.forEach((s, i) => {
         s.x = i * layer.width - (camera * (reduced ? 0 : layer.factor)) % layer.width;
       }));
@@ -218,7 +226,6 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     const stage = host.parentElement!;
     const updateColors = () => {
       for (const color of ['red', 'blue', 'purple'] as const) filters[color].matrix = colorMatrix(color, state.color === color ? 1 : GHOST_ALPHA);
-      obstacleNodes.forEach(({ wall, group }) => { group.alpha = obstacleAlpha(wall, state.color); });
       paintLight();
     };
     const toggleLight = (button: ColorButton) => {

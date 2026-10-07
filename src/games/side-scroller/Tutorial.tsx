@@ -6,7 +6,7 @@ const pages = [
   { title: '點亮，才站得穩', eyebrow: '用光，讓地板成為道路', body: '點亮紅燈，紅色地板就會變成實體；沒有對應的燈光，地板會透明，踩上去就會掉落。藍色也是一樣。', hint: '按「紅燈 1」或「藍燈 2」切換，再按一次就關閉。不必一直按住；先起跳，再切換下一段地板的顏色。' },
   { title: '兩盞燈，一起亮', eyebrow: '紅色 ＋ 藍色 ＝ 紫色', body: '紅燈與藍燈可以一起開啟，融合成紫色光。這時紫色地板可以站，紅色與藍色地板會透明。', hint: '兩盞燈各自保持開關，可以依序按，也可以雙指同時按。正常地板永遠能站；跌落會回到最近落腳區。' },
 ];
-const crossroadsPage = { title: '消散方塊，選擇岔路', eyebrow: '四星・晶石岔路', body: '直立方塊會擋住跳躍！光色相同時，方塊淡到幾乎透明，就能穿過；光色不同會撞上並掉入洞中。紫色方塊要同時開紅、藍兩燈。', hint: '方塊與地板規則不同：同色方塊消散，同色地板可踩。上下平台同時出現時，下路平台較寬、跳躍較少；提早起跳可走上路，挑戰連跳換色。兩路都通往出口。' };
+const crossroadsPage = { title: '消散方塊，選擇岔路', eyebrow: '四星・晶石岔路', body: '沒有點燈時，直立方塊會一直存在，撞上就會掉入洞中。點亮對應顏色，方塊才會完全消失、可以穿過；關燈或換成其他光色，方塊就會恢復。紫色方塊要同時開紅、藍兩燈。', hint: '方塊與地板規則相反：同色方塊消失，同色地板可踩。上下平台同時出現時，下路平台較寬、跳躍較少；提早起跳可走上路，挑戰連跳換色。兩路都通往出口。' };
 export function Tutorial({ initial, crossroads = false, onClose, onStart }: { initial: boolean; crossroads?: boolean; onClose(): void; onStart(): void }) {
   const contents = crossroads ? [...pages, crossroadsPage] : pages;
   const lastPage = contents.length - 1;

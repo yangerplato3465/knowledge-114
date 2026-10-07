@@ -138,7 +138,8 @@ it('選四星會先顯示消散障礙與上下分岔教學，開始後釋放場�
   expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(4);
   expect(created.setTutorial).toHaveBeenLastCalledWith(true);
   expect(screen.getByRole('heading', { name: '消散方塊，選擇岔路' })).toBeTruthy();
-  expect(screen.getByText(/方塊與地板規則不同/)).toBeTruthy();
+  expect(screen.getByText(/方塊與地板規則相反/)).toBeTruthy();
+  expect(screen.getByText(/沒有點燈時，直立方塊會一直存在/)).toBeTruthy();
   fireEvent.click(screen.getAllByRole('button', { name: '開始冒險' }).at(-1)!);
   expect(created.setTutorial).toHaveBeenLastCalledWith(false); expect(created.setMode).toHaveBeenLastCalledWith('play');
   expect(screen.queryByRole('dialog')).toBeNull();

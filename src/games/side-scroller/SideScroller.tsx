@@ -44,7 +44,7 @@ export function SideScroller() {
     + (crossroads ? status.color ? '、同色直立方塊消散' : '、直立方塊皆會阻擋' : '');
   const colorDisabled = load !== 'ready' || manual || (!preview && (status.paused || status.completed));
   const changeColor = (button: ColorButton) => { scene.current?.toggleColor(button); stage.current?.focus({ preventScroll: true }); };
-  const message = status.completed ? '已找到傳送出口，可以重新冒險。' : status.paused ? '已暫停。' : preview ? '正在自動巡覽地圖。' : `固定向前跑，空白鍵或跳躍按鈕起跳。位於落腳區 ${status.checkpoint + 1}。`;
+  const message = status.completed ? '已找到傳送出口，可以重新冒險。' : status.paused ? `已暫停。${preview ? `巡覽第 ${status.lap} 輪。` : ''}` : preview ? `正在自動巡覽地圖，第 ${status.lap} 輪。` : `固定向前跑，空白鍵或跳躍按鈕起跳。位於落腳區 ${status.checkpoint + 1}。`;
   return <><SiteHeader navigation current="activities" /><ActivityTrail title="魔法禁書庫" category="games" status="色彩冒險" />
     <main className="ss-game" ref={shell}>
       <div className="ss-toolbar"><div className="ss-heading"><h1>魔法禁書庫</h1></div><div>
@@ -96,7 +96,7 @@ export function SideScroller() {
         </div>
       </div>
       {manual && load === 'ready' && <Tutorial initial={!started} crossroads={crossroads} onClose={closeManual} onStart={start} />}
-      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊遇到相同光色才消散，否則撞上掉落。下路平台較寬；提早起跳可選上路連跳換色。'}P 暫停。可開啟玩法手冊翻閱示範。</p>
+      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才消散；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}P 暫停。可開啟玩法手冊翻閱示範。</p>
       <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
 }
