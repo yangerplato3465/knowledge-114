@@ -21,8 +21,8 @@ export function TutorialDemo({ page }: { page: number }) {
       const [P, images, ground, wallImage] = await Promise.all([
         import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as Promise<ColorPixi>,
         loadSpriteImages(controller.signal),
-        loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/terrain_${page === 3 ? 'stone' : 'sand'}_horizontal_middle.png`, controller.signal),
-        page === 3 ? loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/block_red.png`, controller.signal) : undefined,
+        loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/terrain_${page === 3 ? 'stone' : 'sand'}_horizontal_middle.webp`, controller.signal),
+        page === 3 ? loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/block_red.webp`, controller.signal) : undefined,
       ]);
       controller.signal.throwIfAborted();
       app = new P.Application(); art = createSpriteArt(P, images); tile = P.Texture.from(ground);

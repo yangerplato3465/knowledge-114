@@ -24,7 +24,7 @@
         40
       ],
       "loop": true,
-      "file": "assets/images/side-scroller/milo-run-v1.png",
+      "file": "assets/images/side-scroller/milo-run-v1.webp",
       "sourceSize": [
         1448,
         1086
@@ -64,7 +64,7 @@
         "recover"
       ],
       "playback": "Physics-phase driven in game; durations are preview only.",
-      "file": "assets/images/side-scroller/milo-jump-v1.png",
+      "file": "assets/images/side-scroller/milo-jump-v1.webp",
       "sourceSize": [
         1774,
         887
@@ -103,7 +103,7 @@
         270,
         315
       ],
-      "file": "assets/images/side-scroller/finish-portal-v1.png",
+      "file": "assets/images/side-scroller/finish-portal-v1.webp",
       "size": [
         1024,
         512

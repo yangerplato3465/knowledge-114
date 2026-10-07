@@ -9,8 +9,8 @@ body.dark button,body.dark select{background:#473953;color:#f5f1fb}body.dark a{c
 <main><h1>米洛與傳送門</h1><p>向右跑、收腿跳躍，還有簡化成 8 幀的旋轉終點。</p>
 <nav aria-label="播放控制"><button id="pause">暫停</button><button id="restart">重新播放</button><button id="theme">深色背景</button><label>速度 <select id="speed"><option value="1">正常</option><option value="0.5">半速</option></select></label><label>尺寸 <select id="size"><option value="1">遊戲尺寸</option><option value="1.6">放大檢查</option></select></label></nav>
 <div class="grid"><article><h2>跑步 · 12 幀</h2><canvas id="run" width="512" height="560" aria-label="米洛向右跑步動畫"></canvas><output id="run-status"></output></article><article><h2>跳躍 · 8 幀</h2><canvas id="jump" width="512" height="560" aria-label="米洛起跳、收腿與落地動畫"></canvas><output id="jump-status"></output></article><article><h2>傳送門 · 8 幀</h2><canvas id="portal" width="512" height="560" aria-label="金色青綠傳送門順時針旋轉"></canvas><output id="portal-status"></output></article></div>
-<p class="sheets"><a href="../../../assets/images/side-scroller/milo-run-v1.png" download>跑步 sprite sheet</a><a href="../../../assets/images/side-scroller/milo-jump-v1.png" download>跳躍 sprite sheet</a><a href="../../../assets/images/side-scroller/finish-portal-v1.png" download>傳送門 sprite sheet</a></p>
-<small>透明 PNG・每格 256 × 256・由左至右、由上至下。此處為美術播放預覽；跳躍弧線用來檢視姿勢，尚未接入關卡。</small><p id="error" role="alert"></p>
+<p class="sheets"><a href="../../../assets/images/side-scroller/milo-run-v1.webp" download>跑步 sprite sheet</a><a href="../../../assets/images/side-scroller/milo-jump-v1.webp" download>跳躍 sprite sheet</a><a href="../../../assets/images/side-scroller/finish-portal-v1.webp" download>傳送門 sprite sheet</a></p>
+<small>透明 WebP・每格 256 × 256・由左至右、由上至下。此處為美術播放預覽；此處跳躍弧線供姿勢檢視，遊戲則依物理狀態選幀。</small><p id="error" role="alert"></p>
 </main>
 <script>
 const specs = /* SPRITE_SPEC */;

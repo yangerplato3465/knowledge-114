@@ -18,7 +18,7 @@ export interface SideScrollerScene {
 }
 const HEIGHT = 600, TILE = 64;
 interface TerrainNode { node: Pick<Node, 'visible' | 'alpha'>; x: number; end: number; obstacle?: Obstacle }
-/** Reconcile light state with viewport culling, including objects returning on a later preview lap. */
+// 每次巡覽都同步光色，包括重新進入視野的障礙。
 export function syncTerrainVisibility(nodes: readonly TerrainNode[], camera: number, viewportWidth: number, color: WorldColor | null) {
   for (const { node, x, end, obstacle } of nodes) {
     const inView = end >= camera - TILE && x <= camera + viewportWidth + TILE;
@@ -46,11 +46,11 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
   const stone = level.terrain === 'stone';
   const terrain = stone ? 'stone' : 'sand';
   const assets = ASSETS.filter(name => name.startsWith('background_') || name.startsWith('gem_') || (name.startsWith(`terrain_${terrain}_`)) || (stone && name.startsWith('block_')));
-  const P = await import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as ColorPixi;
-  const [images, spriteImages, controlImages, starImage] = await Promise.all([
-    Promise.all(assets.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.png`, signal))),
+  const [P, images, spriteImages, controlImages, starImage] = await Promise.all([
+    import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as Promise<ColorPixi>,
+    Promise.all(assets.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.webp`, signal))),
     loadSpriteImages(signal),
-    Promise.all(CONTROL_IMAGES.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney-ui/${name}.png`, signal))),
+    Promise.all(CONTROL_IMAGES.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney-ui/${name}.webp`, signal))),
     loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/difficulty-star-v1.webp`, signal),
   ]);
   signal.throwIfAborted();
@@ -70,10 +70,10 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     initialized = true;
     signal.throwIfAborted();
     const clouds = new P.Container(), sky = new P.Graphics(), hills = new P.Container(), trees = new P.Container(), neutralWorld = new P.Container(), light = new P.Graphics(), world = new P.Container();
-    // Full viewport light washes the scenery; special terrain stays above it, preserving its exact tint and opacity.
+    // 特殊地形放在光層上方，維持原色與透明度。
     const gameRoot = app.stage.addChild(new P.Container());
     [clouds, sky, hills, trees, neutralWorld, light, world].forEach(layer => gameRoot.addChild(layer));
-    // White areas of the original backgrounds let the lower layer show through.
+    // 背景白色區透出下層。
     (hills as Node & { blendMode: string }).blendMode = 'multiply';
     (trees as Node & { blendMode: string }).blendMode = 'multiply';
     hills.alpha = stone ? 0.45 : 0.55; trees.alpha = stone ? 0.55 : 0.7;
@@ -99,7 +99,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     };
     for (const p of PLATFORMS) {
       const group = new P.Container(); (p.color ? world : neutralWorld).addChild(group); terrainNodes.push({ node: group, x: p.x, end: p.x + p.w });
-      // Filter the assembled terrain once, so overlapping tiles keep a uniform ghost opacity.
+      // 整組套用濾鏡，避免重疊磁磚加深透明度。
       if (p.color) (group as Node & { filters: ColorFilter[] }).filters = [filters[p.color]];
       if (p.kind === 'bridge') {
         for (let x = p.x; x < p.x + p.w; x += TILE) {
@@ -115,7 +115,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       for (let y = Math.min(p.y, endY); y < bottom; y += TILE) {
         for (let x = p.x; x < p.x + p.w; x += TILE) sprite(`terrain_${terrain}_block_center`, x, y, TILE, TILE, tiles);
       }
-      // Shear each top tile along the exact collision surface, including gentle slopes.
+      // 頂部貼圖跟隨碰撞坡面。
       for (let x = p.x; x < p.x + p.w; x += TILE) {
         const left = surfaceY(p, x), right = surfaceY(p, x + TILE);
         const top = new P.MeshSimple({ texture: textures[`terrain_${terrain}_block_top`],
@@ -171,7 +171,8 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     });
     let tutorialOpen = true, finishAge = 0;
     let state = initialState(level), previous = state, accumulator = 0, camera = 0, viewportWidth = 1067, previewTravel = 0;
-    let mode: SceneMode = 'preview', paused = false, destroyed = false, lap = 1, lastStatus = '';
+    let mode: SceneMode = 'preview', paused = false, destroyed = false, lap = 1;
+    let lastStatus: SceneStatus | undefined;
     const held = new Set<string>(); let tapTimer: number | undefined; let jumpPressed = false;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let reduced = motion.matches;
@@ -194,8 +195,9 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     ];
     const emit = () => {
       const status = { mode, paused, completed: mode === 'play' && state.completed && finishAge >= 0.6, checkpoint: state.checkpoint, falls: state.falls, lap, color: state.color, collectedGems: state.collectedGems };
-      const serialized = JSON.stringify(status);
-      if (serialized !== lastStatus) { lastStatus = serialized; onStatus(status); }
+      if (!lastStatus || (Object.keys(status) as (keyof SceneStatus)[]).some(key => status[key] !== lastStatus![key])) {
+        lastStatus = status; onStatus(status);
+      }
     };
     const release = () => { held.clear(); jumpPressed = false; ui.clear(); if (tapTimer !== undefined) window.clearTimeout(tapTimer); tapTimer = undefined; };
     const draw = () => {

@@ -306,8 +306,9 @@ export function advance(state: State, input: Input, dt: number, platforms: reado
   // A new press just before landing is consumed once; holding never causes repeated jumps.
   if (s.grounded && s.buffer > 0) { s.vy = -PHYSICS.jump; s.grounded = false; s.buffer = 0; s.coyote = 0; }
   if (!s.knockedDown) {
-    const found = level.gems.filter(gem => !s.collectedGems.includes(gem.color) && touchesGem(s, gem));
-    if (found.length) s.collectedGems = [...s.collectedGems, ...found.map(gem => gem.color)];
+    for (const gem of level.gems) {
+      if (!s.collectedGems.includes(gem.color) && touchesGem(s, gem)) s.collectedGems = [...s.collectedGems, gem.color];
+    }
   }
   level.checkpoints.forEach((x, index) => { if (s.grounded && s.x >= x && index > s.checkpoint) s.checkpoint = index; });
   if (s.y > 820) {

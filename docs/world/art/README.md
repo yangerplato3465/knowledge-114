@@ -90,6 +90,6 @@
 | 石泉、釜、見習筆記與出口 | [prepare-workshop-rustic.py](../../../scripts/prepare-workshop-rustic.py) |
 | UI 素材表與水流 | [prepare-workshop-ui.py](../../../scripts/prepare-workshop-ui.py) |
 | 偵探共用介面圖示 | [prepare-detective-icons.py](../../../scripts/prepare-detective-icons.py) |
-| 橫向遊戲跑跳與傳送門 | [prepare-side-scroller-sprites.mjs](../../../scripts/prepare-side-scroller-sprites.mjs)（Node + Sharp，可用 `NODE_PATH` 指定已安裝的套件位置） |
+| 橫向遊戲跑跳與傳送門 | [prepare-side-scroller-sprites.mjs](../../../scripts/prepare-side-scroller-sprites.mjs)（Node + Sharp，可用 `NODE_PATH` 指定已安裝的套件位置）；[執行圖無損壓縮驗證](../../../scripts/optimize-side-scroller-images.mjs) 預設只稽核，`--write` 才替換較小圖片 |
 
 現有腳本不是所有歷史素材的全量產生器；未涵蓋項目保留現役 WebP 與來源紀錄，不以重新壓縮代替來源追溯。製作腳本會寫入 WebP／部分 TypeScript 素材中繼資料，執行後須檢查差異與留白。字體授權與來源見 [字體說明](../../../assets/fonts/workshop/README.md)；音效與 BGM 見 [工坊設計](../../games/magic-workshop/design.md#動畫素材與音訊)。

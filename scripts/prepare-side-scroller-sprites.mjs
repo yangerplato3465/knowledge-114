@@ -94,7 +94,7 @@ for (const [name, frames] of Object.entries(frameSets)) {
     await writeFile(path.join(preview, `${name}-${i}.png`), frames[i]);
     cells.push({ input: frames[i], left: i % spec.columns * size, top: Math.floor(i / spec.columns) * size });
   }
-  await blank(spec.columns * size, spec.rows * size).composite(cells).png().toFile(path.join(root, spec.file));
+  await blank(spec.columns * size, spec.rows * size).composite(cells).webp({ lossless: true, effort: 6 }).toFile(path.join(root, spec.file));
   spec.size = [spec.columns * size, spec.rows * size];
   spec.anchor = name === 'portal' ? [128, 128] : [128, 216];
   const rawFrames = await Promise.all(frames.map(frame => sharp(frame).flatten({ background: '#dceeff' }).raw().toBuffer()));
