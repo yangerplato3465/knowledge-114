@@ -69,3 +69,74 @@ export function createTouchControls(P: ControlPixi, images: HTMLImageElement[], 
   };
 }
 export type TouchControls = ReturnType<typeof createTouchControls>;
+
+/** Scene artwork follows the same DOM hit targets used by keyboard and touch input. */
+export function createFrameControls(P: ControlPixi, starImage: HTMLImageElement, parent: Node, host: HTMLElement, playfield: HTMLElement) {
+  const root = parent.addChild(new P.Container()), panel = root.addChild(new P.Graphics());
+  const starTexture = P.Texture.from(starImage);
+  const makeLabel = (text: string) => {
+    const label = new P.Text({ text, style: { fontFamily: 'Microsoft JhengHei, sans-serif', fontSize: 32, fontWeight: '900', fill: 0x493449 } });
+    label.anchor.set(0.5); return label;
+  };
+  const titleTarget = host.parentElement!.querySelector<HTMLElement>('[data-frame-title]')!;
+  const title = root.addChild(makeLabel(titleTarget.textContent!));
+  const views = Array.from(host.parentElement!.querySelectorAll<HTMLElement>('[data-frame-control]')).map(target => {
+    const group = root.addChild(new P.Container()), face = group.addChild(new P.Graphics());
+    const labelTarget = target.querySelector<HTMLElement>('.ss-menu-label')!;
+    const label = group.addChild(makeLabel(labelTarget.textContent!));
+    const starTarget = target.querySelector<HTMLElement>('.ss-star-space');
+    const numberTarget = target.querySelector<HTMLElement>('strong');
+    const star = starTarget ? group.addChild(new P.Sprite(starTexture)) : null;
+    const number = numberTarget ? group.addChild(makeLabel(numberTarget.textContent!)) : null;
+    return { target, group, face, labelTarget, label, starTarget, star, numberTarget, number, width: 0, height: 0, last: '' };
+  });
+  const placeLabel = (label: ReturnType<typeof makeLabel>, target: HTMLElement, origin: DOMRect) => {
+    const rect = target.getBoundingClientRect();
+    label.text = target.textContent!;
+    label.position.set(rect.left - origin.left + rect.width / 2, rect.top - origin.top + rect.height / 2);
+    label.scale.set(parseFloat(getComputedStyle(target).fontSize) / 32);
+  };
+  const frame = {
+    layout() {
+      const bounds = host.getBoundingClientRect(), field = playfield.getBoundingClientRect();
+      root.scale.set(600 / Math.max(1, field.height));
+      const header = field.top - bounds.top;
+      panel.clear().rect(0, 0, bounds.width, header).fill(0xd2a86e)
+        .rect(0, 0, bounds.width, 6).fill(0xf9df9b)
+        .rect(0, header - 5, bounds.width, 5).fill(0x6a4e59);
+      placeLabel(title, titleTarget, bounds);
+      title.visible = titleTarget.getBoundingClientRect().width > 0;
+      for (const view of views) {
+        const rect = view.target.getBoundingClientRect();
+        view.group.visible = rect.width > 0 && rect.height > 0;
+        view.group.position.set(rect.left - bounds.left, rect.top - bounds.top);
+        view.width = rect.width; view.height = rect.height; view.last = '';
+        placeLabel(view.label, view.labelTarget, rect);
+        if (view.star && view.starTarget) {
+          const icon = view.starTarget.getBoundingClientRect();
+          view.star.position.set(icon.left - rect.left, icon.top - rect.top);
+          view.star.width = icon.width; view.star.height = icon.height;
+        }
+        if (view.number && view.numberTarget) placeLabel(view.number, view.numberTarget, rect);
+      }
+    },
+    sync() {
+      if (views.some(view => view.group.visible === view.target.hidden || view.label.text !== view.labelTarget.textContent)) frame.layout();
+      for (const view of views) {
+        if (!view.group.visible) continue;
+        const disabled = view.target instanceof HTMLButtonElement && view.target.disabled;
+        const selected = view.target.hasAttribute('data-frame-primary') || view.target.getAttribute('aria-pressed') === 'true';
+        const caption = view.labelTarget.textContent!;
+        const key = `${selected}/${disabled}/${caption}`;
+        if (key === view.last) continue;
+        view.last = key; view.label.text = caption;
+        view.group.alpha = disabled ? 0.5 : 1;
+        view.face.clear().roundRect(0, 3, view.width, view.height - 3, 10).fill(0x796070)
+          .roundRect(0, 0, view.width, view.height - 3, 10).fill(selected ? 0xffdf87 : 0xfff3d9)
+          .stroke({ color: selected ? 0x976130 : 0x665064, width: 2 });
+      }
+    },
+    destroy() { starTexture.destroy(true); },
+  };
+  return frame;
+}

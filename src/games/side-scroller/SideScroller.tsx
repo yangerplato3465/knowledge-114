@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { SiteHeader } from '../../components/SiteHeader';
 import { ActivityTrail } from '../../components/ActivityTrail';
 import { createSideScroller, type SceneStatus, type SideScrollerScene } from './scene';
@@ -8,6 +8,7 @@ import { Tutorial } from './Tutorial';
 
 export function SideScroller() {
   const host = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), shell = useRef<HTMLElement>(null);
+  const startAfterManual = useRef(false), centerAfterManual = useRef(false);
   const scene = useRef<SideScrollerScene | null>(null);
   const [level, setLevel] = useState(LEVEL_ZERO);
   const [manual, setManual] = useState(true), [started, setStarted] = useState(false);
@@ -24,20 +25,39 @@ export function SideScroller() {
     void createSideScroller(host.current!, controller.signal, next => { if (active && !controller.signal.aborted) setStatus(next); }, level).then(created => {
       if (!active || controller.signal.aborted) { created.destroy(); return; }
       window.clearTimeout(timeout); scene.current = created; created.setTutorial(manualRef.current); setLoad('ready');
+      if (!manualRef.current) stage.current?.focus({ preventScroll: true });
     }).catch(() => { window.clearTimeout(timeout); if (active) setLoad('error'); });
     return () => { active = false; controller.abort(); window.clearTimeout(timeout); scene.current?.destroy(); scene.current = null; };
   }, [attempt, level]);
   useEffect(() => {
-    const changed = () => setFullscreen(document.fullscreenElement === shell.current);
+    const changed = () => { setFullscreen(document.fullscreenElement === shell.current); if (!manualRef.current) stage.current?.focus({ preventScroll: true }); };
     document.addEventListener('fullscreenchange', changed);
     return () => document.removeEventListener('fullscreenchange', changed);
   }, []);
-  useEffect(() => {
+  const focusGame = () => stage.current?.focus({ preventScroll: true });
+  const centerGame = () => {
+    if (!document.fullscreenElement && stage.current) {
+      // Leave enough scroll room below the last page element to center the complete game frame.
+      shell.current?.style.setProperty('--ss-scroll-room', `${Math.max(0, (window.innerHeight - stage.current.getBoundingClientRect().height) / 2)}px`);
+      stage.current.scrollIntoView?.({ behavior: 'instant', block: 'center', inline: 'nearest' });
+    }
+    focusGame();
+  };
+  useLayoutEffect(() => {
+    if (!manual) {
+      if (centerAfterManual.current) centerGame(); else focusGame();
+      if (startAfterManual.current) scene.current?.setMode('play');
+      startAfterManual.current = centerAfterManual.current = false;
+    }
     scene.current?.setTutorial(manual);
-    if (!manual) stage.current?.focus({ preventScroll: true });
   }, [manual]);
-  const closeManual = () => { setManual(false); stage.current?.focus({ preventScroll: true }); };
-  const start = () => { setManual(false); setStarted(true); scene.current?.setTutorial(false); scene.current?.setMode('play'); stage.current?.focus({ preventScroll: true }); };
+  const closeManual = () => { centerAfterManual.current = true; setManual(false); };
+  const start = () => {
+    setStarted(true);
+    if (manual) { startAfterManual.current = centerAfterManual.current = true; setManual(false); return; }
+    centerGame(); scene.current?.setTutorial(false);
+    if (status.mode === 'preview' || status.completed) scene.current?.setMode('play');
+  };
   const preview = status.mode === 'preview';
   const crossroads = Boolean(level.obstacles?.length);
   const colorMessage = (status.color === 'purple' ? '紅＋藍開啟 · 紫色地板實體' : status.color === 'red' ? '紅燈開啟 · 紅色地板實體' : status.color === 'blue' ? '藍燈開啟 · 藍色地板實體' : '兩燈關閉 · 特殊地板皆透明')
@@ -47,30 +67,34 @@ export function SideScroller() {
   const message = status.completed ? '已找到傳送出口，可以重新冒險。' : status.paused ? `已暫停。${preview ? `巡覽第 ${status.lap} 輪。` : ''}` : preview ? `正在自動巡覽地圖，第 ${status.lap} 輪。` : `固定向前跑，空白鍵或跳躍按鈕起跳。位於落腳區 ${status.checkpoint + 1}。`;
   return <><SiteHeader navigation current="activities" /><ActivityTrail title="魔法禁書庫" category="games" status="色彩冒險" />
     <main className="ss-game" ref={shell}>
-      <div className="ss-toolbar"><div className="ss-heading"><h1>魔法禁書庫</h1></div><div>
-        <button type="button" aria-pressed={preview} disabled={load !== 'ready'} onClick={() => scene.current?.setMode('preview')}>世界巡覽</button>
-        <button type="button" aria-pressed={!preview} disabled={load !== 'ready'} onClick={start}>開始冒險</button>
-        <button type="button" disabled={load !== 'ready' || status.completed} onClick={() => scene.current?.togglePause()}>{status.paused ? '繼續' : '暫停'}</button>
-        <button type="button" disabled={load !== 'ready'} onClick={() => { scene.current?.restart(); stage.current?.focus(); }}>從頭開始</button>
-        <button type="button" disabled={load !== 'ready'} onClick={() => setManual(true)}>玩法手冊</button>
-        {document.fullscreenEnabled && <button type="button" onClick={() => {
-          void (fullscreen ? document.exitFullscreen() : shell.current?.requestFullscreen())?.catch(() => {});
-        }}>{fullscreen ? '離開全螢幕' : '全螢幕'}</button>}
-        {fullscreen && <a href={`${import.meta.env.BASE_URL}pages/activities.html#games`}>回冒險座</a>}
-      </div></div>
-      <div className="ss-levels" role="group" aria-label="關卡難度">
-        {LEVELS.map(option => <button type="button" key={option.id} aria-pressed={level.id === option.id}
-          aria-label={`${option.difficulty} 星關卡：${option.name}`}
-          onClick={() => { if (option.id === level.id) return; setLoad('loading'); setStarted(false); setManual(Boolean(option.obstacles?.length)); setLevel(option); }}>
-          <span className="ss-difficulty" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}assets/images/side-scroller/difficulty-star-v1.webp`} alt="" /><strong>{option.difficulty}</strong></span>
-          <span>{option.name}</span>
-        </button>)}
-      </div>
       <div className="ss-stage" ref={stage} tabIndex={0} role="region" aria-label="橫向遊戲世界" aria-describedby="ss-instructions">
         <div className="ss-host" ref={host} aria-hidden="true" />
+      <div className="ss-menu" onPointerDown={event => { if (event.button === 0) { event.preventDefault(); focusGame(); } }}>
+      <div className="ss-toolbar"><h1 data-frame-title>魔法禁書庫</h1><div className="ss-actions" role="group" aria-label="場景功能">
+        <button data-frame-control tabIndex={-1} type="button" aria-pressed={preview} disabled={load !== 'ready'} onClick={() => { centerGame(); if (!preview) scene.current?.setMode('preview'); }}><span className="ss-menu-label">世界巡覽</span></button>
+        <button data-frame-control tabIndex={-1} type="button" disabled={load !== 'ready'} onClick={() => setManual(true)}><span className="ss-menu-label">玩法手冊</span></button>
+        {document.fullscreenEnabled && <button data-frame-control tabIndex={-1} type="button" onClick={() => {
+          void (fullscreen ? document.exitFullscreen() : shell.current?.requestFullscreen())?.catch(() => {});
+          focusGame();
+        }}><span className="ss-menu-label">{fullscreen ? '離開全螢幕' : '全螢幕'}</span></button>}
+      </div></div>
+      <div className="ss-levels" role="group" aria-label="關卡難度">
+        {LEVELS.map(option => <button data-frame-control tabIndex={-1} type="button" key={option.id} aria-pressed={level.id === option.id}
+          aria-label={`${option.difficulty} 星關卡：${option.name}`}
+          onClick={() => { centerGame(); if (option.id === level.id) return; setLoad('loading'); setStarted(false); setManual(false); setLevel(option); }}>
+          <span className="ss-difficulty" aria-hidden="true"><span className="ss-star-space" /><strong>{option.difficulty}</strong></span>
+          <span className="ss-menu-label">{option.name}</span>
+        </button>)}
+      </div>
+      </div>
         {load !== 'ready' && <div className="ss-loading" role="status"><p>{load === 'loading' ? '正在打開魔法禁書庫…' : '場景載入失敗，請重新載入。'}</p>
           {load === 'error' && <button type="button" onClick={() => setAttempt(value => value + 1)}>重新載入</button>}</div>}
-        {(status.paused || status.completed) && <div className="ss-message"><strong>{status.completed ? '找到傳送出口了！' : '已暫停'}</strong><span>{status.completed ? '選擇「從頭開始」再跑一次' : '選擇「繼續」或按 P'}</span></div>}
+        <div className="ss-playfield">
+        <button data-frame-control data-frame-primary tabIndex={-1} type="button" className="ss-preview-start"
+          hidden={!preview || manual || load !== 'ready'} onPointerDown={event => { if (event.button === 0) event.preventDefault(); }} onClick={start}>
+          <span className="ss-menu-label">開始冒險</span>
+        </button>
+        {status.completed && <div className="ss-message"><strong>找到傳送出口了！</strong><span>選擇下一個關卡，或回到世界巡覽</span></div>}
         <div className="ss-controls" role="group" aria-label="遊戲操作">
           <button type="button" data-control="jump" aria-label="跳躍" aria-keyshortcuts="Space ArrowUp W" disabled={load !== 'ready' || manual || preview || status.paused || status.completed}
             className="ss-control ss-jump"
@@ -94,9 +118,10 @@ export function SideScroller() {
               onBlur={() => scene.current?.pressControl(button, false, `button-${button}`)}
               onClick={event => { if (event.detail === 0) changeColor(button); }}><span className="ss-control-copy">{button === 'red' ? '紅燈' : '藍燈'}</span></button>)}
         </div>
+        </div>
       </div>
-      {manual && load === 'ready' && <Tutorial initial={!started} crossroads={crossroads} advanced={level.difficulty === 5} onClose={closeManual} onStart={start} />}
-      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才淡化；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}P 暫停。可開啟玩法手冊翻閱示範。</p>
+      {manual && load === 'ready' && <Tutorial initial={!started} onClose={closeManual} onStart={start} />}
+      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才淡化；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}可開啟玩法手冊翻閱示範。</p>
       <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
 }
