@@ -8,7 +8,7 @@ export const categories: ActivityCategory[] = [
     { path: 'magic-ink', title: '神奇的墨水！原子筆的科學', description: '觀察墨水的秘密，動手做變色實驗。' },
   ] },
   { id: 'games', title: '互動學習', starName: '冒險座', description: '讓練習變成一場冒險。', items: [
-    { path: 'math-rpg', title: '數學勇者', description: '開放遊玩 · 五上第 1–5 單元，答題出劍、五關冒險。' },
+    { path: 'math-rpg', title: '數學勇者', description: 'Pixi 遊戲框架 · 題庫保留，圖片與玩法重製中。' },
     { path: 'magic-workshop', title: '魔法工坊', description: '量取魔力液 · 規劃補滿、倒空與互倒，完成五關委託。' },
     { path: 'side-scroller', title: '魔法禁書庫', description: '陪米洛點亮紅藍燈、穿越浮空小徑，找出神祕空間的傳送出口。' },
   ] },

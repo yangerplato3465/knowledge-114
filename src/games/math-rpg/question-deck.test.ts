@@ -1,12 +1,5 @@
 import { expect, test } from 'vitest';
-import { CURRICULUM, createQuestionDeck, isUnitReady, battlePaceFor } from './question-deck';
-
-test('戰鬥節奏依單元切換，不影響小數或六上單元', () => {
-  expect(battlePaceFor('五上', '因數與倍數')).toBe('quick');
-  expect(battlePaceFor('五上', '多位小數與加減')).toBe('standard');
-  expect(battlePaceFor('五上', '擴分、約分與通分')).toBe('moderate');
-  expect(battlePaceFor('六上', '最大公因數與最小公倍數')).toBe('standard');
-});
+import { CURRICULUM, createQuestionDeck, isUnitReady } from './question-deck';
 
 test('五上合併第 2–3 單元並保留課本編號，六上九單元不變；僅新題庫可開局', () => {
   expect(Object.keys(CURRICULUM)).toEqual(['五上', '六上']);

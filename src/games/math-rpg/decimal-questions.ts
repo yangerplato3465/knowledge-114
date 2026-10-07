@@ -1,4 +1,4 @@
-import { seededRandom } from './battle';
+import { seededRandom } from './question-random';
 import type { Question } from './questions';
 
 export const DECIMAL_UNIT = '多位小數與加減';

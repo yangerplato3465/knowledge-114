@@ -12,6 +12,14 @@
 | --- | --- | --- |
 | <img src="../../assets/images/magic-workshop/display/visitor-owl-keeper-v1.webp" width="160" alt="諾爾現役造型"> | <img src="../../assets/images/magic-workshop/display/forest-visitor-v3.webp" width="160" alt="菲恩現役造型"> | <img src="../../assets/images/magic-workshop/display/visitor-bear-artisan-v2.webp" width="160" alt="布諾現役造型"> |
 
+### 上古傳說人物
+
+| 黎薇｜勇者 | 赫恩｜奪輝王 |
+| --- | --- |
+| <img src="art/characters/liwei/liwei-character-master-v1.png" width="220" alt="黎薇已選定原畫"> | <img src="art/characters/heen/heen-character-master-v1.png" width="220" alt="赫恩已選定原畫"> |
+
+兩人屬於暮光森林的上古傳說，與現代居民的造型差異來自年代。共同歷史只見[世界觀](README.md#上古傳說與今日和平)，本頁維護人物身分、個性與辨識。
+
 ## 身分與口吻
 
 | 角色 | 身分與個性 | 說話方式／示例 | 可延伸的小細節 |
@@ -22,8 +30,12 @@
 | 諾爾 | 貓頭鷹星燈看守人；安靜、細心，留意容易被忽略的人 | 短句、留白，有溫柔的觀察。「這盞燈，留給晚歸的人。」 | 替怕黑的燈做夜燈；數星星數到打呵欠 |
 | 菲恩 | 狐狸草藥師；靈巧、愛研究，樂於修正猜想 | 以氣味、葉片與發現說話，不裝神祕。「配方這一格，留給新發現。」 | 落葉當書籤；配方保留空白 |
 | 布諾 | 熊火光修理師；穩重、耐心，擅長讓物件重新運作 | 樸實、有夥伴感。「沒關係，搭檔。我們再試一回。」 | 工具箱裡睡著小貓；珍藏修心情的螺絲 |
+| 黎薇 | 上古勇者；勇敢、沉著、在意同伴，希望大家平安回家；有時把責任全攬在自己身上 | 沉著、關心同行者安全；完整台詞尚未定案 | 這個魔法世界唯一持劍的勇者；現在的下落未定案 |
+| 赫恩 | 上古魔王，稱號「奪輝王」；曾目睹魔法失控造成傷害，逐漸相信魔法應由他一人掌控 | 冷靜、有說服力，也極具威脅感；完整台詞尚未定案 | 具體能力規則未定案，不以圖中的光效建立戰鬥設定 |
 
 ## 同場角色尺度
+
+以下比例只適用於六位現代工坊居民；黎薇與赫恩的共同像素尺寸、角色比例、錨點與腳底基線仍待正式 sprite 製作時確認，不套用這份居民身高表。
 
 角色在同一地面深度並排時，以奧利的自然站姿輪廓為 1.00 校準視覺身高；帽沿、耳尖、羽角、提燈、披風與魔法光暈不拿來決定縮放。這是跨遊戲的畫面比例基準，不是角色的公分身高；遠近透視仍由場景座標調整。各角色有頭身與體型差異，但不把任何居民畫成另一位的巨人或矮人。
 
@@ -39,6 +51,8 @@
 ## 造型基準與原圖
 
 上方速覽直接引用現役 WebP；「造型母圖」連向完整 PNG 原稿，製作新圖時優先使用它。表情、步態與正視修正是同一角色的衍生姿勢，不是不同角色。原稿尺寸、提示與生成紀錄以所連的 manifest 為準；有透明殘點的早期原稿仍需重新驗收，不能把它當成已通過新動畫規格。
+
+上古兩人的速覽直接引用已選定 PNG 母圖；像素站立圖是美術方向參考，並非已採用的遊戲素材。來源與實測尺寸見[上古素材清單](art/manifests/ancient-legend-manifest.json)。
 
 ### 米洛（milo）
 
@@ -87,6 +101,22 @@
 [造型母圖](art/characters/bruno/visitor-bear-artisan-v2.png) · [感謝表情原圖](art/characters/bruno/visitor-bear-happy-v1.png) · [造型來源紀錄](art/manifests/batch-2-manifest.json)
 
 其他姿勢：[六幀步態母圖](art/characters/bruno/guest-bear-walk-v1.png)
+
+### 黎薇
+
+暖棕膚色、及肩棕髮與編髮、金色髮飾、深藍服裝、及腰的藍綠披風、羅盤、發藍光的劍與棕色長靴。外觀以已選定原畫為準，不增加第二把劍或替換辨識配件。
+
+[造型母圖](art/characters/liwei/liwei-character-master-v1.png) · [像素站立修正版參考](art/characters/liwei/liwei-pixel-idle-reference-v2.png) · [來源與素材狀態](art/manifests/ancient-legend-manifest.json)
+
+像素版放在畫面左側、面向右；以雙手握住**同一支劍柄**的修正版為準。此圖未完成正式 sprite 的尺寸、錨點、腳底基線與透明邊緣驗收，不直接縮圖後當作已核准動畫幀。
+
+### 赫恩
+
+深色波浪長髮與白色髮束、鬍鬚、深色服裝、紫色內襯大披風、胸前金色扣飾與棕色長靴。造型依已選定原畫，不加入植物裝飾，也不給他劍；原畫上的魔法效果不等於已定案的能力規則。
+
+[造型母圖](art/characters/heen/heen-character-master-v1.png) · [像素站立參考](art/characters/heen/heen-pixel-idle-reference-v1.png) · [來源與素材狀態](art/manifests/ancient-legend-manifest.json)
+
+像素版放在畫面右側、面向左；與黎薇共用正式製作規格後再驗收，保留原畫的身形、披風與人物辨識。目前仍為參考圖，不能視為可直接切幀的正式素材。
 
 ## 使用順序
 

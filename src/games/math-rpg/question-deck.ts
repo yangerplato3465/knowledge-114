@@ -2,7 +2,6 @@ import { createGeometryDeck, GEOMETRY_UNIT } from './geometry-questions';
 import { createDecimalDeck, DECIMAL_UNIT } from './decimal-questions';
 import { createFactorDeck, FACTOR_UNIT } from './factor-questions';
 import { createFractionDeck, FRACTION_UNIT } from './fraction-questions';
-import type { BattlePace } from './battle';
 
 export interface Unit { number: number; endNumber?: number; name: string }
 export const CURRICULUM: Record<string, Unit[]> = {
@@ -22,13 +21,7 @@ export function isUnitReady(grade: string, unit: string) {
   return grade === '五上' && (unit === DECIMAL_UNIT || unit === FACTOR_UNIT || unit === FRACTION_UNIT || unit === GEOMETRY_UNIT);
 }
 
-export function battlePaceFor(grade: string, unit: string): BattlePace {
-  if (grade === '五上' && unit === FACTOR_UNIT) return 'quick';
-  if (grade === '五上' && unit === FRACTION_UNIT) return 'moderate';
-  return 'standard';
-}
-
-/** 未製作的單元禁止開局，不以其他單元題目代替。 */
+/** 未製作的單元禁止出題，不以其他單元題目代替。 */
 export function createQuestionDeck(grade: string, unit: string, seed: number) {
   if (!isUnitReady(grade, unit)) throw new Error('此單元題庫尚未開放');
   return unit === GEOMETRY_UNIT ? createGeometryDeck(seed) : unit === FACTOR_UNIT ? createFactorDeck(seed) : unit === FRACTION_UNIT ? createFractionDeck(seed) : createDecimalDeck(seed);

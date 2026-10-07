@@ -8,7 +8,7 @@
 | 魔法禁書庫 | 暮光森林；米洛固定前進、一段跳與紅藍混色，找出傳送出口 | [遊戲設計](side-scroller/design.md) |
 | 偵探：黃金貓頭鷹 | 獨立校園案件；沒有定案為暮光森林 | [案件製作](detective/authoring.md) · [案件程式](../../assets/js/detective/cases/) |
 | 偵探：新遊戲框架 | 暮光森林；目前只有空場景與共用介面，案件尚未定案 | [框架設計](detective/new-game-design.md) |
-| 數學勇者 | 獨立像素冒險原型；不把勇者／敵人視為米洛系列角色 | [設計與題庫範圍](math-rpg/design.md) · [美術與動畫](math-rpg/art.md) |
+| 數學勇者 | 暮光森林的上古傳說；空白 Pixi 框架保留題庫，封面與像素遊玩場景尚未接入 | [設計與題庫範圍](math-rpg/design.md) · [美術來源與舊素材規格](math-rpg/art.md) |
 | 班級 RPG | 教師名冊、獎勵／復原、全班角色散步；獨立系統 | [已確認方向](class-rpg/design.md) |
 | 水與酸鹼、墨水科學 | 科學教材與互動；非暮光森林故事 | [教材程式](../../src/lessons/) |
 

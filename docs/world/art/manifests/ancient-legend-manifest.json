@@ -1,0 +1,281 @@
+{
+  "version": 1,
+  "scope": "上古傳說人物的來源原檔及待確認封面；身分與世界設定只見 docs/world/characters.md 與 docs/world/README.md。",
+  "canonical_documents": [
+    "docs/world/README.md",
+    "docs/world/characters.md"
+  ],
+  "runtime_assets": [],
+  "runtime_integration": "尚未接入遊戲；未產生正式 sprite 或切幀。",
+  "assets": [
+    {
+      "character_id": "liwei",
+      "role": "identity-master",
+      "file": "docs/world/art/characters/liwei/liwei-character-master-v1.png",
+      "status": "使用者已選定造型母圖；保留原檔",
+      "origin": {
+        "kind": "user-attachment",
+        "attachment_number": 1,
+        "source_basename": "codex-clipboard-7c8fc906-34c7-4ff3-936b-cc24d5233187.png",
+        "original_generation_tool": null,
+        "original_generation_prompt": null
+      },
+      "copy": {
+        "method": "原檔位元組複製，未裁切、縮放、清除透明殘點或重編碼",
+        "sha256": "c19884c4dd7a881be3c23fcab8c55d44ff9431f250a19b892d1556231798d969"
+      },
+      "image": {
+        "width": 1024,
+        "height": 1536,
+        "mode": "RGBA",
+        "frame_count": 1,
+        "grid": [
+          1,
+          1
+        ],
+        "facing": "以原畫姿態為準"
+      },
+      "inspection": {
+        "alpha_extrema": [
+          0,
+          254
+        ],
+        "alpha_nonzero_bounds_exclusive": [
+          49,
+          55,
+          1002,
+          1514
+        ],
+        "alpha_ge_16_bounds_exclusive": [
+          200,
+          138,
+          893,
+          1396
+        ],
+        "alpha_1_to_15_pixel_count": 19364,
+        "edge_max_alpha_top_bottom_left_right": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "production_ready": false,
+        "warning": "母圖的透明邊緣與低 alpha 像素仍需在製作衍生素材時檢查；不宣稱可直接切成正式 sprite。"
+      }
+    },
+    {
+      "character_id": "heen",
+      "role": "identity-master",
+      "file": "docs/world/art/characters/heen/heen-character-master-v1.png",
+      "status": "使用者已選定造型母圖；保留原檔",
+      "origin": {
+        "kind": "user-attachment",
+        "attachment_number": 2,
+        "source_basename": "codex-clipboard-7e8eca42-4ace-4d8f-9fb9-75050cdeb448.png",
+        "original_generation_tool": null,
+        "original_generation_prompt": null
+      },
+      "copy": {
+        "method": "原檔位元組複製，未裁切、縮放、清除透明殘點或重編碼",
+        "sha256": "c349a9ae9f2cfbb43e05af86274759e9141a93a1dbe2eba6c912e20b6f182b3f"
+      },
+      "image": {
+        "width": 1024,
+        "height": 1536,
+        "mode": "RGBA",
+        "frame_count": 1,
+        "grid": [
+          1,
+          1
+        ],
+        "facing": "以原畫姿態為準"
+      },
+      "inspection": {
+        "alpha_extrema": [
+          0,
+          254
+        ],
+        "alpha_nonzero_bounds_exclusive": [
+          71,
+          71,
+          959,
+          1514
+        ],
+        "alpha_ge_16_bounds_exclusive": [
+          73,
+          149,
+          956,
+          1377
+        ],
+        "alpha_1_to_15_pixel_count": 18107,
+        "edge_max_alpha_top_bottom_left_right": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "production_ready": false,
+        "warning": "母圖的透明邊緣與低 alpha 像素仍需在製作衍生素材時檢查；不宣稱可直接切成正式 sprite。"
+      }
+    },
+    {
+      "character_id": "liwei",
+      "role": "pixel-idle-reference",
+      "file": "docs/world/art/characters/liwei/liwei-pixel-idle-reference-v2.png",
+      "status": "美術方向參考；尚非正式 sprite",
+      "origin": {
+        "kind": "user-attachment",
+        "attachment_number": 3,
+        "source_basename": "codex-clipboard-d3beeea3-0194-4929-ac06-7e750f7f7c0b.png",
+        "original_generation_tool": null,
+        "original_generation_prompt": null
+      },
+      "copy": {
+        "method": "原檔位元組複製，未裁切、縮放、清除透明殘點或重編碼",
+        "sha256": "9bcd4fa67041add9fe81abcd6f186cf43fc4b07fe6508a41ff42f528dc9fc1e9"
+      },
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA",
+        "frame_count": 1,
+        "grid": [
+          1,
+          1
+        ],
+        "facing": "right"
+      },
+      "inspection": {
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "alpha_nonzero_bounds_exclusive": [
+          19,
+          21,
+          1218,
+          1254
+        ],
+        "alpha_ge_16_bounds_exclusive": [
+          392,
+          236,
+          1102,
+          1087
+        ],
+        "alpha_1_to_15_pixel_count": 23275,
+        "edge_max_alpha_top_bottom_left_right": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "production_ready": false,
+        "warning": "像素參考的邊界有 alpha=1 殘點；不以較高透明閾值忽略問題。共同格位、錨點與腳底基線未定案。",
+        "grip": "使用者指定修正版；雙手握同一支劍柄。"
+      }
+    },
+    {
+      "character_id": "heen",
+      "role": "pixel-idle-reference",
+      "file": "docs/world/art/characters/heen/heen-pixel-idle-reference-v1.png",
+      "status": "美術方向參考；尚非正式 sprite",
+      "origin": {
+        "kind": "user-attachment",
+        "attachment_number": 4,
+        "source_basename": "codex-clipboard-22a81bce-b01e-4581-8320-caf452708fb6.png",
+        "original_generation_tool": null,
+        "original_generation_prompt": null
+      },
+      "copy": {
+        "method": "原檔位元組複製，未裁切、縮放、清除透明殘點或重編碼",
+        "sha256": "3e20a66cdbdc34fbe93739d874ee8a7ee5a486558f2fbdc6e3d7e4081b13e88a"
+      },
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA",
+        "frame_count": 1,
+        "grid": [
+          1,
+          1
+        ],
+        "facing": "left"
+      },
+      "inspection": {
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "alpha_nonzero_bounds_exclusive": [
+          0,
+          21,
+          1214,
+          1254
+        ],
+        "alpha_ge_16_bounds_exclusive": [
+          175,
+          232,
+          1080,
+          1107
+        ],
+        "alpha_1_to_15_pixel_count": 19796,
+        "edge_max_alpha_top_bottom_left_right": [
+          0,
+          1,
+          1,
+          0
+        ],
+        "production_ready": false,
+        "warning": "像素參考的邊界有 alpha=1 殘點；不以較高透明閾值忽略問題。共同格位、錨點與腳底基線未定案。"
+      }
+    }
+  ],
+  "production_sprite_contract": {
+    "status": "待使用者逐步確認，產製前必須補齊；不沿用舊遊戲格位",
+    "frame_width": null,
+    "frame_height": null,
+    "frame_count": null,
+    "rows": null,
+    "columns": null,
+    "anchor": null,
+    "foot_baseline": null,
+    "minimum_safe_padding": null,
+    "common_character_scale": null,
+    "background": "transparent",
+    "required_checks": [
+      "角色、武器、衣物、陰影與全部特效完整位於各自格內",
+      "原圖先驗收，切出的每一幀再驗收",
+      "檢查透明殘點、鄰幀殘片與縮放後辨識",
+      "不能以硬切、跨格或逐幀自動裁切解決放不下的動作"
+    ]
+  },
+  "cover_concept": {
+    "file": "docs/world/art/math-rpg/cover-concept-v1.png",
+    "status": "待確認概念稿，非核准封面或遊戲執行圖",
+    "tool": "built-in image_gen",
+    "generation_basename": "exec-1eb4c5d9-4897-424d-bbba-bbea277129fb.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "4c0aa636ccc6a22f64c78c93ce4ca529ab892cd3b61b386b3226bd77cc6a3e1f",
+    "requested_size": [
+      1920,
+      1080
+    ],
+    "requested_aspect": "16:9",
+    "requested_safe_padding": 64,
+    "inputs": [
+      "docs/world/art/characters/liwei/liwei-character-master-v1.png",
+      "docs/world/art/characters/heen/heen-character-master-v1.png"
+    ],
+    "prompt": "Use case: compositing, identity-preserve. Create ONE review-only game title-screen cover concept for the Traditional Chinese math adventure game 數學勇者. This is an art approval mockup, not production sprites or an implemented screen. Landscape 16:9 canvas, target 1920 x 1080, fully opaque painted background. Single image, one frame, no atlas or grid. Keep every required character, entire sword, hands, boots, cape, shadows, and existing effects fully inside the canvas with at least 64 pixels padding at the target size. Do not crop or distort the figures.\n\nInput image 1 is the locked original full-body illustration of the heroine 黎薇 (Livy), a warm-brown-skinned young female hero with shoulder-length braided brown hair, one gold hair ornament, navy clothing, teal-blue waist-length cape, compass, brown long boots, and exactly ONE blue glowing sword. Input image 2 is the locked original full-body illustration of the ancient demon king 赫恩 (Hearn), the 奪輝王, with dark wavy hair, distinctive white hair streak, goatee, dark charcoal clothes, purple-lined sweeping cloak, gold clasp and brown boots. Preserve both original characters' identity, face, costume, accessories, proportions, and painted rendering extremely closely. Compose the supplied figures into the scene; do not redesign them, do not make them photorealistic or pixel art, and do not mirror costume asymmetries. Livy appears on the left third, Hearn on the right third. Her stance is courageous and composed, his expression intelligent and threatening. Use their supplied full-body poses and silhouettes. Hearn never has a sword or plant decoration. Preserve only the small existing magic effect from his reference; it is an illustration motif and not a new defined power. Do not change Livy's cover pose into the later pixel-art stance.\n\nBackground: a modestly detailed ancient stone courtyard under a dramatic dusk sky, with irregular weathered stone texture, a few large offset architectural silhouettes and hazy distant hills, foreground and background separation, grounded contact shadows. This is a proposed ancient cover location, not a canon claim about current world geography. No destroyed or breaking seals, no portals, no plot about a returned demon king, no other characters. The current Twilight Forest is peaceful because Livy defeated and sealed Hearn long ago; this title screen presents that past legend. Use subdued indigo and muted plum atmosphere on Hearn's side, restrained blue-teal accent near Livy's actual sword, and warm natural grazing light on stone. Atmospheric drama comes from scale, value contrast and depth, not dense glitter or arbitrary luminous rings. Visually asymmetric composition and believable cloth, worn leather and brush texture. Avoid sterile gloss, mirror symmetry, repetitive meaningless gold ornament, excessive particles and overly smooth surfaces.\n\nComposition: put the two entire characters on a shared ground plane near the left and right edges, leaving a generous open central third for game typography. Keep sky and scenery behind the central text low contrast and quiet. A visual hierarchy of large title in the upper center, one integrated game-like start control beneath it, and three short legible instruction lines lower in the central space. These are elements within a full-screen game scene, not a website. No webpage header, navigation, cards, sidebar, dashboard, boxed tutorial panels, or browser chrome. Do not show HUD, health bars, answer choices, world lore sections, rewards or pixel sprites in this concept. Scene extends edge to edge. The start control can look like a simple worn stone inset with a restrained blue rim, no ornate gold frame. Keep all wording clear and readable, do not shrink to cram.\n\nRender only the following exact Traditional Chinese text:\nLarge main title: 「數學勇者」\nOne start control: 「開始冒險」\nBelow the control, three concise instruction lines:\n「答對：出劍，壓回敵人蓄力」\n「答錯：敵人反擊」\n「敵人蓄力滿：受到攻擊」\nDo not render quotation marks, character labels, extra text, decorative unreadable script, subtitles, artist signature, watermark or English. Typography should suit a painted fantasy game, with solid legibility and minimal ornament. This is a cover mockup only; actual gameplay remains pixel art and will be designed later.",
+    "review": [
+      "實際輸出為 1672×941，尚未轉成遊戲素材；正式尺寸與留白待確認。",
+      "角色均有完整劍、靴與披風；赫恩右側較靠近畫布邊緣，正式採用前須複核安全留白。",
+      "金色標題與裝飾較突出，裝飾密度與角色貼合度待使用者確認。",
+      "場景、旗幟、標誌與光效僅為構圖提案，不建立古代地理、能力或封印現況。"
+    ],
+    "approved": false
+  },
+  "inspection_note": "alpha>=16 的輪廓僅用於觀察低 alpha 殘點與主要圖形的差異，不是裁切或刪除像素的規則。所有附件均原樣保存。"
+}

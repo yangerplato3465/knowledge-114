@@ -1,4 +1,4 @@
-import { seededRandom } from './battle';
+import { seededRandom } from './question-random';
 import type { Question } from './questions';
 
 export const GEOMETRY_UNIT = '多邊形與扇形';

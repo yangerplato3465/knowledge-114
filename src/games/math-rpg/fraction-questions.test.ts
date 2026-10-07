@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { createFractionDeck, FRACTION_KINDS, FRACTION_UNIT } from './fraction-questions';
-import { createQuestionDeck, battlePaceFor } from './question-deck';
+import { createQuestionDeck } from './question-deck';
 
 function rational(text: string): [bigint, bigint] {
   const match = text.match(/^(?:(\d+)又)?(\d+)\/(\d+)$/);
@@ -72,9 +72,8 @@ test('批次驗算除法、通分、簡單觀察與擴約分，答案唯一且�
   for (const kind of [...FRACTION_KINDS, 'proper', 'improper', 'story', 'equation', 'whole-kept', 'no-whole', 'numerator-blank', 'denominator-blank']) expect(covered.has(kind)).toBe(true);
 });
 
-test('單元入口種子可重現，每輪七類題型且使用中間戰鬥節奏', () => {
+test('單元入口種子可重現，每輪七類題型', () => {
   const a = createFractionDeck(123), b = createQuestionDeck('五上', FRACTION_UNIT, 123);
-  expect(battlePaceFor('五上', FRACTION_UNIT)).toBe('moderate');
   expect(createFractionDeck(124)()).not.toEqual(createFractionDeck(123)());
   for (let block = 0; block < 20; block++) {
     const kinds = new Set();

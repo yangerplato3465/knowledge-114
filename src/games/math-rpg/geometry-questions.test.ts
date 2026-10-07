@@ -1,6 +1,5 @@
 import { expect, test } from 'vitest';
 import { createGeometryDeck, GEOMETRY_KINDS, circleFraction } from './geometry-questions';
-import { battleReducer, createBattle, enemyFor } from './battle';
 
 test('九種模板均衡出題，幾何條件與唯一正解一致', () => {
   const deck = createGeometryDeck(2026), counts = new Map<string, number>();
@@ -24,17 +23,9 @@ test('九種模板均衡出題，幾何條件與唯一正解一致', () => {
   expect([...counts.values()].every(n => n === 1000)).toBe(true);
 });
 
-test('種子可重現；換題保留蓄力比例，重擊適用難度時間，戰敗不能重試', () => {
+test('種子可重現，題目難度標記保留', () => {
   const a = createGeometryDeck(77), b = createGeometryDeck(77);
   for (let i = 0; i < 100; i++) expect(a()).toEqual(b());
-  let state = { ...createBattle(1, [1, 1, 1, 1, 1]), charge: 20, questionScale: 1.4 };
-  expect(enemyFor(state).damage).toBe(enemyFor({ ...state, questionScale: 1 }).damage);
-  state = battleReducer(state, { type: 'answer', correct: true }) as typeof state;
-  state = battleReducer(state, { type: 'tick', seconds: 1.2 }) as typeof state;
-  const ratio = state.charge / enemyFor(state).interval;
-  state = battleReducer(state, { type: 'continue', questionScale: 1 }) as typeof state;
-  expect(state.charge / enemyFor(state).interval).toBeCloseTo(ratio);
-  expect(state.hp).toBe(200);
-  const retry = battleReducer({ ...state, phase: 'lost' }, { type: 'retry', questionScale: 1.4 });
-  expect(retry.phase).toBe('lost'); expect(retry.questionScale).toBe(state.questionScale);
+  const questions = Array.from({ length: 90 }, () => a());
+  expect(new Set(questions.map(q => q.difficulty))).toEqual(new Set(['basic', 'challenge']));
 });

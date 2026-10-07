@@ -7,6 +7,8 @@
 | 需求 | 位置與判讀 |
 | --- | --- |
 | 六位居民的造型、表情與動作原稿 | [角色圖鑑](../characters.md)；實體檔案按人物放在 `characters/<角色英文識別名>/` |
+| 上古黎薇與赫恩的核准原畫、像素站立參考 | [角色圖鑑](../characters.md#上古傳說人物)；來源與尺寸見[上古素材清單](manifests/ancient-legend-manifest.json)，像素圖尚非正式 sprite |
+| 數學勇者封面構圖概念稿 | [封面提案](math-rpg/cover-concept-v1.png)；待使用者確認，未接入遊戲，場景與旗幟不建立新的世界設定 |
 | 工坊背景、物件及整張素材表 | 下方按類別列出的 `workshop/` 原稿 |
 | 網站首頁、活動入口與教師工作室 | [網站原稿與產製規格](site/manifest.json)；介面分工見 [網站設計](../../project/site-design.md) |
 | 尺寸、格位、錨點、留白、產圖提示與生成紀錄 | [製作清單](#製作清單與重建)，不在多個 MD 重複抄寫規格 |
@@ -21,6 +23,8 @@
 ## 共用視覺語言
 
 細緻手繪奇幻繪本、圓潤親切角色、木頭／玻璃／紙張／布料的材質。柔和上左暖光與青綠魔力相呼應；道具接觸陰影、角色比例與場景透視須一致。每款遊戲可以改主色與時段，保留共同材質與角色辨識。
+
+黎薇與赫恩的上古造型採各自核准原畫，與現代工坊的差異依[世界觀的年代設定](../README.md#上古傳說與今日和平)。兩人共用造型語言，封面原畫與遊玩像素版分開製作；不要為了統一現代居民風格而重設他們的服裝、比例或臉型。避免過度對稱、無意義金飾與光效、光滑表面或遮蔽輪廓的細節堆砌。
 
 | 用途 | 基準色 |
 | --- | --- |
@@ -63,6 +67,7 @@
 
 | 清單 | 用途 |
 | --- | --- |
+| [ancient-legend-manifest.json](manifests/ancient-legend-manifest.json) | 黎薇／赫恩已選定母圖、像素參考與待確認封面；原檔雜湊、透明邊緣檢查及正式製作未定項目 |
 | [batch-2-manifest.json](manifests/batch-2-manifest.json) | 露米、奧利、諾爾與布諾造型原稿 |
 | [display-manifest.json](manifests/display-manifest.json) | 完整畫布縮成 WebP 的尺寸與可見範圍 |
 | [detective-icons-manifest.json](manifests/detective-icons-manifest.json) | 偵探共用介面圖示原稿與執行圖 |

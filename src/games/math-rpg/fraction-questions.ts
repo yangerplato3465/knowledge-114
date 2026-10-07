@@ -1,4 +1,4 @@
-import { seededRandom } from './battle';
+import { seededRandom } from './question-random';
 import type { Question } from './questions';
 
 export const FRACTION_UNIT = '擴分、約分與通分';
