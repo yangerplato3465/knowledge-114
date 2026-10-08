@@ -10,7 +10,7 @@ React＋Vite 多頁網站，瀏覽器直連 GitHub／Firebase，無前端 Router
 | 導覽、主題 | `src/components`、`src/features/theme` | `SiteHeader` 學生導覽、`TeacherHeader` 老師導覽、`ActivityTrail` 返回活動；`PageLayout` 組版 |
 | 科學教材 | `src/lessons` | React 內容與互動，各教材獨立入口 |
 | 素材上下載 | `src/features/materials` | GitHub Contents API；清單可取消，寫入依序執行 |
-| 數學勇者 | `src/games/math-rpg` | 空白 Pixi 遊戲框架；`scene.ts` 管理背景／角色／特效／介面圖層與容器縮放，React 僅管理載入及隱藏語意；`question-deck.ts` 保留五上／六上目錄與五上四組動態題庫，尚未接入畫布 |
+| 數學勇者 | `src/games/math-rpg` | `scene.ts` 管理 Pixi 封面、選單與場景切換；`cover-motion.ts` 提供封面 Mesh 微動，`cover-art.ts` 定義封面圖。`battle-model.ts` 管五關規則，`battle-view.ts` 呈現像素戰鬥與題目，`battle-effects.ts` 管出招／命中時間軸，`battle-art.ts` 管圖集載入租約；React 管理共用網站外框、全螢幕、載入及隱藏操作語意，五上四組原題庫已接入 |
 | 魔法工坊 | `src/games/magic-workshop` | 獨立五關量取遊戲；`rules.ts` 管理補滿、倒空、互倒與最短解，`puzzles.ts` 管理已驗證候選題與可重現抽題；`play-scene.ts` 以單一 Pixi canvas 承載場景、操作與液量，隱藏 DOM 提供鍵盤及螢幕閱讀器語意 |
 | 魔法禁書庫 | `src/games/side-scroller` | 本地 Pixi 世界巡覽與固定前進；`model.ts` 一段跳／切色／出口碰撞，`scene.ts` 場景與鏡頭，`art.ts` 米洛與傳送門動畫；`controls.ts` 框內按鈕，`scene.ts` 收藏顯示；React 四頁手冊搭配 Pixi 教學示範 |
 | 班級／偵探 | `src/features/class-rpg`、`src/features/detective` | React 外殼接 `assets/js/class-rpg*`／`assets/js/detective`；仍有直接操作 DOM 的模組 |

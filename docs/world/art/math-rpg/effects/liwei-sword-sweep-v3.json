@@ -1,0 +1,187 @@
+{
+  "frames": {
+    "liwei-sword-sweep-v3-01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 60
+    },
+    "liwei-sword-sweep-v3-02": {
+      "frame": {
+        "x": 128,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 70
+    },
+    "liwei-sword-sweep-v3-03": {
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 80
+    },
+    "liwei-sword-sweep-v3-04": {
+      "frame": {
+        "x": 0,
+        "y": 128,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 70
+    },
+    "liwei-sword-sweep-v3-05": {
+      "frame": {
+        "x": 128,
+        "y": 128,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 80
+    },
+    "liwei-sword-sweep-v3-06": {
+      "frame": {
+        "x": 256,
+        "y": 128,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 100
+    }
+  },
+  "animations": {
+    "play": [
+      "liwei-sword-sweep-v3-01",
+      "liwei-sword-sweep-v3-02",
+      "liwei-sword-sweep-v3-03",
+      "liwei-sword-sweep-v3-04",
+      "liwei-sword-sweep-v3-05",
+      "liwei-sword-sweep-v3-06"
+    ]
+  },
+  "meta": {
+    "image": "liwei-sword-sweep-v3.webp",
+    "size": {
+      "w": 384,
+      "h": 256
+    },
+    "scale": "1",
+    "anchor": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "frameDurationsMs": [
+      60,
+      70,
+      80,
+      70,
+      80,
+      100
+    ],
+    "loop": false,
+    "status": "review-candidate; not loaded by the game",
+    "padding": 16
+  }
+}

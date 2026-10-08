@@ -1,12 +1,29 @@
 {
   "version": 1,
-  "scope": "上古傳說人物的來源原檔及待確認封面；身分與世界設定只見 docs/world/characters.md 與 docs/world/README.md。",
+  "scope": "上古人物母圖、像素參考、核准封面分層、像素戰鬥原型及獨立特效候選；人物與世界設定以共用圖鑑為準。",
   "canonical_documents": [
     "docs/world/README.md",
     "docs/world/characters.md"
   ],
-  "runtime_assets": [],
-  "runtime_integration": "尚未接入遊戲；未產生正式 sprite 或切幀。",
+  "runtime_assets": [
+    "assets/images/math-rpg/battle/battle-court-v1.webp",
+    "assets/images/math-rpg/battle/heen-attack.json",
+    "assets/images/math-rpg/battle/heen-attack.webp",
+    "assets/images/math-rpg/battle/heen-idle.json",
+    "assets/images/math-rpg/battle/heen-idle.webp",
+    "assets/images/math-rpg/battle/hit-spark.json",
+    "assets/images/math-rpg/battle/hit-spark.webp",
+    "assets/images/math-rpg/battle/liwei-attack.json",
+    "assets/images/math-rpg/battle/liwei-attack.webp",
+    "assets/images/math-rpg/battle/liwei-idle.json",
+    "assets/images/math-rpg/battle/liwei-idle.webp",
+    "assets/images/math-rpg/battle/sword-sweep.json",
+    "assets/images/math-rpg/battle/sword-sweep.webp",
+    "assets/images/math-rpg/cover/background-v2.webp",
+    "assets/images/math-rpg/cover/heen-standing-v1.webp",
+    "assets/images/math-rpg/cover/liwei-standing-v1.webp"
+  ],
+  "runtime_integration": "Pixi 封面 Mesh 微動；五關答題原型以像素 AnimatedSprite 呈現，第五關使用黎薇與赫恩四幀待機／六幀攻擊、獨立劍弧與命中星芒；前四關為小型暫用圖形。",
   "assets": [
     {
       "character_id": "liwei",
@@ -228,26 +245,1868 @@
         "production_ready": false,
         "warning": "像素參考的邊界有 alpha=1 殘點；不以較高透明閾值忽略問題。共同格位、錨點與腳底基線未定案。"
       }
+    },
+    {
+      "role": "approved-cover-layout",
+      "file": "docs/world/art/math-rpg/cover-promotional-v2.png",
+      "prompt": "Use case: ads-marketing / identity-preserving cover redesign.\nCreate ONE professionally art-directed illustrated GAME PROMOTIONAL KEY VISUAL that can also serve as a title-screen layout preview. User authorizes redesign of IMAGE 1 to give it strong game-marketing appeal. 16:9 landscape, target 1920x1080, opaque, no crop needed. All required character bodies, sword, cloak tips, hands, boots and words remain inside 4% safe margins.\n\nINPUT ROLES:\nImage 1: existing composite, DESIGN TO REWORK. Its broad twilight palette and paired ancient stone gates/steps are approved. The current passive character catalog arrangement, overly chunky central button and detailed paving need improvement.\nImages 2 and 3: approved ORIGINAL CHARACTER IDENTITY MASTERS. Preserve identities strictly, use these faces and costumes rather than reinterpretations from Image 1. Hand-painted 2D fantasy animation illustration, rounded yet confident shape design, softly faceted paint and restrained texture; not 3D, realistic concept art, vector clipart or pixel gameplay.\n\nMAIN ART DIRECTION: an ancient decisive confrontation. Tell the viewer immediately WHO is confronting WHOM, and WHAT makes this game distinctive. Create a cohesive key-art composition with hierarchy: expressive faces and inward gestures -> memorable readable title -> concise mathematics/legend promise -> modest start affordance. Pose and gaze can be adjusted slightly for stronger visual storytelling, while preserving identity, proportions, costume, and one complete believable sword.\n\nCHARACTERS:\nHero Liwei on LEFT, three-quarter body turned RIGHT, composed brave face looking toward the king, not smiling at camera. Warm brown skin, shoulder-length brown braided curly hair, single approved golden hair ornament, navy/ivory costume, waist-length teal cloak, compass, brown tall boots. Sword's exact original blue-lit blade and gold hilt. One hand securely on one sword hilt, the other hand naturally free; do NOT invent another sword or extra hands. Angle the one sword in a strong inward diagonal toward the upper-center-left, fully in frame and clear of title and faces. Grounded balanced stance. No anatomy or costume redesign.\nAncient king Heen on RIGHT, three-quarter body turned LEFT, calm persuasive but menacing expression, eyes toward the hero, one deliberate open hand extending inward to imply confrontation. Approved wavy dark hair with white streak, goatee, tall purple collar, charcoal/navy robes with violet lining, single gold clasp, brown boots. Retain only the tiny magic detail that already exists in the original, reduced in attention, no invented powers. No sword, plants, horn crown or new jewelry. His cloak is imposing but must not swallow the heroine's visual importance.\nBoth full-body figures have coherent scale and share a grounded baseline around y87-89%. Faces at comparable visual emphasis; hero around x24%, king around x76%. Keep the central region clear; face and hand silhouettes have breathing room. Give their cloth only a restrained directional movement, not a hurricane.\nUnify scene lighting: a broad natural warm twilight light from left grazes both characters, with subdued violet reflected shadow. Actual contact shadows under boots. No bright uniform neon cutout outlines. Do not paste them as unrelated sticker standees.\n\nSCENE:\nA single ancient stone duel court. LEFT gateway/steps remain broad, gently curved, teal-accented and warmer; RIGHT same categories remain taller, sharper, violet-accented and heavier. Same ancient construction family with different shape language echoing the two costumes. Massive plain stones with just a few softened age-worn edges convey antiquity. Gateways sit behind the figures and are darker and simpler than them. Foreground paving now consists of a handful of large quiet painted planes, with very few joints; remove mottled scratches, intricate cracks and repetitive flecks. Distant forest/hills read as two soft silhouette groups. Reduce sky to two broad dusk/cloud masses and a restrained amber opening; it supports faces and title, not a spectacular weather subject. Architecture subtly frames the impending confrontation. No destruction, seal failure or new world lore.\n\nPROMOTIONAL TYPOGRAPHY / INTERFACE:\nTop center in the space BETWEEN heads, around y16-29%, prominent exact Traditional Chinese title \"數學勇者\". Strong custom illustrated display lettering with simple warm ivory/amber face, a thin dark navy outline/shadow; coherent restrained hand-crafted shape, not generic heavy gold extruded type or huge metallic bevel. Do not cross heads, sword or fingertips. Allow clean negative space around the title.\nBelow, around y33-39%, exact concise promotional line \"算出答案，迎戰傳說\", readable but clearly subordinate.\nA SINGLE smaller start plaque at lower-center, around y75-82%, exact text \"開始冒險\". Simple flatter matte navy stone face with restrained warm edge, minimal texture, no massive thick 3D gold frame. It belongs visually to the stone scene and does not compete with faces/title.\nReplace the bulky three-line tutorial block with ONE discreet but legible line along lower-center around y92%, exact wording:\n\"限時解題｜答對出劍｜答錯或敵人蓄力滿時受擊\"\nRender all specified Traditional Chinese accurately, once each. No other slogans, character names, logos, English, UI icons, status bars, cards, navigation, decorative separators or extra buttons.\n\nThe result must stay clear at thumbnail scale: opposing recognizable heroes, distinct ancient architectures, central brand, one small action. Use stronger selective dark-light grouping and silhouette overlap for drama, not increased object count. No swirls, energy collision, lightning, particle confetti, gratuitous glow or cinematic lens effects. Complete figures and clean glyphs; no extra fingers, merged hands, doubled weapons or overly symmetric ornamental filler.",
+      "cleanup_prompt": "Refine this ONE existing illustrated promotional game-cover image, preserving its composition, character identities, all faces/anatomy/poses/costumes, the single sword, full figures and all EXACT Chinese words, UI positions, title size, lighting and 16:9 opaque canvas.\nSingle cleanup goal: remove unapproved decorative visual noise from the ENVIRONMENT, bringing it back to purposeful restrained hand-painted shapes.\n\nRemove BOTH hanging banners completely: the teal cloth flag with gold leaf emblem at far-left, and purple cloth flag with gold emblem at far-right. Remove their emblems and mounts. Restore plain matte ancient stone faces behind them. No heraldry, plants, decorative symbols or new motifs on either architectural side. Preserve the rounded teal INSET STONE of the left gateway and angular violet INSET STONE of the right gateway. Insets are plain colored stone surfaces, NOT fabric or glowing portals.\nSimplify texture on all foreground paving and gate blocks: remove the many mottled flecks and tiny cracks. Maintain a few broad subtly faceted painted shade planes and important large structural joints. No new decoration. Simplify background forest and sky only by grouping small brush marks into larger quieter masses; preserve sunset mood and all major silhouettes.\nRemove the little decorative line-and-diamond separator directly below the large title, leaving natural breathing space above the tagline.\nDo NOT remove the approved tiny leaf motif on the HERO'S ACTUAL CLOTHING or her approved hair ornament/compass, and do not touch character outfits or original distinguishing features.\nPreserve text perfectly: \"數學勇者\"; \"算出答案，迎戰傳說\"; \"開始冒險\"; \"限時解題｜答對出劍｜答錯或敵人蓄力滿時受擊\".\nNo other edits. Clean promotional hierarchy, illustrated characters as focus, restrained old stone environment as support.",
+      "approved": true,
+      "reference": "使用者於本對話確認喜歡此設計並要求接入",
+      "origin": {
+        "kind": "built-in-imagegen",
+        "references": [
+          "approved character identity masters",
+          "previous cover composite"
+        ]
+      },
+      "processing_script": "scripts/prepare-math-rpg-cover.py"
+    },
+    {
+      "role": "cover-background-layer",
+      "file": "docs/world/art/math-rpg/cover-background-v2.png",
+      "prompt": "Edit this APPROVED game-cover illustration into its BACKGROUND-ONLY layer. Preserve its exact 16:9 composition, rounded teal stone gate and broad rounded stairs on the left, angular violet stone gate and angular stairs on the right, subdued forest silhouettes, warm sunset, plain ancient stone terrace, painterly 2D palette and lighting. Remove both characters completely, their sword and magic detail and all character contact shadows. Remove ALL title lettering, tagline, button/plaque, instruction lettering and UI. Reconstruct the hidden areas naturally using the same large plain stone planes, forest silhouettes and simple sky. No residual silhouettes, no text-shaped marks or ghosting. No new objects, ornaments or banners. The broad court should be intact and empty. Quiet low-detail background suitable for separately composited approved characters, not a redesigned scene. Opaque 16:9, target 1920x1080, no important crop.",
+      "runtime_file": "assets/images/math-rpg/cover/background-v2.webp",
+      "encoding": "WebP quality 86，完整尺寸，不裁切",
+      "origin": {
+        "kind": "built-in-imagegen",
+        "references": [
+          "docs/world/art/math-rpg/cover-promotional-v2.png"
+        ]
+      },
+      "processing_script": "scripts/prepare-math-rpg-cover.py"
+    },
+    {
+      "role": "cover-actor-layer",
+      "character_id": "liwei",
+      "file": "docs/world/art/characters/liwei/liwei-cover-standing-v1.png",
+      "prompt": "Extract ONLY the approved female hero Liwei from IMAGE 1 into a standalone TRANSPARENT character layer. Image 2 is her identity master for any tiny occluded details. Preserve the exact inward-facing pose, face/expression, shoulder-length braided brown hair, warm brown skin, golden hair ornament, navy/ivory clothes, compass, waist-length teal cloak, brown tall boots and single blue-glowing sword seen on the LEFT of Image 1. Do not redesign, add hands, change weapon or increase glow. No other character, no scenery, no text, no contact shadow or floor.\nSingle frame only. Canvas target 1024x1536 portrait RGBA with genuine transparent background. Exactly one complete full-body figure with sword, hair, cloth and all existing small effects fully contained; preserve proportions, fit uniformly inside minimum 80px safe padding on all four edges. Both boots share a visual baseline near y=1400; complete sword tip and cloak tips. The sword remains in the same single hand. Center the complete silhouette horizontally; NO cropping to artwork or clipped edges. Preserve clean opaque painted interiors and soft antialiasing at outer edges, no transparent holes, no black halo or colored background remnants. This is an illustrated cover actor, NOT a pixel-art sprite or sprite sheet.",
+      "runtime_file": "assets/images/math-rpg/cover/liwei-standing-v1.webp",
+      "encoding": "lossless WebP exact RGBA，完整尺寸，不裁切",
+      "origin": {
+        "kind": "built-in-imagegen",
+        "references": [
+          "docs/world/art/math-rpg/cover-promotional-v2.png"
+        ]
+      },
+      "processing_script": "scripts/prepare-math-rpg-cover.py"
+    },
+    {
+      "role": "cover-actor-layer",
+      "character_id": "heen",
+      "file": "docs/world/art/characters/heen/heen-cover-standing-v1.png",
+      "prompt": "Extract ONLY the approved ancient king Heen from IMAGE 1 into a standalone TRANSPARENT character layer. Image 2 is his approved identity master for any tiny occluded details. Preserve the exact figure on the RIGHT of Image 1: dark wavy hair with white streak, goatee and face, threatening composed expression, tall purple collar, navy charcoal robe and violet cloak lining, single gold clasp, brown boots, hand gestures, and existing small descending blue/gold magical shards. NO sword, plant ornament, horns or added power effects. No other character, scenery, lettering, ground or contact shadow.\nSingle complete frame, target 1024x1536 portrait RGBA genuinely transparent background. One complete full-body figure, ALL cloak tips and tiny magic shards inside minimum 80px safe padding on every edge. Preserve proportions, fit entire silhouette uniformly, center horizontally; boots share visual baseline near y1400. Do not auto-crop, cut clothing, stretch him or clip effects. Opaque painted interior, clean softly antialiased transparent edges, no black or sunset background halo and no transparent holes in clothing. Illustrative cover layer, not pixel art or sprite sheet.",
+      "runtime_file": "assets/images/math-rpg/cover/heen-standing-v1.webp",
+      "encoding": "lossless WebP exact RGBA，完整尺寸，不裁切",
+      "origin": {
+        "kind": "built-in-imagegen",
+        "references": [
+          "docs/world/art/math-rpg/cover-promotional-v2.png"
+        ]
+      },
+      "processing_script": "scripts/prepare-math-rpg-cover.py"
+    },
+    {
+      "file": "docs/world/art/characters/liwei/liwei-pixel-attack-source-v1.png",
+      "generation_basename": "exec-6b1abc17-09ae-4a79-bf52-2c39a4ede5e5.png",
+      "prompt": "Use image1 ONLY as precise geometric layout guide, image2 as locked pixel character identity. Create SIX attack frames in3columns2rows on1536x1024 TRUE TRANSPARENT RGBA. Each cell512 square. The green boxes show BODY SIZE and POSITION: head near localy190, boots EXACTLY localy448 (redline), root x256. Body about250px tall. Sword may extend outside GREEN boxes but must stay at least32px INSIDE black safety box edges, localx64..448 and y64..448. ALL SIX bodies have same height and feet baseline. REMOVE EVERY guide/background/line from final image, draw only isolated complete figures with huge transparent space around them. Do not draw figures large: upper70% of each cell mostly transparent; bodies occupy only center-lower portion. Preserve Liwei identity, navy/ivory tunic, waist-length teal cape, brown braided curls/gold ornament, compass and boots. RIGHT-facing, ONE blue-lit sword BOTH hands on its SAME hilt in ALL poses. Same pixel clustered style. Sequence 1 guard sword diagonalup-right, 2 small crouch and sword raised for windup, 3 forward high-to-low sweep, 4 weight shifted right and sword low-right atimpact, 5 recover from low-right sword, 6 originalguard. No attack arcs/glow haze/scene/floor/shadows/text. Complete swords in every frame, no neighboring fragments. Particularly left column's horizontal sword must NOT cross into middle column. Thin long silver blade can be angled steeper down if necessary, never cut. Priority: exact geometry, consistent small figures and full safe swords.",
+      "origin": "built-in-imagegen",
+      "processing_script": "scripts/prepare-math-rpg-battle.py",
+      "adopted": true,
+      "sha256": "3604a5bfe32fb62c03afcb04d91da25c0eee0da85f4fa6861ca7d491ab70fe6d",
+      "image": {
+        "width": 1536,
+        "height": 1024,
+        "mode": "RGBA"
+      },
+      "status": "已接入操作原型，待使用者美術確認",
+      "role": "pixel-battle-source",
+      "packing_profile": {
+        "source": "characters/liwei/liwei-pixel-attack-source-v1.png",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "x_boundaries": [
+          0,
+          512,
+          1024,
+          1536
+        ],
+        "row_height": 512,
+        "source_root_x": [
+          256,
+          256,
+          256
+        ],
+        "source_baselines": [
+          503,
+          467
+        ],
+        "uniform_scale": 0.36,
+        "frame_size": [
+          256,
+          256
+        ],
+        "columns": 3,
+        "rows": 2,
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            82,
+            96,
+            197,
+            224
+          ],
+          [
+            79,
+            60,
+            180,
+            224
+          ],
+          [
+            65,
+            109,
+            207,
+            224
+          ],
+          [
+            58,
+            115,
+            214,
+            223
+          ],
+          [
+            72,
+            109,
+            203,
+            224
+          ],
+          [
+            79,
+            96,
+            192,
+            224
+          ]
+        ],
+        "durations_ms": [
+          130,
+          120,
+          80,
+          110,
+          130,
+          140
+        ],
+        "runtime": "assets/images/math-rpg/battle/liwei-attack.json"
+      },
+      "runtime_file": "assets/images/math-rpg/battle/liwei-attack.json",
+      "character_id": "liwei",
+      "identity_reference": "docs/world/art/characters/liwei/liwei-pixel-idle-reference-v2.png"
+    },
+    {
+      "file": "docs/world/art/characters/liwei/liwei-pixel-idle-source-v1.png",
+      "generation_basename": "exec-195545ab-0192-4caf-8dc3-d146ca2ca20c.png",
+      "prompt": "Four-frame pixel-art IDLE spritesheet, based exactly on attached Liwei. Canvas1024x1024 true transparent RGBA,2columns2rows, each512x512. Single complete character in each cell, right-facing, both hands on SAME one sword hilt, blue-lit sword diagonal up-right. Preserve braided brown curls/goldhairornament, warmbrownskin, waist-lengthtealcape, navy/ivorytunic, compass, brownboots. SAME size, headshape, cloth and sword throughout. Whole character and sword fit within cell with≥48px empty padding. Feet baseline localy448, midpointx256. Idle motion tiny: frame1 relaxed guard, frame2 slight inhale and cape edge lifted2px, frame3 gentle exhale cape settles, frame4 betweenframe3and1. Feet unmoving, hands locked sword, no action posechanges. Crisp 16bit pixel clusters, restrained palette, no blur. NO background, labels, grid, floor, shadows, diffuse glow or particles.",
+      "origin": "built-in-imagegen",
+      "processing_script": "scripts/prepare-math-rpg-battle.py",
+      "adopted": true,
+      "sha256": "7807a78d8937713c18ba3e708a27ab70a42e4469df691efbfb2cdee4594840cc",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "status": "已接入操作原型，待使用者美術確認",
+      "role": "pixel-battle-source",
+      "packing_profile": {
+        "source": "characters/liwei/liwei-pixel-idle-source-v1.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "x_boundaries": [
+          0,
+          627,
+          1254
+        ],
+        "row_height": 627,
+        "source_root_x": [
+          326,
+          285
+        ],
+        "source_baselines": [
+          599,
+          548
+        ],
+        "uniform_scale": 0.25,
+        "frame_size": [
+          256,
+          256
+        ],
+        "columns": 2,
+        "rows": 2,
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            92,
+            96,
+            198,
+            224
+          ],
+          [
+            90,
+            96,
+            201,
+            224
+          ],
+          [
+            92,
+            96,
+            198,
+            224
+          ],
+          [
+            93,
+            96,
+            201,
+            224
+          ]
+        ],
+        "durations_ms": [
+          230,
+          230,
+          230,
+          230
+        ],
+        "runtime": "assets/images/math-rpg/battle/liwei-idle.json"
+      },
+      "runtime_file": "assets/images/math-rpg/battle/liwei-idle.json",
+      "character_id": "liwei",
+      "identity_reference": "docs/world/art/characters/liwei/liwei-pixel-idle-reference-v2.png"
+    },
+    {
+      "file": "docs/world/art/characters/heen/heen-pixel-attack-source-v1.png",
+      "generation_basename": "exec-f08e84a5-bb22-468e-bbee-16f0a883ee06.png",
+      "prompt": "Create a production pixel-art KING ATTACK spritesheet from this locked Heen reference. Exactly SIX frames,3columns2rows, equal512x512 source cells, total1536x1024 true transparent RGBA. Read row-major. Draw each entire figure SMALL, hair-to-boots about280px high centered near x256, feet at localy448 in EACH cell. At least40px transparent safe padding all sides, all cape tips/fingers/hair stay IN their own cell. Keep proportions/scale SAME across sequence. LEFT-facing Heen, distinctive white streak through dark flowing hair, goatee, purple high collar, charcoal/navy robe, violet cloak lining, brown boots, single gold clasp, SAME costume as reference. Pixel-art hard edges and restrained clustered palette, no illustration smoothing. NO sword, plants, horns, new jewelry or large effects. Hands spellcasting-style gesture is only an attack presentation, do not invent a specific power. 1 neutral standing pose asreference with leftward extended hand; 2 pull open palm toward chest in controlled anticipation, slight knee bend; 3 raise palm and lean weight slightly forward, cloak lags; 4 thrust palm decisively LEFT, balanced stance with torso twist; 5 hand withdraws and body recoils slightly; 6 recover original standing pose. Smooth anatomical progression with clear anticipation/action/recovery. Preserve fixedgroundbaseline, no floating, no changing character height or cloning arms. NO magic projectile/glow/particles/contactshadow/floor/text/grid. Complete full-body figures, genuine transparency, empty surrounding space.",
+      "origin": "built-in-imagegen",
+      "processing_script": "scripts/prepare-math-rpg-battle.py",
+      "adopted": true,
+      "sha256": "b871eae306136a688b51bbcc5fde482c117a38dedb7638224c8e5f97051ea69d",
+      "image": {
+        "width": 1536,
+        "height": 1024,
+        "mode": "RGBA"
+      },
+      "status": "已接入操作原型，待使用者美術確認",
+      "role": "pixel-battle-source",
+      "packing_profile": {
+        "source": "characters/heen/heen-pixel-attack-source-v1.png",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "x_boundaries": [
+          0,
+          576,
+          1024,
+          1536
+        ],
+        "row_height": 512,
+        "source_root_x": [
+          256,
+          192,
+          256
+        ],
+        "source_baselines": [
+          497,
+          471
+        ],
+        "uniform_scale": 0.32,
+        "frame_size": [
+          256,
+          256
+        ],
+        "columns": 3,
+        "rows": 2,
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            71,
+            92,
+            202,
+            224
+          ],
+          [
+            82,
+            96,
+            196,
+            224
+          ],
+          [
+            66,
+            100,
+            204,
+            224
+          ],
+          [
+            63,
+            100,
+            226,
+            224
+          ],
+          [
+            83,
+            101,
+            202,
+            224
+          ],
+          [
+            59,
+            95,
+            195,
+            224
+          ]
+        ],
+        "durations_ms": [
+          130,
+          120,
+          80,
+          110,
+          130,
+          140
+        ],
+        "runtime": "assets/images/math-rpg/battle/heen-attack.json"
+      },
+      "runtime_file": "assets/images/math-rpg/battle/heen-attack.json",
+      "character_id": "heen",
+      "identity_reference": "docs/world/art/characters/heen/heen-pixel-idle-reference-v1.png"
+    },
+    {
+      "file": "docs/world/art/characters/heen/heen-pixel-idle-source-v1.png",
+      "generation_basename": "exec-03193add-2ed3-4c0f-8878-e068b02bb2e6.png",
+      "prompt": "Four-frame pixel-art IDLE spritesheet based EXACTLY on this Heen reference. 1024x1024 transparent RGBA,2columns2rows equal512 cells, complete LEFT-facing figure one per cell. Same hair-to-boots size acrossframes, bothboots planted on localbaseline448, bodycenterx256; minimum48px empty transparent space around cape/hair/hands. Hands preserve reference gesture, only tiny controlled breathing and a2pixel shift in cloakedge/hair, no waving, noattacks, no limb changes. Sequence calmstance, inhale, exhale, returntowardfirstframe. Preserve dark wavyhairandwhitestreak, goatee, purplecollar, charcoalnavyrobesandvioletlining, goldclasp, brownboots. Crisp deliberate16bitpixels, limitedcoherentcolors. No sword, plants, horns, particles, scene, shadow, glow, text orguidelines.",
+      "origin": "built-in-imagegen",
+      "processing_script": "scripts/prepare-math-rpg-battle.py",
+      "adopted": true,
+      "sha256": "ae30b04ecbbc1310f4d405678b0e01dd263e2acc835ba86f3e2cd2d170351e07",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "status": "已接入操作原型，待使用者美術確認",
+      "role": "pixel-battle-source",
+      "packing_profile": {
+        "source": "characters/heen/heen-pixel-idle-source-v1.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "x_boundaries": [
+          0,
+          627,
+          1254
+        ],
+        "row_height": 627,
+        "source_root_x": [
+          320,
+          320
+        ],
+        "source_baselines": [
+          588,
+          563
+        ],
+        "uniform_scale": 0.25,
+        "frame_size": [
+          256,
+          256
+        ],
+        "columns": 2,
+        "rows": 2,
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            64,
+            96,
+            195,
+            224
+          ],
+          [
+            62,
+            95,
+            194,
+            224
+          ],
+          [
+            64,
+            97,
+            197,
+            224
+          ],
+          [
+            64,
+            97,
+            195,
+            224
+          ]
+        ],
+        "durations_ms": [
+          230,
+          230,
+          230,
+          230
+        ],
+        "runtime": "assets/images/math-rpg/battle/heen-idle.json"
+      },
+      "runtime_file": "assets/images/math-rpg/battle/heen-idle.json",
+      "character_id": "heen",
+      "identity_reference": "docs/world/art/characters/heen/heen-pixel-idle-reference-v1.png"
+    },
+    {
+      "file": "docs/world/art/math-rpg/battle-court-source-v1.png",
+      "generation_basename": "exec-b191eab8-7353-43d5-b1c2-14f3cec92d4d.png",
+      "prompt": "Use case: stylized-concept. Create ONE background-only 16-bit pixel-art battle arena for Math Hero, matching the pixel technique and palette language of these two character references. Opaque landscape16:9 target1536x864, intended native640x360. Pure deliberately clustered PIXEL ART, no smooth illustration, no paintedblur, nophotorealism. Ancient finalduel atmosphere, heroicquiet suspense, no modern crisis or brokenseal narrative. Sideview with a flat horizontal stonecourt platform, usable groundbaseline near68% imageheight, massive plain ancientstones and very few structuraljoints. Clear central fightspace. Left side has a rounded old teal-insetstone arch and broad curvedsteps, right side same ancientconstruction family with tallangularviolet-insetstone arch and straighterheavysteps. Stonefaces mostlyplain with a few deliberate worn edges, NO repeatedrunes, banners,plants,goldmotifs,jewelry,portals orglow. Architecturedarkerthanactors. Distant forest andhills as2 lowcontrastindigosilhouette layers. Skyquiet dusk using2broadpixelcolormasses,warmamberneargroundleft andmutedvioletonright, clouds NOT main subject. Uppercenterlargecleannegative space for smallHUD, lower30% quiet broaddarkstone planes available for readablegamequestions. Shared palette of mutedindigo,charcoal,teal,violet withwarmamberstoneedges, moderatecontrastbackground so skin/sword silhouettes pop. All significant structures inside64px horizontal margin, bottomforegroundcontinuous. Nocharacters, weapons, effects, interface, lettering or numbers. Detailedcharacters arereferencesonly, NOT toinclude.",
+      "origin": "built-in-imagegen",
+      "processing_script": "scripts/prepare-math-rpg-battle.py",
+      "adopted": true,
+      "sha256": "f701d6032f51b8ff5caf0ea3c317f065a962a4804a32c4587d608e560a09adc8",
+      "image": {
+        "width": 1672,
+        "height": 941,
+        "mode": "RGB"
+      },
+      "status": "已接入操作原型，待使用者美術確認",
+      "role": "pixel-battle-source",
+      "runtime_file": "assets/images/math-rpg/battle/battle-court-v1.webp",
+      "processing": "完整畫面 nearest 縮為 640×360，無損 WebP；不裁切"
+    },
+    {
+      "file": "docs/world/art/math-rpg/sword-sweep-source-v1.png",
+      "generation_basename": "exec-f12d2ef6-4c21-49be-95bc-907aa8075244.png",
+      "prompt": "One game VFX spritesheet: a restrained blue-white pixel SWORD SWEEP trail, four chronological frames in2x2grid,1024x1024canvas, equal512px cells. True transparent. Each complete effect stays centered in owncell local(256,256), all luminouspixels andparticles inside localx64..448,y64..448, empty margin64px. NO characters, physicalweapons, hands, scene, text, guides, symbols. 16-bit hardpixelclusters matching blue-lit hero sword reference, limitedcyanwhiteblue palette, no softbloom or diffuse haze. 1 smallthin diagonal crescentappears,2 crescent opens to broad diagonal slash curving upperleftto lowerright,3 brightest decisive single sweeping arc with2tiny sparks withinbounds,4 broken short fadingpixelarc dissolves. Negative space center, not circularportal or energyexplosion. Samecellsize/pivot, no crossedboundaries. Intended native128x128afterwhole-sheetscale, clearathalfsizetoo.",
+      "origin": "built-in-imagegen",
+      "processing_script": "scripts/prepare-math-rpg-battle.py",
+      "adopted": true,
+      "sha256": "64800bdac38f755889ac93c965cf0d8f8e7b7bd5047fb975853d0db3cf4b09fc",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "status": "已接入操作原型，待使用者美術確認",
+      "role": "pixel-battle-source",
+      "packing_profile": {
+        "source": "math-rpg/sword-sweep-source-v1.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "x_boundaries": [
+          0,
+          627,
+          1254
+        ],
+        "row_height": 627,
+        "source_root_x": [
+          313,
+          313
+        ],
+        "source_baselines": [
+          313,
+          313
+        ],
+        "uniform_scale": 0.16,
+        "frame_size": [
+          128,
+          128
+        ],
+        "columns": 2,
+        "rows": 2,
+        "anchor": [
+          64,
+          64
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            43,
+            41,
+            87,
+            84
+          ],
+          [
+            28,
+            33,
+            99,
+            94
+          ],
+          [
+            28,
+            27,
+            106,
+            90
+          ],
+          [
+            34,
+            35,
+            92,
+            82
+          ]
+        ],
+        "durations_ms": [
+          65,
+          75,
+          90,
+          100
+        ],
+        "runtime": "assets/images/math-rpg/battle/sword-sweep.json"
+      },
+      "runtime_file": "assets/images/math-rpg/battle/sword-sweep.json"
+    },
+    {
+      "file": "docs/world/art/math-rpg/hit-spark-source-v1.png",
+      "generation_basename": "exec-babf8903-c791-42a7-bbfd-98c35433ce29.png",
+      "prompt": "FOUR sequential animation frames of a SMALL neutral pixel-art HIT SPARK,2x2 equal grid,1024x1024 transparent RGBA,512 square cells. Center anchor(256,256) every cell. All pixels with >=64px safe transparent margin. 1 tiny compressed ivoryamber spark,2 medium four-point asymmetrical sharp pixelstar,3 short bright impact with6 smallpixelchips closecenter,4 tiny dissolvingfragments. Limitedivoryamberwarmgoldnavy palette, deliberate 16bit pixelclusters. No hugeexplosion,bloom, softgradient, swirlingmagicrings. Nocharacters,bodyparts,weapons,scene,shadows,lettering,guides. Effect should work on both characters as generic nonviolenthit feedback; not a new power rule. Samecell geometry, no overlappingneighborframes.",
+      "origin": "built-in-imagegen",
+      "processing_script": "scripts/prepare-math-rpg-battle.py",
+      "adopted": false,
+      "sha256": "ab0fd60fbc7d7ef1af4812a818eab7752325450a4a593f2fc35b183e4b4fe722",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "status": "未採用：邊緣有離群殘點；改用 v2",
+      "role": "pixel-battle-source"
+    },
+    {
+      "file": "docs/world/art/math-rpg/hit-spark-source-v2.png",
+      "generation_basename": "exec-6684c789-f92e-487f-844e-2c01a21f0686.png",
+      "prompt": "Clean ONLY the transparency of this existing four-frame pixel hit-spark sheet. Keep the FOUR exact central spark shapes, current shapes/colors/order and exact1254x1254canvas2x2equal627cells. Remove ALL stray colored/white pixels or faint alpha dust far away from the four central effects. Every effect must fit in its own local x128..499,y128..499 area, the rest of eachcell absolutelyalpha0 withno noise. Main star opaque pixelart, edge can antialiaswithin2px, no diffusehalo. NO other changes, labels,guides or background. Genuine perfect transparent outer margins and grid separators.",
+      "origin": "built-in-imagegen",
+      "processing_script": "scripts/prepare-math-rpg-battle.py",
+      "adopted": true,
+      "sha256": "1e47c62eaa0324e2c51a04589267a1e3fca9dfdfbf876f515d8e589b33f9373a",
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA"
+      },
+      "status": "已接入操作原型，待使用者美術確認",
+      "role": "pixel-battle-source",
+      "packing_profile": {
+        "source": "math-rpg/hit-spark-source-v2.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "x_boundaries": [
+          0,
+          627,
+          1254
+        ],
+        "row_height": 627,
+        "source_root_x": [
+          313,
+          313
+        ],
+        "source_baselines": [
+          313,
+          313
+        ],
+        "uniform_scale": 0.16,
+        "frame_size": [
+          128,
+          128
+        ],
+        "columns": 2,
+        "rows": 2,
+        "anchor": [
+          64,
+          64
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            57,
+            57,
+            71,
+            71
+          ],
+          [
+            49,
+            48,
+            82,
+            81
+          ],
+          [
+            47,
+            44,
+            81,
+            81
+          ],
+          [
+            51,
+            48,
+            75,
+            76
+          ]
+        ],
+        "durations_ms": [
+          65,
+          75,
+          90,
+          100
+        ],
+        "runtime": "assets/images/math-rpg/battle/hit-spark.json"
+      },
+      "runtime_file": "assets/images/math-rpg/battle/hit-spark.json"
+    },
+    {
+      "role": "effect-sheet-source-candidate",
+      "file": "docs/world/art/math-rpg/liwei-sword-sweep-source-v2.png",
+      "status": "美術候選；未採用於現役遊戲；不包含角色，不定義能力規則",
+      "origin": {
+        "kind": "imagegen",
+        "tool": "image_gen.imagegen",
+        "generated_basename": "exec-4823524c-bdaf-4520-93c2-aa86b16d4ed4.png",
+        "prompt": "Production sprite-sheet edit. Keep ONLY the six isolated curved slash effects from this image. Remove all soft glow, fog, haze, shadows and background residue. Replace the entire background with one perfectly uniform flat key color #FF00FF (255,0,255), with no texture, gradient or variation. Do not add people, bodies, hands, swords, weapons, lettering or objects. Six cyan-teal pixel slash animation frames in a 3-column by 2-row grid, 1536x1024 canvas, each cell 512x512. Frame sequence: tiny curved streak, growing arc, full descending arc, splitting arc, broken thin trail, two fading chips. Effect centered at (256,256) within each cell; all colored pixels stay between 96 and 416 in each cell. Crisp deliberate pixel clusters, stepped contour, limited muted teal / blue-gray / pale aqua / warm ivory colors. Minimal ivory core. No blue bloom. Empty magenta margins around all frames. Keep expressive asymmetric crescent silhouettes; no boxes or cell lines.",
+        "transparent_background_requested": false,
+        "references": [
+          {
+            "generated_basename": "exec-69ee2d2d-48f2-4f18-a1ed-9699ac41af6c.png",
+            "prompt": "Edit the FIRST input, an old sword-sweep spritesheet, into a NEW refined SIX-frame pixel-animation sheet. Images2 and3 are style/color references for the existing in-game hero and battle environment, NOT objects to include. Deliver only the isolated sword-light effect, never characters or scenery. Production contract: canvas1536x1024 RGBA with TRUE TRANSPARENT background, EXACT3 equal columns x2 equal rows, six512x512 cells. Reading order left-to-right then top-to-bottom. Same local center anchor(256,256) each cell. All painted shapes AND every fragment stay inside local x96..416,y96..416; at least96px perfectly empty transparent margin on EVERY edge of EVERY cell. No guides, lines, cell labels, text or border. This high-res sheet will be uniformly nearest-neighbor scaled to native128px cells, so draw clean pixel clusters aligned to an approx4px source grid, no smooth curves or subpixel blur. Art direction: tasteful 16-bit fantasy RPG effects matching a brown-haired teal-cloaked sword heroine in a muted sunset stone court. Replace the old electric-blue chunky crescent and broad blown-out white center with a graceful asymmetric diagonal sword cut, a slim curved ribbon with clear taper, stronger leading edge and restrained broken trailing edge. Coherent palette of dark desaturated blue-teal outline, slate teal, muted cyan, pale aqua, tiny warm ivory accents (no pure-white slab, neon royal blue, gradients, Gaussian glow, black haze, fog disks, bokeh, glitter crosses). The effect is hand-pixelled expressive art with 2-4 deliberate ribbons/chips, not geometry icons, perfect circles, diamonds or symmetrical stars. Use exact clean binary transparency if possible. Motion is ONE short attack, not six unrelated effects: frame1 a short fine diagonal tip, frame2 growing curved cut with subtle teal trailing ribbon, frame3 full sweeping ribbon at peak but still thin/light, frame4 trailing edge splits into2 curved fragments, frame5 thinning broken ribbon and2 small shards, frame6 last tiny dissolving fragments. Preserve one diagonal down-right cut direction and center anchor, don't translate the whole effect from cell to cell. Distinct motion beats with believable follow-through. Peak visible footprint around300x290 source pixels, not larger. EMPTY margins are mandatory, make all tips and fragments complete within their own cell.",
+            "status": "特效形狀前稿；透明邊緣不合格，經重新生成背景修正"
+          }
+        ]
+      },
+      "approved": false,
+      "image": {
+        "width": 1536,
+        "height": 1024,
+        "mode": "RGBA",
+        "frame_count": 6,
+        "grid": [
+          3,
+          2
+        ],
+        "source_background": "flat magenta key; not a transparent sprite yet"
+      },
+      "processing": {
+        "script": "scripts/prepare-math-rpg-effects.py",
+        "method": "色鍵移除背景；整格共同比例縮小與置中；不裁輪廓、不逐幀縮放或重畫",
+        "key_rgb": [
+          255,
+          0,
+          255
+        ],
+        "key_max_channel_distance": 64,
+        "magenta_spill_min_r_minus_g_and_b_minus_g": 40,
+        "source": "docs/world/art/math-rpg/liwei-sword-sweep-source-v2.png",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "source_bounds": [
+          [
+            186,
+            181,
+            349,
+            322
+          ],
+          [
+            113,
+            137,
+            394,
+            385
+          ],
+          [
+            64,
+            112,
+            446,
+            424
+          ],
+          [
+            121,
+            96,
+            435,
+            370
+          ],
+          [
+            124,
+            96,
+            401,
+            369
+          ],
+          [
+            152,
+            140,
+            390,
+            333
+          ]
+        ],
+        "sha256": "a2fb31c5c96b0303fd0dba444f9ade3ea0dc03bce90c21d1300f6804195c7b8c",
+        "frame_size": [
+          128,
+          128
+        ],
+        "grid": [
+          3,
+          2
+        ],
+        "frame_count": 6,
+        "anchor": [
+          64,
+          64
+        ],
+        "uniform_full_cell_scale": 0.21875,
+        "center_offset": [
+          8,
+          8
+        ],
+        "horizontal_mirror_all_frames": true,
+        "bounds": [
+          [
+            44,
+            48,
+            79,
+            78
+          ],
+          [
+            34,
+            38,
+            95,
+            92
+          ],
+          [
+            22,
+            33,
+            106,
+            101
+          ],
+          [
+            25,
+            29,
+            94,
+            89
+          ],
+          [
+            32,
+            29,
+            93,
+            88
+          ],
+          [
+            35,
+            39,
+            87,
+            81
+          ]
+        ],
+        "actual_padding": [
+          44,
+          33,
+          22,
+          25,
+          29,
+          35
+        ],
+        "durations_ms": [
+          60,
+          70,
+          80,
+          70,
+          80,
+          100
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "lossless_webp_exact_rgba": true,
+        "production_ready": false,
+        "status": "美術候選；未替換現役特效，正式 Pixi 播放待確認後驗證",
+        "outputs": [
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.png",
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.webp",
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.json",
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.gif"
+        ],
+        "orientation": "全部六幀水平翻轉；圓弧凸出的前緣朝右、凹口朝左，飛向赫恩；保留原色、尺寸與時序",
+        "superseded_export": "docs/world/art/math-rpg/effects/liwei-sword-sweep-v2.json"
+      }
+    },
+    {
+      "role": "effect-sheet-source-candidate",
+      "file": "docs/world/art/math-rpg/heen-magic-wave-source-v1.png",
+      "status": "使用者指出輪廓像劍氣；未採用，改以凝聚魔力彈美術方向製作",
+      "origin": {
+        "kind": "imagegen",
+        "tool": "image_gen.imagegen",
+        "generated_basename": "exec-5a56fed4-d54c-4483-852a-a26d0472fbd6.png",
+        "prompt": "Replace the six blue slash effects with SIX ISOLATED PURPLE MAGIC WAVE animation frames, retaining this crisp pixel-cluster art technique and perfectly uniform flat #FF00FF key-color background. Canvas 1536x1024, three columns by two rows, each cell 512x512. All effect pixels inside x=96..416,y=96..416 of each cell, fixed visual anchor (256,256). Read left-to-right, top-to-bottom: 1 a small hooked stroke, 2 a forming leftward curl, 3 the full flowing curved wave, 4 a stretched leftward wave with split trailing ribbon, 5 the broken narrow ribbon, 6 three fading chips. Traveling direction LEFT, leading edge at LEFT, curved tail flows RIGHT. Use only charcoal purple, dark plum, desaturated violet, dusty lavender and a tiny warm gray-lavender core, no cyan, no blue, no bright white. Uneven taper, asymmetrical curved silhouette, cohesive flowing shape with only 2-4 chips. Deliberate stepped pixels; strong outer contour, subtle internal shading. NO figures, faces, bodies, hands, weapons, swords, objects, text, grid lines, stars, diamonds, lightning zigzags, blur, glow, smoke or gradients. Only six contained pixel effects and empty magenta.",
+        "transparent_background_requested": false,
+        "references": [
+          "docs/world/art/math-rpg/liwei-sword-sweep-source-v2.png"
+        ]
+      },
+      "approved": false,
+      "image": {
+        "width": 1536,
+        "height": 1024,
+        "mode": "RGBA",
+        "frame_count": 6,
+        "grid": [
+          3,
+          2
+        ],
+        "source_background": "flat magenta key; not a transparent sprite yet"
+      },
+      "processing": {
+        "script": "scripts/prepare-math-rpg-effects.py",
+        "method": "色鍵移除背景；整格共同比例縮小與置中；不裁輪廓、不逐幀縮放或重畫",
+        "key_rgb": [
+          255,
+          0,
+          255
+        ],
+        "key_max_channel_distance": 64,
+        "magenta_spill_min_r_minus_g_and_b_minus_g": 120,
+        "source": "docs/world/art/math-rpg/heen-magic-wave-source-v1.png",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "source_bounds": [
+          [
+            175,
+            183,
+            350,
+            327
+          ],
+          [
+            104,
+            155,
+            395,
+            362
+          ],
+          [
+            46,
+            112,
+            431,
+            400
+          ],
+          [
+            112,
+            98,
+            429,
+            353
+          ],
+          [
+            127,
+            99,
+            406,
+            358
+          ],
+          [
+            160,
+            170,
+            334,
+            320
+          ]
+        ],
+        "sha256": "052aed1436c3b347e5a2f8df4c296f34ad143ed59f42172b191b88f370333ea2",
+        "frame_size": [
+          128,
+          128
+        ],
+        "grid": [
+          3,
+          2
+        ],
+        "frame_count": 6,
+        "anchor": [
+          64,
+          64
+        ],
+        "uniform_full_cell_scale": 0.21875,
+        "center_offset": [
+          8,
+          8
+        ],
+        "horizontal_mirror_all_frames": true,
+        "bounds": [
+          [
+            43,
+            48,
+            82,
+            80
+          ],
+          [
+            34,
+            42,
+            97,
+            87
+          ],
+          [
+            26,
+            33,
+            110,
+            96
+          ],
+          [
+            26,
+            29,
+            95,
+            85
+          ],
+          [
+            31,
+            30,
+            92,
+            86
+          ],
+          [
+            47,
+            45,
+            85,
+            78
+          ]
+        ],
+        "actual_padding": [
+          43,
+          31,
+          18,
+          26,
+          30,
+          43
+        ],
+        "durations_ms": [
+          60,
+          70,
+          80,
+          80,
+          90,
+          100
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "lossless_webp_exact_rgba": true,
+        "production_ready": false,
+        "status": "使用者指出輪廓像劍氣；未採用，改以凝聚魔力彈美術方向製作",
+        "outputs": [
+          "docs/world/art/math-rpg/effects/heen-magic-wave-v1.png",
+          "docs/world/art/math-rpg/effects/heen-magic-wave-v1.webp",
+          "docs/world/art/math-rpg/effects/heen-magic-wave-v1.json",
+          "docs/world/art/math-rpg/effects/heen-magic-wave-v1.gif"
+        ]
+      }
+    },
+    {
+      "role": "effect-sheet-source-candidate",
+      "file": "docs/world/art/math-rpg/hit-shards-source-v1.png",
+      "status": "美術候選；未採用於現役遊戲；不包含角色，不定義能力規則",
+      "origin": {
+        "kind": "imagegen",
+        "tool": "image_gen.imagegen",
+        "generated_basename": "exec-69e683eb-f898-484b-a494-4b4f72f1424f.png",
+        "prompt": "Replace the six blue slash effects with SIX ISOLATED NEUTRAL CONTACT SHARD animation frames, retaining this crisp pixel-cluster art technique and perfectly uniform flat #FF00FF key-color background. Canvas 1536x1024, three columns by two rows, each cell 512x512. All effect pixels inside x=96..416,y=96..416 of each cell, fixed impact anchor (256,256). Read left-to-right, top-to-bottom: 1 two tiny sparks touching at the anchor, 2 a sharp broken diagonal contact flash, 3 the full asymmetrical broken contact flash with four short tapered shards, 4 the shrinking contact flash and drifting chips, 5 three falling thin chips, 6 two very small fading chips. Use warm ivory, muted parchment, desaturated antique ochre, brown-gray outline and a very small pale teal accent. Small solid light core, jagged directional broken silhouette, readable empty spaces. No perfect starburst, no circular ring, no symmetric cross, no long rays. NO figures, faces, bodies, hands, weapons, swords, objects, text, grid lines, blur, glow, smoke or gradients. Only six contained pixel effects and empty magenta.",
+        "transparent_background_requested": false,
+        "references": [
+          "docs/world/art/math-rpg/liwei-sword-sweep-source-v2.png"
+        ]
+      },
+      "approved": false,
+      "image": {
+        "width": 1536,
+        "height": 1024,
+        "mode": "RGBA",
+        "frame_count": 6,
+        "grid": [
+          3,
+          2
+        ],
+        "source_background": "flat magenta key; not a transparent sprite yet"
+      },
+      "processing": {
+        "script": "scripts/prepare-math-rpg-effects.py",
+        "method": "色鍵移除背景；整格共同比例縮小與置中；不裁輪廓、不逐幀縮放或重畫",
+        "key_rgb": [
+          255,
+          0,
+          255
+        ],
+        "key_max_channel_distance": 64,
+        "magenta_spill_min_r_minus_g_and_b_minus_g": 40,
+        "source": "docs/world/art/math-rpg/hit-shards-source-v1.png",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "source_bounds": [
+          [
+            237,
+            236,
+            300,
+            287
+          ],
+          [
+            176,
+            189,
+            330,
+            343
+          ],
+          [
+            137,
+            160,
+            351,
+            400
+          ],
+          [
+            191,
+            149,
+            351,
+            360
+          ],
+          [
+            200,
+            174,
+            331,
+            340
+          ],
+          [
+            212,
+            217,
+            297,
+            316
+          ]
+        ],
+        "sha256": "71bb8f2b28215bbce19a0e6a13716e7fb12125ab92f896c0641ffc9e7729911b",
+        "frame_size": [
+          128,
+          128
+        ],
+        "grid": [
+          3,
+          2
+        ],
+        "frame_count": 6,
+        "anchor": [
+          64,
+          64
+        ],
+        "uniform_full_cell_scale": 0.21875,
+        "center_offset": [
+          8,
+          8
+        ],
+        "horizontal_mirror_all_frames": false,
+        "bounds": [
+          [
+            60,
+            60,
+            74,
+            71
+          ],
+          [
+            47,
+            50,
+            80,
+            83
+          ],
+          [
+            38,
+            43,
+            85,
+            96
+          ],
+          [
+            50,
+            41,
+            85,
+            87
+          ],
+          [
+            52,
+            46,
+            80,
+            82
+          ],
+          [
+            54,
+            57,
+            73,
+            77
+          ]
+        ],
+        "actual_padding": [
+          54,
+          45,
+          32,
+          41,
+          46,
+          51
+        ],
+        "durations_ms": [
+          50,
+          65,
+          80,
+          85,
+          100,
+          120
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "lossless_webp_exact_rgba": true,
+        "production_ready": false,
+        "status": "美術候選；未替換現役特效，正式 Pixi 播放待確認後驗證",
+        "outputs": [
+          "docs/world/art/math-rpg/effects/hit-shards-v1.png",
+          "docs/world/art/math-rpg/effects/hit-shards-v1.webp",
+          "docs/world/art/math-rpg/effects/hit-shards-v1.json",
+          "docs/world/art/math-rpg/effects/hit-shards-v1.gif"
+        ]
+      }
+    },
+    {
+      "role": "effect-sheet-source-candidate",
+      "file": "docs/world/art/math-rpg/heen-magic-bolt-source-v1.png",
+      "status": "使用者已選定凝聚魔力彈的美術方向；圖集為待確認候選，能力規則未定案",
+      "origin": {
+        "kind": "imagegen",
+        "tool": "image_gen.imagegen",
+        "generated_basename": "exec-e06d1acb-cb75-463c-9dd5-3f98716462d7.png",
+        "prompt": "Create a pixel-art special-effects sprite sheet of SIX ISOLATED COMPRESSED MAGIC BOLTS only. Canvas 1536x1024, three columns and two rows, each cell exactly 512x512. Perfectly uniform flat #FF00FF key-color background. Crisp, deliberate 16-bit pixel clusters and stepped outlines. Limited palette: charcoal plum #2E263B, dark gray-violet #493355, muted violet #785C8A, dusty lavender #AC91B1, gray-lavender #D7C9CB, and tiny warm ivory highlights #EDE1BD. Each bolt has a HEAVY SOLID ROUND energy core, irregular overlapping compact volumes, internal compressed swirling bands, a bright small FRONT EDGE on its LEFT side, and only a short stubby tail trailing to its RIGHT. Core center anchored at (256,256) within every cell, all effects and chips fully inside x=96..416,y=96..416. Read left-to-right, top-to-bottom: 1 a small gathered knot of energy, 2 a denser compressed round core, 3 full compact round bolt at launch, 4 full bolt with a short rightward tail for leftward travel, 5 core splitting into four chunky fragments, 6 three tiny fading fragments. Clearly a spherical magic projectile, never a crescent, sword slash, blade, ribbon or long wave. NO characters, figures, people, hands, weapons, scenery, text, grids, stars, symmetrical ornaments, soft glow, bloom or blur. All six frames isolated, complete and contained.",
+        "transparent_background_requested": false,
+        "references": []
+      },
+      "requested_contract": {
+        "asset": "heen-magic-bolt-v1",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "source_cell": [
+          512,
+          512
+        ],
+        "frame_size": [
+          128,
+          128
+        ],
+        "grid": [
+          3,
+          2
+        ],
+        "anchor": [
+          64,
+          64
+        ],
+        "minimum_padding": 16,
+        "source_safe_bounds": [
+          96,
+          96,
+          416,
+          416
+        ],
+        "direction": "left; thick leading core, short trailing tail on the right",
+        "durations_ms": [
+          100,
+          100,
+          100,
+          100,
+          90,
+          100
+        ],
+        "beats": [
+          "palm gathering",
+          "dense compressed core",
+          "launch",
+          "leftward flight with short right tail",
+          "core breaking up",
+          "fading small fragments"
+        ],
+        "background": "source magenta key; exported RGBA transparent",
+        "status": "user chose visual direction; ability rules not defined"
+      },
+      "approved": false,
+      "image": {
+        "width": 1536,
+        "height": 1024,
+        "mode": "RGBA",
+        "frame_count": 6,
+        "grid": [
+          3,
+          2
+        ],
+        "source_background": "flat magenta key; not a transparent sprite yet"
+      },
+      "processing": {
+        "script": "scripts/prepare-math-rpg-effects.py",
+        "method": "色鍵移除背景；整格共同比例縮小與置中；不裁輪廓、不逐幀縮放或重畫",
+        "key_rgb": [
+          255,
+          0,
+          255
+        ],
+        "key_max_channel_distance": 64,
+        "magenta_spill_min_r_minus_g_and_b_minus_g": 120,
+        "source": "docs/world/art/math-rpg/heen-magic-bolt-source-v1.png",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "source_bounds": [
+          [
+            190,
+            162,
+            350,
+            341
+          ],
+          [
+            143,
+            130,
+            378,
+            368
+          ],
+          [
+            107,
+            102,
+            393,
+            393
+          ],
+          [
+            84,
+            104,
+            449,
+            380
+          ],
+          [
+            112,
+            83,
+            406,
+            387
+          ],
+          [
+            151,
+            130,
+            390,
+            364
+          ]
+        ],
+        "sha256": "5107e2a663138d5267fccf676080b49094de2aaf581e22cf4f75d09536deefa1",
+        "frame_size": [
+          128,
+          128
+        ],
+        "grid": [
+          3,
+          2
+        ],
+        "frame_count": 6,
+        "anchor": [
+          64,
+          64
+        ],
+        "uniform_full_cell_scale": 0.21875,
+        "center_offset": [
+          8,
+          8
+        ],
+        "horizontal_mirror_all_frames": false,
+        "bounds": [
+          [
+            50,
+            43,
+            85,
+            83
+          ],
+          [
+            39,
+            36,
+            91,
+            89
+          ],
+          [
+            31,
+            30,
+            94,
+            94
+          ],
+          [
+            26,
+            31,
+            106,
+            91
+          ],
+          [
+            33,
+            26,
+            97,
+            93
+          ],
+          [
+            41,
+            36,
+            93,
+            88
+          ]
+        ],
+        "actual_padding": [
+          43,
+          36,
+          30,
+          22,
+          26,
+          35
+        ],
+        "durations_ms": [
+          100,
+          100,
+          100,
+          100,
+          90,
+          100
+        ],
+        "alpha_extrema": [
+          0,
+          255
+        ],
+        "lossless_webp_exact_rgba": true,
+        "production_ready": false,
+        "status": "美術候選；未替換現役特效，正式 Pixi 播放待確認後驗證",
+        "outputs": [
+          "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.png",
+          "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.webp",
+          "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.json",
+          "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.gif"
+        ]
+      }
     }
   ],
   "production_sprite_contract": {
-    "status": "待使用者逐步確認，產製前必須補齊；不沿用舊遊戲格位",
-    "frame_width": null,
-    "frame_height": null,
-    "frame_count": null,
-    "rows": null,
-    "columns": null,
-    "anchor": null,
-    "foot_baseline": null,
-    "minimum_safe_padding": null,
-    "common_character_scale": null,
-    "background": "transparent",
-    "required_checks": [
-      "角色、武器、衣物、陰影與全部特效完整位於各自格內",
-      "原圖先驗收，切出的每一幀再驗收",
-      "檢查透明殘點、鄰幀殘片與縮放後辨識",
-      "不能以硬切、跨格或逐幀自動裁切解決放不下的動作"
-    ]
+    "status": "操作原型已接入並驗收固定格位；美術與教室平衡待使用者確認",
+    "frame_size": [
+      256,
+      256
+    ],
+    "idle_grid": [
+      2,
+      2
+    ],
+    "attack_grid": [
+      3,
+      2
+    ],
+    "anchor": [
+      128,
+      224
+    ],
+    "normalized_anchor": [
+      0.5,
+      0.875
+    ],
+    "foot_baseline": 224,
+    "minimum_safe_padding": 12,
+    "trimmed": false,
+    "rotated": false,
+    "background": "transparent RGBA",
+    "effects": {
+      "frame_size": [
+        128,
+        128
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "anchor": [
+        64,
+        64
+      ],
+      "minimum_safe_padding": 12
+    },
+    "initial_requested_source": {
+      "idle": [
+        1024,
+        1024
+      ],
+      "attack": [
+        1536,
+        1024
+      ],
+      "source_cell": [
+        512,
+        512
+      ],
+      "source_anchor": [
+        256,
+        448
+      ],
+      "source_padding": 24
+    },
+    "actual_source_note": "生成待機與特效為 1254×1254，攻擊 1536×1024；重新定義完整來源矩形、共同比例、列支點與行基線後搬入等尺寸執行格，不依輪廓自動裁切或逐幀縮放。",
+    "source_profiles": {
+      "liwei-idle": {
+        "source": "characters/liwei/liwei-pixel-idle-source-v1.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "x_boundaries": [
+          0,
+          627,
+          1254
+        ],
+        "row_height": 627,
+        "source_root_x": [
+          326,
+          285
+        ],
+        "source_baselines": [
+          599,
+          548
+        ],
+        "uniform_scale": 0.25,
+        "frame_size": [
+          256,
+          256
+        ],
+        "columns": 2,
+        "rows": 2,
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            92,
+            96,
+            198,
+            224
+          ],
+          [
+            90,
+            96,
+            201,
+            224
+          ],
+          [
+            92,
+            96,
+            198,
+            224
+          ],
+          [
+            93,
+            96,
+            201,
+            224
+          ]
+        ],
+        "durations_ms": [
+          230,
+          230,
+          230,
+          230
+        ],
+        "runtime": "assets/images/math-rpg/battle/liwei-idle.json"
+      },
+      "liwei-attack": {
+        "source": "characters/liwei/liwei-pixel-attack-source-v1.png",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "x_boundaries": [
+          0,
+          512,
+          1024,
+          1536
+        ],
+        "row_height": 512,
+        "source_root_x": [
+          256,
+          256,
+          256
+        ],
+        "source_baselines": [
+          503,
+          467
+        ],
+        "uniform_scale": 0.36,
+        "frame_size": [
+          256,
+          256
+        ],
+        "columns": 3,
+        "rows": 2,
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            82,
+            96,
+            197,
+            224
+          ],
+          [
+            79,
+            60,
+            180,
+            224
+          ],
+          [
+            65,
+            109,
+            207,
+            224
+          ],
+          [
+            58,
+            115,
+            214,
+            223
+          ],
+          [
+            72,
+            109,
+            203,
+            224
+          ],
+          [
+            79,
+            96,
+            192,
+            224
+          ]
+        ],
+        "durations_ms": [
+          130,
+          120,
+          80,
+          110,
+          130,
+          140
+        ],
+        "runtime": "assets/images/math-rpg/battle/liwei-attack.json"
+      },
+      "heen-idle": {
+        "source": "characters/heen/heen-pixel-idle-source-v1.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "x_boundaries": [
+          0,
+          627,
+          1254
+        ],
+        "row_height": 627,
+        "source_root_x": [
+          320,
+          320
+        ],
+        "source_baselines": [
+          588,
+          563
+        ],
+        "uniform_scale": 0.25,
+        "frame_size": [
+          256,
+          256
+        ],
+        "columns": 2,
+        "rows": 2,
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            64,
+            96,
+            195,
+            224
+          ],
+          [
+            62,
+            95,
+            194,
+            224
+          ],
+          [
+            64,
+            97,
+            197,
+            224
+          ],
+          [
+            64,
+            97,
+            195,
+            224
+          ]
+        ],
+        "durations_ms": [
+          230,
+          230,
+          230,
+          230
+        ],
+        "runtime": "assets/images/math-rpg/battle/heen-idle.json"
+      },
+      "heen-attack": {
+        "source": "characters/heen/heen-pixel-attack-source-v1.png",
+        "source_size": [
+          1536,
+          1024
+        ],
+        "x_boundaries": [
+          0,
+          576,
+          1024,
+          1536
+        ],
+        "row_height": 512,
+        "source_root_x": [
+          256,
+          192,
+          256
+        ],
+        "source_baselines": [
+          497,
+          471
+        ],
+        "uniform_scale": 0.32,
+        "frame_size": [
+          256,
+          256
+        ],
+        "columns": 3,
+        "rows": 2,
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            71,
+            92,
+            202,
+            224
+          ],
+          [
+            82,
+            96,
+            196,
+            224
+          ],
+          [
+            66,
+            100,
+            204,
+            224
+          ],
+          [
+            63,
+            100,
+            226,
+            224
+          ],
+          [
+            83,
+            101,
+            202,
+            224
+          ],
+          [
+            59,
+            95,
+            195,
+            224
+          ]
+        ],
+        "durations_ms": [
+          130,
+          120,
+          80,
+          110,
+          130,
+          140
+        ],
+        "runtime": "assets/images/math-rpg/battle/heen-attack.json"
+      },
+      "sword-sweep": {
+        "source": "math-rpg/sword-sweep-source-v1.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "x_boundaries": [
+          0,
+          627,
+          1254
+        ],
+        "row_height": 627,
+        "source_root_x": [
+          313,
+          313
+        ],
+        "source_baselines": [
+          313,
+          313
+        ],
+        "uniform_scale": 0.16,
+        "frame_size": [
+          128,
+          128
+        ],
+        "columns": 2,
+        "rows": 2,
+        "anchor": [
+          64,
+          64
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            43,
+            41,
+            87,
+            84
+          ],
+          [
+            28,
+            33,
+            99,
+            94
+          ],
+          [
+            28,
+            27,
+            106,
+            90
+          ],
+          [
+            34,
+            35,
+            92,
+            82
+          ]
+        ],
+        "durations_ms": [
+          65,
+          75,
+          90,
+          100
+        ],
+        "runtime": "assets/images/math-rpg/battle/sword-sweep.json"
+      },
+      "hit-spark": {
+        "source": "math-rpg/hit-spark-source-v2.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "x_boundaries": [
+          0,
+          627,
+          1254
+        ],
+        "row_height": 627,
+        "source_root_x": [
+          313,
+          313
+        ],
+        "source_baselines": [
+          313,
+          313
+        ],
+        "uniform_scale": 0.16,
+        "frame_size": [
+          128,
+          128
+        ],
+        "columns": 2,
+        "rows": 2,
+        "anchor": [
+          64,
+          64
+        ],
+        "padding": 12,
+        "bounds": [
+          [
+            57,
+            57,
+            71,
+            71
+          ],
+          [
+            49,
+            48,
+            82,
+            81
+          ],
+          [
+            47,
+            44,
+            81,
+            81
+          ],
+          [
+            51,
+            48,
+            75,
+            76
+          ]
+        ],
+        "durations_ms": [
+          65,
+          75,
+          90,
+          100
+        ],
+        "runtime": "assets/images/math-rpg/battle/hit-spark.json"
+      }
+    },
+    "encoding": "lossless WebP exact RGBA；解碼與打包像素逐位元組一致",
+    "sampling": "nearest",
+    "timing_source": "atlas JSON duration，AnimatedSprite autoUpdate:false，場景私人 ticker",
+    "inspection": [
+      "完整來源先檢查；劍尖跨格的草稿未採用。赫恩披風的完整矩形重新放在空白分隔處。",
+      "各個執行幀均檢查輪廓、武器、披風、安全留白與鄰幀殘片；alpha>=16 僅量測，不刪除透明像素。",
+      "迴圈、攻擊／特效在實際 Pixi 中檢查；共同腳底線及兩倍 nearest 顯示。",
+      "受擊使用獨立命中星芒與暫時 tint；尚無專用受擊、勝敗與其餘怪物正式圖集。"
+    ],
+    "processing_script": "scripts/prepare-math-rpg-battle.py",
+    "runtime_source": "src/games/math-rpg/battle-art.ts"
   },
   "cover_concept": {
     "file": "docs/world/art/math-rpg/cover-concept-v1.png",
@@ -277,5 +2136,57 @@
     ],
     "approved": false
   },
-  "inspection_note": "alpha>=16 的輪廓僅用於觀察低 alpha 殘點與主要圖形的差異，不是裁切或刪除像素的規則。所有附件均原樣保存。"
+  "inspection_note": "alpha>=16 的輪廓僅用於觀察低 alpha 殘點與主要圖形的差異，不是裁切或刪除像素的規則。所有附件均原樣保存。",
+  "cover_layer_contract": {
+    "frame_count": 1,
+    "arrangement": "single isolated illustration per image; not an atlas",
+    "actual_background_size": [
+      1672,
+      941
+    ],
+    "actual_actor_size": [
+      1024,
+      1536
+    ],
+    "alpha_background": "opaque",
+    "alpha_actors": "RGBA; outer-border alpha <= 1, preserve source losslessly",
+    "usable_alpha_threshold": 16,
+    "actor_bounds": {
+      "liwei": [
+        104,
+        103,
+        957,
+        1432
+      ],
+      "heen": [
+        40,
+        93,
+        1009,
+        1449
+      ]
+    },
+    "anchor": "horizontal center of measured bounds, foot at measured bottom",
+    "standing_baseline": "both placed on the same scene baseline; lower mesh rows do not deform",
+    "production_pixel_sprite": false,
+    "full_prompt_provenance": "prompt fields on each source entry",
+    "runtime_source": "src/games/math-rpg/cover-art.ts"
+  },
+  "effect_candidates": {
+    "approved": false,
+    "runtime_integration": false,
+    "directory": "docs/world/art/math-rpg/effects",
+    "script": "scripts/prepare-math-rpg-effects.py",
+    "contact": "docs/world/art/math-rpg/effects/effects-contact-v2.png",
+    "battle_preview": "docs/world/art/math-rpg/effects/effects-battle-preview-v2.gif",
+    "current_sword": "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.json",
+    "current_magic": "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.json",
+    "selected_magic_visual_direction": "使用者選定：掌心聚攏、壓縮，再推出厚實的灰紫魔力彈；僅為攻擊外觀與動作，能力規則未定案",
+    "superseded_derivatives": {
+      "liwei-sword-sweep-v2": "圓弧前緣朝向相反，以 v3 修正；原圖不變",
+      "heen-magic-wave-v1": "使用者指出輪廓像劍氣；未採用",
+      "effects-battle-preview-v1": "含上述舊特效，改看 v2"
+    },
+    "preview_actors": "現役 battle/liwei-* 與 heen-* 圖集；沒有生成新人物",
+    "note": "特效不定義能力規則；角色、題庫、遊戲程式及現役載入檔未更換。所有非零 alpha 留白與 PNG/WebP 一致性已驗證；畫風、節奏與正式 Pixi 播放待確認。"
+  }
 }

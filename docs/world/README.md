@@ -66,6 +66,6 @@
 | 內容 | 範圍與唯一來源 |
 | --- | --- |
 | 魔法工坊 | 四條日常委託旅程（月光茶會、迷路星星、雨天音樂會、種子等春天），完整台詞與彩蛋見 [story.ts](../../src/games/magic-workshop/story.ts)，玩法見 [工坊設計](../games/magic-workshop/design.md) |
-| 數學勇者的上古傳說 | 黎薇擊敗並封印赫恩，帶來現代和平；人物見[角色圖鑑](characters.md)，遊戲目前仍為[空白 Pixi 框架](../games/math-rpg/design.md)，封面與像素參考尚未接入 |
+| 數學勇者的上古傳說 | 黎薇擊敗並封印赫恩，帶來現代和平；人物見[角色圖鑑](characters.md)，[Pixi 封面與五關像素原型](../games/math-rpg/design.md)已接入，第五關使用黎薇／赫恩動畫圖集 |
 
 目前沒有已定案的完整世界地圖或跨遊戲時間年表；不要從單一場景推定全世界地理。其他遊戲的歸屬見 [遊戲目錄](../games/README.md)。
