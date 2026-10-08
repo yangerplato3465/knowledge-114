@@ -1,0 +1,132 @@
+{
+  "frames": {
+    "heen-hurt-01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "duration": 80
+    },
+    "heen-hurt-02": {
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "duration": 140
+    },
+    "heen-hurt-03": {
+      "frame": {
+        "x": 0,
+        "y": 256,
+        "w": 256,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "duration": 160
+    },
+    "heen-hurt-04": {
+      "frame": {
+        "x": 256,
+        "y": 256,
+        "w": 256,
+        "h": 256
+      },
+      "rotated": false,
+      "trimmed": false,
+      "sourceSize": {
+        "w": 256,
+        "h": 256
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "anchor": {
+        "x": 0.5,
+        "y": 0.875
+      },
+      "duration": 140
+    }
+  },
+  "animations": {
+    "play": [
+      "heen-hurt-01",
+      "heen-hurt-02",
+      "heen-hurt-03",
+      "heen-hurt-04"
+    ]
+  },
+  "meta": {
+    "image": "heen-hurt.webp",
+    "size": {
+      "w": 512,
+      "h": 512
+    },
+    "scale": "1",
+    "anchor": {
+      "x": 0.5,
+      "y": 0.875
+    },
+    "frameDurationsMs": [
+      80,
+      140,
+      160,
+      140
+    ],
+    "loop": false,
+    "padding": 16
+  }
+}

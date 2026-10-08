@@ -9,7 +9,8 @@ export interface BattlePixi extends Pixi {
   Assets:{ load<T>(input:{src:string;data:Record<string,unknown>}):Promise<T>; unload(url:string):Promise<void> };
   AnimatedSprite:new(options:{textures:{texture:Texture;time:number}[];autoUpdate:boolean;loop:boolean})=>AnimatedActor;
 }
-export const BATTLE_FILES = ['battle-court-v1.webp','liwei-idle.json','liwei-attack.json','heen-idle.json','heen-attack.json','sword-sweep.json','hit-spark.json'] as const;
+export const BATTLE_FILES = ['battle-court-v1.webp','liwei-idle.json','liwei-attack.json','liwei-hurt.json',
+  'heen-idle.json','heen-attack.json','heen-hurt.json','liwei-sword-sweep-v3.json','heen-magic-bolt-v1.json','hit-shards-v1.json'] as const;
 interface Lease { refs:number; promise:Promise<unknown>; unloading?:Promise<void> }
 const leases=new Map<string,Lease>();
 /** Shared Assets cache needs leases: an old scene must not unload a newer scene. */
@@ -49,4 +50,10 @@ export async function loadBattleArt(P:BattlePixi,signal:AbortSignal) {
 export type BattleArt=Awaited<ReturnType<typeof loadBattleArt>>;
 export function animationFrames(sheet:Sheet) {
   return sheet.animations.play.map((texture,i)=>({texture,time:sheet.data.frames[sheet.data.animations.play[i]].duration}));
+}
+/** Seek authored durations on the battle clock; pausing/resizing cannot restart a clip. */
+export function animationFrameAt(frames:{time:number}[],elapsed:number):number|null {
+  if(elapsed<0)return null;
+  for(let i=0;i<frames.length;i++){if(elapsed<frames[i].time)return i;elapsed-=frames[i].time;}
+  return null;
 }

@@ -3,6 +3,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { createGameScene, fitViewport, type SceneLoaders } from './scene';
 import type { Pixi } from '../magic-workshop/scene-types';
 import { BATTLE_RULES } from './battle-model';
+import { BATTLE_FILES } from './battle-art';
 import { createQuestionDeck } from './question-deck';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
@@ -40,8 +41,15 @@ function fixture(init = async () => {}) {
   vi.stubGlobal('matchMedia',()=>media); vi.spyOn(document,'hidden','get').mockReturnValue(false);
   vi.stubGlobal('ResizeObserver',class {constructor(callback:()=>void){resize=callback;} observe=vi.fn();disconnect=disconnect;});
   const textureDestroy=vi.fn();
-  const Assets={load:vi.fn(async(input:{src:string})=>input.src.endsWith('.webp')?{width:640,height:360}: {
-    animations:{play:[{},{},{},{}]},data:{frames:{a:{duration:230},b:{duration:230},c:{duration:230},d:{duration:230}},animations:{play:['a','b','c','d']}}}),unload:vi.fn(async()=>{})};
+  const Assets={load:vi.fn(async(input:{src:string})=>{
+    if(input.src.endsWith('.webp'))return {width:640,height:360};
+    const durations=input.src.includes('-hurt')?[80,140,160,140]:input.src.includes('-attack')?[130,120,80,110,130,140]:
+      input.src.includes('sword-sweep')?[60,70,80,70,80,100]:input.src.includes('magic-bolt')?[100,100,100,100,90,100]:
+      input.src.includes('hit-shards')?[50,65,80,85,100,120]:[230,230,230,230];
+    const names=durations.map((_,i)=>`${i}`);
+    return {animations:{play:names.map(frame=>({source:input.src,frame}))},
+      data:{frames:Object.fromEntries(names.map((key,i)=>[key,{duration:durations[i]}])),animations:{play:names}}};
+  }),unload:vi.fn(async()=>{})};
   const pixi=vi.fn(async()=>({Application:class {constructor(){return app;}},Container,Graphics,Sprite,AnimatedSprite,Assets,Text,MeshSimple:Mesh,
     Texture:{from:(image:HTMLImageElement)=>({width:image.width,height:image.height,destroy:textureDestroy})}}) as unknown as Pixi);
   const image=(w:number,h:number)=>Object.assign(document.createElement('img'),{width:w,height:h});
@@ -119,16 +127,17 @@ test('第五關接入私人 ticker，降動態仍計時，錯題解說、暫停�
   const scene=await createGameScene(f.host,new AbortController().signal,f.loaders,{controls,announce});
   scene.activate('start');scene.activate('unit:多位小數與加減');scene.activate('stage:4');
   await vi.waitFor(()=>expect(controls.mock.calls.at(-1)![0]).toEqual(expect.arrayContaining([expect.objectContaining({id:'fight'})])));
-  expect(f.animated).toHaveLength(4);scene.activate('fight');f.frame(100);
+  expect(f.animated).toHaveLength(6);scene.activate('fight');f.frame(100);
   expect(f.animated[0].update).toHaveBeenCalledWith({deltaMS:100,deltaTime:6});
   scene.activate('pause');const updates=f.animated[0].update.mock.calls.length;f.frame(30000);
   expect(f.animated[0].update).toHaveBeenCalledTimes(updates);expect(announce.mock.calls.at(-1)![0]).toContain('已暫停');
   scene.activate('resume');f.motion(true);f.frame(20000);f.frame(700);
-  expect(f.animated[3].visible).toBe(true);
-  expect(f.animated[3].playing).toBe(false);
-  expect(f.animated[3].scale.x).toBeGreaterThan(4);
+  expect(f.animated[5].visible).toBe(true);
+  expect(f.animated[5].playing).toBe(false);
+  expect(f.animated[4].visible).toBe(false);
+  expect(f.animated[0].textures[0]).toMatchObject({texture:{source:expect.stringContaining('liwei-hurt.json')}});
   f.frame(BATTLE_RULES.resolveMs-700);
-  expect(f.animated[3].update).not.toHaveBeenCalled();
+  expect(f.animated[5].update).not.toHaveBeenCalled();
   expect(announce.mock.calls.at(-1)![0]).toContain('正解');
   expect(controls.mock.calls.at(-1)![0]).toEqual(expect.arrayContaining([expect.objectContaining({id:'continue'})]));
   scene.activate('continue');expect(announce.mock.calls.at(-1)![0]).toContain('黎薇生命 5');
@@ -137,7 +146,7 @@ test('第五關接入私人 ticker，降動態仍計時，錯題解說、暫停�
   scene.activate('back');expect(controls.mock.calls.at(-1)![0]).toEqual(expect.arrayContaining([expect.objectContaining({id:'stage:4'})]));
   expect(announce.mock.calls.at(-1)![0]).toContain('已返回選關');
   scene.activate('back');expect(controls.mock.calls.at(-1)![0]).toEqual(expect.arrayContaining([expect.objectContaining({id:'unit:多位小數與加減'})]));
-  scene.destroy();await vi.waitFor(()=>expect(f.Assets.unload).toHaveBeenCalledTimes(7));
+  scene.destroy();await vi.waitFor(()=>expect(f.Assets.unload).toHaveBeenCalledTimes(BATTLE_FILES.length));
 });
 
 test('戰鬥素材載入時返回單元，晚到圖集不會蓋掉選單或建立角色',async()=>{
@@ -145,7 +154,7 @@ test('戰鬥素材載入時返回單元，晚到圖集不會蓋掉選單或建�
   const pending=new Promise<Awaited<ReturnType<typeof f.Assets.load>>>(resolve=>{finish=resolve;});f.Assets.load.mockImplementation(()=>pending);
   const scene=await createGameScene(f.host,new AbortController().signal,f.loaders,{controls});
   scene.activate('start');scene.activate('unit:多位小數與加減');scene.activate('stage:4');scene.activate('back');
-  finish({width:640,height:360});await vi.waitFor(()=>expect(f.Assets.unload).toHaveBeenCalledTimes(7));
+  finish({width:640,height:360});await vi.waitFor(()=>expect(f.Assets.unload).toHaveBeenCalledTimes(BATTLE_FILES.length));
   expect(f.animated).toHaveLength(0);expect(controls.mock.calls.at(-1)![0]).toEqual(expect.arrayContaining([expect.objectContaining({id:'unit:多位小數與加減'})]));
   scene.destroy();
 });
@@ -158,16 +167,22 @@ test('答對有移向敵人的劍弧與命中，答錯攻擊勇者；暫停、�
   scene.activate('fullscreen');expect(requestFullscreen).toHaveBeenCalledTimes(1);
   scene.fullscreen(true);expect(controls.mock.calls.at(-1)![0]).toContainEqual(expect.objectContaining({id:'fullscreen',label:'退出全螢幕'}));
   scene.activate('start');scene.activate('unit:多位小數與加減');scene.activate('stage:4');
-  await vi.waitFor(()=>expect(f.animated).toHaveLength(4));
-  scene.activate('fight');scene.activate(`answer:1:${question.correct}`);f.frame(300);
-  const [hero,king,slash,spark]=f.animated;
+  await vi.waitFor(()=>expect(f.animated).toHaveLength(6));
+  scene.activate('fight');scene.activate(`answer:1:${question.correct}`);f.frame(500);
+  const [hero,king,echo,slash,bolt,spark]=f.animated;
   expect(slash.visible).toBe(true);expect(slash.x).toBeGreaterThan(hero.x+105);expect(slash.x).toBeLessThan(king.x);
-  expect(slash.scale.x).toBeGreaterThan(3);f.frame(300);
+  expect(slash.scale.x).toBe(3);expect(echo.visible).toBe(true);expect(echo.x).toBeLessThan(slash.x);f.frame(200);
   expect(spark.visible).toBe(true);expect(spark.x).toBe(king.x-25);
+  expect(king.textures[0]).toMatchObject({texture:{source:expect.stringContaining('heen-hurt.json')}});
+  expect(king.currentFrame).toBe(1);
   scene.activate('pause');const position=slash.x;f.frame(600);expect(slash.x).toBe(position);expect(spark.visible).toBe(true);
+  expect(king.currentFrame).toBe(1);f.resize(390,844);expect(king.currentFrame).toBe(1);expect(spark.x).toBe(king.x-25);
   scene.activate('fullscreen');expect(requestFullscreen).toHaveBeenCalledTimes(2);
-  scene.activate('resume');f.frame(BATTLE_RULES.resolveMs-600);expect(spark.visible).toBe(false);
-  f.frame(20000);f.frame(1000);expect(spark.visible).toBe(true);expect(spark.x).toBe(hero.x+25);
+  scene.activate('resume');f.frame(BATTLE_RULES.resolveMs-700);expect(spark.visible).toBe(false);
+  f.frame(20000);f.frame(650);expect(bolt.visible).toBe(true);expect(bolt.x).toBeLessThan(king.x-100);
+  expect(slash.visible).toBe(false);expect(hero.textures[0]).toMatchObject({texture:{source:expect.stringContaining('liwei-idle.json')}});
+  f.frame(150);expect(spark.visible).toBe(true);expect(spark.x).toBe(hero.x+25);
+  expect(hero.textures[0]).toMatchObject({texture:{source:expect.stringContaining('liwei-hurt.json')}});
   scene.activate('back');expect(spark.visible).toBe(false);expect(controls.mock.calls.at(-1)![0]).toContainEqual(expect.objectContaining({id:'stage:4'}));
-  scene.destroy();await vi.waitFor(()=>expect(f.Assets.unload).toHaveBeenCalledTimes(7));
+  scene.destroy();await vi.waitFor(()=>expect(f.Assets.unload).toHaveBeenCalledTimes(BATTLE_FILES.length));
 });

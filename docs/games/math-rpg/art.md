@@ -8,23 +8,21 @@
 
 ## 現役像素場景與圖集
 
-以已選定像素站立參考為造型依據，黎薇朝右、雙手握同一支劍；赫恩朝左、徒手。每人四幀待機、六幀攻擊，順序從左至右、從上至下。黎薇為防守、起揮、斬擊、命中、收勢、回到防守；赫恩以收掌、蓄勢、推掌、出手、收勢、回到待機呈現攻擊，不據此定義專屬能力。
+黎薇朝右、雙手握同一支劍；赫恩朝左、徒手。每人四幀待機、六幀攻擊與四幀受擊，順序從左至右、從上至下。攻擊與受擊均使用獨立圖集，不改人物身分或能力設定。
 
-執行規格由 [加工腳本](../../../scripts/prepare-math-rpg-battle.py)及[上古素材清單](../../world/art/manifests/ancient-legend-manifest.json)維護：角色每格 256×256、共同支點 (128,224)，待機 2×2、攻擊 3×2；獨立劍弧及命中星芒每格 128×128、2×2、中心支點 (64,64)。全部有效輪廓至少保留 12 像素，透明 RGBA 以無損 WebP 保存並逐像素比對。圖集未 trim、未旋轉，每幀時間記在 JSON；Pixi 使用 nearest 取樣與私人 ticker。
+執行格位由[原有動作加工腳本](../../../scripts/prepare-math-rpg-battle.py)、[受擊加工腳本](../../../scripts/prepare-math-rpg-hurt.py)及[上古素材清單](../../world/art/manifests/ancient-legend-manifest.json)維護。人物維持共同尺寸、支點與腳底基線，完整來源矩形共同比例縮小，不逐幀裁輪廓或縮放。生成稿實際尺寸與預定值不同，先按空白分隔重新定義欄支點及行基線，禁止硬切越界披風。全部幀、透明邊緣、留白與原稿須驗收；無損 WebP 解碼逐像素比對，圖集未 trim、未旋轉，Pixi 使用 nearest。
 
-生成草稿不等於格位合格的圖集：實際待機與特效來源為 1254×1254，攻擊為 1536×1024，來源行基線也不同；赫恩伸出的披風越過原先預想的等寬欄線。加工前重新定義空白處的來源矩形、列支點與行基線，以同一動作共同比例搬移完整矩形，再放入統一執行格。禁止依輪廓自動裁切、逐幀縮放或硬切越界披風。完整原稿、切出的各幀、循環與實際 Pixi 攻擊均須檢查；alpha>=16 僅用於主要輪廓量測，不刪除低透明像素。
+背景維持側視像素古代石庭，和宣傳封面呼應。相似門拱、台階、石材在黎薇側使用圓弧與青綠，赫恩側使用尖角與紫色；較暗、低細節遠景襯托人物，共同水平平台承接腳底。畫面反差來自大形與輪廓，不堆砌裝飾，也不建立新的地理或封印現況。
 
-背景採 640×360 側視像素古代石庭，和宣傳封面的建築構圖呼應。相似的門拱、台階、石材在黎薇側使用圓弧與青綠、赫恩側使用尖角與紫色；遠景以較暗、低細節的森林和山線襯托人物。共同水平平台承接角色，題目位於下方安靜石面區。畫面反差來自大形與輪廓，不堆砌裝飾、粒子或光柱；不建立封印失效、現代災難或新的古代地理。
+現役入口為 [battle-art.ts](../../../src/games/math-rpg/battle-art.ts)，播放與版面見 [battle-view.ts](../../../src/games/math-rpg/battle-view.ts)。[battle-effects.ts](../../../src/games/math-rpg/battle-effects.ts) 已以獨立劍氣、魔力彈與命中碎光圖集替換幾何軌跡與星形爆光。人物和特效共用戰鬥結算時間，命中才切換受擊；暫停、調整尺寸與跳幀不重播。降動態保留固定受擊姿勢及靜態命中標記。第一至第四關維持 Pixi 小型幾何怪暫代，勝利／敗退與其餘背景待製作。
 
-現役入口為 [battle-art.ts](../../../src/games/math-rpg/battle-art.ts)，播放與版面見 [battle-view.ts](../../../src/games/math-rpg/battle-view.ts)。攻擊演出由 [battle-effects.ts](../../../src/games/math-rpg/battle-effects.ts) 將劍弧圖集與像素軌跡、命中碎片組合：黎薇使用藍色劍弧，赫恩使用紫色出手軌跡，命中落在受擊者身上；特效保持在人物區，不遮擋題目。降動態以靜態命中標記取代飛行。這些是攻擊表現，未定義角色能力規則。第一至第四關使用 Pixi 小型幾何怪暫代，尚非正式怪物造型；舊怪物、勇者及舊戰鬥圖集未恢復。專用受擊、勝利／敗退及其餘背景仍待後續美術確認。
+## 採用特效與受擊圖集
 
-## 特效圖集候選
+獨立製作[黎薇劍氣](../../world/art/math-rpg/effects/liwei-sword-sweep-v3.png)、[赫恩凝聚魔力彈](../../world/art/math-rpg/effects/heen-magic-bolt-v1.png)及[共用命中碎光](../../world/art/math-rpg/effects/hit-shards-v1.png)，以青藍、灰紫與暖米色呼應人物。黎薇劍氣圓弧前緣朝右、凹口朝左，全部幀水平翻轉修正方向；演出加大並疊同圖集短暫低透明殘光。赫恩的厚實球狀核心先在掌心聚攏、壓縮，再向左推出，短尾在右；不使用劍氣輪廓、大片光暈或密集粒子。具體能力規則仍依[共用角色圖鑑](../../world/characters.md#赫恩)維持未定案。
 
-獨立製作[黎薇劍氣](../../world/art/math-rpg/effects/liwei-sword-sweep-v3.png)、[赫恩凝聚魔力彈](../../world/art/math-rpg/effects/heen-magic-bolt-v1.png)與[共用命中碎光](../../world/art/math-rpg/effects/hit-shards-v1.png)，以青藍、灰紫與暖米色呼應現役角色。黎薇劍氣的圓弧前緣朝右、凹口朝左，飛向赫恩；全部幀共用方向，不翻轉人物。赫恩的魔力彈為厚實球狀核心，左側前緣朝向黎薇，短尾在右；聚攏、壓縮後推出，再碎裂消散。保留少量碎片，避免大片光暈、規則星形與過密粒子。
+[逐幀總覽](../../world/art/math-rpg/effects/effects-contact-v2.png)保留特效原格；[攻擊與受擊搭配動畫](../../world/art/math-rpg/effects/battle-hurt-preview-v1.gif)為讀取現役圖集的美術合成預覽。特效生成稿採洋紅色鍵背景，[加工腳本](../../../scripts/prepare-math-rpg-effects.py)移除指定背景色及殘色，以完整格位共同比例縮小與置中。舊方向劍氣與近似劍氣的魔王出手波未採用；現役輸出在 `assets/images/math-rpg/battle/`，原稿與預覽在共用美術庫。
 
-[逐幀總覽](../../world/art/math-rpg/effects/effects-contact-v2.png)與[角色搭配動畫](../../world/art/math-rpg/effects/effects-battle-preview-v2.gif)供使用者確認；預覽直接讀取現役人物圖集，角色未重新生成。使用者已選定赫恩「凝聚魔力彈」的攻擊外觀與動作，具體能力規則仍依[共用角色圖鑑](../../world/characters.md#赫恩)維持未定案。此批圖集尚未替換遊戲載入的特效或修改玩法，正式 Pixi 播放留待美術確認後驗證。
-
-格位、中心錨點、留白、時序及透明邊緣量測以[加工腳本](../../../scripts/prepare-math-rpg-effects.py)和[上古素材清單](../../world/art/manifests/ancient-legend-manifest.json)的 `effect_candidates` 為準。生成原稿使用洋紅色鍵背景；加工移除指定背景色及其殘色，完整格位以共同比例縮小與置中，不逐幀裁輪廓或重畫。劍氣 v3 由原稿共用水平翻轉修正方向；舊方向 v2 與近似劍氣的赫恩出手波未採用，保留來源追溯。候選 PNG／無損 WebP／Pixi JSON 置於美術庫，確認採用後才移入執行素材目錄。
+受擊使用[黎薇原稿](../../world/art/characters/liwei/liwei-hurt-source-v1.png)與[赫恩原稿](../../world/art/characters/heen/heen-hurt-source-v1.png)，按現役待機第一幀鎖定造型，順序為命中、後仰、穩住、回復。黎薇向左退縮、雙手不離劍柄；赫恩向右退縮、收掌防禦。只清除生成背景精確 RGBA(0,0,0,1) 殘樣，保留有色低透明邊緣與黑色輪廓；命中效果另疊圖集，不烘入人物。格位、錨點、留白與時序以加工腳本和上古素材清單為準。
 
 ## 舊版素材來源與規格
 

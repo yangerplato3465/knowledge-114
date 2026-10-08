@@ -68,7 +68,7 @@ def sample(frames, durations, elapsed):
     return None
 
 
-def load_actor(name):
+def load_actor(name, stretch=1.6):
     # Read the ACTIVE atlas, never regenerate the already confirmed characters.
     folder = ROOT / 'assets/images/math-rpg/battle'
     data = json.loads((folder / f'{name}.json').read_text(encoding='utf-8'))
@@ -79,7 +79,7 @@ def load_actor(name):
         entry = data['frames'][key]
         rect = entry['frame']
         frames.append(atlas.crop((rect['x'], rect['y'], rect['x']+rect['w'], rect['y']+rect['h'])))
-        durations.append(round(entry['duration']*1.6))
+        durations.append(round(entry['duration']*stretch))
     return frames, durations
 
 
@@ -89,6 +89,10 @@ def battle_preview(all_frames):
     heen_idle, _ = load_actor('heen-idle')
     liwei_attack, liwei_times = load_actor('liwei-attack')
     heen_attack, heen_times = load_actor('heen-attack')
+    adopted=(ROOT/'assets/images/math-rpg/battle/liwei-hurt.json').exists()
+    if adopted:
+        liwei_hurt, liwei_hurt_times=load_actor('liwei-hurt',1)
+        heen_hurt, heen_hurt_times=load_actor('heen-hurt',1)
     animation = []
     peaks = []
     font = chinese_font(17)
@@ -97,6 +101,9 @@ def battle_preview(all_frames):
             frame = background.copy()
             liwei = sample(liwei_attack, liwei_times, elapsed) if attacker == 'liwei' else None
             heen = sample(heen_attack, heen_times, elapsed) if attacker == 'heen' else None
+            if adopted:
+                if attacker=='heen': liwei=sample(liwei_hurt,liwei_hurt_times,elapsed-700)
+                else: heen=sample(heen_hurt,heen_hurt_times,elapsed-620)
             frame.alpha_composite(liwei if liwei is not None else liwei_idle[0], (42,-6))
             frame.alpha_composite(heen if heen is not None else heen_idle[0], (342,-6))
             name = 'liwei-sword-sweep-v3' if attacker == 'liwei' else 'heen-magic-bolt-v1'
@@ -115,7 +122,17 @@ def battle_preview(all_frames):
                 x = round(420-238*flight)
                 y = round(106+34*flight)
             if effect is not None:
-                frame.alpha_composite(effect, (x-64, y-64))
+                if adopted and attacker=='liwei':
+                    lag=elapsed-80
+                    echo=sample(all_frames[name],SPECS[name][1],lag-340)
+                    if echo is not None:
+                        echo=echo.resize((173,173),Image.Resampling.NEAREST)
+                        echo.putalpha(echo.getchannel('A').point(lambda a:round(a*.28)))
+                        ex=round(220+230*max(0,min(1,(lag-340)/280)))
+                        frame.alpha_composite(echo,(ex-86,y-82))
+                    effect=effect.resize((192,192),Image.Resampling.NEAREST)
+                    frame.alpha_composite(effect,(x-96,y-96))
+                else: frame.alpha_composite(effect, (x-64, y-64))
             hit = sample(all_frames['hit-shards-v1'], SPECS['hit-shards-v1'][1], elapsed-(620 if attacker == 'liwei' else 700))
             if hit is not None:
                 target = 462 if attacker == 'liwei' else 180
@@ -124,7 +141,7 @@ def battle_preview(all_frames):
             draw = ImageDraw.Draw(frame)
             label = '黎薇・劍氣朝右 →' if attacker == 'liwei' else '← 赫恩・凝聚魔力彈'
             draw.text((18,18), label, font=font, fill=(239,230,208), stroke_width=2, stroke_fill=(24,28,39))
-            draw.text((18,330), '美術候選｜角色取自現有遊戲圖集', font=chinese_font(13), fill=(239,230,208))
+            draw.text((18,330), '現役圖集｜攻擊、命中、受擊同步' if adopted else '美術候選｜角色取自現有遊戲圖集', font=chinese_font(13), fill=(239,230,208))
             animation.append(frame.convert('RGB'))
             if elapsed in ((500,750) if attacker == 'liwei' else (650,850)):
                 peaks.append(frame.convert('RGB'))
@@ -138,12 +155,13 @@ def battle_preview(all_frames):
             palette_board.paste(effect, ((j%3)*128, 360*5+i*256+(j//3)*128), effect)
     palette = palette_board.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
     gifs = [frame.quantize(palette=palette, dither=Image.Dither.NONE) for frame in animation]
-    gifs[0].save(OUT/'effects-battle-preview-v2.gif', save_all=True, append_images=gifs[1:], duration=50, loop=0, disposal=2)
+    preview='battle-hurt-preview-v1' if adopted else 'effects-battle-preview-v2'
+    gifs[0].save(OUT/f'{preview}.gif', save_all=True, append_images=gifs[1:], duration=50, loop=0, disposal=2)
     contact = Image.new('RGB', (1280,720))
     for i, frame in enumerate(peaks):
         # Columns are actors; rows are maximum slash and maximum contact.
         contact.paste(frame, (640*(i//2),360*(i%2)))
-    contact.save(OUT/'effects-battle-preview-v2.png')
+    contact.save(OUT/f'{preview}.png')
     for i, frame in enumerate(animation):
         frame.save(QA/f'battle-preview-{i:02}.png')
 
@@ -152,6 +170,8 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     QA.mkdir(parents=True, exist_ok=True)
     manifest = json.loads(MANIFEST.read_text(encoding='utf-8'))
+    integration=manifest.get('effect_candidates',{})
+    adopted=integration.get('runtime_integration',False)
     report = {}
     all_frames = {}
     for name, (file, durations, mirror, label) in SPECS.items():
@@ -190,7 +210,7 @@ def main():
         data = {'frames':{}, 'animations':{'play':[]}, 'meta':{
             'image':f'{name}.webp', 'size':{'w':atlas.width,'h':atlas.height}, 'scale':'1',
             'anchor':{'x':.5,'y':.5}, 'frameDurationsMs':durations, 'loop':False,
-            'status':'review-candidate; not loaded by the game', 'padding':PADDING}}
+            'status':'adopted; exported to game runtime' if adopted else 'review-candidate; not loaded by the game', 'padding':PADDING}}
         for i in range(6):
             key = f'{name}-{i+1:02}'
             data['frames'][key] = {'frame':{'x':i%3*CELL,'y':i//3*CELL,'w':CELL,'h':CELL},
@@ -209,7 +229,7 @@ def main():
             'horizontal_mirror_all_frames':mirror, 'bounds':bounds, 'actual_padding':padding,
             'durations_ms':durations, 'alpha_extrema':list(atlas.getchannel('A').getextrema()),
             'lossless_webp_exact_rgba':True, 'production_ready':False,
-            'status':'美術候選；未替換現役特效，正式 Pixi 播放待確認後驗證',
+            'status':'已採用；現役引用見 battle-art.ts' if adopted else '美術候選；未替換現役特效，正式 Pixi 播放待確認後驗證',
             'outputs':[f'docs/world/art/math-rpg/effects/{name}.{ext}' for ext in ('png','webp','json','gif')]}
         entry = next(asset for asset in manifest['assets'] if asset['file'] == relative)
         entry['image'] = {'width':source.width,'height':source.height,'mode':'RGBA','frame_count':6,'grid':[3,2],
@@ -242,10 +262,10 @@ def main():
                 supersededBy=f'{replacement}.json', reviewComment=reason)
             path.write_text(json.dumps(legacy,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     manifest['effect_candidates'] = {
-        'approved':False, 'runtime_integration':False,
+        **integration, 'approved':integration.get('approved',False), 'runtime_integration':adopted,
         'directory':'docs/world/art/math-rpg/effects', 'script':'scripts/prepare-math-rpg-effects.py',
         'contact':'docs/world/art/math-rpg/effects/effects-contact-v2.png',
-        'battle_preview':'docs/world/art/math-rpg/effects/effects-battle-preview-v2.gif',
+        'battle_preview':f'docs/world/art/math-rpg/effects/{"battle-hurt-preview-v1" if adopted else "effects-battle-preview-v2"}.gif',
         'current_sword':'docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.json',
         'current_magic':'docs/world/art/math-rpg/effects/heen-magic-bolt-v1.json',
         'selected_magic_visual_direction':'使用者選定：掌心聚攏、壓縮，再推出厚實的灰紫魔力彈；僅為攻擊外觀與動作，能力規則未定案',
@@ -254,7 +274,7 @@ def main():
             'heen-magic-wave-v1':'使用者指出輪廓像劍氣；未採用',
             'effects-battle-preview-v1':'含上述舊特效，改看 v2'},
         'preview_actors':'現役 battle/liwei-* 與 heen-* 圖集；沒有生成新人物',
-        'note':'特效不定義能力規則；角色、題庫、遊戲程式及現役載入檔未更換。所有非零 alpha 留白與 PNG/WebP 一致性已驗證；畫風、節奏與正式 Pixi 播放待確認。'}
+        'note':integration['note'] if adopted else '特效不定義能力規則；角色、題庫、遊戲程式及現役載入檔未更換。所有非零 alpha 留白與 PNG/WebP 一致性已驗證；畫風、節奏與正式 Pixi 播放待確認。'}
     MANIFEST.write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     (QA/'packing-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({name:{'bounds':v['bounds'],'padding':v['actual_padding']} for name,v in report.items()}))

@@ -1,6 +1,6 @@
 {
   "frames": {
-    "liwei-sword-sweep-v3-01": {
+    "hit-shards-v1-01": {
       "frame": {
         "x": 0,
         "y": 0,
@@ -23,9 +23,9 @@
         "w": 128,
         "h": 128
       },
-      "duration": 60
+      "duration": 50
     },
-    "liwei-sword-sweep-v3-02": {
+    "hit-shards-v1-02": {
       "frame": {
         "x": 128,
         "y": 0,
@@ -48,9 +48,9 @@
         "w": 128,
         "h": 128
       },
-      "duration": 70
+      "duration": 65
     },
-    "liwei-sword-sweep-v3-03": {
+    "hit-shards-v1-03": {
       "frame": {
         "x": 256,
         "y": 0,
@@ -75,7 +75,7 @@
       },
       "duration": 80
     },
-    "liwei-sword-sweep-v3-04": {
+    "hit-shards-v1-04": {
       "frame": {
         "x": 0,
         "y": 128,
@@ -98,36 +98,11 @@
         "w": 128,
         "h": 128
       },
-      "duration": 70
+      "duration": 85
     },
-    "liwei-sword-sweep-v3-05": {
+    "hit-shards-v1-05": {
       "frame": {
         "x": 128,
-        "y": 128,
-        "w": 128,
-        "h": 128
-      },
-      "rotated": false,
-      "trimmed": false,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.5
-      },
-      "sourceSize": {
-        "w": 128,
-        "h": 128
-      },
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 128,
-        "h": 128
-      },
-      "duration": 80
-    },
-    "liwei-sword-sweep-v3-06": {
-      "frame": {
-        "x": 256,
         "y": 128,
         "w": 128,
         "h": 128
@@ -149,20 +124,45 @@
         "h": 128
       },
       "duration": 100
+    },
+    "hit-shards-v1-06": {
+      "frame": {
+        "x": 256,
+        "y": 128,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 120
     }
   },
   "animations": {
     "play": [
-      "liwei-sword-sweep-v3-01",
-      "liwei-sword-sweep-v3-02",
-      "liwei-sword-sweep-v3-03",
-      "liwei-sword-sweep-v3-04",
-      "liwei-sword-sweep-v3-05",
-      "liwei-sword-sweep-v3-06"
+      "hit-shards-v1-01",
+      "hit-shards-v1-02",
+      "hit-shards-v1-03",
+      "hit-shards-v1-04",
+      "hit-shards-v1-05",
+      "hit-shards-v1-06"
     ]
   },
   "meta": {
-    "image": "liwei-sword-sweep-v3.webp",
+    "image": "hit-shards-v1.webp",
     "size": {
       "w": 384,
       "h": 256
@@ -173,15 +173,15 @@
       "y": 0.5
     },
     "frameDurationsMs": [
-      60,
-      70,
+      50,
+      65,
       80,
-      70,
-      80,
-      100
+      85,
+      100,
+      120
     ],
     "loop": false,
-    "status": "adopted; exported to game runtime",
+    "status": "runtime; user requested integration",
     "padding": 16
   }
 }

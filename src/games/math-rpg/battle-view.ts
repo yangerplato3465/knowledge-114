@@ -1,7 +1,7 @@
 import type { App, Graphic, Label, Node, Texture } from '../magic-workshop/scene-types';
 import type { SceneControl, SceneHooks, Viewport } from './scene';
-import { animationFrames, type BattleArt, type BattlePixi, type Sheet } from './battle-art';
-import { createBattleEffects } from './battle-effects';
+import { animationFrameAt, animationFrames, type BattleArt, type BattlePixi, type Sheet } from './battle-art';
+import { attackPresentation, createBattleEffects } from './battle-effects';
 import { BATTLE_RULES, createBattle, STAGES } from './battle-model';
 import { createQuestionDeck } from './question-deck';
 import type { GeometryDiagramData } from './geometry-questions';
@@ -17,8 +17,9 @@ export function createBattleView(P:BattlePixi,app:App,art:BattleArt,grade:string
     const idle=animationFrames(art.values[`${who}-idle.json`] as Sheet);
     // Hold the authored strike/impact pose through the travel and contact beat.
     const attack=animationFrames(art.values[`${who}-attack.json`] as Sheet).map(frame=>({...frame,time:frame.time*1.6}));
+    const hurt=animationFrames(art.values[`${who}-hurt.json`] as Sheet);
     const sprite=world.addChild(new P.AnimatedSprite({textures:idle,autoUpdate:false,loop:true}));
-    sprite.anchor.set(.5,224/256);sprite.play();return {sprite,idle,attack};
+    sprite.anchor.set(.5,224/256);sprite.play();return {sprite,idle,attack,hurt,mode:'idle' as 'idle'|'attack'|'hurt'};
   };
   const hero=actor('liwei'), king=actor('heen'), placeholder=world.addChild(new P.Graphics());
   const effects=createBattleEffects(P,fx,art);
@@ -65,20 +66,26 @@ export function createBattleView(P:BattlePixi,app:App,art:BattleArt,grade:string
       if(data.type==='split')g.moveTo(x,y-size*.75).lineTo(x,y+size*.6).stroke({color:0xe2c796,width:2});
     }
   }
-  function idle(sprite:typeof hero) {sprite.sprite.onComplete=null;sprite.sprite.textures=sprite.idle;sprite.sprite.loop=true;reduced?sprite.sprite.gotoAndStop(0):sprite.sprite.gotoAndPlay(0);}
-  function attack(sprite:typeof hero) {sprite.sprite.onComplete=()=>{if(!disposed)idle(sprite);};sprite.sprite.textures=sprite.attack;sprite.sprite.loop=false;reduced?sprite.sprite.gotoAndStop(3):sprite.sprite.gotoAndPlay(0);}
-  function animateEvent() {
-    if(state.event==='correct')attack(hero);else if(state.stage===4)attack(king);
-    effects.clear();
+  function idle(actor:typeof hero,force=false) {
+    if(actor.mode==='idle'&&!force)return;
+    actor.mode='idle';actor.sprite.onComplete=null;actor.sprite.textures=actor.idle;actor.sprite.loop=true;
+    reduced?actor.sprite.gotoAndStop(0):actor.sprite.gotoAndPlay(0);
+  }
+  function pose(actor:typeof hero,clip:'attack'|'hurt',elapsed:number) {
+    const frames=actor[clip],frame=reduced?Math.min(clip==='attack'?3:1,frames.length-1):animationFrameAt(frames,elapsed);
+    if(frame===null){idle(actor);return;}
+    if(actor.mode!==clip){actor.mode=clip;actor.sprite.textures=frames;actor.sprite.loop=false;}
+    actor.sprite.gotoAndStop(frame);
   }
   function presentAttack() {
-    if(state.phase!=='resolving'){effects.clear();hero.sprite.tint=king.sprite.tint=0xffffff;return;}
+    if(state.phase!=='resolving'){effects.clear();idle(hero);idle(king);return;}
     const correct=state.event==='correct';
-    const source={x:correct?hero.sprite.x+105:king.sprite.x-105,y:hero.sprite.y-(correct?160:180)};
+    const source={x:correct?hero.sprite.x+105:king.sprite.x-100,y:hero.sprite.y-(correct?160:225)};
     const target={x:correct?king.sprite.x-25:hero.sprite.x+25,y:hero.sprite.y-140};
+    const sample=attackPresentation(state.event,state.elapsed,reduced);
+    pose(correct?hero:king,'attack',state.elapsed);
+    pose(correct?king:hero,'hurt',sample.impactElapsed);
     effects.render(state.event,state.elapsed,source,target,reduced);
-    const hit=!reduced&&state.elapsed>=540&&state.elapsed<920;
-    hero.sprite.tint=!correct&&hit?0xffbfa9:0xffffff;king.sprite.tint=correct&&hit?0xffd9bd:0xffffff;
   }
   function paint() {
     if(disposed)return;
@@ -143,19 +150,18 @@ export function createBattleView(P:BattlePixi,app:App,art:BattleArt,grade:string
     if(id==='fight')model.start();else if(id==='pause')model.pause(true);else if(id==='resume')model.pause(false);
     else if(id==='continue')model.continue();else if(id==='retry'){model.retry();idle(hero);idle(king);}
     else if(id==='next-stage'){model.nextStage();idle(hero);idle(king);}
-    else if(id.startsWith('answer:')){const [,turn,index]=id.split(':');if(model.answer(Number(turn),Number(index)))animateEvent();}
+    else if(id.startsWith('answer:')){const [,turn,index]=id.split(':');model.answer(Number(turn),Number(index));}
     paint();
   }
   return { activate,
     resize(next:Viewport){viewport=next;paint();},
     focus(id:string|null){focused=id;controls.forEach((item,key)=>item.ring.visible=key===id);draw();},
     setFullscreen(value:boolean){fullscreen=value;paint();},
-    setReduced(value:boolean){reduced=value;if(value){hero.sprite.gotoAndStop(0);king.sprite.gotoAndStop(0);}else{idle(hero);idle(king);}presentAttack();draw();},
+    setReduced(value:boolean){reduced=value;idle(hero,true);idle(king,true);presentAttack();draw();},
     hide(){if(state.phase==='playing'||state.phase==='resolving'){model.pause(true);paint();}},
     update(ms:number){
       if(disposed||state.paused)return;
-      const event=state.event,phase=state.phase;model.tick(ms);
-      if(phase==='playing'&&state.phase==='resolving'&&state.event!==event)animateEvent();
+      model.tick(ms);
       if(!reduced){const ticker={deltaMS:ms,deltaTime:ms*.06};[hero.sprite,king.sprite].forEach(sprite=>{if(sprite.playing)sprite.update(ticker);});}
       presentAttack();
       if(signature!==`${state.phase}:${state.turn}:${state.paused}:${state.stage}`){if(state.phase!=='resolving'){idle(hero);idle(king);}paint();}else updateHud();

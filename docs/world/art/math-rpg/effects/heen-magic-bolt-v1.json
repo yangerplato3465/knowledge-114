@@ -181,7 +181,7 @@
       100
     ],
     "loop": false,
-    "status": "review-candidate; not loaded by the game",
+    "status": "adopted; exported to game runtime",
     "padding": 16
   }
 }

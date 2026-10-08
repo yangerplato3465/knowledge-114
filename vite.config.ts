@@ -7,6 +7,8 @@ const pages = readdirSync(new URL('./pages/', import.meta.url)).filter(file => f
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
   publicDir: false,
+  // Local art/browser QA files include locked Windows profile databases.
+  server: { watch: { ignored: ['**/.art-output/**'] } },
   plugins: [react(), {
     name: 'homepage-module-boundary',
     generateBundle(_options, bundle) {

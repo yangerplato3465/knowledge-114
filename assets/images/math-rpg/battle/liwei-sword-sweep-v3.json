@@ -181,7 +181,7 @@
       100
     ],
     "loop": false,
-    "status": "adopted; exported to game runtime",
+    "status": "runtime; user requested integration",
     "padding": 16
   }
 }

@@ -11,19 +11,25 @@
     "assets/images/math-rpg/battle/heen-attack.webp",
     "assets/images/math-rpg/battle/heen-idle.json",
     "assets/images/math-rpg/battle/heen-idle.webp",
-    "assets/images/math-rpg/battle/hit-spark.json",
-    "assets/images/math-rpg/battle/hit-spark.webp",
     "assets/images/math-rpg/battle/liwei-attack.json",
     "assets/images/math-rpg/battle/liwei-attack.webp",
     "assets/images/math-rpg/battle/liwei-idle.json",
     "assets/images/math-rpg/battle/liwei-idle.webp",
-    "assets/images/math-rpg/battle/sword-sweep.json",
-    "assets/images/math-rpg/battle/sword-sweep.webp",
     "assets/images/math-rpg/cover/background-v2.webp",
     "assets/images/math-rpg/cover/heen-standing-v1.webp",
-    "assets/images/math-rpg/cover/liwei-standing-v1.webp"
+    "assets/images/math-rpg/cover/liwei-standing-v1.webp",
+    "assets/images/math-rpg/battle/liwei-sword-sweep-v3.json",
+    "assets/images/math-rpg/battle/liwei-sword-sweep-v3.webp",
+    "assets/images/math-rpg/battle/heen-magic-bolt-v1.json",
+    "assets/images/math-rpg/battle/heen-magic-bolt-v1.webp",
+    "assets/images/math-rpg/battle/hit-shards-v1.json",
+    "assets/images/math-rpg/battle/hit-shards-v1.webp",
+    "assets/images/math-rpg/battle/liwei-hurt.json",
+    "assets/images/math-rpg/battle/liwei-hurt.webp",
+    "assets/images/math-rpg/battle/heen-hurt.json",
+    "assets/images/math-rpg/battle/heen-hurt.webp"
   ],
-  "runtime_integration": "Pixi 封面 Mesh 微動；五關答題原型以像素 AnimatedSprite 呈現，第五關使用黎薇與赫恩四幀待機／六幀攻擊、獨立劍弧與命中星芒；前四關為小型暫用圖形。",
+  "runtime_integration": "Pixi 封面 Mesh 微動；五關答題原型使用像素 AnimatedSprite，第五關有四幀待機、六幀攻擊與四幀受擊；獨立圖集呈現黎薇朝右劍氣、赫恩朝左凝聚魔力彈及命中碎光，前四關維持暫代怪。",
   "assets": [
     {
       "character_id": "liwei",
@@ -1041,7 +1047,7 @@
         ],
         "lossless_webp_exact_rgba": true,
         "production_ready": false,
-        "status": "美術候選；未替換現役特效，正式 Pixi 播放待確認後驗證",
+        "status": "已採用；現役引用見 battle-art.ts",
         "outputs": [
           "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.png",
           "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.webp",
@@ -1379,7 +1385,7 @@
         ],
         "lossless_webp_exact_rgba": true,
         "production_ready": false,
-        "status": "美術候選；未替換現役特效，正式 Pixi 播放待確認後驗證",
+        "status": "已採用；現役引用見 battle-art.ts",
         "outputs": [
           "docs/world/art/math-rpg/effects/hit-shards-v1.png",
           "docs/world/art/math-rpg/effects/hit-shards-v1.webp",
@@ -1594,7 +1600,7 @@
         ],
         "lossless_webp_exact_rgba": true,
         "production_ready": false,
-        "status": "美術候選；未替換現役特效，正式 Pixi 播放待確認後驗證",
+        "status": "已採用；現役引用見 battle-art.ts",
         "outputs": [
           "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.png",
           "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.webp",
@@ -1602,6 +1608,238 @@
           "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.gif"
         ]
       }
+    },
+    {
+      "file": "docs/world/art/characters/liwei/liwei-hurt-source-v1.png",
+      "tool": "built-in image_gen",
+      "sha256": "509a48726ab436df3d85ee9c145c1752e75714fa2f0ee7f42ec052ec3da0951d",
+      "prompt": "Edit target: the supplied CURRENT GAME pixel sprite of 黎薇. Produce a single 4-frame HURT/RECOIL animation sheet, preserving EXACTLY her identity, face, warm brown skin, shoulder-length wavy braided brown hair with golden flower ornament, navy and ivory tunic over navy trousers, waist-length teal cape, belt compass, tall brown boots, and ONE silver-blue sword held with BOTH hands on the SAME handle. This is NOT a new heroine. Do not give her a ponytail, armor, short skirt, pale skin, extra weapon, or new jewelry. Copy the supplied existing small pixel clusters, dark outlines and limited palette closely; true hard-edged pixel game art, not painted illustration.\nSheet contract established before generation: 1024x1024 total, TWO columns and TWO rows, FOUR uniform 512x512 cells, reading left-to-right then top-to-bottom, no visible grid. The supplied entire 256x256 sprite canvas is the layout reference: enlarge it exactly 2x conceptually for each source cell. Character body from hair to soles is approximately 260 pixels high in a 512 cell, NOT filling the cell; shared root x=256 and soles baseline y=448 in EVERY cell. Sword must also remain whole within its OWN cell. Keep at least 32 pixels clear on every cell edge, including sword, hair and cape. SAME character scale, foot positions and baseline throughout; do not center or zoom each pose individually. True transparent alpha background; no floor, shadows, glow, motion lines or hit effect. Effects are separate assets.\nAction: hero stands LEFT in game facing RIGHT, receives a blow FROM THE RIGHT, reacting backwards TO THE LEFT. Frame1 short flinch, brows tense, elbows bend and torso draws back slightly while sword remains diagonal up-right and both hands retain its handle. Frame2 strongest recoil: torso leans a little further left, knees bend slightly, cape follows, boots stay planted; sword rotates a little but remains complete. Frame3 regains balance with low knees and controlled two-handed guard. Frame4 recovers close to the supplied original guard pose, alert and composed. Subtle readable physical weight, no violent collapse, wounds, blood, death, big motion or body resizing. Preserve the supplied EXACT wardrobe silhouettes and character. Each full source cell contains ONLY her isolated complete pose.",
+      "inputs": [
+        "assets/images/math-rpg/battle/liwei-idle.json"
+      ],
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA",
+        "grid": [
+          2,
+          2
+        ],
+        "frame_count": 4
+      },
+      "processing": {
+        "script": "scripts/prepare-math-rpg-hurt.py",
+        "frame_size": [
+          256,
+          256
+        ],
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 16,
+        "source_grid": {
+          "xs": [
+            0,
+            627,
+            1254
+          ],
+          "roots": [
+            346,
+            319
+          ],
+          "feet": [
+            594,
+            562
+          ],
+          "scale": 0.27
+        },
+        "source_bounds": [
+          [
+            134,
+            66,
+            547,
+            596
+          ],
+          [
+            78,
+            77,
+            513,
+            595
+          ],
+          [
+            144,
+            44,
+            563,
+            563
+          ],
+          [
+            115,
+            45,
+            533,
+            563
+          ]
+        ],
+        "bounds": [
+          [
+            71,
+            82,
+            182,
+            224
+          ],
+          [
+            63,
+            85,
+            180,
+            224
+          ],
+          [
+            74,
+            84,
+            187,
+            224
+          ],
+          [
+            73,
+            85,
+            186,
+            224
+          ]
+        ],
+        "durations_ms": [
+          80,
+          140,
+          160,
+          140
+        ],
+        "method": "只移除生成背景精確 RGBA(0,0,0,1) 殘樣；保留有色低 alpha 邊緣。完整矩形共同比例 nearest 縮小、欄支點與行基線對齊，不逐幀裁輪廓、縮放或重畫",
+        "identified_background_rgba": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "background_samples_removed": 50607,
+        "runtime": "assets/images/math-rpg/battle/liwei-hurt.json",
+        "lossless_webp_exact_rgba": true
+      },
+      "generation_basename": "exec-a6bfad88-d9e1-4fa8-99c1-e64568d37305.png"
+    },
+    {
+      "file": "docs/world/art/characters/heen/heen-hurt-source-v1.png",
+      "tool": "built-in image_gen",
+      "sha256": "cec9148ec9f810733798c9ff66023c0bff9cd82d00057ccdad861b290f716046",
+      "prompt": "Edit target: supplied CURRENT GAME pixel sprite of 赫恩 the ancient king. Create FOUR hurt/recoil poses of THIS EXACT SAME male character. Preserve the existing face, swept dark wavy hair with distinctive WHITE forelock, goatee, high purple collar, charcoal clothes, purple-lined dark sweeping cloak, gold round chest clasp, plain brown belt and brown tall boots. No sword, staff, horns, plants, armor, extra ornaments, new magic or effect. Preserve hard pixel clusters, outlines and the limited palette and the body's proportions from the supplied game sprite; do not create a different character or painted illustration.\nLayout specified before generation: target total 1024x1024, TWO columns by TWO rows, FOUR equal 512x512 cells, reading top-left/top-right/bottom-left/bottom-right, no grid lines. Enlarge the supplied complete 256x256 canvas to 512 as the conceptual layout: body hair-to-soles around 260px tall, so there is generous transparent space above; feet baseline y=448, root x=256 IN EVERY CELL. Full cloak, boots, hands and hair remain at least32px inside every cell. Shared character scale and foot positions in all poses, do not auto zoom or individually center poses. True transparent background, no shadow, floor, glow, particles, projectile or baked-in impact marks.\nMotion: king stands on RIGHT of game facing LEFT, receives a blow FROM THE LEFT and recoils towards RIGHT. Frame1 sharp controlled flinch: head and shoulders draw a little right, left extended palm retracts. Frame2 strongest recoil: slight backward lean right, knees soften, forearm comes toward chest defensively; cloak folds follow the lean. Frame3 braces and recovers balance with tense brow, both hands free, still facing left. Frame4 settles close to original composed left-facing guard with left palm out. Complete both boots stay on SAME floor baseline. Adult intelligent threatening expression, not silly panic; no blood, damage, death, falling, identity drift or resizing. Only four complete isolated poses of the supplied exact king, no other characters.",
+      "inputs": [
+        "assets/images/math-rpg/battle/heen-idle.json"
+      ],
+      "image": {
+        "width": 1254,
+        "height": 1254,
+        "mode": "RGBA",
+        "grid": [
+          2,
+          2
+        ],
+        "frame_count": 4
+      },
+      "processing": {
+        "script": "scripts/prepare-math-rpg-hurt.py",
+        "frame_size": [
+          256,
+          256
+        ],
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 16,
+        "source_grid": {
+          "xs": [
+            0,
+            680,
+            1254
+          ],
+          "roots": [
+            374,
+            300
+          ],
+          "feet": [
+            612,
+            557
+          ],
+          "scale": 0.25
+        },
+        "source_bounds": [
+          [
+            191,
+            118,
+            627,
+            610
+          ],
+          [
+            101,
+            144,
+            556,
+            611
+          ],
+          [
+            143,
+            89,
+            642,
+            554
+          ],
+          [
+            48,
+            85,
+            529,
+            559
+          ]
+        ],
+        "bounds": [
+          [
+            82,
+            101,
+            191,
+            224
+          ],
+          [
+            78,
+            108,
+            192,
+            224
+          ],
+          [
+            70,
+            107,
+            194,
+            224
+          ],
+          [
+            66,
+            106,
+            186,
+            224
+          ]
+        ],
+        "durations_ms": [
+          80,
+          140,
+          160,
+          140
+        ],
+        "method": "只移除生成背景精確 RGBA(0,0,0,1) 殘樣；保留有色低 alpha 邊緣。完整矩形共同比例 nearest 縮小、欄支點與行基線對齊，不逐幀裁輪廓、縮放或重畫",
+        "identified_background_rgba": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "background_samples_removed": 24004,
+        "runtime": "assets/images/math-rpg/battle/heen-hurt.json",
+        "lossless_webp_exact_rgba": true
+      },
+      "generation_basename": "exec-55a89924-a8a5-4d9f-bfe1-4c9a1d815531.png"
     }
   ],
   "production_sprite_contract": {
@@ -1637,14 +1875,14 @@
         128
       ],
       "grid": [
-        2,
+        3,
         2
       ],
       "anchor": [
         64,
         64
       ],
-      "minimum_safe_padding": 12
+      "minimum_safe_padding": 16
     },
     "initial_requested_source": {
       "idle": [
@@ -2027,7 +2265,8 @@
           90,
           100
         ],
-        "runtime": "assets/images/math-rpg/battle/sword-sweep.json"
+        "runtime": "assets/images/math-rpg/battle/sword-sweep.json",
+        "status": "historical export; no longer loaded by battle-art.ts"
       },
       "hit-spark": {
         "source": "math-rpg/hit-spark-source-v2.png",
@@ -2093,7 +2332,8 @@
           90,
           100
         ],
-        "runtime": "assets/images/math-rpg/battle/hit-spark.json"
+        "runtime": "assets/images/math-rpg/battle/hit-spark.json",
+        "status": "historical export; no longer loaded by battle-art.ts"
       }
     },
     "encoding": "lossless WebP exact RGBA；解碼與打包像素逐位元組一致",
@@ -2103,10 +2343,14 @@
       "完整來源先檢查；劍尖跨格的草稿未採用。赫恩披風的完整矩形重新放在空白分隔處。",
       "各個執行幀均檢查輪廓、武器、披風、安全留白與鄰幀殘片；alpha>=16 僅量測，不刪除透明像素。",
       "迴圈、攻擊／特效在實際 Pixi 中檢查；共同腳底線及兩倍 nearest 顯示。",
-      "受擊使用獨立命中星芒與暫時 tint；尚無專用受擊、勝敗與其餘怪物正式圖集。"
+      "雙方受擊採獨立四幀 hurt 圖集，於劍氣／魔力彈命中時開始；第一至第四關維持暫代怪，勝敗正式動作未製作。"
     ],
     "processing_script": "scripts/prepare-math-rpg-battle.py",
-    "runtime_source": "src/games/math-rpg/battle-art.ts"
+    "runtime_source": "src/games/math-rpg/battle-art.ts",
+    "hurt_grid": [
+      2,
+      2
+    ]
   },
   "cover_concept": {
     "file": "docs/world/art/math-rpg/cover-concept-v1.png",
@@ -2172,12 +2416,12 @@
     "runtime_source": "src/games/math-rpg/cover-art.ts"
   },
   "effect_candidates": {
-    "approved": false,
-    "runtime_integration": false,
+    "approved": true,
+    "runtime_integration": true,
     "directory": "docs/world/art/math-rpg/effects",
     "script": "scripts/prepare-math-rpg-effects.py",
     "contact": "docs/world/art/math-rpg/effects/effects-contact-v2.png",
-    "battle_preview": "docs/world/art/math-rpg/effects/effects-battle-preview-v2.gif",
+    "battle_preview": "docs/world/art/math-rpg/effects/battle-hurt-preview-v1.gif",
     "current_sword": "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.json",
     "current_magic": "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.json",
     "selected_magic_visual_direction": "使用者選定：掌心聚攏、壓縮，再推出厚實的灰紫魔力彈；僅為攻擊外觀與動作，能力規則未定案",
@@ -2187,6 +2431,209 @@
       "effects-battle-preview-v1": "含上述舊特效，改看 v2"
     },
     "preview_actors": "現役 battle/liwei-* 與 heen-* 圖集；沒有生成新人物",
-    "note": "特效不定義能力規則；角色、題庫、遊戲程式及現役載入檔未更換。所有非零 alpha 留白與 PNG/WebP 一致性已驗證；畫風、節奏與正式 Pixi 播放待確認。"
+    "note": "已依使用者要求接入 Pixi；赫恩凝聚魔力彈僅定義視覺，不新增能力規則。黎薇劍氣加大並疊加同圖集短暫殘光。",
+    "runtime_files": [
+      "assets/images/math-rpg/battle/liwei-sword-sweep-v3.json",
+      "assets/images/math-rpg/battle/heen-magic-bolt-v1.json",
+      "assets/images/math-rpg/battle/hit-shards-v1.json"
+    ]
+  },
+  "hurt_runtime": {
+    "script": "scripts/prepare-math-rpg-hurt.py",
+    "clips": {
+      "liwei-hurt": {
+        "script": "scripts/prepare-math-rpg-hurt.py",
+        "frame_size": [
+          256,
+          256
+        ],
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 16,
+        "source_grid": {
+          "xs": [
+            0,
+            627,
+            1254
+          ],
+          "roots": [
+            346,
+            319
+          ],
+          "feet": [
+            594,
+            562
+          ],
+          "scale": 0.27
+        },
+        "source_bounds": [
+          [
+            134,
+            66,
+            547,
+            596
+          ],
+          [
+            78,
+            77,
+            513,
+            595
+          ],
+          [
+            144,
+            44,
+            563,
+            563
+          ],
+          [
+            115,
+            45,
+            533,
+            563
+          ]
+        ],
+        "bounds": [
+          [
+            71,
+            82,
+            182,
+            224
+          ],
+          [
+            63,
+            85,
+            180,
+            224
+          ],
+          [
+            74,
+            84,
+            187,
+            224
+          ],
+          [
+            73,
+            85,
+            186,
+            224
+          ]
+        ],
+        "durations_ms": [
+          80,
+          140,
+          160,
+          140
+        ],
+        "method": "只移除生成背景精確 RGBA(0,0,0,1) 殘樣；保留有色低 alpha 邊緣。完整矩形共同比例 nearest 縮小、欄支點與行基線對齊，不逐幀裁輪廓、縮放或重畫",
+        "identified_background_rgba": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "background_samples_removed": 50607,
+        "runtime": "assets/images/math-rpg/battle/liwei-hurt.json",
+        "lossless_webp_exact_rgba": true
+      },
+      "heen-hurt": {
+        "script": "scripts/prepare-math-rpg-hurt.py",
+        "frame_size": [
+          256,
+          256
+        ],
+        "anchor": [
+          128,
+          224
+        ],
+        "padding": 16,
+        "source_grid": {
+          "xs": [
+            0,
+            680,
+            1254
+          ],
+          "roots": [
+            374,
+            300
+          ],
+          "feet": [
+            612,
+            557
+          ],
+          "scale": 0.25
+        },
+        "source_bounds": [
+          [
+            191,
+            118,
+            627,
+            610
+          ],
+          [
+            101,
+            144,
+            556,
+            611
+          ],
+          [
+            143,
+            89,
+            642,
+            554
+          ],
+          [
+            48,
+            85,
+            529,
+            559
+          ]
+        ],
+        "bounds": [
+          [
+            82,
+            101,
+            191,
+            224
+          ],
+          [
+            78,
+            108,
+            192,
+            224
+          ],
+          [
+            70,
+            107,
+            194,
+            224
+          ],
+          [
+            66,
+            106,
+            186,
+            224
+          ]
+        ],
+        "durations_ms": [
+          80,
+          140,
+          160,
+          140
+        ],
+        "method": "只移除生成背景精確 RGBA(0,0,0,1) 殘樣；保留有色低 alpha 邊緣。完整矩形共同比例 nearest 縮小、欄支點與行基線對齊，不逐幀裁輪廓、縮放或重畫",
+        "identified_background_rgba": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "background_samples_removed": 24004,
+        "runtime": "assets/images/math-rpg/battle/heen-hurt.json",
+        "lossless_webp_exact_rgba": true
+      }
+    },
+    "clock": "battle elapsed; hero hit 620ms / king hit 700ms; reduced motion uses fixed poses"
   }
 }

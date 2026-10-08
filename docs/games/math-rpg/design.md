@@ -17,7 +17,7 @@
 
 [MathRpg.tsx](../../../src/games/math-rpg/MathRpg.tsx) 沿用魔法工坊的共用網站導覽、主題切換、返回列與等寬遊戲外框，並管理畫布生命週期及隱藏的標題、玩法、狀態與語意按鈕。封面是遊戲內的開場；全螢幕按鈕在封面／選單與戰鬥暫停畫面內，由 Pixi 繪製。滑鼠／觸控與鍵盤呼叫同一場景操作，鍵盤焦點由 Pixi 繪製。Escape 優先退出全螢幕，再依所在場景返回選關、單元或封面；網站導覽的鍵盤操作不觸發遊戲返回。載入失敗可重試或返回單元。
 
-[scene.ts](../../../src/games/math-rpg/scene.ts) 按需載入本地 Pixi ESM，所有可見背景、角色、題目、示意圖與操作皆在 Pixi。封面 MeshSimple 下方頂點固定，圖片入口為 [cover-art.ts](../../../src/games/math-rpg/cover-art.ts)。戰鬥的 AnimatedSprite 四幀待機、六幀攻擊及獨立劍弧／命中星芒由 [battle-art.ts](../../../src/games/math-rpg/battle-art.ts)載入；共同圖集以引用租約管理，舊場景不得卸載新場景正在使用的素材。
+[scene.ts](../../../src/games/math-rpg/scene.ts) 按需載入本地 Pixi ESM，所有可見背景、角色、題目、示意圖與操作皆在 Pixi。封面 MeshSimple 下方頂點固定，圖片入口為 [cover-art.ts](../../../src/games/math-rpg/cover-art.ts)。戰鬥的 AnimatedSprite 四幀待機、六幀攻擊、四幀受擊及獨立劍氣／魔力彈／命中碎光由 [battle-art.ts](../../../src/games/math-rpg/battle-art.ts)載入；共同圖集以引用租約管理，舊場景不得卸載新場景正在使用的素材。
 
 畫布依容器縮放並支援高像素密度。封面與戰鬥使用私人 ticker，AnimatedSprite 不訂閱共享 ticker。[battle-effects.ts](../../../src/games/math-rpg/battle-effects.ts) 依結算時間呈現出招軌跡及命中，即使更新間隔較長也能直接顯示命中；暫停凍結，離場清除。降低動態停止角色循環與飛行，保留靜態命中標記及同一答題計時、傷害規則；隱藏頁面自動暫停戰鬥，回來後手動繼續。逾時、離場及過期初始化不得附加場景；離場銷毀 Pixi、素材、字體、計時器與監聽。素材載入一律使用 `import.meta.env.BASE_URL`。
 
@@ -42,4 +42,4 @@
 
 ## 下一階段
 
-[核准宣傳封面](../../world/art/math-rpg/cover-promotional-v2.png)與新的像素操作原型皆已接入。下一步由使用者確認實際攻擊、背景與答題節奏，再分批製作其餘怪物、受擊／勝敗動作與敘事。圖片產製遵循[美術來源與邊界規則](art.md)，來源與全提示保留在[上古素材清單](../../world/art/manifests/ancient-legend-manifest.json)。
+[核准宣傳封面](../../world/art/math-rpg/cover-promotional-v2.png)與新的像素操作原型皆已接入。下一步由使用者確認實際攻擊、背景與答題節奏，再分批製作其餘怪物、勝敗動作與敘事。圖片產製遵循[美術來源與邊界規則](art.md)，來源與全提示保留在[上古素材清單](../../world/art/manifests/ancient-legend-manifest.json)。
