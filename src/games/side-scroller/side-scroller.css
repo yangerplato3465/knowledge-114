@@ -48,7 +48,7 @@
   .ss-game { width: calc(100% - 20px); }
   .ss-toolbar { display: grid; grid-template-rows: 24px 1fr; gap: 6px; justify-content: stretch; }
   .ss-toolbar h1 { font-size: 17px; text-align: center; }
-  .ss-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .ss-actions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
   .ss-actions button, .ss-actions a { padding: 4px 6px; font-size: 13px; }
   .ss-menu { padding: 10px 12px; grid-template-rows: 74px 104px; gap: 6px; }
   .ss-levels { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
@@ -57,7 +57,7 @@
   .ss-difficulty strong { font-size: 19px; }
   .ss-stage { --ss-menu-height: 204px; aspect-ratio: 4 / 7; border-radius: 15px; }
   .ss-controls { inset: auto max(12px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); gap: 12px; }
-  .ss-game:fullscreen .ss-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ss-game:fullscreen .ss-actions { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 @media (orientation: landscape) and (max-height: 600px) {
   body:has(.ss-game) { padding: 8px 12px; }

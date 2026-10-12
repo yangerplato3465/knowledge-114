@@ -1,6 +1,7 @@
 import type { Node, Pixi, Sprite, Texture } from '../magic-workshop/scene-types';
-import metadata from '../../../assets/images/side-scroller/sprites-v1.json';
+import metadata from '../../../assets/images/side-scroller/sprites/sprites-v1.json';
 import type { State } from './model';
+import { loadImage } from './assets';
 
 export const SPRITES = metadata.animations;
 export type AnimationName = keyof typeof SPRITES;
@@ -12,31 +13,20 @@ export interface Animation extends Sprite {
 }
 export type ArtPixi = Omit<Pixi, 'Texture'> & {
   Rectangle: new (x: number, y: number, width: number, height: number) => unknown;
-  Texture: { new (options: { source: unknown; frame: unknown }): Texture; from(image: HTMLImageElement): Texture & { source: unknown } };
+  Texture: { new (options: { source: unknown; frame: unknown }): Texture; from(image: HTMLImageElement, skipCache?: boolean): Texture & { source: unknown } };
   AnimatedSprite: new (options: { textures: Frame[]; autoUpdate: boolean; autoPlay: boolean; loop: boolean }) => Animation;
 };
-export function loadImage(url: string, signal: AbortSignal): Promise<HTMLImageElement> {
-  signal.throwIfAborted();
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    const cleanup = () => { image.onload = image.onerror = null; signal.removeEventListener('abort', aborted); };
-    const aborted = () => { cleanup(); image.src = ''; reject(signal.reason); };
-    image.onload = () => { cleanup(); resolve(image); };
-    image.onerror = () => { cleanup(); reject(new Error(`素材載入失敗：${url}`)); };
-    signal.addEventListener('abort', aborted, { once: true }); image.src = url;
-  });
-}
-export async function loadSpriteImages(signal: AbortSignal) {
-  const names = Object.keys(SPRITES) as AnimationName[];
+export async function loadSpriteImages(signal: AbortSignal, names: readonly AnimationName[] = ['run', 'jump', 'portal']) {
   const images = await Promise.all(names.map(name => loadImage(`${import.meta.env.BASE_URL}${SPRITES[name].file}`, signal)));
-  return Object.fromEntries(names.map((name, i) => [name, images[i]])) as Record<AnimationName, HTMLImageElement>;
+  return Object.fromEntries(names.map((name, i) => [name, images[i]])) as Partial<Record<AnimationName, HTMLImageElement>>;
 }
-// Scene-owned images keep the existing abort/unmount isolation, without sharing a global texture cache.
-export function createSpriteArt(P: ArtPixi, images: Record<AnimationName, HTMLImageElement>) {
+// Each scene owns its texture sources even when decoded images are reused.
+export function createSpriteArt(P: ArtPixi, images: Partial<Record<AnimationName, HTMLImageElement>>) {
   const bases: Texture[] = [], frames: Texture[] = [];
   const sequences = {} as Record<AnimationName, Frame[]>;
   for (const name of Object.keys(SPRITES) as AnimationName[]) {
-    const spec = SPRITES[name], base = P.Texture.from(images[name]); bases.push(base);
+    const image = images[name]; if (!image) continue;
+    const spec = SPRITES[name], base = P.Texture.from(image, true); bases.push(base);
     sequences[name] = Array.from({ length: spec.frames }, (_, i) => {
       const texture = new P.Texture({ source: base.source, frame: new P.Rectangle(i % spec.columns * 256, Math.floor(i / spec.columns) * 256, 256, 256) });
       frames.push(texture); return { texture, time: spec.durationsMs[i] };

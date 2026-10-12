@@ -60,7 +60,7 @@
 
 [造型母圖](art/characters/milo/apprentice-v2.png) · [感謝表情原圖](art/characters/milo/apprentice-celebrate-v1.png) · [造型來源紀錄](art/manifests/manifest.json)
 
-橫向遊戲的 Q 版空手造型：[核准母圖](art/characters/milo/milo-platformer-master-v1.png) · [跑跳動畫來源與規格](art/manifests/side-scroller-sprites-manifest.json)。採右向側視與 Kenney 素材包的粗輪廓；本遊戲不攜帶小瓶，共用身分不變。
+橫向遊戲的 Q 版空手造型：[核准母圖](art/characters/milo/milo-platformer-master-v1.png) · [跑跳動畫來源與規格](art/side-scroller/manifests/sprites-manifest.json)。採右向側視與 Kenney 素材包的粗輪廓；本遊戲不攜帶小瓶，共用身分不變。
 
 ### 露米（lumi）
 

@@ -1,0 +1,189 @@
+{
+  "frames": {
+    "heen-magic-wave-v1-01": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 60
+    },
+    "heen-magic-wave-v1-02": {
+      "frame": {
+        "x": 128,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 70
+    },
+    "heen-magic-wave-v1-03": {
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 80
+    },
+    "heen-magic-wave-v1-04": {
+      "frame": {
+        "x": 0,
+        "y": 128,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 80
+    },
+    "heen-magic-wave-v1-05": {
+      "frame": {
+        "x": 128,
+        "y": 128,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 90
+    },
+    "heen-magic-wave-v1-06": {
+      "frame": {
+        "x": 256,
+        "y": 128,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "duration": 100
+    }
+  },
+  "animations": {
+    "play": [
+      "heen-magic-wave-v1-01",
+      "heen-magic-wave-v1-02",
+      "heen-magic-wave-v1-03",
+      "heen-magic-wave-v1-04",
+      "heen-magic-wave-v1-05",
+      "heen-magic-wave-v1-06"
+    ]
+  },
+  "meta": {
+    "image": "heen-magic-wave-v1.webp",
+    "size": {
+      "w": 384,
+      "h": 256
+    },
+    "scale": "1",
+    "anchor": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "frameDurationsMs": [
+      60,
+      70,
+      80,
+      80,
+      90,
+      100
+    ],
+    "loop": false,
+    "status": "superseded; not loaded by the game",
+    "padding": 16,
+    "supersededBy": "heen-magic-bolt-v1.json",
+    "reviewComment": "使用者指出輪廓像劍氣，未採用"
+  }
+}

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '../../features/theme/ThemeProvider';
 import { SideScroller } from './SideScroller';
 import { createSideScroller, type SceneStatus, type SideScrollerScene } from './scene';
@@ -8,7 +8,12 @@ import { toggleColor } from './model';
 
 vi.mock('./scene', () => ({ createSideScroller: vi.fn() }));
 vi.mock('./TutorialDemo', () => ({ TutorialDemo: () => <div>玩法動畫示範</div> }));
-afterEach(() => { cleanup(); vi.resetAllMocks(); });
+beforeEach(() => {
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+  vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
+  vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => {});
+});
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.resetAllMocks(); });
 const fakeScene = (): SideScrollerScene => ({ hold: vi.fn(), tap: vi.fn(), setMode: vi.fn(), toggleColor: vi.fn(), pressControl: vi.fn(), setTutorial: vi.fn(), destroy: vi.fn() });
 it('開始入口只在巡覽中央，功能列只接受點擊且焦點回遊戲，沒有暫停或重啟操作', async () => {
   const created = fakeScene();
@@ -26,6 +31,10 @@ it('開始入口只在巡覽中央，功能列只接受點擊且焦點回遊戲�
   const actions = screen.getByRole('group', { name: '場景功能' });
   expect(within(actions).queryByRole('button', { name: '開始冒險' })).toBeNull();
   expect(within(actions).queryByRole('link', { name: '回冒險座' })).toBeNull();
+  fireEvent.click(within(actions).getByRole('button', { name: '關閉音樂' }));
+  expect(within(actions).getByRole('button', { name: '開啟音樂' }).getAttribute('aria-pressed')).toBe('false');
+  fireEvent.click(within(actions).getByRole('button', { name: '關閉音效' }));
+  expect(within(actions).getByRole('button', { name: '開啟音效' }).getAttribute('aria-pressed')).toBe('false');
   [...within(actions).getAllByRole('button'), ...within(screen.getByRole('group', { name: '關卡難度' })).getAllByRole('button')].forEach(button => expect(button.tabIndex).toBe(-1));
   expect(screen.getByRole('button', { name: '開始冒險' }).closest('.ss-playfield')).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: '開始冒險' })); expect(created.setMode).toHaveBeenCalledWith('play');

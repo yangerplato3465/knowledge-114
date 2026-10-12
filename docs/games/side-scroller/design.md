@@ -36,13 +36,13 @@
 
 左上四個 Pixi 圖示由淡色轉為完整原色，世界中的已收集寶石隱藏；DOM 提供收藏狀態語意。跌落、切燈及重看手冊保留收藏；回巡覽、新冒險及換關清空，不跨局儲存。
 
-素材為 Kenney New Platformer Pack 1.1 的 `Sprites/Tiles/Double/gem_yellow/green/red/blue.png`，現役檔位於 [kenney](../../../assets/images/side-scroller/kenney/) 的同名 WebP。四圖各 128×128、中心錨點 (64,64)，完整縮放、無裁切。
+素材為 Kenney New Platformer Pack 1.1 的 `Sprites/Tiles/Double/gem_yellow/green/red/blue.png`，現役檔位於 [collectibles](../../../assets/images/side-scroller/collectibles/) 的同名 WebP。四圖各 128×128、中心錨點 (64,64)，完整縮放、無裁切。
 
 ## 操作與手冊
 
 空白鍵跳躍，鍵盤 1／2 切換紅／藍燈；多指跳躍與切燈互不干擾，長按不重複切換。底部按鍵由 Pixi 九宮格圖片與文字呈現，DOM 提供透明操作範圍、語意與 pointer capture。開燈維持壓下外觀，放開跳躍鍵則回彈。
 
-框內上方提供世界巡覽、玩法手冊、全螢幕及六個難度選項，以指標操作並略過 Tab 導覽；點擊後焦點回到遊戲，鍵盤持續控制角色。巡覽畫面中央才顯示「開始冒險」。沒有暫停／繼續、從頭開始或框內回冒險座按鈕。
+框內上方提供世界巡覽、玩法手冊、音樂與音效獨立開關、全螢幕及六個難度選項，以指標操作並略過 Tab 導覽；點擊後焦點回到遊戲，鍵盤持續控制角色。巡覽畫面中央才顯示「開始冒險」。沒有暫停／繼續、從頭開始或框內回冒險座按鈕。
 
 [Tutorial.tsx](../../../src/games/side-scroller/Tutorial.tsx) 維護四頁短文：委託與跳躍、同色地板、混成紫光、淡化障礙與岔路。首次開場顯示手冊，切換四、五星不強制重看；寶石不列入教學。[TutorialDemo.tsx](../../../src/games/side-scroller/TutorialDemo.tsx) 共用遊戲素材提供 Pixi 示範。
 
@@ -56,22 +56,37 @@
 | [model.ts](../../../src/games/side-scroller/model.ts) | 關卡、固定步長物理、碰撞、重生與收藏 |
 | [scene.ts](../../../src/games/side-scroller/scene.ts) | Pixi 場景、鏡頭、地形篩選、光色、收藏圖示及狀態回報 |
 | [controls.ts](../../../src/games/side-scroller/controls.ts) | 框內選單與觸控按鍵繪製 |
-| [art.ts](../../../src/games/side-scroller/art.ts) | 可取消圖片載入、固定格動畫及角色動作 |
+| [assets.ts](../../../src/games/side-scroller/assets.ts) | 素材分類路徑、可取消載入與本頁圖片快取 |
+| [art.ts](../../../src/games/side-scroller/art.ts) | 固定格動畫、獨立紋理及角色動作 |
+| [audio.ts](../../../src/games/side-scroller/audio.ts) | 互動後才建立背景音樂與音效；隱藏頁面暫停，離場釋放 |
 
-本地 Pixi 與圖片平行準備，各關只載入所需地板。場景與教學各自持有紋理及 ticker；換關、翻頁與離場取消舊載入並清理資源，避免共用紋理被舊場景銷毀。狀態只有變化才通知 React。網站路徑使用 `BASE_URL`，遊戲不連線、不保存玩家資料。
+遊戲 HTML 以 `modulepreload` 提早準備本地 Pixi，`vite-ignore` 保留與動態 import 相同的 vendor URL，避免額外打包第二份引擎；首頁不預載。圖片準備與本地 Pixi 渲染器初始化平行進行，各關只載入所需地板。已載入圖片在本遊戲頁面中重用，離場清空；場景與教學透過 `Texture.from(image, true)` 各自持有紋理來源，換關、翻頁不互相銷毀。手冊每頁只建立需要的動畫。開手冊、失焦或背景時停止主場景 ticker；手冊示範在背景或減少動態時停止 ticker。功能列透過 DOM 變更通知同步，避免每幀重新讀取按鈕。狀態只有變化才通知 React。網站路徑使用 `BASE_URL`，不保存玩家資料。
 
-## 美術維護
+音樂由使用者提供的 `Mario Odyssey OST Fossil Falls 8 Bit - Gaming2070 Music.mp3` 壓至 64 kbps MP3，四分鐘約 1.92 MB；僅在玩家操作後開始，與 Pixi 載入平行且不列入場景就緒條件。功能列可分別關閉音樂與音效；六個短音效為 Kenney Interface Sounds 1.0 的 CC0 Ogg，採按需載入：起跳 `pluck_001`、落地 `drop_001`、切燈 `toggle_002`、寶石 `glass_001`、跌落 `error_004`、出口 `maximize_007`。執行檔與授權在 [音訊目錄](../../../assets/audio/side-scroller/)；音樂的公開使用權須由提供者確認，未在此文件視為已授權發布。
+
+## 素材與文件維護
+
+本文件維護本遊戲的玩法與模組入口；共用人物仍由[角色圖鑑](../../world/characters.md)維護。執行圖片按用途分類，來源、提示與加工規格集中在 [manifests](../../world/art/side-scroller/manifests/)，本遊戲場景與介面原圖在 [sources](../../world/art/side-scroller/sources/)。角色母圖沿用 `docs/world/art/characters/milo/`，不複製第二份。
+
+| 執行素材目錄 | 內容 |
+| --- | --- |
+| [sprites](../../../assets/images/side-scroller/sprites/) | 米洛跑跳、傳送門動畫與固定格 metadata |
+| [world](../../../assets/images/side-scroller/world/) | `backgrounds` 背景、`terrain` 地板、`obstacles` 障礙 |
+| [collectibles](../../../assets/images/side-scroller/collectibles/) | 四種寶石 |
+| [ui](../../../assets/images/side-scroller/ui/) | 手冊外框、難度星星與 `controls` 觸控鍵 |
+| [licenses](../../../assets/images/side-scroller/licenses/) | 圖片套件授權；來源名稱不當作素材分類 |
+| [audio](../../../assets/audio/side-scroller/) | `music` 背景音樂、`sfx` 短音效及其授權 |
 
 | 素材 | 來源與唯一紀錄 |
 | --- | --- |
-| 地形、背景、方塊、寶石 | 使用者提供的 `C:\Users\nini9\Downloads\kenney_new-platformer-pack-1.1`；現役 [kenney 目錄與 CC0 授權](../../../assets/images/side-scroller/kenney/) |
-| 觸控鍵 | [Kenney UI Pack 來源清單](../../world/art/side-scroller/touch-controls-manifest.json) |
-| 米洛跑跳、旋轉傳送門 | [原稿、提示與固定格製作清單](../../world/art/manifests/side-scroller-sprites-manifest.json)、[執行 metadata](../../../assets/images/side-scroller/sprites-v1.json) |
-| 手冊外框、難度星星 | [外框來源](../../world/art/side-scroller/manual-frame-manifest.json)、[星星來源](../../world/art/side-scroller/difficulty-star-manifest.json) |
+| 地形、背景、方塊、寶石 | 使用者提供的 `C:\Users\nini9\Downloads\kenney_new-platformer-pack-1.1`；保留原套件檔名，採用檔案見 [assets.ts](../../../src/games/side-scroller/assets.ts)，[CC0 授權](../../../assets/images/side-scroller/licenses/kenney-platformer.txt) |
+| 觸控鍵 | [Kenney UI Pack 來源清單](../../world/art/side-scroller/manifests/touch-controls-manifest.json) |
+| 米洛跑跳、旋轉傳送門 | [原稿、提示與固定格製作清單](../../world/art/side-scroller/manifests/sprites-manifest.json)、[執行 metadata](../../../assets/images/side-scroller/sprites/sprites-v1.json) |
+| 手冊外框、難度星星 | [外框來源](../../world/art/side-scroller/manifests/manual-frame-manifest.json)、[星星來源](../../world/art/side-scroller/manifests/difficulty-star-manifest.json) |
 
 現役圖片採 WebP。PNG 轉換使用無損模式，逐像素驗證透明度與可見顏色，保留尺寸、格位、錨點及留白；不保留重複執行 PNG，原稿與授權仍按來源目錄保存。既有 WebP 若重新編碼更大則保留。
 
-[動畫加工腳本](../../../scripts/prepare-side-scroller-sprites.mjs) 重建無損 WebP 圖表，在 `.art-output/side-scroller/animation/` 產生逐幀 PNG、GIF 與可播放預覽。[壓縮驗證腳本](../../../scripts/optimize-side-scroller-images.mjs) 預設只比較，加入 `--write` 才替換較小且像素驗證通過的執行圖；兩者需 Node 與 Sharp，可透過 `NODE_PATH` 指定已安裝套件。
+[動畫加工腳本](../../../scripts/side-scroller/prepare-sprites.mjs) 與[預覽模板](../../../scripts/side-scroller/sprite-preview.html) 集中在 `scripts/side-scroller/`，重建無損 WebP 圖表並在 `.art-output/side-scroller/animation/` 產生可刪除、可重建的逐幀 PNG、GIF 與預覽。[壓縮驗證腳本](../../../scripts/side-scroller/optimize-images.mjs) 預設只比較，加入 `--write` 才替換較小且像素驗證通過的執行圖；兩者需 Node 與 Sharp，可透過 `NODE_PATH` 指定已安裝套件。
 
 地形依模型表面拼接，三色濾鏡套在整組地形以避免重疊加深；紫色障礙由藍方塊染色。米洛依物理狀態選跳躍姿勢，傳送門維持固定格循環，時鐘與跑道一起凍結。
 

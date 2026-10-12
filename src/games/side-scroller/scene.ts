@@ -1,8 +1,10 @@
 import type { App, Node, Sprite, Texture } from '../magic-workshop/scene-types';
 import { advance, GEM_COLORS, GHOST_ALPHA, initialState, LEVEL_THREE, obstacleAlpha, PHYSICS, selectWorldColor, surfaceY, toggleColor, type ColorButton, type GemColor, type Level, type Obstacle, type Platform, type WorldColor } from './model';
 
-import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type ArtPixi } from './art';
+import { createMilo, createSpriteArt, loadSpriteImages, type ArtPixi } from './art';
+import { imageUrl, loadImage, worldImageUrl, WORLD_IMAGES as ASSETS } from './assets';
 import { CONTROL_IMAGES, createFrameControls, createTouchControls, type ControlId, type ControlPixi, type TouchControls } from './controls';
+import type { SideScrollerCue } from './audio';
 
 export type SceneMode = 'preview' | 'play';
 type Action = 'jump';
@@ -34,41 +36,37 @@ export function colorMatrix(color: WorldColor, alpha: number) {
   const channels = color === 'red' ? [1.45, 0.34, 0.42] : color === 'blue' ? [0.3, 0.76, 1.55] : [1.0, 0.42, 1.5];
   return [...channels.flatMap(value => [0.299 * value, 0.587 * value, 0.114 * value, 0, 0]), 0, 0, 0, alpha, 0];
 }
-const ASSETS = ['background_clouds', 'background_fade_hills', 'background_fade_trees',
-  'terrain_sand_block_top', 'terrain_sand_block_center', 'terrain_sand_horizontal_left',
-  'terrain_sand_horizontal_middle', 'terrain_sand_horizontal_right',
-  'terrain_stone_block_top', 'terrain_stone_block_center', 'terrain_stone_horizontal_left',
-  'terrain_stone_horizontal_middle', 'terrain_stone_horizontal_right', 'block_red', 'block_blue',
-  'gem_yellow', 'gem_green', 'gem_red', 'gem_blue'] as const;
-
-export async function createSideScroller(host: HTMLElement, signal: AbortSignal, onStatus: (status: SceneStatus) => void, level: Level = LEVEL_THREE): Promise<SideScrollerScene> {
+export async function createSideScroller(host: HTMLElement, signal: AbortSignal, onStatus: (status: SceneStatus) => void, level: Level = LEVEL_THREE, onCue?: (cue: SideScrollerCue) => void): Promise<SideScrollerScene> {
   const { platforms: PLATFORMS, width: WORLD_WIDTH, exit: EXIT } = level;
   const stone = level.terrain === 'stone';
   const terrain = stone ? 'stone' : 'sand';
   const assets = ASSETS.filter(name => name.startsWith('background_') || name.startsWith('gem_') || (name.startsWith(`terrain_${terrain}_`)) || (stone && name.startsWith('block_')));
+  let readyApp: App | undefined, cancelled = false;
   const [P, images, spriteImages, controlImages, starImage] = await Promise.all([
-    import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as Promise<ColorPixi>,
-    Promise.all(assets.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/${name}.webp`, signal))),
+    (import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as Promise<ColorPixi>).then(async P => {
+      const app = new P.Application();
+      // Create the renderer while images download and decode, rather than afterwards.
+      await app.init({ width: 1067, height: HEIGHT, background: stone ? 0x999ac6 : 0xc3e3ff, antialias: true, autoStart: false,
+        sharedTicker: false, preference: 'webgl', resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true });
+      if (cancelled || signal.aborted) { app.destroy({ removeView: true }, { children: true }); throw signal.reason ?? new Error('Scene loading cancelled'); }
+      readyApp = app; return P;
+    }),
+    Promise.all(assets.map(name => loadImage(worldImageUrl(name), signal))),
     loadSpriteImages(signal),
-    Promise.all(CONTROL_IMAGES.map(name => loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney-ui/${name}.webp`, signal))),
-    loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/difficulty-star-v1.webp`, signal),
-  ]);
-  signal.throwIfAborted();
+    Promise.all(CONTROL_IMAGES.map(name => loadImage(imageUrl(`ui/controls/${name}.webp`), signal))),
+    loadImage(imageUrl('ui/difficulty-star-v1.webp'), signal),
+  ]).catch(error => { cancelled = true; readyApp?.destroy({ removeView: true }, { children: true }); throw error; });
+  const app = readyApp!;
+  if (signal.aborted) { app.destroy({ removeView: true }, { children: true }); signal.throwIfAborted(); }
   const textures = {} as Record<typeof ASSETS[number], Texture>;
-  assets.forEach((name, i) => { textures[name] = P.Texture.from(images[i]); });
+  assets.forEach((name, i) => { textures[name] = P.Texture.from(images[i], true); });
   const art = createSpriteArt(P, spriteImages);
-  const app: App = new P.Application();
   const filters = { red: new P.ColorMatrixFilter(), blue: new P.ColorMatrixFilter(), purple: new P.ColorMatrixFilter() };
   const purpleWall = new P.ColorMatrixFilter(); purpleWall.matrix = colorMatrix('purple', 1);
-  let initialized = false;
   let controls: TouchControls | undefined;
   let frameControls: ReturnType<typeof createFrameControls> | undefined;
-  const dispose = () => { if (initialized) app.destroy({ removeView: true }, { children: true }); controls?.destroy(); frameControls?.destroy(); art.destroy(); purpleWall.destroy(); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
+  const dispose = () => { frameControls?.destroy(); app.destroy({ removeView: true }, { children: true }); controls?.destroy(); art.destroy(); purpleWall.destroy(); Object.values(filters).forEach(filter => filter.destroy()); Object.values(textures).forEach(texture => texture.destroy(true)); };
   try {
-    await app.init({ width: 1067, height: HEIGHT, background: stone ? 0x999ac6 : 0xc3e3ff, antialias: true, autoStart: false,
-      sharedTicker: false, preference: 'webgl', resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true });
-    initialized = true;
-    signal.throwIfAborted();
     const clouds = new P.Container(), sky = new P.Graphics(), hills = new P.Container(), trees = new P.Container(), neutralWorld = new P.Container(), light = new P.Graphics(), world = new P.Container();
     // 特殊地形放在光層上方，維持原色與透明度。
     const gameRoot = app.stage.addChild(new P.Container());
@@ -186,7 +184,9 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
       const icon = gemHud.addChild(new P.Sprite(textures[`gem_${color}`])); icon.anchor.set(0.5);
       return { color, target, icon };
     });
-    frameControls = createFrameControls(P, starImage, app.stage, host, playfield);
+    frameControls = createFrameControls(P, starImage, app.stage, host, playfield, () => {
+      frameControls?.sync(); if (paused || tutorialOpen) app.render();
+    });
     const ui = controls;
     const backgroundLayers = [
       { node: clouds, name: 'background_clouds' as const, width: 768, height: 600, y: 0, factor: 0.12, sprites: [] as Sprite[] },
@@ -265,6 +265,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     const toggleLight = (button: ColorButton) => {
       if (destroyed || tutorialOpen || (mode === 'play' && (paused || state.completed))) return;
       state = selectWorldColor(state, toggleColor(state.color, button), PLATFORMS); previous = state;
+      onCue?.('lamp');
       ui.pulse(button);
       updateColors(); draw(); if (paused) app.render(); emit();
     };
@@ -284,8 +285,8 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     };
     const focus = (event: PointerEvent) => { if (!(event.target as HTMLElement).closest('button,a')) stage.focus({ preventScroll: true }); };
     const focusout = (event: FocusEvent) => { if (!stage.contains(event.relatedTarget as globalThis.Node | null)) release(); };
-    const blur = () => { release(); paused = true; accumulator = 0; previous = state; emit(); };
-    const resume = () => { paused = document.hidden; accumulator = 0; previous = state; emit(); };
+    const blur = () => { release(); paused = true; accumulator = 0; previous = state; app.stop(); draw(); app.render(); emit(); };
+    const resume = () => { paused = document.hidden; accumulator = 0; previous = state; if (!paused && !tutorialOpen) app.start(); emit(); };
     const visibility = () => { if (document.hidden) blur(); else resume(); };
     const motionChanged = () => { reduced = motion.matches; };
     const observer = new ResizeObserver(resize);
@@ -303,7 +304,13 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
             previous = state;
             state = advance(state, { jump: jumpPressed || held.size > 0 }, PHYSICS.step, PLATFORMS, level);
             jumpPressed = false;
-            if (state.falls !== previous.falls) { previous = state; milo.reset(); }
+            if (state.falls !== previous.falls) { onCue?.('fall'); previous = state; milo.reset(); }
+            else {
+              if (state.vy < 0 && previous.vy >= 0) onCue?.('jump');
+              else if (state.grounded && !previous.grounded) onCue?.('land');
+              if (state.collectedGems.length > previous.collectedGems.length) onCue?.('gem');
+              if (state.completed && !previous.completed) onCue?.('exit');
+            }
             accumulator -= PHYSICS.step;
           }
           camera = Math.max(0, Math.min(WORLD_WIDTH - viewportWidth, state.x - viewportWidth * 0.28));
@@ -323,7 +330,7 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
     stage.addEventListener('focusout', focusout); window.addEventListener('blur', blur);
     window.addEventListener('focus', resume);
     document.addEventListener('visibilitychange', visibility); motion.addEventListener('change', motionChanged);
-    app.ticker.add(tick); app.ticker.maxFPS = 60; app.start(); emit();
+    app.ticker.add(tick); app.ticker.maxFPS = 60; emit();
     return {
       hold(_action, active, source) {
         if (destroyed) return;
@@ -338,7 +345,10 @@ export async function createSideScroller(host: HTMLElement, signal: AbortSignal,
         tapTimer = window.setTimeout(() => { held.delete('tap'); tapTimer = undefined; }, 100);
       },
       setMode(next) { if (destroyed) return; mode = next; reset(true); },
-      setTutorial(open) { if (destroyed) return; tutorialOpen = open; release(); accumulator = 0; previous = state; },
+      setTutorial(open) {
+        if (destroyed) return; tutorialOpen = open; release(); accumulator = 0; previous = state;
+        if (open || paused) { app.stop(); draw(); app.render(); } else app.start();
+      },
       toggleColor: toggleLight,
       pressControl(control, pressed, source) { if (!destroyed) ui.press(control, pressed, source); },
       destroy() {

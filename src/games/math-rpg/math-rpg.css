@@ -1,6 +1,15 @@
-html, body, #root { width: 100%; height: 100%; margin: 0; }
-body { padding: 0; overflow: hidden; background: var(--bg); }
-.mr-game { position: relative; width: 100%; height: 100dvh; overflow: hidden; background: var(--bg); }
+body:has(.mr-game) { padding: 0; background: var(--frame-bg); }
+body:has(.mr-game) .activity-trail { width: calc(100% - 32px); max-width: var(--activity-frame-width); }
+.mr-game { position: relative; width: calc(100% - 32px); max-width: var(--activity-frame-width); margin: 0 auto 32px;
+  overflow: hidden; border: 1px solid var(--frame-border); border-radius: 24px; background: #11192f;
+  box-shadow: 0 10px 32px var(--frame-shadow); -webkit-tap-highlight-color: transparent; }
+.mr-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #11192f; }
 .mr-pixi-host { position: absolute; inset: 0; }
 .mr-pixi-host canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .mr-accessibility { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mr-game.mr-immersive, .mr-game:fullscreen { position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh;
+  margin: 0; border: 0; border-radius: 0; box-shadow: none; z-index: 1000; }
+.mr-game.mr-immersive .mr-stage, .mr-game:fullscreen .mr-stage { height: 100%; aspect-ratio: auto; }
+@media (max-width: 649px) {
+  .mr-stage { height: auto; aspect-ratio: 9 / 16; }
+}

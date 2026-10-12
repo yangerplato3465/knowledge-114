@@ -8,13 +8,15 @@
 | --- | --- |
 | 六位居民的造型、表情與動作原稿 | [角色圖鑑](../characters.md)；實體檔案按人物放在 `characters/<角色英文識別名>/` |
 | 上古黎薇與赫恩的核准原畫、像素站立參考 | [角色圖鑑](../characters.md#上古傳說人物)；來源與尺寸見[上古素材清單](manifests/ancient-legend-manifest.json)，像素圖尚非正式 sprite |
-| 數學勇者封面構圖概念稿 | [封面提案](math-rpg/cover-concept-v1.png)；待使用者確認，未接入遊戲，場景與旗幟不建立新的世界設定 |
+| 數學勇者核准封面與圖層 | [宣傳封面](math-rpg/cover-promotional-v2.png)及[乾淨背景](math-rpg/cover-background-v2.png)；角色圖層在各人物資料夾，來源／加工見[上古清單](manifests/ancient-legend-manifest.json)，[現役引用](../../../src/games/math-rpg/cover-art.ts)。早期[概念稿](math-rpg/cover-concept-v1.png)未採用，構圖不建立新的世界設定 |
+| 數學勇者像素戰鬥圖集與背景 | 黎薇／赫恩的待機、攻擊與受擊來源在各人物資料夾；[古代石庭](math-rpg/battle-court-source-v1.png)、劍弧與命中星芒在 `math-rpg/`。完整提示、實測尺寸、格位與加工見[上古清單](manifests/ancient-legend-manifest.json)，[現役引用](../../../src/games/math-rpg/battle-art.ts)，呈現差異見[美術規格](../../games/math-rpg/art.md)；操作原型已接入，仍待使用者美術確認 |
+| 數學勇者獨立特效與受擊 | [黎薇星輝劍弧六幀](math-rpg/effects/liwei-sword-sweep-v4-contact.png)與[其餘特效逐幀](math-rpg/effects/effects-contact-v2.png)；黎薇劍氣前緣朝右，赫恩採使用者選定的凝聚魔力彈美術方向。來源與加工見[上古清單](manifests/ancient-legend-manifest.json)的 `effect_candidates`，已接入現役 Pixi 戰鬥，受擊來源亦記於清單；未定義能力規則 |
 | 工坊背景、物件及整張素材表 | 下方按類別列出的 `workshop/` 原稿 |
 | 網站首頁、活動入口與教師工作室 | [網站原稿與產製規格](site/manifest.json)；介面分工見 [網站設計](../../project/site-design.md) |
 | 尺寸、格位、錨點、留白、產圖提示與生成紀錄 | [製作清單](#製作清單與重建)，不在多個 MD 重複抄寫規格 |
 | 實際載入的 WebP | [工坊 display](../../../assets/images/magic-workshop/display/)；程式使用原 URL，未複製第二份共用素材 |
 | 偵探共用圖示 | [圖示來源與輸出](manifests/detective-icons-manifest.json)；黃金貓頭鷹案件共用放大鏡與拖曳手勢 |
-| 橫向遊戲的米洛與旋轉終點 | [動畫製作清單](manifests/side-scroller-sprites-manifest.json)；米洛原稿在 `characters/milo/`，傳送門原稿在 `side-scroller/`；[手冊外框](side-scroller/manual-frame-manifest.json)、[難度星星](side-scroller/difficulty-star-manifest.json)、[Kenney 觸控按鈕](side-scroller/touch-controls-manifest.json)、[四種寶石](../../games/side-scroller/design.md#寶石彩蛋) |
+| 橫向遊戲的米洛與旋轉終點 | [動畫製作清單](side-scroller/manifests/sprites-manifest.json)；米洛原稿在 `characters/milo/`，傳送門原稿在 `side-scroller/sources/`；[手冊外框](side-scroller/manifests/manual-frame-manifest.json)、[難度星星](side-scroller/manifests/difficulty-star-manifest.json)、[Kenney 觸控按鈕](side-scroller/manifests/touch-controls-manifest.json)、[四種寶石](../../games/side-scroller/design.md#寶石彩蛋) |
 
 **原稿與執行圖分工**：此資料夾保留完整原圖供後續產製，不隨網站發布。中間切幀不另存入美術庫，加工直接使用完整母圖。PNG 檔名沿用生成版本便於追溯，人物資料夾與圖鑑提供可讀名稱。WebP 是縮圖／切幀的遊戲素材，不等於另一份原稿。歷史版本有不同像素與構圖，保留作來源比對，不能因版本號大就直接更換遊戲圖。
 
@@ -67,7 +69,7 @@
 
 | 清單 | 用途 |
 | --- | --- |
-| [ancient-legend-manifest.json](manifests/ancient-legend-manifest.json) | 黎薇／赫恩已選定母圖、像素參考與待確認封面；原檔雜湊、透明邊緣檢查及正式製作未定項目 |
+| [ancient-legend-manifest.json](manifests/ancient-legend-manifest.json) | 黎薇／赫恩母圖、像素參考、核准封面及像素戰鬥原型；提示、原檔雜湊、透明邊緣、實測格位與加工關係 |
 | [batch-2-manifest.json](manifests/batch-2-manifest.json) | 露米、奧利、諾爾與布諾造型原稿 |
 | [display-manifest.json](manifests/display-manifest.json) | 完整畫布縮成 WebP 的尺寸與可見範圍 |
 | [detective-icons-manifest.json](manifests/detective-icons-manifest.json) | 偵探共用介面圖示原稿與執行圖 |
@@ -75,7 +77,7 @@
 | [guest-animation-manifest.json](manifests/guest-animation-manifest.json) | 五位客人完整六幀步態表與固定格規格 |
 | [guest-gaze-manifest.json](manifests/guest-gaze-manifest.json) | 露米、諾爾、菲恩的正視修正 |
 | [manifest.json](manifests/manifest.json) | 初批背景、米洛、菲恩與道具原稿；早期透明殘點紀錄 |
-| [side-scroller-sprites-manifest.json](manifests/side-scroller-sprites-manifest.json) | 使用者核准的 Q 版米洛跑跳、8 幀旋轉傳送門；固定格與製作提示 |
+| [sprites-manifest.json](side-scroller/manifests/sprites-manifest.json) | 使用者核准的 Q 版米洛跑跳、8 幀旋轉傳送門；固定格與製作提示 |
 | [muted-props-manifest.json](manifests/muted-props-manifest.json) | 現役石泉與低亮度釜 |
 | [reactions-manifest.json](manifests/reactions-manifest.json) | 六位居民感謝表情與原造型的對應 |
 | [rustic-manifest.json](manifests/rustic-manifest.json) | 樸素道具素材表；其中泉／釜是歷史版本 |
@@ -95,6 +97,6 @@
 | 石泉、釜、見習筆記與出口 | [prepare-workshop-rustic.py](../../../scripts/prepare-workshop-rustic.py) |
 | UI 素材表與水流 | [prepare-workshop-ui.py](../../../scripts/prepare-workshop-ui.py) |
 | 偵探共用介面圖示 | [prepare-detective-icons.py](../../../scripts/prepare-detective-icons.py) |
-| 橫向遊戲跑跳與傳送門 | [prepare-side-scroller-sprites.mjs](../../../scripts/prepare-side-scroller-sprites.mjs)（Node + Sharp，可用 `NODE_PATH` 指定已安裝的套件位置）；[執行圖無損壓縮驗證](../../../scripts/optimize-side-scroller-images.mjs) 預設只稽核，`--write` 才替換較小圖片 |
+| 橫向遊戲跑跳與傳送門 | [prepare-sprites.mjs](../../../scripts/side-scroller/prepare-sprites.mjs)（Node + Sharp，可用 `NODE_PATH` 指定已安裝的套件位置）；[執行圖無損壓縮驗證](../../../scripts/side-scroller/optimize-images.mjs) 預設只稽核，`--write` 才替換較小圖片 |
 
 現有腳本不是所有歷史素材的全量產生器；未涵蓋項目保留現役 WebP 與來源紀錄，不以重新壓縮代替來源追溯。製作腳本會寫入 WebP／部分 TypeScript 素材中繼資料，執行後須檢查差異與留白。字體授權與來源見 [字體說明](../../../assets/fonts/workshop/README.md)；音效與 BGM 見 [工坊設計](../../games/magic-workshop/design.md#動畫素材與音訊)。

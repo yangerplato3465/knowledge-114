@@ -1,17 +1,18 @@
-import type { Node, Pixi, Sprite } from '../magic-workshop/scene-types';
+import type { Node, Pixi, Sprite, Texture } from '../magic-workshop/scene-types';
 import { isLightOn, type WorldColor } from './model';
 
 export const CONTROL_IDS = ['jump', 'red', 'blue'] as const;
 export type ControlId = typeof CONTROL_IDS[number];
 export const CONTROL_IMAGES = CONTROL_IDS.flatMap(id => [`${id}-raised`, `${id}-pressed`]);
-export type ControlPixi = Pixi & {
+export type ControlPixi = Omit<Pixi, 'Texture'> & {
+  Texture: { from(image: HTMLImageElement, skipCache?: boolean): Texture };
   NineSliceSprite: new (options: { texture: Sprite['texture']; leftWidth: number; rightWidth: number; topHeight: number; bottomHeight: number }) => Sprite;
 };
 interface ControlState { mode: 'preview' | 'play'; paused: boolean; completed: boolean; color: WorldColor | null; tutorialOpen: boolean }
 
 // The DOM supplies semantic hit targets and pointer capture; this scene-owned Pixi layer supplies every visible button.
 export function createTouchControls(P: ControlPixi, images: HTMLImageElement[], parent: Node, host: HTMLElement) {
-  const textures = images.map(image => P.Texture.from(image));
+  const textures = images.map(image => P.Texture.from(image, true));
   const root = parent.addChild(new P.Container());
   const views = CONTROL_IDS.map((id, index) => {
     const group = root.addChild(new P.Container()), surface = group.addChild(new P.Container());
@@ -71,9 +72,12 @@ export function createTouchControls(P: ControlPixi, images: HTMLImageElement[], 
 export type TouchControls = ReturnType<typeof createTouchControls>;
 
 /** Scene artwork follows the same DOM hit targets used by keyboard and touch input. */
-export function createFrameControls(P: ControlPixi, starImage: HTMLImageElement, parent: Node, host: HTMLElement, playfield: HTMLElement) {
+export function createFrameControls(P: ControlPixi, starImage: HTMLImageElement, parent: Node, host: HTMLElement, playfield: HTMLElement, onChange: () => void = () => {}) {
+  let dirty = true;
+  const observer = new MutationObserver(() => { dirty = true; onChange(); });
+  observer.observe(host.parentElement!, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'disabled', 'aria-pressed'] });
   const root = parent.addChild(new P.Container()), panel = root.addChild(new P.Graphics());
-  const starTexture = P.Texture.from(starImage);
+  const starTexture = P.Texture.from(starImage, true);
   const makeLabel = (text: string) => {
     const label = new P.Text({ text, style: { fontFamily: 'Microsoft JhengHei, sans-serif', fontSize: 32, fontWeight: '900', fill: 0x493449 } });
     label.anchor.set(0.5); return label;
@@ -98,6 +102,7 @@ export function createFrameControls(P: ControlPixi, starImage: HTMLImageElement,
   };
   const frame = {
     layout() {
+      dirty = true;
       const bounds = host.getBoundingClientRect(), field = playfield.getBoundingClientRect();
       root.scale.set(600 / Math.max(1, field.height));
       const header = field.top - bounds.top;
@@ -121,7 +126,9 @@ export function createFrameControls(P: ControlPixi, starImage: HTMLImageElement,
       }
     },
     sync() {
+      if (!dirty) return;
       if (views.some(view => view.group.visible === view.target.hidden || view.label.text !== view.labelTarget.textContent)) frame.layout();
+      dirty = false;
       for (const view of views) {
         if (!view.group.visible) continue;
         const disabled = view.target instanceof HTMLButtonElement && view.target.disabled;
@@ -136,7 +143,7 @@ export function createFrameControls(P: ControlPixi, starImage: HTMLImageElement,
           .stroke({ color: selected ? 0x976130 : 0x665064, width: 2 });
       }
     },
-    destroy() { starTexture.destroy(true); },
+    destroy() { observer.disconnect(); starTexture.destroy(true); },
   };
   return frame;
 }

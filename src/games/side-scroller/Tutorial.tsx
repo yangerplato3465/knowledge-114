@@ -25,7 +25,7 @@ export function Tutorial({ initial, onClose, onStart }: { initial: boolean; onCl
       if (event.key === 'ArrowRight') { event.preventDefault(); setPage(value => Math.min(lastPage, value + 1)); }
       if (event.key === 'ArrowLeft') { event.preventDefault(); setPage(value => Math.max(0, value - 1)); }
     }}>
-    <img className="ss-manual-frame" src={`${import.meta.env.BASE_URL}assets/images/side-scroller/manual-frame-v1.webp`} alt="" aria-hidden="true" />
+    <img className="ss-manual-frame" src={`${import.meta.env.BASE_URL}assets/images/side-scroller/ui/manual-frame-v1.webp`} alt="" aria-hidden="true" />
     <div className="ss-manual-content">
       <div className="ss-manual-top"><span>旅人手冊 · {page + 1} / {contents.length}</span><button type="button" onClick={onClose}>{initial ? '先看世界' : '返回遊戲'}</button></div>
       <div className="ss-manual-window" onPointerDown={event => {
