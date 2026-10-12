@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { App, Texture } from '../magic-workshop/scene-types';
-import { createMilo, createSpriteArt, loadImage, loadSpriteImages, type SpriteArt } from './art';
+import { createMilo, createSpriteArt, loadSpriteImages, type SpriteArt } from './art';
+import { loadImage, worldImageUrl } from './assets';
 import { colorMatrix, type ColorPixi } from './scene';
 import { isLightOn, OBSTACLE_GHOST_ALPHA, type WorldColor } from './model';
 
@@ -11,22 +12,24 @@ export function TutorialDemo({ page }: { page: number }) {
     const controller = new AbortController(); let active = true, initialized = false, released = false;
     let app: App | undefined, art: SpriteArt | undefined, tile: Texture | undefined, wallTexture: Texture | undefined;
     const filters: { destroy(): void }[] = [];
+    let stopListening = () => {};
     setFailed(false); setColor('red');
     const dispose = () => {
       if (released) return; released = true;
+      stopListening();
       if (initialized) app?.destroy({ removeView: true }, { children: true });
       art?.destroy(); tile?.destroy(true); wallTexture?.destroy(true); filters.forEach(filter => filter.destroy());
     };
     void (async () => {
       const [P, images, ground, wallImage] = await Promise.all([
         import(/* @vite-ignore */ `${import.meta.env.BASE_URL}assets/vendor/pixi.esm.min.js`) as Promise<ColorPixi>,
-        loadSpriteImages(controller.signal),
-        loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/terrain_${page === 3 ? 'stone' : 'sand'}_horizontal_middle.webp`, controller.signal),
-        page === 3 ? loadImage(`${import.meta.env.BASE_URL}assets/images/side-scroller/kenney/block_red.webp`, controller.signal) : undefined,
+        loadSpriteImages(controller.signal, page === 0 ? ['run', 'portal'] : ['run', 'jump']),
+        loadImage(worldImageUrl(`terrain_${page === 3 ? 'stone' : 'sand'}_horizontal_middle`), controller.signal),
+        page === 3 ? loadImage(worldImageUrl('block_red'), controller.signal) : undefined,
       ]);
       controller.signal.throwIfAborted();
-      app = new P.Application(); art = createSpriteArt(P, images); tile = P.Texture.from(ground);
-      if (wallImage) wallTexture = P.Texture.from(wallImage);
+      app = new P.Application(); art = createSpriteArt(P, images); tile = P.Texture.from(ground, true);
+      if (wallImage) wallTexture = P.Texture.from(wallImage, true);
       await app.init({ width: 620, height: 206, backgroundAlpha: 0, antialias: true, autoStart: false, sharedTicker: false, preference: 'webgl', resolution: Math.min(devicePixelRatio || 1, 2), autoDensity: true });
       initialized = true; controller.signal.throwIfAborted();
       const platforms: { filter: InstanceType<ColorPixi['ColorMatrixFilter']> }[] = [];
@@ -49,7 +52,8 @@ export function TutorialDemo({ page }: { page: number }) {
         }
       }
       const actors = Array.from({ length: count }, () => createMilo(P, art!, app!.stage));
-      const portal = art.create('portal'); portal.scale.set(0.64); portal.position.set(488, 105); portal.visible = page === 0; app.stage.addChild(portal);
+      const portal = page === 0 ? art.create('portal') : null;
+      if (portal) { portal.scale.set(0.64); portal.position.set(488, 105); app.stage.addChild(portal); }
       const motion = matchMedia('(prefers-reduced-motion: reduce)');
       let elapsed = 0, lastColor: WorldColor | null = null;
       const draw = (dt: number) => {
@@ -74,16 +78,24 @@ export function TutorialDemo({ page }: { page: number }) {
           actor.sprite.alpha = y > 220 ? 0 : 1;
           actor.update({ grounded: fall < 0.45, vy: fall > 0.45 ? 400 : 0 }, dt, motion.matches);
         });
-        platforms.forEach(({ filter }, i) => {
+        if (lastFilterColor === null || (page === 2 && current !== lastFilterColor)) platforms.forEach(({ filter }, i) => {
           if (page === 1) filter.matrix = colorMatrix('red', i === 0 ? 1 : 0.26);
           if (page === 2) filter.matrix = colorMatrix('purple', current === 'purple' ? 1 : 0.26);
         });
-        if (!motion.matches) portal.update({ deltaTime: dt * 60 });
+        lastFilterColor = current;
+        if (!motion.matches) portal?.update({ deltaTime: dt * 60 });
       };
-      app.ticker.add(ticker => { if (!document.hidden) draw(Math.min(ticker.deltaMS / 1000, 0.05)); });
+      let lastFilterColor: WorldColor | null = null;
+      app.ticker.add(ticker => draw(Math.min(ticker.deltaMS / 1000, 0.05)));
       app.ticker.maxFPS = 30; draw(0);
       app.canvas.style.width = app.canvas.style.height = '100%';
-      host.current!.append(app.canvas); app.start();
+      const syncPlayback = () => {
+        if (document.hidden || motion.matches) { app!.stop(); if (!document.hidden) { draw(0); app!.render(); } }
+        else app!.start();
+      };
+      document.addEventListener('visibilitychange', syncPlayback); motion.addEventListener('change', syncPlayback);
+      stopListening = () => { document.removeEventListener('visibilitychange', syncPlayback); motion.removeEventListener('change', syncPlayback); };
+      host.current!.append(app.canvas); syncPlayback();
     })().catch(() => { dispose(); if (active) setFailed(true); });
     return () => { active = false; controller.abort(); if (initialized) dispose(); };
   }, [page]);

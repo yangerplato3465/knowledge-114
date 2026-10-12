@@ -6,7 +6,7 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 
 const sharp = createRequire(import.meta.url)('sharp');
-const root = fileURLToPath(new URL('../assets/images/side-scroller/', import.meta.url));
+const root = fileURLToPath(new URL('../../assets/images/side-scroller/', import.meta.url));
 const write = process.argv.includes('--write');
 const report = [];
 for (const file of (await readdir(root, { recursive: true })).filter(file => /\.(png|webp)$/.test(file))) {

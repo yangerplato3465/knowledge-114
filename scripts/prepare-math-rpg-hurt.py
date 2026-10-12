@@ -18,7 +18,7 @@ SPECS = {
     'liwei': {'xs': [0, 627, 1254], 'roots': [346, 319], 'feet': [594, 562], 'scale': .27},
     'heen': {'xs': [0, 680, 1254], 'roots': [374, 300], 'feet': [612, 557], 'scale': .25},
 }
-FX = ('liwei-sword-sweep-v3', 'heen-magic-bolt-v1', 'hit-shards-v1')
+FX = ('liwei-sword-sweep-v4', 'heen-magic-bolt-v1', 'hit-shards-v1')
 
 
 def main():
@@ -111,7 +111,7 @@ def main():
         path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     manifest['effect_candidates'].update(approved=True,runtime_integration=True,
         runtime_files=[f'assets/images/math-rpg/battle/{name}.json' for name in FX],
-        note='已依使用者要求接入 Pixi；赫恩凝聚魔力彈僅定義視覺，不新增能力規則。黎薇劍氣加大並疊加同圖集短暫殘光。')
+        note='已依使用者要求接入 Pixi；赫恩凝聚魔力彈僅定義視覺，不新增能力規則。黎薇星輝劍弧有兩道短暫殘影與分層命中碎光。')
     manifest['production_sprite_contract']['inspection'][-1]='雙方受擊採獨立四幀 hurt 圖集，於劍氣／魔力彈命中時開始；第一至第四關維持暫代怪，勝敗正式動作未製作。'
     manifest['production_sprite_contract']['hurt_grid']=[2,2]
     manifest['production_sprite_contract']['effects'].update(grid=[3,2],minimum_safe_padding=16)

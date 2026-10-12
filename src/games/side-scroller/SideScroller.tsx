@@ -5,11 +5,15 @@ import { createSideScroller, type SceneStatus, type SideScrollerScene } from './
 import { GEM_COLORS, GEM_NAMES, isLightOn, LEVELS, LEVEL_ZERO, type ColorButton } from './model';
 import './side-scroller.css';
 import { Tutorial } from './Tutorial';
+import { createSideScrollerAudio } from './audio';
+import { clearImageCache } from './assets';
 
 export function SideScroller() {
   const host = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), shell = useRef<HTMLElement>(null);
   const startAfterManual = useRef(false), centerAfterManual = useRef(false);
   const scene = useRef<SideScrollerScene | null>(null);
+  const audio = useRef<ReturnType<typeof createSideScrollerAudio> | null>(null);
+  const [musicEnabled, setMusicEnabled] = useState(true), [effectsEnabled, setEffectsEnabled] = useState(true);
   const [level, setLevel] = useState(LEVEL_ZERO);
   const [manual, setManual] = useState(true), [started, setStarted] = useState(false);
   const manualRef = useRef(true); manualRef.current = manual;
@@ -17,18 +21,25 @@ export function SideScroller() {
   const [attempt, setAttempt] = useState(0), [fullscreen, setFullscreen] = useState(false);
   const [status, setStatus] = useState<SceneStatus>({ mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] });
   useEffect(() => {
+    const player = createSideScrollerAudio(); audio.current = player;
+    const visibility = () => player.visibility();
+    document.addEventListener('visibilitychange', visibility);
+    return () => { document.removeEventListener('visibilitychange', visibility); player.destroy(); audio.current = null; };
+  }, []);
+  useEffect(() => {
     const controller = new AbortController();
     let active = true;
     setLoad('loading');
     setStatus({ mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] });
     const timeout = window.setTimeout(() => { controller.abort(); if (active) setLoad('error'); }, 20000);
-    void createSideScroller(host.current!, controller.signal, next => { if (active && !controller.signal.aborted) setStatus(next); }, level).then(created => {
+    void createSideScroller(host.current!, controller.signal, next => { if (active && !controller.signal.aborted) setStatus(next); }, level, cue => audio.current?.cue(cue)).then(created => {
       if (!active || controller.signal.aborted) { created.destroy(); return; }
       window.clearTimeout(timeout); scene.current = created; created.setTutorial(manualRef.current); setLoad('ready');
       if (!manualRef.current) stage.current?.focus({ preventScroll: true });
     }).catch(() => { window.clearTimeout(timeout); if (active) setLoad('error'); });
     return () => { active = false; controller.abort(); window.clearTimeout(timeout); scene.current?.destroy(); scene.current = null; };
   }, [attempt, level]);
+  useEffect(() => clearImageCache, []);
   useEffect(() => {
     const changed = () => { setFullscreen(document.fullscreenElement === shell.current); if (!manualRef.current) stage.current?.focus({ preventScroll: true }); };
     document.addEventListener('fullscreenchange', changed);
@@ -51,8 +62,9 @@ export function SideScroller() {
     }
     scene.current?.setTutorial(manual);
   }, [manual]);
-  const closeManual = () => { centerAfterManual.current = true; setManual(false); };
+  const closeManual = () => { audio.current?.start(); centerAfterManual.current = true; setManual(false); };
   const start = () => {
+    audio.current?.start();
     setStarted(true);
     if (manual) { startAfterManual.current = centerAfterManual.current = true; setManual(false); return; }
     centerGame(); scene.current?.setTutorial(false);
@@ -73,6 +85,8 @@ export function SideScroller() {
       <div className="ss-toolbar"><h1 data-frame-title>魔法禁書庫</h1><div className="ss-actions" role="group" aria-label="場景功能">
         <button data-frame-control tabIndex={-1} type="button" aria-pressed={preview} disabled={load !== 'ready'} onClick={() => { centerGame(); if (!preview) scene.current?.setMode('preview'); }}><span className="ss-menu-label">世界巡覽</span></button>
         <button data-frame-control tabIndex={-1} type="button" disabled={load !== 'ready'} onClick={() => setManual(true)}><span className="ss-menu-label">玩法手冊</span></button>
+        <button data-frame-control tabIndex={-1} type="button" aria-label={musicEnabled ? '關閉音樂' : '開啟音樂'} aria-pressed={musicEnabled} onClick={() => { const enabled = !musicEnabled; setMusicEnabled(enabled); audio.current?.setMusicEnabled(enabled); focusGame(); }}><span className="ss-menu-label">音樂：{musicEnabled ? '開' : '關'}</span></button>
+        <button data-frame-control tabIndex={-1} type="button" aria-label={effectsEnabled ? '關閉音效' : '開啟音效'} aria-pressed={effectsEnabled} onClick={() => { const enabled = !effectsEnabled; setEffectsEnabled(enabled); audio.current?.setEffectsEnabled(enabled); focusGame(); }}><span className="ss-menu-label">音效：{effectsEnabled ? '開' : '關'}</span></button>
         {document.fullscreenEnabled && <button data-frame-control tabIndex={-1} type="button" onClick={() => {
           void (fullscreen ? document.exitFullscreen() : shell.current?.requestFullscreen())?.catch(() => {});
           focusGame();

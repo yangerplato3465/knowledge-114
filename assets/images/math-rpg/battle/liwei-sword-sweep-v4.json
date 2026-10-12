@@ -1,6 +1,6 @@
 {
   "frames": {
-    "liwei-sword-sweep-v3-01": {
+    "liwei-sword-sweep-v4-01": {
       "frame": {
         "x": 0,
         "y": 0,
@@ -25,7 +25,7 @@
       },
       "duration": 60
     },
-    "liwei-sword-sweep-v3-02": {
+    "liwei-sword-sweep-v4-02": {
       "frame": {
         "x": 128,
         "y": 0,
@@ -50,7 +50,7 @@
       },
       "duration": 70
     },
-    "liwei-sword-sweep-v3-03": {
+    "liwei-sword-sweep-v4-03": {
       "frame": {
         "x": 256,
         "y": 0,
@@ -75,7 +75,7 @@
       },
       "duration": 80
     },
-    "liwei-sword-sweep-v3-04": {
+    "liwei-sword-sweep-v4-04": {
       "frame": {
         "x": 0,
         "y": 128,
@@ -100,7 +100,7 @@
       },
       "duration": 70
     },
-    "liwei-sword-sweep-v3-05": {
+    "liwei-sword-sweep-v4-05": {
       "frame": {
         "x": 128,
         "y": 128,
@@ -125,7 +125,7 @@
       },
       "duration": 80
     },
-    "liwei-sword-sweep-v3-06": {
+    "liwei-sword-sweep-v4-06": {
       "frame": {
         "x": 256,
         "y": 128,
@@ -153,16 +153,16 @@
   },
   "animations": {
     "play": [
-      "liwei-sword-sweep-v3-01",
-      "liwei-sword-sweep-v3-02",
-      "liwei-sword-sweep-v3-03",
-      "liwei-sword-sweep-v3-04",
-      "liwei-sword-sweep-v3-05",
-      "liwei-sword-sweep-v3-06"
+      "liwei-sword-sweep-v4-01",
+      "liwei-sword-sweep-v4-02",
+      "liwei-sword-sweep-v4-03",
+      "liwei-sword-sweep-v4-04",
+      "liwei-sword-sweep-v4-05",
+      "liwei-sword-sweep-v4-06"
     ]
   },
   "meta": {
-    "image": "liwei-sword-sweep-v3.webp",
+    "image": "liwei-sword-sweep-v4.webp",
     "size": {
       "w": 384,
       "h": 256
@@ -181,7 +181,7 @@
       100
     ],
     "loop": false,
-    "status": "runtime; user requested integration",
+    "status": "runtime; starlight sword sweep",
     "padding": 16
   }
 }

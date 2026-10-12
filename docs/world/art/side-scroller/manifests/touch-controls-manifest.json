@@ -1,7 +1,7 @@
 {
   "source": "Kenney UI Pack 2.0, user-provided C:/Users/nini9/Downloads/kenney_ui-pack",
-  "license": "CC0; assets/images/side-scroller/kenney-ui/license.txt",
-  "runtimeDirectory": "assets/images/side-scroller/kenney-ui/",
+  "license": "CC0; assets/images/side-scroller/licenses/kenney-ui.txt",
+  "runtimeDirectory": "assets/images/side-scroller/ui/controls/",
   "files": [
     { "runtime": "jump-raised.webp", "original": "PNG/Yellow/Double/button_rectangle_depth_gloss.png" },
     { "runtime": "jump-pressed.webp", "original": "PNG/Yellow/Double/button_rectangle_gloss.png" },

@@ -2,6 +2,7 @@ import type { Pixi, Sprite, Texture } from '../magic-workshop/scene-types';
 export interface Sheet { animations: Record<string, Texture[]>; data: { frames: Record<string,{duration:number}>; animations: Record<string,string[]> } }
 export interface AnimatedActor extends Sprite {
   textures: {texture:Texture;time:number}[]; loop:boolean; playing:boolean; currentFrame:number;
+  blendMode:string;
   onComplete:(() => void)|null; play():void; stop():void; gotoAndPlay(frame:number):void; gotoAndStop(frame:number):void;
   update(ticker:{deltaTime:number;deltaMS:number}):void;
 }
@@ -10,7 +11,7 @@ export interface BattlePixi extends Pixi {
   AnimatedSprite:new(options:{textures:{texture:Texture;time:number}[];autoUpdate:boolean;loop:boolean})=>AnimatedActor;
 }
 export const BATTLE_FILES = ['battle-court-v1.webp','liwei-idle.json','liwei-attack.json','liwei-hurt.json',
-  'heen-idle.json','heen-attack.json','heen-hurt.json','liwei-sword-sweep-v3.json','heen-magic-bolt-v1.json','hit-shards-v1.json'] as const;
+  'heen-idle.json','heen-attack.json','heen-hurt.json','liwei-sword-sweep-v4.json','heen-magic-bolt-v1.json','hit-shards-v1.json'] as const;
 interface Lease { refs:number; promise:Promise<unknown>; unloading?:Promise<void> }
 const leases=new Map<string,Lease>();
 /** Shared Assets cache needs leases: an old scene must not unload a newer scene. */

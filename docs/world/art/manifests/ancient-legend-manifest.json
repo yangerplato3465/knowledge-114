@@ -18,8 +18,8 @@
     "assets/images/math-rpg/cover/background-v2.webp",
     "assets/images/math-rpg/cover/heen-standing-v1.webp",
     "assets/images/math-rpg/cover/liwei-standing-v1.webp",
-    "assets/images/math-rpg/battle/liwei-sword-sweep-v3.json",
-    "assets/images/math-rpg/battle/liwei-sword-sweep-v3.webp",
+    "assets/images/math-rpg/battle/liwei-sword-sweep-v4.json",
+    "assets/images/math-rpg/battle/liwei-sword-sweep-v4.webp",
     "assets/images/math-rpg/battle/heen-magic-bolt-v1.json",
     "assets/images/math-rpg/battle/heen-magic-bolt-v1.webp",
     "assets/images/math-rpg/battle/hit-shards-v1.json",
@@ -1056,6 +1056,152 @@
         ],
         "orientation": "全部六幀水平翻轉；圓弧凸出的前緣朝右、凹口朝左，飛向赫恩；保留原色、尺寸與時序",
         "superseded_export": "docs/world/art/math-rpg/effects/liwei-sword-sweep-v2.json"
+      }
+    },
+    {
+      "role": "effect-sheet-source-adopted",
+      "file": "docs/world/art/math-rpg/liwei-sword-sweep-source-v3.png",
+      "status": "已採用；現役 Pixi 戰鬥載入 v4 星輝劍弧，不改角色或能力規則",
+      "origin": {
+        "kind": "imagegen",
+        "tool": "image_gen.imagegen",
+        "generated_basename": "exec-8f924260-cc2e-4fc2-b1c0-081467cac70f.png",
+        "prompt": "Produce a pixel-art six-frame sword-energy sprite sheet edit from the reference. Exact 3 columns and 2 rows, 1536x1024 canvas, each frame 512x512, alpha transparent background. Within each cell keep all pixels at least 64px from cell borders. Preserve current diagonal orientation and frame ordering. Make the arc's ivory-white center thicker and brighter, cyan/teal and cobalt edges, and only a few tiny warm gold spark points following the slash. 1 glint, 2 growing crescent, 3 largest complete crescent, 4 strong parallel crescent, 5 fading two trails, 6 final spark fragments. Strict crisp nearest-neighbor pixel art; no blur, background, characters, text, dividing lines, overlaps, or clipping.",
+        "transparent_background_requested": true,
+        "references": [
+          "docs/world/art/math-rpg/liwei-sword-sweep-source-v2.png"
+        ],
+        "raw_sha256": "5096be927bbeee3aae11014abf91962c47a5fcd01a85a2f9767abb4fba5c4e0d"
+      },
+      "approved": true,
+      "image": {
+        "width": 1536,
+        "height": 1024,
+        "mode": "RGBA",
+        "frame_count": 6,
+        "grid": [
+          3,
+          2
+        ],
+        "source_bounds": [
+          [
+            158,
+            179,
+            336,
+            329
+          ],
+          [
+            107,
+            135,
+            408,
+            393
+          ],
+          [
+            69,
+            112,
+            447,
+            427
+          ],
+          [
+            104,
+            94,
+            439,
+            385
+          ],
+          [
+            105,
+            107,
+            398,
+            377
+          ],
+          [
+            119,
+            146,
+            406,
+            348
+          ]
+        ],
+        "minimum_actual_padding": 65
+      },
+      "processing": {
+        "script": "scripts/prepare-math-rpg-starlight.py",
+        "source_safety_cleanup": "生成稿每格移除 alpha <= 16 的殘暈，整格以 nearest 縮至 440x440 並置中於 512x512；沒有逐幀裁輪廓。",
+        "source_sha256": "c512db3040dcab7c6a3a4571bbff3d5f5f6705ecdc4b6ffd0a9d73f538ac8977",
+        "export": "完整 512x512 格共同比例縮至 112x112，置中於 128x128，全部水平翻轉；無損 WebP 與 PNG 像素一致。",
+        "frame_size": [
+          128,
+          128
+        ],
+        "anchor": [
+          64,
+          64
+        ],
+        "padding_required": 16,
+        "bounds": [
+          [
+            47,
+            47,
+            85,
+            80
+          ],
+          [
+            31,
+            38,
+            96,
+            94
+          ],
+          [
+            22,
+            33,
+            105,
+            101
+          ],
+          [
+            24,
+            29,
+            97,
+            92
+          ],
+          [
+            33,
+            31,
+            97,
+            90
+          ],
+          [
+            31,
+            40,
+            94,
+            84
+          ]
+        ],
+        "actual_padding": [
+          43,
+          31,
+          22,
+          24,
+          31,
+          31
+        ],
+        "durations_ms": [
+          60,
+          70,
+          80,
+          70,
+          80,
+          100
+        ],
+        "outputs": [
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v4.png",
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v4.webp",
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v4.json",
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v4.gif",
+          "docs/world/art/math-rpg/effects/liwei-sword-sweep-v4-contact.png"
+        ],
+        "runtime": [
+          "assets/images/math-rpg/battle/liwei-sword-sweep-v4.json",
+          "assets/images/math-rpg/battle/liwei-sword-sweep-v4.webp"
+        ]
       }
     },
     {
@@ -2422,21 +2568,26 @@
     "script": "scripts/prepare-math-rpg-effects.py",
     "contact": "docs/world/art/math-rpg/effects/effects-contact-v2.png",
     "battle_preview": "docs/world/art/math-rpg/effects/battle-hurt-preview-v1.gif",
-    "current_sword": "docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.json",
+    "current_sword": "docs/world/art/math-rpg/effects/liwei-sword-sweep-v4.json",
     "current_magic": "docs/world/art/math-rpg/effects/heen-magic-bolt-v1.json",
     "selected_magic_visual_direction": "使用者選定：掌心聚攏、壓縮，再推出厚實的灰紫魔力彈；僅為攻擊外觀與動作，能力規則未定案",
     "superseded_derivatives": {
       "liwei-sword-sweep-v2": "圓弧前緣朝向相反，以 v3 修正；原圖不變",
       "heen-magic-wave-v1": "使用者指出輪廓像劍氣；未採用",
-      "effects-battle-preview-v1": "含上述舊特效，改看 v2"
+      "effects-battle-preview-v1": "含上述舊特效，改看 v2",
+      "liwei-sword-sweep-v3": "由星輝劍弧 v4 取代；保留原稿與美術輸出供追溯，遊戲不再載入 v3"
     },
     "preview_actors": "現役 battle/liwei-* 與 heen-* 圖集；沒有生成新人物",
-    "note": "已依使用者要求接入 Pixi；赫恩凝聚魔力彈僅定義視覺，不新增能力規則。黎薇劍氣加大並疊加同圖集短暫殘光。",
+    "note": "現役黎薇星輝劍弧以兩道殘影、劍尖碎光、青色與暖色命中碎光及短暫角形光圈呈現；不改戰鬥結算和傷害。赫恩凝聚魔力彈僅定義視覺，不新增能力規則。",
     "runtime_files": [
-      "assets/images/math-rpg/battle/liwei-sword-sweep-v3.json",
+      "assets/images/math-rpg/battle/liwei-sword-sweep-v4.json",
       "assets/images/math-rpg/battle/heen-magic-bolt-v1.json",
       "assets/images/math-rpg/battle/hit-shards-v1.json"
-    ]
+    ],
+    "current_sword_contact": "docs/world/art/math-rpg/effects/liwei-sword-sweep-v4-contact.png",
+    "current_sword_preview": "docs/world/art/math-rpg/effects/liwei-sword-sweep-v4.gif",
+    "starlight_script": "scripts/prepare-math-rpg-starlight.py",
+    "battle_preview_status": "舊版 v3 劍氣的戰鬥合成預覽；現役 v4 以 Pixi 實際畫面及獨立六幀預覽驗收"
   },
   "hurt_runtime": {
     "script": "scripts/prepare-math-rpg-hurt.py",

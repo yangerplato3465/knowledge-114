@@ -266,7 +266,7 @@ def main():
         'directory':'docs/world/art/math-rpg/effects', 'script':'scripts/prepare-math-rpg-effects.py',
         'contact':'docs/world/art/math-rpg/effects/effects-contact-v2.png',
         'battle_preview':f'docs/world/art/math-rpg/effects/{"battle-hurt-preview-v1" if adopted else "effects-battle-preview-v2"}.gif',
-        'current_sword':'docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.json',
+        'current_sword':integration.get('current_sword','docs/world/art/math-rpg/effects/liwei-sword-sweep-v3.json'),
         'current_magic':'docs/world/art/math-rpg/effects/heen-magic-bolt-v1.json',
         'selected_magic_visual_direction':'使用者選定：掌心聚攏、壓縮，再推出厚實的灰紫魔力彈；僅為攻擊外觀與動作，能力規則未定案',
         'superseded_derivatives':{

@@ -14,13 +14,13 @@
 
 背景維持側視像素古代石庭，和宣傳封面呼應。相似門拱、台階、石材在黎薇側使用圓弧與青綠，赫恩側使用尖角與紫色；較暗、低細節遠景襯托人物，共同水平平台承接腳底。畫面反差來自大形與輪廓，不堆砌裝飾，也不建立新的地理或封印現況。
 
-現役入口為 [battle-art.ts](../../../src/games/math-rpg/battle-art.ts)，播放與版面見 [battle-view.ts](../../../src/games/math-rpg/battle-view.ts)。[battle-effects.ts](../../../src/games/math-rpg/battle-effects.ts) 已以獨立劍氣、魔力彈與命中碎光圖集替換幾何軌跡與星形爆光。人物和特效共用戰鬥結算時間，命中才切換受擊；暫停、調整尺寸與跳幀不重播。降動態保留固定受擊姿勢及靜態命中標記。第一至第四關維持 Pixi 小型幾何怪暫代，勝利／敗退與其餘背景待製作。
+現役入口為 [battle-art.ts](../../../src/games/math-rpg/battle-art.ts)，播放與版面見 [battle-view.ts](../../../src/games/math-rpg/battle-view.ts)。[battle-effects.ts](../../../src/games/math-rpg/battle-effects.ts) 以獨立劍氣、魔力彈與命中碎光圖集呈現攻擊。人物和特效共用戰鬥結算時間，命中才切換受擊；暫停、調整尺寸與跳幀不重播。降動態保留固定受擊姿勢及靜態命中標記。第一至第四關維持 Pixi 小型幾何怪暫代，勝利／敗退與其餘背景待製作。
 
 ## 採用特效與受擊圖集
 
-獨立製作[黎薇劍氣](../../world/art/math-rpg/effects/liwei-sword-sweep-v3.png)、[赫恩凝聚魔力彈](../../world/art/math-rpg/effects/heen-magic-bolt-v1.png)及[共用命中碎光](../../world/art/math-rpg/effects/hit-shards-v1.png)，以青藍、灰紫與暖米色呼應人物。黎薇劍氣圓弧前緣朝右、凹口朝左，全部幀水平翻轉修正方向；演出加大並疊同圖集短暫低透明殘光。赫恩的厚實球狀核心先在掌心聚攏、壓縮，再向左推出，短尾在右；不使用劍氣輪廓、大片光暈或密集粒子。具體能力規則仍依[共用角色圖鑑](../../world/characters.md#赫恩)維持未定案。
+獨立製作[黎薇星輝劍弧](../../world/art/math-rpg/effects/liwei-sword-sweep-v4-contact.png)、[赫恩凝聚魔力彈](../../world/art/math-rpg/effects/heen-magic-bolt-v1.png)及[共用命中碎光](../../world/art/math-rpg/effects/hit-shards-v1.png)。黎薇現役劍弧以米白核心、青藍外緣與少量金色星點呈現；六幀全部水平翻轉，使圓弧前緣朝右，飛行時疊兩道逐漸變淡的同圖集殘影，命中時疊青色與暖色碎光及短暫擴散的角形光圈。赫恩的厚實球狀核心先在掌心聚攏、壓縮，再向左推出，短尾在右；不使用劍氣輪廓、大片光暈或密集粒子。具體能力規則仍依[共用角色圖鑑](../../world/characters.md#赫恩)維持未定案。
 
-[逐幀總覽](../../world/art/math-rpg/effects/effects-contact-v2.png)保留特效原格；[攻擊與受擊搭配動畫](../../world/art/math-rpg/effects/battle-hurt-preview-v1.gif)為讀取現役圖集的美術合成預覽。特效生成稿採洋紅色鍵背景，[加工腳本](../../../scripts/prepare-math-rpg-effects.py)移除指定背景色及殘色，以完整格位共同比例縮小與置中。舊方向劍氣與近似劍氣的魔王出手波未採用；現役輸出在 `assets/images/math-rpg/battle/`，原稿與預覽在共用美術庫。
+黎薇新版[六幀總覽](../../world/art/math-rpg/effects/liwei-sword-sweep-v4-contact.png)與[播放預覽](../../world/art/math-rpg/effects/liwei-sword-sweep-v4.gif)由[加工腳本](../../../scripts/prepare-math-rpg-starlight.py)從透明原稿整格縮小、置中並驗證每幀留白。赫恩與共用碎光的[原有逐幀總覽](../../world/art/math-rpg/effects/effects-contact-v2.png)由[原有特效腳本](../../../scripts/prepare-math-rpg-effects.py)產出。現役輸出在 `assets/images/math-rpg/battle/`，原稿與預覽在共用美術庫。
 
 受擊使用[黎薇原稿](../../world/art/characters/liwei/liwei-hurt-source-v1.png)與[赫恩原稿](../../world/art/characters/heen/heen-hurt-source-v1.png)，按現役待機第一幀鎖定造型，順序為命中、後仰、穩住、回復。黎薇向左退縮、雙手不離劍柄；赫恩向右退縮、收掌防禦。只清除生成背景精確 RGBA(0,0,0,1) 殘樣，保留有色低透明邊緣與黑色輪廓；命中效果另疊圖集，不烘入人物。格位、錨點、留白與時序以加工腳本和上古素材清單為準。
 
