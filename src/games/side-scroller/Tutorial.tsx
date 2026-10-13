@@ -11,24 +11,23 @@ export function Tutorial({ initial, onClose, onStart }: { initial: boolean; onCl
   const contents = [...pages, crossroadsPage];
   const lastPage = contents.length - 1;
   const [page, setPage] = useState(0);
-  const dialog = useRef<HTMLDialogElement>(null), heading = useRef<HTMLHeadingElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null), heading = useRef<HTMLHeadingElement>(null), windowPane = useRef<HTMLDivElement>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     const element = dialog.current!;
     if (typeof element.showModal === 'function') element.showModal(); else element.setAttribute('open', '');
     return () => { if (typeof element.close === 'function') element.close(); };
   }, []);
-  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, [page]);
+  useEffect(() => { if (windowPane.current) windowPane.current.scrollTop = 0; heading.current?.focus({ preventScroll: true }); }, [page]);
   return <dialog className="ss-manual" ref={dialog} aria-labelledby="ss-manual-title" aria-describedby="ss-manual-body"
     onCancel={event => { event.preventDefault(); onClose(); }} onKeyDown={event => {
       event.stopPropagation();
       if (event.key === 'ArrowRight') { event.preventDefault(); setPage(value => Math.min(lastPage, value + 1)); }
       if (event.key === 'ArrowLeft') { event.preventDefault(); setPage(value => Math.max(0, value - 1)); }
     }}>
-    <img className="ss-manual-frame" src={`${import.meta.env.BASE_URL}assets/images/side-scroller/ui/manual-frame-v1.webp`} alt="" aria-hidden="true" />
     <div className="ss-manual-content">
       <div className="ss-manual-top"><span>旅人手冊 · {page + 1} / {contents.length}</span><button type="button" onClick={onClose}>{initial ? '先看世界' : '返回遊戲'}</button></div>
-      <div className="ss-manual-window" onPointerDown={event => {
+      <div className="ss-manual-window" ref={windowPane} onPointerDown={event => {
         if (event.pointerType === 'touch' && !(event.target as HTMLElement).closest('button')) swipe.current = { x: event.clientX, y: event.clientY };
       }} onPointerUp={event => {
         const start = swipe.current; swipe.current = null; if (!start) return;
