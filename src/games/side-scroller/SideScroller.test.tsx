@@ -35,8 +35,10 @@ it('開始入口只在巡覽中央，功能列只接受點擊且焦點回遊戲�
   expect(within(actions).getByRole('button', { name: '開啟音樂' }).getAttribute('aria-pressed')).toBe('false');
   fireEvent.click(within(actions).getByRole('button', { name: '關閉音效' }));
   expect(within(actions).getByRole('button', { name: '開啟音效' }).getAttribute('aria-pressed')).toBe('false');
-  [...within(actions).getAllByRole('button'), ...within(screen.getByRole('group', { name: '關卡難度' })).getAllByRole('button')].forEach(button => expect(button.tabIndex).toBe(-1));
+  within(actions).getAllByRole('button').forEach(button => expect(button.tabIndex).toBe(-1));
+  within(screen.getByRole('group', { name: '關卡難度' })).getAllByRole('button').forEach(button => expect(button.tabIndex).toBe(0));
   expect(screen.getByRole('button', { name: '開始冒險' }).closest('.ss-playfield')).toBeTruthy();
+  expect(screen.getByRole('button', { name: '開始冒險' }).tabIndex).toBe(0);
   fireEvent.click(screen.getByRole('button', { name: '開始冒險' })); expect(created.setMode).toHaveBeenCalledWith('play');
   expect(screen.queryByRole('button', { name: '開始冒險' })).toBeNull();
   const jump = screen.getByRole('button', { name: '跳躍' });
@@ -166,27 +168,67 @@ it('巡覽開始前先置中，跌落重生不顯示開始入口；切換難度�
   expect(document.activeElement).toBe(stage);
   expect(screen.getByRole('button', { name: '世界巡覽' }).getAttribute('aria-pressed')).toBe('true');
 });
-it('可選一星平台跑道，原高難度保留三星', async () => {
+it('一星書架提供三條路線，選書後才切換場景，原高難度保留三星', async () => {
   const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
   fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
   expect(screen.getByRole('button', { name: /4 星關卡/ })).toBeTruthy();
   expect(screen.getByRole('button', { name: /3 星關卡/ })).toBeTruthy();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /1 星關卡/ })); });
+  const shelf = screen.getByRole('dialog', { name: '1 星書架' });
+  expect(within(shelf).getAllByRole('button', { name: /1 星第/ })).toHaveLength(3);
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(0);
+  await act(async () => { fireEvent.click(within(shelf).getByRole('button', { name: /斷頁橋/ })); });
   expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(1);
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.id).toBe('missing-page');
   expect(screen.getByRole('button', { name: /1 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getByRole('button', { name: /1 星關卡/ }).textContent).toContain('跳臺書架');
+  expect(screen.getByRole('button', { name: /1 星關卡/ }).textContent).not.toContain('斷頁橋');
   expect(created.destroy).toHaveBeenCalledOnce();
 });
-it('提供0至4星五個關卡，可選二星雙光迴廊', async () => {
+it('提供0至5星六個難度，可從二星書架選不同的同級路線', async () => {
   const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
   fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
-  for (const stars of [0, 1, 2, 3, 4]) expect(screen.getByRole('button', { name: new RegExp(`${stars} 星關卡`) })).toBeTruthy();
+  for (const stars of [0, 1, 2, 3, 4, 5]) expect(screen.getByRole('button', { name: new RegExp(`${stars} 星關卡`) })).toBeTruthy();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /2 星關卡/ })); });
+  const shelf = screen.getByRole('dialog', { name: '2 星書架' });
+  expect(within(shelf).getAllByRole('button', { name: /2 星第/ })).toHaveLength(3);
+  await act(async () => { fireEvent.click(within(shelf).getByRole('button', { name: /折頁坡道/ })); });
   expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(2);
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.id).toBe('folded-slope');
   expect(screen.getByRole('button', { name: /2 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getByRole('button', { name: /2 星關卡/ }).textContent).toContain('換燈書架');
+  expect(screen.getByRole('button', { name: /2 星關卡/ }).textContent).not.toContain('折頁坡道');
 });
-it.each([[4, '晶石岔路'], [5, '晶光試煉']] as const)('選 %i 星 %s 直接巡覽，不強制重看手冊；手動開啟仍有四頁', async (difficulty, name) => {
+it('書架凍結正在遊玩的跑道；返回不重啟，完成後可直接換下一本', async () => {
+  const scenes: SideScrollerScene[] = [];
+  let emit!: (status: SceneStatus) => void;
+  vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
+    const created = fakeScene(); scenes.push(created); emit = onStatus;
+    created.setMode = vi.fn(mode => onStatus({ mode, paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] }));
+    return created;
+  });
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
+  fireEvent.click(screen.getByRole('button', { name: /1 星關卡/ }));
+  await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: '1 星書架' })).getByRole('button', { name: /斷頁橋/ })); });
+  expect(scenes).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: '開始冒險' }));
+  expect(scenes[1].setMode).toHaveBeenLastCalledWith('play');
+  fireEvent.click(screen.getByRole('button', { name: /1 星關卡/ }));
+  expect(scenes[1].setTutorial).toHaveBeenLastCalledWith(true);
+  fireEvent.click(within(screen.getByRole('dialog', { name: '1 星書架' })).getByRole('button', { name: '返回遊戲' }));
+  expect(scenes[1].setTutorial).toHaveBeenLastCalledWith(false);
+  expect(scenes[1].setMode).toHaveBeenCalledTimes(1);
+  expect(scenes).toHaveLength(2);
+  act(() => emit({ mode: 'play', paused: false, completed: true, checkpoint: 4, falls: 0, lap: 1, color: 'blue', collectedGems: [] }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: '下一本書' })); });
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.id).toBe('book-spine');
+  expect(scenes).toHaveLength(3);
+  expect(screen.getByRole('button', { name: '開始冒險' })).toBeTruthy();
+});
+it.each([[4, '石橋岔路'], [5, '燈牆連跳']] as const)('選 %i 星 %s 直接巡覽，不強制重看手冊；手動開啟仍有四頁', async (difficulty, name) => {
   const created = fakeScene(); vi.mocked(createSideScroller).mockResolvedValue(created);
   render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
   fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
@@ -238,7 +280,10 @@ it('六個關卡選項只顯示難度與名稱，畫面及輔助科技名稱都�
     expect(button.getAttribute('aria-label')).toMatch(new RegExp(`^${index} 星關卡：`));
     expect(button.getAttribute('aria-label')).not.toContain('秒');
   });
-  expect(within(menu).getByRole('button', { name: '5 星關卡：晶光試煉' })).toBeTruthy();
+  expect(buttons.map(button => button.textContent?.trim())).toEqual([
+    '0點燈起步', '1跳臺書架', '2換燈書架', '3斷谷高臺', '4石橋岔路', '5燈牆連跳',
+  ]);
+  expect(within(menu).getByRole('button', { name: '5 星關卡：燈牆連跳' })).toBeTruthy();
 });
 it('三個觸控區依序為跳躍、紅燈、藍燈；多指切燈不會放開跳躍，取消接觸會釋放各自按壓', async () => {
   const created = fakeScene();

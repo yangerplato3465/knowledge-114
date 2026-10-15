@@ -2,11 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { SiteHeader } from '../../components/SiteHeader';
 import { ActivityTrail } from '../../components/ActivityTrail';
 import { createSideScroller, type SceneStatus, type SideScrollerScene } from './scene';
-import { GEM_COLORS, GEM_NAMES, isLightOn, LEVELS, LEVEL_ZERO, type ColorButton } from './model';
+import { GEM_COLORS, GEM_NAMES, isLightOn, LEVEL_TIER_NAMES, LEVEL_TIERS, LEVEL_ZERO, type ColorButton, type Level } from './model';
 import './side-scroller.css';
 import { Tutorial } from './Tutorial';
 import { createSideScrollerAudio } from './audio';
 import { clearImageCache } from './assets';
+import { BookShelf } from './BookShelf';
 
 export function SideScroller() {
   const host = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), shell = useRef<HTMLElement>(null);
@@ -17,6 +18,8 @@ export function SideScroller() {
   const [level, setLevel] = useState(LEVEL_ZERO);
   const [manual, setManual] = useState(true), [started, setStarted] = useState(false);
   const manualRef = useRef(true); manualRef.current = manual;
+  const [shelfDifficulty, setShelfDifficulty] = useState<number | null>(null);
+  const shelfRef = useRef(false); shelfRef.current = shelfDifficulty !== null;
   const [load, setLoad] = useState<'loading' | 'ready' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0), [fullscreen, setFullscreen] = useState(false);
   const [status, setStatus] = useState<SceneStatus>({ mode: 'preview', paused: false, completed: false, checkpoint: 0, falls: 0, lap: 1, color: null, collectedGems: [] });
@@ -34,8 +37,9 @@ export function SideScroller() {
     const timeout = window.setTimeout(() => { controller.abort(); if (active) setLoad('error'); }, 20000);
     void createSideScroller(host.current!, controller.signal, next => { if (active && !controller.signal.aborted) setStatus(next); }, level, cue => audio.current?.cue(cue)).then(created => {
       if (!active || controller.signal.aborted) { created.destroy(); return; }
-      window.clearTimeout(timeout); scene.current = created; created.setTutorial(manualRef.current); setLoad('ready');
-      if (!manualRef.current) stage.current?.focus({ preventScroll: true });
+      window.clearTimeout(timeout); scene.current = created; created.setTutorial(manualRef.current || shelfRef.current); setLoad('ready');
+      if (shelfRef.current) setShelfDifficulty(null);
+      else if (!manualRef.current) stage.current?.focus({ preventScroll: true });
     }).catch(() => { window.clearTimeout(timeout); if (active) setLoad('error'); });
     return () => { active = false; controller.abort(); window.clearTimeout(timeout); scene.current?.destroy(); scene.current = null; };
   }, [attempt, level]);
@@ -55,13 +59,13 @@ export function SideScroller() {
     focusGame();
   };
   useLayoutEffect(() => {
-    if (!manual) {
+    if (!manual && shelfDifficulty === null) {
       if (centerAfterManual.current) centerGame(); else focusGame();
       if (startAfterManual.current) scene.current?.setMode('play');
       startAfterManual.current = centerAfterManual.current = false;
     }
-    scene.current?.setTutorial(manual);
-  }, [manual]);
+    scene.current?.setTutorial(manual || shelfDifficulty !== null);
+  }, [manual, shelfDifficulty]);
   const closeManual = () => { audio.current?.start(); centerAfterManual.current = true; setManual(false); };
   const start = () => {
     audio.current?.start();
@@ -70,7 +74,14 @@ export function SideScroller() {
     centerGame(); scene.current?.setTutorial(false);
     if (status.mode === 'preview' || status.completed) scene.current?.setMode('play');
   };
+  const openShelf = (difficulty: number) => { scene.current?.setTutorial(true); setShelfDifficulty(difficulty); };
+  const selectBook = (book: Level) => {
+    if (book.id === level.id) { setShelfDifficulty(null); return; }
+    setLoad('loading'); setStarted(false); setManual(false); setLevel(book);
+  };
   const preview = status.mode === 'preview';
+  const books = LEVEL_TIERS[level.difficulty];
+  const nextBook = books[books.findIndex(book => book.id === level.id) + 1];
   const crossroads = Boolean(level.obstacles?.length);
   const colorMessage = (status.color === 'purple' ? '紅＋藍開啟 · 紫色地板實體' : status.color === 'red' ? '紅燈開啟 · 紅色地板實體' : status.color === 'blue' ? '藍燈開啟 · 藍色地板實體' : '兩燈關閉 · 特殊地板皆透明')
     + (crossroads ? status.color ? '、同色直立方塊淡化' : '、直立方塊皆會阻擋' : '');
@@ -93,11 +104,17 @@ export function SideScroller() {
         }}><span className="ss-menu-label">{fullscreen ? '離開全螢幕' : '全螢幕'}</span></button>}
       </div></div>
       <div className="ss-levels" role="group" aria-label="關卡難度">
-        {LEVELS.map(option => <button data-frame-control tabIndex={-1} type="button" key={option.id} aria-pressed={level.id === option.id}
-          aria-label={`${option.difficulty} 星關卡：${option.name}`}
-          onClick={() => { centerGame(); if (option.id === level.id) return; setLoad('loading'); setStarted(false); setManual(false); setLevel(option); }}>
-          <span className="ss-difficulty" aria-hidden="true"><span className="ss-star-space" /><strong>{option.difficulty}</strong></span>
-          <span className="ss-menu-label">{option.name}</span>
+        {LEVEL_TIERS.map((tier, difficulty) => <button data-frame-control type="button" key={difficulty}
+          aria-pressed={level.difficulty === difficulty}
+          aria-label={`${difficulty} 星關卡：${LEVEL_TIER_NAMES[difficulty]}${tier.length > 1 ? `，共 ${tier.length} 關，開啟書架` : ''}`}
+          onClick={() => {
+            centerGame();
+            if (tier.length > 1) { openShelf(difficulty); return; }
+            if (tier[0].id === level.id) return;
+            setLoad('loading'); setStarted(false); setManual(false); setLevel(tier[0]);
+          }}>
+          <span className="ss-difficulty" aria-hidden="true"><span className="ss-star-space" /><strong>{difficulty}</strong></span>
+          <span className="ss-menu-label">{LEVEL_TIER_NAMES[difficulty]}</span>
         </button>)}
       </div>
       </div>
@@ -107,11 +124,18 @@ export function SideScroller() {
         <div className="ss-gems" role="group" aria-label="寶石收藏">
           {GEM_COLORS.map(color => <span key={color} data-gem={color} role="img" aria-label={`${GEM_NAMES[color]}寶石：${status.collectedGems.includes(color) ? '已收集' : '未收集'}`} />)}
         </div>
-        <button data-frame-control data-frame-primary tabIndex={-1} type="button" className="ss-preview-start"
+        <button data-frame-control data-frame-primary type="button" className="ss-preview-start"
           hidden={!preview || manual || load !== 'ready'} onPointerDown={event => { if (event.button === 0) event.preventDefault(); }} onClick={start}>
           <span className="ss-menu-label">開始冒險</span>
         </button>
-        {status.completed && <div className="ss-message"><strong>找到傳送出口了！</strong><span>選擇下一個關卡，或回到世界巡覽</span></div>}
+        {status.completed && <div className="ss-message"><strong>找到傳送出口了！</strong>
+          <span>{books.length > 1 ? `${level.difficulty} 星 · ${level.name}` : '選擇下一個關卡，或回到世界巡覽'}</span>
+          {books.length > 1 && <div className="ss-message-actions">
+            <button type="button" onClick={() => { centerGame(); scene.current?.setMode('play'); }}>再玩一次</button>
+            {nextBook && <button type="button" onClick={() => selectBook(nextBook)}>下一本書</button>}
+            <button type="button" onClick={() => openShelf(level.difficulty)}>選別本書</button>
+          </div>}
+        </div>}
         <div className="ss-controls" role="group" aria-label="遊戲操作">
           <button type="button" data-control="jump" aria-label="跳躍" aria-keyshortcuts="Space ArrowUp W" disabled={load !== 'ready' || manual || preview || status.paused || status.completed}
             className="ss-control ss-jump"
@@ -138,6 +162,8 @@ export function SideScroller() {
         </div>
       </div>
       {manual && load === 'ready' && <Tutorial initial={!started} onClose={closeManual} onStart={start} />}
+      {shelfDifficulty !== null && <BookShelf difficulty={shelfDifficulty} levels={LEVEL_TIERS[shelfDifficulty]} current={level}
+        loading={load === 'loading'} onClose={() => setShelfDifficulty(null)} onSelect={selectBook} />}
       <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才淡化；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}可開啟玩法手冊翻閱示範。</p>
       <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.collectedGems.length > 0 ? `寶石 ${status.collectedGems.length} / 4。` : ''}{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;

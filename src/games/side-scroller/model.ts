@@ -16,7 +16,8 @@ export const GEM_RADIUS = 18;
 export interface Input { jump: boolean; color?: WorldColor | null }
 export type Difficulty = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Level {
-  id: 'intro' | 'platforms' | 'fusion' | 'challenge' | 'crossroads' | 'gauntlet'; name: string; difficulty: Difficulty;
+  id: 'intro' | 'platforms' | 'missing-page' | 'book-spine' | 'fusion' | 'color-seam' | 'folded-slope' | 'challenge' | 'crossroads' | 'gauntlet';
+  name: string; difficulty: Difficulty; focus?: string;
   width: number; platforms: readonly Platform[]; checkpoints: readonly number[];
   terrain?: 'stone'; obstacles?: readonly Obstacle[];
   gems: readonly Gem[];
@@ -31,7 +32,7 @@ export function obstacleAlpha(obstacle: Obstacle, color: WorldColor | null): num
 const ground = (x: number, y: number, w: number, endY = y, color?: WorldColor): Platform => ({ x, y, w, endY, color, h: 672 - y, kind: 'ground' });
 const bridge = (x: number, y: number, w: number, color?: WorldColor): Platform => ({ x, y, w, color, h: 32, kind: 'bridge' });
 export const LEVEL_THREE: Level = {
-  id: 'challenge', name: '深層小徑', difficulty: 3, width: 13632,
+  id: 'challenge', name: '斷谷高臺', difficulty: 3, width: 13632,
   checkpoints: [160, 2624, 5056, 7488, 11136], exit: { x: 13408, y: 408, radius: 54 },
   gems: [{ color: 'yellow', x: 1900, y: 382 }, { color: 'green', x: 4890, y: 386 }, { color: 'red', x: 8300, y: 478 }, { color: 'blue', x: 11880, y: 450 }],
   platforms: [
@@ -59,7 +60,7 @@ export const LEVEL_THREE: Level = {
   ],
 };
 export const LEVEL_ZERO: Level = {
-  id: 'intro', name: '初探禁書庫', difficulty: 0, width: 8832,
+  id: 'intro', name: '點燈起步', difficulty: 0, width: 8832,
   checkpoints: [160, 1984, 4480, 6912], exit: { x: 8608, y: 408, radius: 54 },
   gems: [{ color: 'yellow', x: 1980, y: 450 }, { color: 'green', x: 3300, y: 386 }, { color: 'red', x: 5500, y: 450 }, { color: 'blue', x: 7600, y: 450 }],
   platforms: [
@@ -78,7 +79,7 @@ export const LEVEL_ZERO: Level = {
   ],
 };
 export const LEVEL_ONE: Level = {
-  id: 'platforms', name: '浮空書徑', difficulty: 1, width: 10112,
+  id: 'platforms', name: '浮空書徑', difficulty: 1, focus: '跨過浮空平台', width: 10112,
   checkpoints: [160, 2656, 4864, 6976, 9408], exit: { x: 9888, y: 408, radius: 54 },
   gems: [{ color: 'yellow', x: 1840, y: 450 }, { color: 'green', x: 3880, y: 450 }, { color: 'red', x: 6000, y: 322 }, { color: 'blue', x: 8500, y: 450 }],
   platforms: [
@@ -101,8 +102,51 @@ export const LEVEL_ONE: Level = {
     ground(9024, 480, 256, 480, 'blue'), ground(9280, 480, 832),
   ],
 };
+export const LEVEL_ONE_BRIDGE: Level = {
+  id: 'missing-page', name: '斷頁橋', difficulty: 1, focus: '在缺口間找落腳處', width: 10112,
+  checkpoints: [160, 2304, 4736, 6912, 9280], exit: { x: 9888, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1840, y: 450 }, { color: 'green', x: 3740, y: 386 }, { color: 'red', x: 6460, y: 450 }, { color: 'blue', x: 8520, y: 450 }],
+  platforms: [
+    ground(0, 480, 640), ground(640, 480, 256, 480, 'blue'), ground(896, 480, 448),
+    ground(1344, 480, 256, 480, 'red'), ground(1600, 480, 384),
+    ground(1984, 480, 320, 416, 'red'), ground(2304, 416, 256),
+    ground(2560, 416, 256, 416, 'blue'), ground(2816, 416, 256),
+    // The first small gap leads to a raised two-step bridge rather than a flat repeat.
+    ground(3168, 416, 256), ground(3424, 416, 256, 416, 'red'), ground(3680, 416, 288),
+    bridge(3968, 352, 192, 'red'), bridge(4288, 288, 192),
+    ground(4480, 288, 256, 288, 'blue'), ground(4736, 288, 512),
+    ground(5248, 288, 256, 288, 'purple'), ground(5504, 288, 256),
+    ground(5760, 288, 576, 480, 'red'), ground(6336, 480, 320),
+    ground(6656, 480, 256, 480, 'blue'), ground(6912, 480, 384),
+    ground(7296, 480, 256, 480, 'purple'), ground(7552, 480, 320),
+    ground(7872, 480, 256, 480, 'red'), ground(8128, 480, 320),
+    ground(8448, 480, 256, 480, 'purple'), ground(8704, 480, 320),
+    ground(9024, 480, 256, 480, 'blue'), ground(9280, 480, 832),
+  ],
+};
+export const LEVEL_ONE_RIDGE: Level = {
+  id: 'book-spine', name: '高低書脊', difficulty: 1, focus: '沿坡道登上高臺', width: 10112,
+  checkpoints: [160, 2304, 4160, 6400, 9024], exit: { x: 9888, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1800, y: 417 }, { color: 'green', x: 4200, y: 450 }, { color: 'red', x: 6848, y: 370 }, { color: 'blue', x: 8800, y: 450 }],
+  platforms: [
+    ground(0, 480, 512), ground(512, 480, 256, 480, 'red'), ground(768, 480, 512),
+    ground(1280, 480, 256, 480, 'blue'), ground(1536, 480, 512, 416),
+    ground(2048, 416, 256, 416, 'red'), ground(2304, 416, 320),
+    ground(2752, 416, 384), ground(3136, 416, 256, 416, 'blue'),
+    ground(3392, 416, 512, 480), ground(3904, 480, 256, 480, 'red'), ground(4160, 480, 448),
+    // The bridge arrives later than in the original one-star route.
+    bridge(4672, 416, 192, 'blue'), bridge(4864, 480, 128), bridge(4992, 352, 192), ground(5184, 352, 384),
+    ground(5568, 352, 256, 352, 'purple'), ground(5824, 352, 320),
+    ground(6144, 352, 256, 352, 'blue'), ground(6400, 352, 256),
+    ground(6656, 352, 512, 480), ground(7168, 480, 256, 480, 'red'),
+    ground(7424, 480, 256), ground(7680, 480, 256, 480, 'purple'),
+    ground(7936, 480, 320), ground(8256, 480, 256, 480, 'blue'),
+    ground(8512, 480, 256), ground(8768, 480, 256, 480, 'purple'),
+    ground(9024, 480, 256), ground(9280, 480, 256, 480, 'red'), ground(9536, 480, 576),
+  ],
+};
 export const LEVEL_TWO: Level = {
-  id: 'fusion', name: '雙光迴廊', difficulty: 2, width: 12160,
+  id: 'fusion', name: '雙光迴廊', difficulty: 2, focus: '跨過兩處相鄰色塊', width: 12160,
   checkpoints: [160, 2656, 4864, 7072, 10208], exit: { x: 11936, y: 408, radius: 54 },
   gems: [{ color: 'yellow', x: 1840, y: 450 }, { color: 'green', x: 5000, y: 322 }, { color: 'red', x: 7800, y: 450 }, { color: 'blue', x: 10450, y: 450 }],
   platforms: [
@@ -125,8 +169,43 @@ export const LEVEL_TWO: Level = {
     ground(11072, 480, 256, 480, 'red'), ground(11328, 480, 832),
   ],
 };
+export const LEVEL_TWO_SEAM: Level = {
+  id: 'color-seam', name: '雙色接縫', difficulty: 2, focus: '在接縫處跳起換燈', width: 12160,
+  checkpoints: [160, 2304, 4736, 6592, 9664], exit: { x: 11936, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1840, y: 450 }, { color: 'green', x: 3740, y: 386 }, { color: 'red', x: 7350, y: 450 }, { color: 'blue', x: 10270, y: 450 }],
+  platforms: [
+    ...LEVEL_ONE_BRIDGE.platforms.filter(p => p.x < 5248),
+    // Blue to purple on the high shelf; purple to red on the low shelf.
+    ground(5248, 288, 256, 288, 'blue'), ground(5504, 288, 256, 288, 'purple'),
+    ground(5760, 288, 256), ground(6016, 288, 576, 480), ground(6592, 480, 320),
+    ground(6912, 480, 256, 480, 'red'), ground(7168, 480, 384),
+    ground(7552, 480, 256, 480, 'blue'), ground(7808, 480, 448),
+    ground(8256, 480, 256, 480, 'purple'), ground(8512, 480, 256, 480, 'red'),
+    ground(8768, 480, 640), ground(9408, 480, 256, 480, 'blue'),
+    ground(9664, 480, 384), ground(10048, 480, 256, 480, 'purple'),
+    ground(10304, 480, 448), ground(10752, 480, 256, 480, 'red'),
+    ground(11008, 480, 1152),
+  ],
+};
+export const LEVEL_TWO_SLOPE: Level = {
+  id: 'folded-slope', name: '折頁坡道', difficulty: 2, focus: '上坡後接連換燈', width: 12160,
+  checkpoints: [160, 2304, 4160, 6080, 8704], exit: { x: 11936, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1800, y: 417 }, { color: 'green', x: 4400, y: 450 }, { color: 'red', x: 7750, y: 450 }, { color: 'blue', x: 10300, y: 450 }],
+  platforms: [
+    ...LEVEL_ONE_RIDGE.platforms.filter(p => p.x < 5568),
+    ground(5568, 352, 256, 352, 'red'), ground(5824, 352, 256, 352, 'purple'),
+    ground(6080, 352, 320), ground(6400, 352, 256, 352, 'blue'),
+    ground(6656, 352, 512, 480), ground(7168, 480, 256, 480, 'purple'),
+    ground(7424, 480, 384), ground(7808, 480, 256, 480, 'red'),
+    ground(8064, 480, 384), ground(8448, 480, 256, 480, 'blue'),
+    ground(8704, 480, 320), ground(9024, 480, 256, 480, 'purple'),
+    ground(9280, 480, 256, 480, 'blue'), ground(9536, 480, 512),
+    ground(10048, 480, 256, 480, 'red'), ground(10304, 480, 448),
+    ground(10752, 480, 256, 480, 'purple'), ground(11008, 480, 1152),
+  ],
+};
 export const LEVEL_FOUR: Level = {
-  id: 'crossroads', name: '晶石岔路', difficulty: 4, terrain: 'stone', width: 14336,
+  id: 'crossroads', name: '石橋岔路', difficulty: 4, terrain: 'stone', width: 14336,
   checkpoints: [160, 1376, 3296, 5760, 7360, 10752, 12640], exit: { x: 14144, y: 408, radius: 54 },
   gems: [{ color: 'yellow', x: 1800, y: 450 }, { color: 'green', x: 4608, y: 274 }, { color: 'red', x: 8928, y: 274 }, { color: 'blue', x: 12672, y: 450 }],
   platforms: [
@@ -161,7 +240,7 @@ export const LEVEL_FOUR: Level = {
   ],
 };
 export const LEVEL_FIVE: Level = {
-  id: 'gauntlet', name: '晶光試煉', difficulty: 5, terrain: 'stone', width: 15232,
+  id: 'gauntlet', name: '燈牆連跳', difficulty: 5, terrain: 'stone', width: 15232,
   checkpoints: [160, 1792, 3296, 5760, 7360, 10752, 12640, 14848], exit: { x: 15040, y: 408, radius: 54 },
   gems: [{ color: 'yellow', x: 1820, y: 450 }, { color: 'green', x: 4608, y: 274 }, { color: 'red', x: 8928, y: 274 }, { color: 'blue', x: 13300, y: 450 }],
   platforms: [
@@ -197,7 +276,14 @@ export const LEVEL_FIVE: Level = {
     { x: 14592, y: 224, w: 64, h: 256, color: 'red' },
   ],
 };
-export const LEVELS: readonly Level[] = [LEVEL_ZERO, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_FOUR, LEVEL_FIVE];
+export const LEVEL_TIERS: readonly (readonly Level[])[] = [
+  [LEVEL_ZERO], [LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_RIDGE],
+  [LEVEL_TWO, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE], [LEVEL_THREE], [LEVEL_FOUR], [LEVEL_FIVE],
+];
+export const LEVEL_TIER_NAMES: readonly string[] = [
+  LEVEL_ZERO.name, '跳臺書架', '換燈書架', LEVEL_THREE.name, LEVEL_FOUR.name, LEVEL_FIVE.name,
+];
+export const LEVELS: readonly Level[] = LEVEL_TIERS.flat();
 export const levelSeconds = (level: Level) => (level.exit.x - level.checkpoints[0]) / PHYSICS.speed;
 // The existing three-star course remains the default for callers without an explicit level.
 export const WORLD_WIDTH = LEVEL_THREE.width, PLATFORMS = LEVEL_THREE.platforms, CHECKPOINTS = LEVEL_THREE.checkpoints;

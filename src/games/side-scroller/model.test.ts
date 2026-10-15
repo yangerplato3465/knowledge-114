@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GEM_COLORS, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_TWO, LEVEL_THREE, LEVEL_ZERO, LEVEL_SECONDS, LEVELS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, touchesGem, WORLD_WIDTH, type Input, type Platform, type State, type WorldColor } from './model';
+import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GEM_COLORS, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_RIDGE, LEVEL_TWO, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE, LEVEL_THREE, LEVEL_TIERS, LEVEL_ZERO, LEVEL_SECONDS, LEVELS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, touchesGem, WORLD_WIDTH, type Input, type Level, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
@@ -41,6 +41,61 @@ function simulate(start: State, input: Input, seconds: number, platforms: readon
   for (let i = 0; i < Math.round(seconds / PHYSICS.step); i++) state = advance(state, input, PHYSICS.step, platforms);
   return state;
 }
+function runShelfRoute(level: Level, jumps: readonly number[], offset = 0) {
+  let state = initialState(level), seconds = 0;
+  const used = new Set<number>();
+  for (let i = 0; i < 120 * 46 && !state.completed && !state.falls; i++) {
+    const jump = jumps.find(x => state.x >= x + offset && !used.has(x));
+    if (jump !== undefined) used.add(jump);
+    const target = level.platforms.filter(p => {
+      if (!p.color) return false;
+      const joined = level.platforms.some(previous => previous.color && previous.x + previous.w === p.x);
+      return state.x >= p.x - (joined ? 104 : 144) + offset;
+    }).at(-1)?.color;
+    let color = state.color;
+    if (target) for (const button of ['red', 'blue'] as const) {
+      if (isLightOn(color, button) !== isLightOn(target, button)) color = toggleColor(color, button);
+    }
+    state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, level.platforms, level);
+    seconds += PHYSICS.step;
+  }
+  return { state, seconds, used };
+}
+describe('同星級書架路線', () => {
+  it('每個星級各自成組，新路線維持時長、色塊量與兩星相鄰換色密度', () => {
+    expect(LEVEL_TIERS.map(tier => tier.length)).toEqual([1, 3, 3, 1, 1, 1]);
+    expect(new Set(LEVELS.map(level => level.id)).size).toBe(LEVELS.length);
+    for (const tier of [LEVEL_TIERS[1], LEVEL_TIERS[2]]) {
+      const standard = tier[0];
+      const count = (level: Level) => level.platforms.filter(p => p.color).length;
+      const joined = (level: Level) => level.platforms.filter(p => p.color && level.platforms.some(previous => previous.color && previous.x + previous.w === p.x)).length;
+      expect(new Set(tier.map(level => level.platforms.filter(p => p.kind === 'bridge').length))).toEqual(new Set([2, 3]));
+      for (const level of tier) {
+        expect(level.difficulty).toBe(standard.difficulty);
+        expect(Math.abs(levelSeconds(level) - levelSeconds(standard))).toBeLessThan(0.5);
+        expect(Math.abs(count(level) - count(standard))).toBeLessThanOrEqual(2);
+        expect(joined(level)).toBe(joined(standard));
+        level.checkpoints.forEach(x => expect(level.platforms.some(p => p.kind === 'ground' && !p.color && x >= p.x && x < p.x + p.w)).toBe(true));
+      }
+    }
+  });
+  it.each([
+    [LEVEL_ONE_BRIDGE, [3000, 3830, 4100]],
+    [LEVEL_ONE_RIDGE, [2540, 4530, 4810]],
+    [LEVEL_TWO_SEAM, [3000, 3830, 4100, 5370, 8370]],
+    [LEVEL_TWO_SLOPE, [2540, 4530, 4810, 5680, 9136]],
+  ] as const)('%s 有可容錯的完整路線與四顆可選寶石', (level, jumps) => {
+    for (const offset of [-12, 0, 12]) {
+      const result = runShelfRoute(level, jumps, offset);
+      expect(result.state.falls, `${level.name} 操作偏移 ${offset}`).toBe(0);
+      expect(result.state.completed, `${level.name} 操作偏移 ${offset}`).toBe(true);
+      expect(result.used.size).toBe(jumps.length);
+      expect(result.state.checkpoint).toBe(level.checkpoints.length - 1);
+      expect(new Set(result.state.collectedGems)).toEqual(new Set(GEM_COLORS));
+      expect(Math.abs(result.seconds - levelSeconds(level))).toBeLessThan(0.5);
+    }
+  });
+});
 // Acceptance route: one press for each required crossing, never an airborne second jump.
 const routeJumps = [994, 3572, 3856, 4212, 4496, 5492, 5812, 6132, 6432, 8740, 9030, 9296, 9652, 9972, 10256, 10576, 11982, 12516];
 // Change alternating platform colors only after leaving the previous support.
@@ -185,7 +240,7 @@ describe('二星雙光迴廊', () => {
     for (const seam of [6016, 9536]) expect(run(0, seam).state.falls, `未切換接縫 ${seam}`).toBeGreaterThan(0);
   });
 });
-describe('四星晶石岔路', () => {
+describe('四星石橋岔路', () => {
   function run(upperFirst: boolean, upperSecond: boolean, offset = 0, missedWall = false) {
     const jumps = [1000, 1960, 2920,
       ...(upperFirst ? [3740, 3992, 4312, 4632] : [4218, 4794]), 6952,
@@ -279,7 +334,7 @@ describe('四星晶石岔路', () => {
   });
 });
 
-describe('五星晶光試煉', () => {
+describe('五星燈牆連跳', () => {
   function run(first: boolean, second: boolean, offset = 0, missedSeam?: number) {
     const jumps = [1000, 1372, 1960, 2332, 2920,
       ...(first ? [3740, 3992, 4312, 4632] : [4218, 4794]), 5352, 5928, 6952,
