@@ -16,7 +16,7 @@ export const GEM_RADIUS = 18;
 export interface Input { jump: boolean; color?: WorldColor | null }
 export type Difficulty = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Level {
-  id: 'intro' | 'platforms' | 'missing-page' | 'book-spine' | 'fusion' | 'color-seam' | 'folded-slope' | 'challenge' | 'crossroads' | 'gauntlet';
+  id: 'intro' | 'platforms' | 'missing-page' | 'book-spine' | 'lower-crossing' | 'late-bridges' | 'fusion' | 'color-seam' | 'folded-slope' | 'lower-seam' | 'late-seam' | 'challenge' | 'crossroads' | 'gauntlet';
   name: string; difficulty: Difficulty; focus?: string;
   width: number; platforms: readonly Platform[]; checkpoints: readonly number[];
   terrain?: 'stone'; obstacles?: readonly Obstacle[];
@@ -145,6 +145,47 @@ export const LEVEL_ONE_RIDGE: Level = {
     ground(9024, 480, 256), ground(9280, 480, 256, 480, 'red'), ground(9536, 480, 576),
   ],
 };
+export const LEVEL_ONE_LOWER: Level = {
+  id: 'lower-crossing', name: '低谷浮橋', difficulty: 1, focus: '先過浮橋，再走下坡', width: 10112,
+  checkpoints: [160, 3008, 5184, 7360, 9344], exit: { x: 9888, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1800, y: 450 }, { color: 'green', x: 3860, y: 322 }, { color: 'red', x: 6450, y: 450 }, { color: 'blue', x: 8500, y: 450 }],
+  platforms: [
+    ground(0, 480, 640), ground(640, 480, 256, 480, 'red'), ground(896, 480, 384),
+    ground(1280, 480, 256, 480, 'blue'), ground(1536, 480, 320),
+    ground(1856, 480, 256, 480, 'red'), ground(2112, 480, 256),
+    // Two early rising bridges; the rest of the map is a broad descending shelf.
+    bridge(2496, 416, 192, 'blue'), bridge(2816, 352, 192), ground(3008, 352, 512),
+    ground(3520, 352, 256, 352, 'purple'), ground(3776, 352, 512),
+    ground(4288, 352, 256, 352, 'red'), ground(4544, 352, 448),
+    ground(4992, 352, 512, 480), ground(5504, 480, 256, 480, 'blue'), ground(5760, 480, 320),
+    ground(6208, 480, 192), ground(6400, 480, 256, 480, 'red'), ground(6656, 480, 384),
+    ground(7040, 480, 256, 480, 'purple'), ground(7296, 480, 512),
+    ground(7808, 480, 256, 480, 'blue'), ground(8064, 480, 512),
+    ground(8576, 480, 256, 480, 'red'), ground(8832, 480, 256),
+    ground(9088, 480, 256, 480, 'purple'), ground(9344, 480, 768),
+  ],
+};
+export const LEVEL_ONE_LATE: Level = {
+  id: 'late-bridges', name: '坡頂三橋', difficulty: 1, focus: '先上坡，再跨三座橋', width: 10112,
+  checkpoints: [160, 2304, 5056, 6784, 9280], exit: { x: 9888, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1780, y: 450 }, { color: 'green', x: 4000, y: 322 }, { color: 'red', x: 6650, y: 386 }, { color: 'blue', x: 8540, y: 450 }],
+  platforms: [
+    ground(0, 480, 576), ground(576, 480, 256, 480, 'blue'), ground(832, 480, 448),
+    ground(1280, 480, 256, 480, 'red'), ground(1536, 480, 512),
+    ground(2048, 480, 256, 480, 'purple'), ground(2304, 480, 448, 416),
+    ground(2752, 416, 256, 416, 'blue'), ground(3008, 416, 384),
+    ground(3392, 416, 384, 352), ground(3776, 352, 256, 352, 'red'), ground(4032, 352, 512),
+    ground(4544, 352, 256, 352, 'purple'), ground(4800, 352, 384),
+    ground(5184, 352, 512, 416), ground(5696, 416, 256, 416, 'red'), ground(5952, 416, 512),
+    ground(6464, 416, 256, 416, 'blue'), ground(6720, 416, 256),
+    // The bridge sequence arrives late and descends to the final low shelf.
+    bridge(7104, 352, 192), bridge(7424, 416, 192, 'purple'), bridge(7744, 480, 192),
+    ground(7936, 480, 256, 480, 'red'), ground(8192, 480, 320),
+    ground(8512, 480, 256, 480, 'blue'), ground(8768, 480, 256),
+    ground(9024, 480, 256, 480, 'purple'), ground(9280, 480, 256),
+    ground(9536, 480, 576),
+  ],
+};
 export const LEVEL_TWO: Level = {
   id: 'fusion', name: '雙光迴廊', difficulty: 2, focus: '跨過兩處相鄰色塊', width: 12160,
   checkpoints: [160, 2656, 4864, 7072, 10208], exit: { x: 11936, y: 408, radius: 54 },
@@ -202,6 +243,43 @@ export const LEVEL_TWO_SLOPE: Level = {
     ground(9280, 480, 256, 480, 'blue'), ground(9536, 480, 512),
     ground(10048, 480, 256, 480, 'red'), ground(10304, 480, 448),
     ground(10752, 480, 256, 480, 'purple'), ground(11008, 480, 1152),
+  ],
+};
+export const LEVEL_TWO_LOWER: Level = {
+  id: 'lower-seam', name: '下坡換燈', difficulty: 2, focus: '過橋後在高低兩處換燈', width: 12160,
+  checkpoints: [160, 3008, 5184, 7360, 9728, 11264], exit: { x: 11936, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1800, y: 450 }, { color: 'green', x: 3860, y: 322 }, { color: 'red', x: 7600, y: 450 }, { color: 'blue', x: 10400, y: 450 }],
+  platforms: [
+    ...LEVEL_ONE_LOWER.platforms.filter(p => p.x < 4288),
+    // First adjoining colors are high up; the second pair follows the descent.
+    ground(4288, 352, 256, 352, 'red'), ground(4544, 352, 256, 352, 'purple'),
+    ground(4800, 352, 384), ground(5184, 352, 512, 480),
+    ground(5696, 480, 256, 480, 'blue'), ground(5952, 480, 320),
+    ground(6400, 480, 256), ground(6656, 480, 256, 480, 'red'), ground(6912, 480, 192),
+    ground(7104, 480, 256, 480, 'purple'), ground(7360, 480, 448),
+    ground(7808, 480, 256, 480, 'blue'), ground(8064, 480, 512),
+    ground(8576, 480, 256, 480, 'red'), ground(8832, 480, 384),
+    ground(9216, 480, 256, 480, 'blue'), ground(9472, 480, 256, 480, 'purple'),
+    ground(9728, 480, 576), ground(10304, 480, 256, 480, 'red'), ground(10560, 480, 448),
+    ground(11008, 480, 256, 480, 'blue'), ground(11264, 480, 896),
+  ],
+};
+export const LEVEL_TWO_LATE: Level = {
+  id: 'late-seam', name: '三橋換燈', difficulty: 2, focus: '先在坡頂換燈，再過三橋', width: 12160,
+  checkpoints: [160, 2304, 5056, 6912, 9664, 11072], exit: { x: 11936, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1780, y: 450 }, { color: 'green', x: 4000, y: 322 }, { color: 'red', x: 6650, y: 386 }, { color: 'blue', x: 10480, y: 450 }],
+  platforms: [
+    ...LEVEL_ONE_LATE.platforms.filter(p => p.x < 4544),
+    ground(4544, 352, 256, 352, 'purple'), ground(4800, 352, 256, 352, 'red'),
+    ground(5056, 352, 384), ground(5440, 352, 512, 416),
+    ground(5952, 416, 256, 416, 'blue'), ground(6208, 416, 448),
+    ground(6656, 416, 256, 416, 'purple'), ground(6912, 416, 640),
+    // Three descending bridges postpone the platform sequence until after the first seam.
+    bridge(7680, 352, 192), bridge(8000, 416, 192, 'blue'), bridge(8320, 480, 192),
+    ground(8512, 480, 256, 480, 'red'), ground(8768, 480, 384),
+    ground(9152, 480, 256, 480, 'blue'), ground(9408, 480, 256, 480, 'purple'),
+    ground(9664, 480, 512), ground(10176, 480, 256, 480, 'red'), ground(10432, 480, 384),
+    ground(10816, 480, 256, 480, 'blue'), ground(11072, 480, 1088),
   ],
 };
 export const LEVEL_FOUR: Level = {
@@ -277,8 +355,8 @@ export const LEVEL_FIVE: Level = {
   ],
 };
 export const LEVEL_TIERS: readonly (readonly Level[])[] = [
-  [LEVEL_ZERO], [LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_RIDGE],
-  [LEVEL_TWO, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE], [LEVEL_THREE], [LEVEL_FOUR], [LEVEL_FIVE],
+  [LEVEL_ZERO], [LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_RIDGE, LEVEL_ONE_LOWER, LEVEL_ONE_LATE],
+  [LEVEL_TWO, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE, LEVEL_TWO_LOWER, LEVEL_TWO_LATE], [LEVEL_THREE], [LEVEL_FOUR], [LEVEL_FIVE],
 ];
 export const LEVEL_TIER_NAMES: readonly string[] = [
   LEVEL_ZERO.name, '跳臺書架', '換燈書架', LEVEL_THREE.name, LEVEL_FOUR.name, LEVEL_FIVE.name,

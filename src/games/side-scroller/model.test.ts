@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GEM_COLORS, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_RIDGE, LEVEL_TWO, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE, LEVEL_THREE, LEVEL_TIERS, LEVEL_ZERO, LEVEL_SECONDS, LEVELS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, touchesGem, WORLD_WIDTH, type Input, type Level, type Platform, type State, type WorldColor } from './model';
+import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GEM_COLORS, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_LATE, LEVEL_ONE_LOWER, LEVEL_ONE_RIDGE, LEVEL_TWO, LEVEL_TWO_LATE, LEVEL_TWO_LOWER, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE, LEVEL_THREE, LEVEL_TIERS, LEVEL_ZERO, LEVEL_SECONDS, LEVELS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, touchesGem, WORLD_WIDTH, type Input, type Level, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
@@ -42,7 +42,7 @@ function simulate(start: State, input: Input, seconds: number, platforms: readon
   return state;
 }
 function runShelfRoute(level: Level, jumps: readonly number[], offset = 0) {
-  let state = initialState(level), seconds = 0;
+  let state = initialState(level), seconds = 0, lampPresses = 0;
   const used = new Set<number>();
   for (let i = 0; i < 120 * 46 && !state.completed && !state.falls; i++) {
     const jump = jumps.find(x => state.x >= x + offset && !used.has(x));
@@ -54,16 +54,16 @@ function runShelfRoute(level: Level, jumps: readonly number[], offset = 0) {
     }).at(-1)?.color;
     let color = state.color;
     if (target) for (const button of ['red', 'blue'] as const) {
-      if (isLightOn(color, button) !== isLightOn(target, button)) color = toggleColor(color, button);
+      if (isLightOn(color, button) !== isLightOn(target, button)) { color = toggleColor(color, button); lampPresses++; }
     }
     state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, level.platforms, level);
     seconds += PHYSICS.step;
   }
-  return { state, seconds, used };
+  return { state, seconds, used, lampPresses };
 }
 describe('同星級書架路線', () => {
   it('每個星級各自成組，新路線維持時長、色塊量與兩星相鄰換色密度', () => {
-    expect(LEVEL_TIERS.map(tier => tier.length)).toEqual([1, 3, 3, 1, 1, 1]);
+    expect(LEVEL_TIERS.map(tier => tier.length)).toEqual([1, 5, 5, 1, 1, 1]);
     expect(new Set(LEVELS.map(level => level.id)).size).toBe(LEVELS.length);
     for (const tier of [LEVEL_TIERS[1], LEVEL_TIERS[2]]) {
       const standard = tier[0];
@@ -82,17 +82,65 @@ describe('同星級書架路線', () => {
   it.each([
     [LEVEL_ONE_BRIDGE, [3000, 3830, 4100]],
     [LEVEL_ONE_RIDGE, [2540, 4530, 4810]],
+    [LEVEL_ONE_LOWER, [2320, 2630, 6020]],
+    [LEVEL_ONE_LATE, [6930, 7220, 7540]],
     [LEVEL_TWO_SEAM, [3000, 3830, 4100, 5370, 8370]],
     [LEVEL_TWO_SLOPE, [2540, 4530, 4810, 5680, 9136]],
+    [LEVEL_TWO_LOWER, [2320, 2630, 4410, 6190, 9330]],
+    [LEVEL_TWO_LATE, [4650, 7540, 7840, 8160, 9270]],
   ] as const)('%s 有可容錯的完整路線與四顆可選寶石', (level, jumps) => {
     for (const offset of [-12, 0, 12]) {
       const result = runShelfRoute(level, jumps, offset);
-      expect(result.state.falls, `${level.name} 操作偏移 ${offset}`).toBe(0);
+      expect(result.state.falls, `${level.name} 操作偏移 ${offset}，x=${result.state.x.toFixed(0)}，已跳 ${[...result.used]}`).toBe(0);
       expect(result.state.completed, `${level.name} 操作偏移 ${offset}`).toBe(true);
       expect(result.used.size).toBe(jumps.length);
       expect(result.state.checkpoint).toBe(level.checkpoints.length - 1);
       expect(new Set(result.state.collectedGems)).toEqual(new Set(GEM_COLORS));
       expect(Math.abs(result.seconds - levelSeconds(level))).toBeLessThan(0.5);
+    }
+  });
+  it('新書的主要橋段落在不同位置，地形高度與色塊排列明顯不同', () => {
+    for (const [early, late] of [[LEVEL_ONE_LOWER, LEVEL_ONE_LATE], [LEVEL_TWO_LOWER, LEVEL_TWO_LATE]]) {
+      const bridges = (level: Level) => level.platforms.filter(p => p.kind === 'bridge');
+      expect(bridges(early)[0].x / early.width).toBeLessThan(0.3);
+      expect(bridges(late)[0].x / late.width).toBeGreaterThan(0.6);
+      const floorHeight = (level: Level, x: number) => {
+        const p = level.platforms.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w);
+        return p ? surfaceY(p, x) : null;
+      };
+      const differing = Array.from({ length: 35 }, (_, i) => 512 + i * 256)
+        .filter(x => floorHeight(early, x) !== floorHeight(late, x)).length;
+      expect(differing).toBeGreaterThanOrEqual(12);
+      const colors = (level: Level) => level.platforms.filter(p => p.color).map(p => p.color);
+      expect(colors(early)).not.toEqual(colors(late));
+    }
+  });
+  it('同星級任選兩本書，沿途地形輪廓都有足夠差異', () => {
+    const floorHeight = (level: Level, x: number) => {
+      const p = level.platforms.find(p => p.kind === 'ground' && x >= p.x && x < p.x + p.w);
+      return p ? surfaceY(p, x) : null;
+    };
+    for (const tier of [LEVEL_TIERS[1], LEVEL_TIERS[2]]) {
+      for (let i = 0; i < tier.length; i++) for (let j = i + 1; j < tier.length; j++) {
+        const xs = Array.from({ length: Math.floor((tier[i].width - 1024) / 256) }, (_, n) => 512 + n * 256);
+        const different = xs.filter(x => {
+          const a = floorHeight(tier[i], x), b = floorHeight(tier[j], x);
+          return a === null || b === null ? a !== b : Math.abs(a - b) >= 64;
+        }).length;
+        expect(different, `${tier[i].name} / ${tier[j].name}`).toBeGreaterThanOrEqual(8);
+      }
+    }
+  });
+  it('新路線同星級的實際跳躍與切燈操作量接近', () => {
+    const plans = [
+      [[LEVEL_ONE_LOWER, [2320, 2630, 6020]], [LEVEL_ONE_LATE, [6930, 7220, 7540]]],
+      [[LEVEL_TWO_LOWER, [2320, 2630, 4410, 6190, 9330]], [LEVEL_TWO_LATE, [4650, 7540, 7840, 8160, 9270]]],
+    ] as const;
+    for (const [early, late] of plans) {
+      const first = runShelfRoute(early[0], early[1]), second = runShelfRoute(late[0], late[1]);
+      expect(first.used.size).toBe(second.used.size);
+      expect(Math.abs(first.lampPresses - second.lampPresses)).toBeLessThanOrEqual(2);
+      expect(Math.abs(first.seconds - second.seconds)).toBeLessThan(0.5);
     }
   });
 });

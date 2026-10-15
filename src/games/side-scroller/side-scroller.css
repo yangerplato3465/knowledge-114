@@ -48,7 +48,10 @@
 .ss-shelf-heading h2 { margin: 0; font-size: clamp(24px, 4vw, 34px); line-height: 1.25; }
 .ss-shelf-heading p { margin: 6px 0 0; font-size: 15px; line-height: 1.5; }
 .ss-shelf-close { flex: 0 0 auto; min-height: 44px; padding: 8px 15px; border: 2px solid #d9b887; border-radius: 9px; background: #fff1cf; color: #3b2b41; font: inherit; font-weight: 800; cursor: pointer; }
-.ss-shelf-books { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 24px 24px 30px; overflow: auto; max-height: min(480px, calc(100dvh - 190px)); background: repeating-linear-gradient(180deg, #513748 0 197px, #8f614d 197px 208px, #452d39 208px 216px); }
+.ss-shelf-books { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; padding: 24px 24px 30px; overflow: auto; max-height: min(480px, calc(100dvh - 190px)); background: repeating-linear-gradient(180deg, #513748 0 197px, #8f614d 197px 208px, #452d39 208px 216px); }
+.ss-book { grid-column: span 2; }
+.ss-book:nth-child(4):nth-last-child(2) { grid-column: 2 / span 2; }
+.ss-book:nth-child(5):last-child { grid-column: 4 / span 2; }
 .ss-book { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; min-height: 174px; padding: 20px 12px 14px 24px; overflow: hidden; border: 2px solid #e5b878; border-left: 12px solid #6e526d; border-radius: 6px 12px 12px 6px; background: linear-gradient(100deg, #86566b 0 11%, #ba7a72 14%, #82495b 82%, #6b4055 100%); color: #fff8e6; box-shadow: 5px 8px 0 #2c2130a6, inset -4px 0 0 #dfae83; font: inherit; text-align: center; cursor: pointer; }
 .ss-book:nth-child(2) { border-left-color: #446f73; background: linear-gradient(100deg, #496f74 0 11%, #73a6a1 14%, #426e75 82%, #31545c 100%); }
 .ss-book:nth-child(3) { border-left-color: #765a7b; background: linear-gradient(100deg, #725477 0 11%, #a07da0 14%, #705275 82%, #4e3d64 100%); }
@@ -69,6 +72,7 @@
   .ss-shelf-heading p { font-size: 13px; }
   .ss-shelf-close { padding-inline: 9px; font-size: 13px; }
   .ss-shelf-books { grid-template-columns: 1fr; gap: 10px; padding: 14px; max-height: calc(100dvh - 170px); background: repeating-linear-gradient(180deg, #513748 0 96px, #8f614d 96px 104px, #452d39 104px 112px); }
+  .ss-book, .ss-book:nth-child(4):nth-last-child(2), .ss-book:nth-child(5):last-child { grid-column: auto; }
   .ss-book { min-height: 92px; align-items: flex-start; padding: 9px 14px 8px 18px; }
   .ss-book-mark { position: absolute; right: 16px; top: 10px; }
   .ss-book strong { margin-top: 0; font-size: 19px; }
