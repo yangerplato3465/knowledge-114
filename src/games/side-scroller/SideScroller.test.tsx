@@ -119,7 +119,7 @@ it('開場四頁手冊阻止跑道前進，可依序看完障礙教學，開始�
   expect(screen.getByRole('button', { name: '紅燈' }).textContent).toBe('紅燈');
   expect(screen.getByRole('button', { name: '藍燈' }).textContent).toBe('藍燈');
 });
-it('預設零星，選三星重建場景；過期的零星載入不可覆蓋三星', async () => {
+it('預設零星，從三星書架選書會取消過期載入', async () => {
   let resolveIntro!: (scene: SideScrollerScene) => void;
   const intro = fakeScene(), challenge = fakeScene();
   vi.mocked(createSideScroller).mockImplementation((_host, _signal, _onStatus, level) => level?.difficulty === 0 ? new Promise(done => { resolveIntro = done; }) : Promise.resolve(challenge));
@@ -127,9 +127,13 @@ it('預設零星，選三星重建場景；過期的零星載入不可覆蓋三�
   const firstSignal = vi.mocked(createSideScroller).mock.calls[0][1];
   expect(vi.mocked(createSideScroller).mock.calls[0][3]?.difficulty).toBe(0);
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: /3 星關卡/ })); });
+  const shelf = screen.getByRole('dialog', { name: '3 星書架' });
+  expect(within(shelf).getAllByRole('button', { name: /3 星第/ })).toHaveLength(5);
+  await act(async () => { fireEvent.click(within(shelf).getByRole('button', { name: /半途連橋/ })); });
   expect(firstSignal.aborted).toBe(true);
   expect(screen.getByRole('button', { name: /3 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
   expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.difficulty).toBe(3);
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.id).toBe('middle-bridge');
   await act(async () => resolveIntro(intro));
   expect(intro.destroy).toHaveBeenCalledOnce(); expect(challenge.destroy).not.toHaveBeenCalled();
   expect(challenge.setTutorial).toHaveBeenLastCalledWith(false);
@@ -200,6 +204,24 @@ it('提供0至5星六個難度，可從二星書架選不同的同級路線', as
   expect(screen.getByRole('button', { name: /2 星關卡/ }).getAttribute('aria-pressed')).toBe('true');
   expect(screen.getByRole('button', { name: /2 星關卡/ }).textContent).toContain('換燈書架');
   expect(screen.getByRole('button', { name: /2 星關卡/ }).textContent).not.toContain('三橋換燈');
+});
+it('三星第四本通關後可切到第五本，入口仍顯示原三星名稱', async () => {
+  let emit!: (status: SceneStatus) => void;
+  vi.mocked(createSideScroller).mockImplementation(async (_host, _signal, onStatus) => {
+    emit = onStatus;
+    return fakeScene();
+  });
+  render(<ThemeProvider><SideScroller /></ThemeProvider>); await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: '先看世界' }));
+  fireEvent.click(screen.getByRole('button', { name: /3 星關卡/ }));
+  const shelf = screen.getByRole('dialog', { name: '3 星書架' });
+  expect(within(shelf).getAllByRole('button', { name: /3 星第/ })).toHaveLength(5);
+  await act(async () => { fireEvent.click(within(shelf).getByRole('button', { name: /半途連橋/ })); });
+  expect(screen.getByRole('button', { name: /3 星關卡/ }).textContent).toContain('斷谷高臺');
+  act(() => emit({ mode: 'play', paused: false, completed: true, checkpoint: 4, falls: 0, lap: 1, color: 'purple', collectedGems: [] }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: '下一本書' })); });
+  expect(vi.mocked(createSideScroller).mock.calls.at(-1)?.[3]?.id).toBe('slope-bridge');
+  expect(screen.getByRole('button', { name: '開始冒險' })).toBeTruthy();
 });
 it('書架凍結正在遊玩的跑道；返回不重啟，完成後可直接換下一本', async () => {
   const scenes: SideScrollerScene[] = [];

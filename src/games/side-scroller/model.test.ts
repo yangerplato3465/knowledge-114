@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GEM_COLORS, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_LATE, LEVEL_ONE_LOWER, LEVEL_ONE_RIDGE, LEVEL_TWO, LEVEL_TWO_LATE, LEVEL_TWO_LOWER, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE, LEVEL_THREE, LEVEL_TIERS, LEVEL_ZERO, LEVEL_SECONDS, LEVELS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, touchesGem, WORLD_WIDTH, type Input, type Level, type Platform, type State, type WorldColor } from './model';
+import { advance, blocksPath, BODY, checkpointY, CHECKPOINTS, EXIT, GEM_COLORS, GOAL, initialState, isLightOn, isSolid, LEVEL_FIVE, LEVEL_FOUR, LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_LATE, LEVEL_ONE_LOWER, LEVEL_ONE_RIDGE, LEVEL_TWO, LEVEL_TWO_LATE, LEVEL_TWO_LOWER, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE, LEVEL_THREE, LEVEL_THREE_MIDDLE, LEVEL_THREE_SLOPE, LEVEL_THREE_UPPER, LEVEL_THREE_VALLEY, LEVEL_TIERS, LEVEL_ZERO, LEVEL_SECONDS, LEVELS, levelSeconds, obstacleAlpha, obstacleContact, OBSTACLE_GHOST_ALPHA, PHYSICS, PLATFORMS, selectWorldColor, surfaceY, toggleColor, touchesExit, touchesGem, WORLD_WIDTH, type Input, type Level, type Platform, type State, type WorldColor } from './model';
 
 const neutral: Input = { jump: false };
 const floor: Platform[] = [{ x: 0, y: 480, w: WORLD_WIDTH, h: 200, kind: 'ground' }];
@@ -63,7 +63,7 @@ function runShelfRoute(level: Level, jumps: readonly number[], offset = 0) {
 }
 describe('同星級書架路線', () => {
   it('每個星級各自成組，新路線維持時長、色塊量與兩星相鄰換色密度', () => {
-    expect(LEVEL_TIERS.map(tier => tier.length)).toEqual([1, 5, 5, 1, 1, 1]);
+    expect(LEVEL_TIERS.map(tier => tier.length)).toEqual([1, 5, 5, 5, 1, 1]);
     expect(new Set(LEVELS.map(level => level.id)).size).toBe(LEVELS.length);
     for (const tier of [LEVEL_TIERS[1], LEVEL_TIERS[2]]) {
       const standard = tier[0];
@@ -150,7 +150,7 @@ const routeJumps = [994, 3572, 3856, 4212, 4496, 5492, 5812, 6132, 6432, 8740, 9
 const routeColors: [number, WorldColor][] = [[400, 'red'], [3380, 'blue'], [6000, 'purple'], [7600, 'blue'], [8400, 'red'], [8745, 'purple'], [9035, 'blue'], [9301, 'purple'], [9657, 'red'], [9977, 'purple'], [10260, 'blue'], [10580, 'purple'], [11500, 'blue'], [12290, 'red'], [12521, 'purple']];
 function runRoute(platforms: readonly Platform[] = PLATFORMS, switchColors = true, timingOffset = 0) {
   const used = new Set<number>(), landed = new Set<Platform>();
-  let s = initialState(), seconds = 0;
+  let s = initialState(), seconds = 0, lampPresses = 0;
   for (let n = 0; n < 120 * 50 && !s.completed && !s.falls; n++) {
     const next = routeJumps.find(x => s.x >= x + timingOffset && !used.has(x));
     if (next !== undefined) used.add(next);
@@ -158,14 +158,118 @@ function runRoute(platforms: readonly Platform[] = PLATFORMS, switchColors = tru
     // Follow the same two independent button toggles as the scene, including combined purple.
     let color = s.color;
     if (targetColor !== undefined) for (const button of ['red', 'blue'] as const) {
-      if (isLightOn(color, button) !== isLightOn(targetColor, button)) color = toggleColor(color, button);
+      if (isLightOn(color, button) !== isLightOn(targetColor, button)) { color = toggleColor(color, button); lampPresses++; }
     }
     s = advance(s, { jump: next !== undefined, color }, PHYSICS.step, platforms);
     if (s.grounded) platforms.filter(p => p.kind === 'bridge' && s.x >= p.x && s.x < p.x + p.w && s.y === p.y).forEach(p => landed.add(p));
     seconds += PHYSICS.step;
   }
-  return { state: s, seconds, landed, used };
+  return { state: s, seconds, landed, used, lampPresses };
 }
+const thirdPlans = [
+  { level: LEVEL_THREE_UPPER, bridge: 5376, climb: 3584, low: 7296, run: 8576, swapped: false },
+  { level: LEVEL_THREE_VALLEY, bridge: 4864, climb: 6784, low: 3584, run: 8576, swapped: true },
+  { level: LEVEL_THREE_MIDDLE, bridge: 3584, climb: 8192, low: 9984, run: 5504, swapped: true },
+  { level: LEVEL_THREE_SLOPE, bridge: 6656, climb: 3584, low: 5376, run: 8576, swapped: false },
+] as const;
+function playThirdVariant(plan: typeof thirdPlans[number], timingOffset = 0, without?: Platform) {
+  const { level, bridge, climb, low, run, swapped } = plan;
+  const jumps = [994,
+    ...[-12, 272, 628, 912].map(n => bridge + n),
+    ...[-12, 308, 628, 928].map(n => climb + n),
+    ...[164, 454, 720, 1076, 1396, 1680, 2000].map(n => run + n),
+    11982, 12516,
+  ].sort((a, b) => a - b);
+  const events: [number, WorldColor][] = [
+    [400, 'red'], [bridge === 5376 ? 5280 : bridge - 204, 'blue'],
+    [climb - 204, 'blue'], [climb + 496, 'purple'], [low + 304, 'blue'],
+    [level === LEVEL_THREE_VALLEY ? 8490 : run - 176, 'red'],
+    ...([['purple', 169], ['blue', 459], ['purple', 725], ['red', 1081], ['purple', 1401], ['blue', 1684], ['purple', 2004]] as const)
+      .map(([color, at]) => [run + at, color] as [number, WorldColor]),
+    [11500, 'blue'], [12290, 'red'], [12521, 'purple'],
+  ];
+  events.sort((a, b) => a[0] - b[0]);
+  const platforms = without ? level.platforms.filter(p => p !== without) : level.platforms;
+  const used = new Set<number>(), landed = new Set<Platform>();
+  let state = initialState(level), seconds = 0, lampPresses = 0;
+  for (let i = 0; i < 120 * 52 && !state.completed && !state.falls; i++) {
+    const jump = jumps.find(x => state.x >= x + timingOffset && !used.has(x));
+    if (jump !== undefined) used.add(jump);
+    let target = events.filter(([x]) => state.x >= x + timingOffset).at(-1)?.[1];
+    if (swapped && target) target = target === 'red' ? 'blue' : target === 'blue' ? 'red' : target;
+    let color = state.color;
+    if (target) for (const button of ['red', 'blue'] as const) {
+      if (isLightOn(color, button) !== isLightOn(target, button)) { color = toggleColor(color, button); lampPresses++; }
+    }
+    state = advance(state, { jump: jump !== undefined, color }, PHYSICS.step, platforms, level);
+    if (state.grounded) platforms.filter(p => p.kind === 'bridge' && state.x >= p.x && state.x < p.x + p.w && state.y === p.y).forEach(p => landed.add(p));
+    seconds += PHYSICS.step;
+  }
+  return { state, seconds, used, landed, lampPresses, jumps };
+}
+describe('三星五條路線', () => {
+  it('路程與操作量接近原關，且每關都保留必要的連色與浮橋挑戰', () => {
+    expect(LEVEL_TIERS[3]).toHaveLength(5);
+    const baselineColors = LEVEL_THREE.platforms.filter(p => p.color).length;
+    const baselineBridges = LEVEL_THREE.platforms.filter(p => p.kind === 'bridge').length;
+    for (const { level } of thirdPlans) {
+      expect(Math.abs(levelSeconds(level) - levelSeconds(LEVEL_THREE))).toBeLessThan(0.5);
+      expect(level.platforms.filter(p => p.color)).toHaveLength(baselineColors);
+      expect(level.platforms.filter(p => p.kind === 'bridge')).toHaveLength(baselineBridges);
+      expect(level.platforms.some(p => p.color && level.platforms.some(next => next.color && next.color !== p.color && next.x === p.x + p.w))).toBe(true);
+      level.checkpoints.forEach(x => expect(level.platforms.some(p => p.kind === 'ground' && !p.color && x >= p.x && x < p.x + p.w), `${level.name} checkpoint ${x}`).toBe(true));
+    }
+  });
+  it.each(thirdPlans)('$level.name 能用一段跳與切燈零跌落通關，前後操作時機仍有餘裕', plan => {
+    for (const offset of [-12, 0, 12]) {
+      const result = playThirdVariant(plan, offset);
+      expect(result.state.falls, `${plan.level.name} 偏移 ${offset} x=${result.state.x.toFixed(0)} 已跳=${[...result.used]}`).toBe(0);
+      expect(result.state.completed, `${plan.level.name} 偏移 ${offset} x=${result.state.x.toFixed(0)}`).toBe(true);
+      expect(result.used.size).toBe(18);
+      expect(result.landed.size).toBe(plan.level.platforms.filter(p => p.kind === 'bridge').length);
+      expect(result.state.checkpoint).toBe(plan.level.checkpoints.length - 1);
+      expect(new Set(result.state.collectedGems)).toEqual(new Set(GEM_COLORS));
+      expect(Math.abs(result.seconds - levelSeconds(plan.level))).toBeLessThan(0.4);
+    }
+  });
+  it('五關的橋群位置與高低輪廓各有差異，切燈次數接近原關', () => {
+    const baseline = runRoute();
+    const tier = LEVEL_TIERS[3];
+    for (const plan of thirdPlans) {
+      const result = playThirdVariant(plan);
+      expect(Math.abs(result.lampPresses - baseline.lampPresses), plan.level.name).toBeLessThanOrEqual(2);
+    }
+    const height = (level: Level, x: number) => {
+      const support = level.platforms.find(p => x >= p.x && x < p.x + p.w);
+      return support ? surfaceY(support, x) : null;
+    };
+    for (let i = 0; i < tier.length; i++) for (let j = i + 1; j < tier.length; j++) {
+      const different = Array.from({ length: 47 }, (_, n) => 512 + n * 256).filter(x => {
+        const a = height(tier[i], x), b = height(tier[j], x);
+        return a === null || b === null ? a !== b : Math.abs(a - b) >= 64;
+      }).length;
+      expect(different, `${tier[i].name} / ${tier[j].name}`).toBeGreaterThanOrEqual(8);
+    }
+    expect(new Set(thirdPlans.map(plan => plan.bridge))).toEqual(new Set([3584, 4864, 5376, 6656]));
+    expect(new Set(thirdPlans.map(plan => plan.climb))).toEqual(new Set([3584, 6784, 8192]));
+    expect(new Set(thirdPlans.map(plan => plan.run))).toEqual(new Set([5504, 8576]));
+  });
+  it.each(thirdPlans)('$level.name 的落腳區可重生，缺少必要橋板無法沿驗收路線前進', plan => {
+    const { level } = plan;
+    level.checkpoints.forEach((x, checkpoint) => {
+      const state = advance({ ...initialState(level), checkpoint, y: 830, grounded: false, color: 'blue' }, neutral, PHYSICS.step, level.platforms, level);
+      expect(state.x).toBe(x);
+      expect(state.y).toBe(checkpointY(checkpoint, level));
+      expect(state.color).toBe('blue');
+      expect(state.falls).toBe(1);
+    });
+    for (const bridge of level.platforms.filter(p => p.kind === 'bridge')) {
+      const result = playThirdVariant(plan, 0, bridge);
+      expect(result.state.completed, `${level.name} 缺橋 ${bridge.x}`).toBe(false);
+      expect(result.state.falls, `${level.name} 缺橋 ${bridge.x}`).toBeGreaterThan(0);
+    }
+  });
+});
 describe('零星入門跑道', () => {
   it('特殊地板彼此分隔，前半只教紅藍，後半才加入紫色', () => {
     expect(LEVEL_ZERO.difficulty).toBe(0); expect(LEVEL_THREE.difficulty).toBe(3);

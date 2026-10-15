@@ -16,7 +16,7 @@ export const GEM_RADIUS = 18;
 export interface Input { jump: boolean; color?: WorldColor | null }
 export type Difficulty = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Level {
-  id: 'intro' | 'platforms' | 'missing-page' | 'book-spine' | 'lower-crossing' | 'late-bridges' | 'fusion' | 'color-seam' | 'folded-slope' | 'lower-seam' | 'late-seam' | 'challenge' | 'crossroads' | 'gauntlet';
+  id: 'intro' | 'platforms' | 'missing-page' | 'book-spine' | 'lower-crossing' | 'late-bridges' | 'fusion' | 'color-seam' | 'folded-slope' | 'lower-seam' | 'late-seam' | 'challenge' | 'upper-bridge' | 'valley-bridge' | 'middle-bridge' | 'slope-bridge' | 'crossroads' | 'gauntlet';
   name: string; difficulty: Difficulty; focus?: string;
   width: number; platforms: readonly Platform[]; checkpoints: readonly number[];
   terrain?: 'stone'; obstacles?: readonly Obstacle[];
@@ -32,7 +32,7 @@ export function obstacleAlpha(obstacle: Obstacle, color: WorldColor | null): num
 const ground = (x: number, y: number, w: number, endY = y, color?: WorldColor): Platform => ({ x, y, w, endY, color, h: 672 - y, kind: 'ground' });
 const bridge = (x: number, y: number, w: number, color?: WorldColor): Platform => ({ x, y, w, color, h: 32, kind: 'bridge' });
 export const LEVEL_THREE: Level = {
-  id: 'challenge', name: '斷谷高臺', difficulty: 3, width: 13632,
+  id: 'challenge', name: '斷谷高臺', difficulty: 3, focus: '跨過斷谷，登上高臺', width: 13632,
   checkpoints: [160, 2624, 5056, 7488, 11136], exit: { x: 13408, y: 408, radius: 54 },
   gems: [{ color: 'yellow', x: 1900, y: 382 }, { color: 'green', x: 4890, y: 386 }, { color: 'red', x: 8300, y: 478 }, { color: 'blue', x: 11880, y: 450 }],
   platforms: [
@@ -57,6 +57,60 @@ export const LEVEL_THREE: Level = {
   ground(12160, 480, 192), ground(12352, 480, 256, 480, 'red'), ground(12608, 480, 192, 480, 'purple'),
   // A quiet, neutral approach after the last color change; no input is needed to reach the exit.
   ground(12800, 480, 832),
+  ],
+};
+// Reorder proven third-star passages. Every section keeps its internal gaps and
+// platform spacing; the short neutral connectors make each new junction readable.
+function thirdSection(from: number, to: number, start: number, rise = 0): Platform[] {
+  return LEVEL_THREE.platforms.filter(p => p.x >= from && p.x < to).map(p => ({
+    ...p, x: p.x - from + start, y: p.y + rise,
+    endY: p.endY === undefined ? undefined : p.endY + rise,
+    h: p.kind === 'ground' ? 672 - p.y - rise : p.h,
+  }));
+}
+function exchangeThirdLights(platforms: Platform[]): Platform[] {
+  return platforms.map(p => ({ ...p, color: p.color === 'red' ? 'blue' : p.color === 'blue' ? 'red' : p.color }));
+}
+const thirdOpening = () => thirdSection(0, 3584, 0);
+const thirdHome = () => thirdSection(11264, 13632, 11264);
+export const LEVEL_THREE_UPPER: Level = {
+  id: 'upper-bridge', name: '高坡後橋', difficulty: 3, focus: '先登高臺，再穿過橋群', width: 13632,
+  checkpoints: [160, 2624, 4800, 7488, 11136], exit: { x: 13408, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1900, y: 382 }, { color: 'green', x: 4890, y: 322 }, { color: 'red', x: 8300, y: 478 }, { color: 'blue', x: 11880, y: 450 }],
+  platforms: [
+    ...thirdOpening(), ...thirdSection(5504, 7296, 3584, 128),
+    ground(5248, 352, 128), ...thirdSection(3584, 5504, 5376, -64),
+    ...thirdSection(7296, 8576, 7296), ...thirdSection(8576, 11264, 8576), ...thirdHome(),
+  ],
+};
+export const LEVEL_THREE_VALLEY: Level = {
+  id: 'valley-bridge', name: '谷底長橋', difficulty: 3, focus: '先落入低地，再一路登高', width: 13632,
+  checkpoints: [160, 2624, 6336, 7808, 11136], exit: { x: 13408, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1900, y: 382 }, { color: 'green', x: 5350, y: 450 }, { color: 'red', x: 8300, y: 194 }, { color: 'blue', x: 11880, y: 450 }],
+  platforms: exchangeThirdLights([
+    ...thirdOpening(), ...thirdSection(7296, 8576, 3584),
+    ...thirdSection(3584, 5504, 4864), ...thirdSection(5504, 7296, 6784),
+    ground(8448, 224, 128), ...thirdSection(8576, 11264, 8576), ...thirdHome(),
+  ]),
+};
+export const LEVEL_THREE_MIDDLE: Level = {
+  id: 'middle-bridge', name: '半途連橋', difficulty: 3, focus: '中段連跳換燈，後段再登高', width: 13632,
+  checkpoints: [160, 2624, 5056, 8000, 11136], exit: { x: 13408, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1900, y: 382 }, { color: 'green', x: 4890, y: 386 }, { color: 'red', x: 9350, y: 194 }, { color: 'blue', x: 11880, y: 450 }],
+  platforms: exchangeThirdLights([
+    ...thirdOpening(), ...thirdSection(3584, 5504, 3584),
+    ...thirdSection(8576, 11264, 5504), ...thirdSection(5504, 7296, 8192),
+    ...thirdSection(7296, 8576, 9984), ...thirdHome(),
+  ]),
+};
+export const LEVEL_THREE_SLOPE: Level = {
+  id: 'slope-bridge', name: '坡下橋群', difficulty: 3, focus: '先登坡後落谷，再過橋群', width: 13632,
+  checkpoints: [160, 2624, 4800, 8064, 11136], exit: { x: 13408, y: 408, radius: 54 },
+  gems: [{ color: 'yellow', x: 1900, y: 382 }, { color: 'green', x: 4890, y: 322 }, { color: 'red', x: 8300, y: 386 }, { color: 'blue', x: 11880, y: 450 }],
+  platforms: [
+    ...thirdOpening(), ...thirdSection(5504, 7296, 3584, 128),
+    ...thirdSection(7296, 8576, 5376), ...thirdSection(3584, 5504, 6656),
+    ...thirdSection(8576, 11264, 8576), ...thirdHome(),
   ],
 };
 export const LEVEL_ZERO: Level = {
@@ -356,7 +410,8 @@ export const LEVEL_FIVE: Level = {
 };
 export const LEVEL_TIERS: readonly (readonly Level[])[] = [
   [LEVEL_ZERO], [LEVEL_ONE, LEVEL_ONE_BRIDGE, LEVEL_ONE_RIDGE, LEVEL_ONE_LOWER, LEVEL_ONE_LATE],
-  [LEVEL_TWO, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE, LEVEL_TWO_LOWER, LEVEL_TWO_LATE], [LEVEL_THREE], [LEVEL_FOUR], [LEVEL_FIVE],
+  [LEVEL_TWO, LEVEL_TWO_SEAM, LEVEL_TWO_SLOPE, LEVEL_TWO_LOWER, LEVEL_TWO_LATE],
+  [LEVEL_THREE, LEVEL_THREE_UPPER, LEVEL_THREE_VALLEY, LEVEL_THREE_MIDDLE, LEVEL_THREE_SLOPE], [LEVEL_FOUR], [LEVEL_FIVE],
 ];
 export const LEVEL_TIER_NAMES: readonly string[] = [
   LEVEL_ZERO.name, '跳臺書架', '換燈書架', LEVEL_THREE.name, LEVEL_FOUR.name, LEVEL_FIVE.name,

@@ -41,14 +41,14 @@
 .ss-sr-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ss-game:fullscreen { width: 100%; height: 100%; max-width: none; padding: 8px; margin: 0; background: var(--frame-bg); }
 .ss-game:fullscreen .ss-stage { width: 100%; height: 100%; aspect-ratio: auto; }
-.ss-shelf { width: min(850px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 7px solid #593c48; border-radius: 20px; background: #5b3d4d; color: #fff4d8; box-shadow: 0 22px 70px #1d1527b8, inset 0 0 0 3px #b18463; }
+.ss-shelf { display: flex; flex-direction: column; width: min(850px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; overflow: hidden; border: 7px solid #593c48; border-radius: 20px; background: #5b3d4d; color: #fff4d8; box-shadow: 0 22px 70px #1d1527b8, inset 0 0 0 3px #b18463; }
 .ss-shelf::backdrop { background: #171329bf; }
 .ss-shelf-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 20px 24px 15px; background: linear-gradient(160deg, #745162, #453043); border-bottom: 5px solid #b68961; }
 .ss-shelf-eyebrow { display: block; margin-bottom: 3px; color: #ffe1a5; font-size: 13px; letter-spacing: .08em; font-weight: 800; }
 .ss-shelf-heading h2 { margin: 0; font-size: clamp(24px, 4vw, 34px); line-height: 1.25; }
 .ss-shelf-heading p { margin: 6px 0 0; font-size: 15px; line-height: 1.5; }
 .ss-shelf-close { flex: 0 0 auto; min-height: 44px; padding: 8px 15px; border: 2px solid #d9b887; border-radius: 9px; background: #fff1cf; color: #3b2b41; font: inherit; font-weight: 800; cursor: pointer; }
-.ss-shelf-books { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; padding: 24px 24px 30px; overflow: auto; max-height: min(480px, calc(100dvh - 190px)); background: repeating-linear-gradient(180deg, #513748 0 197px, #8f614d 197px 208px, #452d39 208px 216px); }
+.ss-shelf-books { display: grid; flex: 0 1 auto; min-height: 0; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; padding: 24px 24px 30px; overflow: auto; background: repeating-linear-gradient(180deg, #513748 0 197px, #8f614d 197px 208px, #452d39 208px 216px); }
 .ss-book { grid-column: span 2; }
 .ss-book:nth-child(4):nth-last-child(2) { grid-column: 2 / span 2; }
 .ss-book:nth-child(5):last-child { grid-column: 4 / span 2; }
@@ -71,9 +71,9 @@
   .ss-shelf-heading { padding: 14px; gap: 10px; }
   .ss-shelf-heading p { font-size: 13px; }
   .ss-shelf-close { padding-inline: 9px; font-size: 13px; }
-  .ss-shelf-books { grid-template-columns: 1fr; gap: 10px; padding: 14px; max-height: calc(100dvh - 170px); background: repeating-linear-gradient(180deg, #513748 0 96px, #8f614d 96px 104px, #452d39 104px 112px); }
+  .ss-shelf-books { grid-template-columns: 1fr; gap: 10px; padding: 14px; background: repeating-linear-gradient(180deg, #513748 0 96px, #8f614d 96px 104px, #452d39 104px 112px); }
   .ss-book, .ss-book:nth-child(4):nth-last-child(2), .ss-book:nth-child(5):last-child { grid-column: auto; }
-  .ss-book { min-height: 92px; align-items: flex-start; padding: 9px 14px 8px 18px; }
+  .ss-book { min-height: 118px; align-items: flex-start; padding: 9px 14px 8px 18px; }
   .ss-book-mark { position: absolute; right: 16px; top: 10px; }
   .ss-book strong { margin-top: 0; font-size: 19px; }
   .ss-book small { margin-top: 1px; }

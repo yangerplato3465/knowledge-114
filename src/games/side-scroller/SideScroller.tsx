@@ -163,7 +163,7 @@ export function SideScroller() {
       </div>
       {manual && load === 'ready' && <Tutorial initial={!started} onClose={closeManual} onStart={start} />}
       {shelfDifficulty !== null && <BookShelf difficulty={shelfDifficulty} levels={LEVEL_TIERS[shelfDifficulty]} current={level}
-        loading={load === 'loading'} onClose={() => setShelfDifficulty(null)} onSelect={selectBook} />}
+        loading={load === 'loading' && shelfDifficulty === level.difficulty} onClose={() => setShelfDifficulty(null)} onSelect={selectBook} />}
       <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才淡化；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}可開啟玩法手冊翻閱示範。</p>
       <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.collectedGems.length > 0 ? `寶石 ${status.collectedGems.length} / 4。` : ''}{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
