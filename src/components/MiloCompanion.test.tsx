@@ -13,7 +13,7 @@ it('米洛持續切換散步與魔法，也能點擊切換動作', () => {
   expect(document.querySelector('.milo-stage')?.getAttribute('data-action')).toBe('walk');
   fireEvent.click(screen.getByRole('button', { name: /和米洛說話/ }));
   expect(document.querySelector('.milo-stage')?.getAttribute('data-action')).toBe('water');
-  expect(screen.getByText('小水滴，來幫花喝水吧。')).toBeTruthy();
+  expect(screen.getByText('小水滴，這朵花也在等你。')).toBeTruthy();
 });
 
 it('減少動態偏好下不自動播放，仍可手動切換對話', () => {

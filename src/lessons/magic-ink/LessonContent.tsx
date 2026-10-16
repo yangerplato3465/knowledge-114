@@ -25,7 +25,7 @@ export function LessonContent() { return (<div className="wrap">
 <h2 >{"原子筆的世界"}</h2>
 <span className="sec-tag">{"歷史 · 名稱由來 · 構造"}</span>
 </div>
-<p className="sec-lead">{"每天寫功課、考卷、畫圖都離不開它。你有沒有想過：原子筆裡面到底長什麼樣子？它為什麼叫「原子」筆？"}</p>
+<p className="sec-lead">{"寫功課、作答、畫圖時，我們常會用到原子筆。你有沒有想過：它裡面有哪些零件？名字裡為什麼有「原子」？"}</p>
 <h3 className="block-title">{"開場提問：你喜歡粗筆還是細筆？"}</h3>
 <div className="photo-grid2">
 <div className="photo">
@@ -44,7 +44,7 @@ export function LessonContent() { return (<div className="wrap">
 <div className="h-body">
 <div className="h-year">{"1888"}</div>
 <div className="h-title">{"🇺🇸 John J. Loud 取得最早專利"}</div>
-<p >{"10 月 30 日發表。他想做一支能在粗糙木頭、厚包裝紙上寫字的筆——筆尖有一顆可以滾動的小鋼珠。可惜出墨不均勻、會漏水堵塞，專利沒有被開發而最終失效。"}</p>
+<p >{"10 月 30 日發表。他想做一支能在粗糙木頭、厚包裝紙上寫字的筆——筆尖有一顆可以滾動的小鋼珠。可惜出墨不均，還有漏墨、堵塞等問題，這項專利最終未能發展成普及的產品。"}</p>
 </div>
 </div>
 <div className="hist-card">
@@ -68,20 +68,20 @@ export function LessonContent() { return (<div className="wrap">
 <div className="h-body">
 <div className="h-year">{"現在"}</div>
 <div className="h-title">{"🖊️ 名字一直流傳到今天"}</div>
-<p >{"「原子筆」也代表「取用不完、源源不絕」的意思。後來沒有更新的創意產品取代它，這個名字就一直流傳到現在，大家也習慣用「原子筆」稱呼鋼珠筆。"}</p>
+<p >{"「原子筆」也代表「取用不完、源源不絕」的意思。後來，「原子筆」這個名稱逐漸流傳開來，成了大家習慣使用的稱呼。"}</p>
 </div>
 </div>
 </div>
 <h3 className="block-title">{"筆的演化：越來越方便"}</h3>
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/slide-evolution.webp"} alt="羽毛筆到鋼筆到原子筆的演化" loading="lazy" width={1334} height={750} />
-<div className="cap">{"羽毛筆（沾墨，麻煩）→ 鋼筆（滑順但容易漏墨）→ 原子筆（便宜、不漏、耐用）——最方便的進化版！"}</div>
+<div className="cap">{"從需要沾墨的羽毛筆，到能儲存墨水的鋼筆，再到方便攜帶的原子筆，筆的設計隨著使用需求逐漸改變。"}</div>
 </div>
 <h3 className="block-title">{"拆開來看：裡面有好多零件！"}</h3>
 <div className="photo-grid2">
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/pen-exploded.webp"} alt="原子筆分解圖" loading="lazy" width={1536} height={1024} />
-<div className="cap">{"雖然外觀看起來很普通，但其實它有很多零件喔！"}</div>
+<div className="cap">{"小小一支筆，裡面的零件各有工作。一起拆開看看吧！"}</div>
 </div>
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/pen-parts.webp"} alt="拆解後的原子筆零件" loading="lazy" width={1536} height={1024} />
@@ -91,17 +91,17 @@ export function LessonContent() { return (<div className="wrap">
 <h3 className="block-title">{"基本構造與筆尖放大圖"}</h3>
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/slide-structure.webp"} alt="原子筆基本構造圖" loading="lazy" width={1334} height={750} />
-<div className="cap">{"外層保護、按鈕開關、裝墨水的地方；筆芯放大：座、球珠座、球珠、油墨導向孔、墨盒、潤滑脂、埋塞"}</div>
+<div className="cap">{"外殼、按鈕與儲存墨水的筆芯；放大筆芯，還能看到：座、球珠座、球珠、油墨導向孔、墨盒、潤滑脂、埋塞"}</div>
 </div>
 <div className="photo" style={{"marginTop": "14px"}}>
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/slide-ball-socket.webp"} alt="球珠固定方式放大圖" loading="lazy" width={1334} height={750} />
-<div className="cap">{"球珠卡在小小的圓形槽裡——能滾、不會掉出來，精密程度用「微米」計算！"}</div>
+<div className="cap">{"球珠嵌在小小的凹槽裡，能滾動，也不容易脫落；製作時要精準到微米尺度。"}</div>
 </div>
 <h3 className="block-title">{"筆尖的主角：球珠"}</h3>
 <div className="photo-grid2">
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/ball-writing.webp"} alt="球珠寫字特寫" loading="lazy" width={2500} height={1406} />
-<div className="cap">{"這顆小鋼球是筆的靈魂！一直滾、一直沾墨，把墨轉到紙上——一邊轉、一邊寫"}</div>
+<div className="cap">{"筆尖的小球珠一邊滾動、一邊帶出墨水，把筆畫留在紙上。"}</div>
 </div>
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/tips-macro.webp"} alt="筆尖特寫" loading="lazy" width={2500} height={1668} />
@@ -116,7 +116,7 @@ export function LessonContent() { return (<div className="wrap">
 <div className="info-box info">{"\n            毛細現象控制流量 ＋ 筆尖的「球」擋住出口 ＝ 墨水只會慢慢沾到球上，不會像倒水一樣整罐流出來。\n        "}</div>
 <div className="photo" style={{"marginTop": "14px"}}>
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/tip-sizes.webp"} alt="0.5mm 0.7mm 1.0mm 筆尖粗細比較" loading="lazy" width={1536} height={1024} />
-<div className="cap">{"設計筆的人會做出很多尺寸：0.5 / 0.7 / 1.0 mm，給不同的使用者"}</div>
+<div className="cap">{"常見的筆尖尺寸有 0.5、0.7、1.0 mm，可以依書寫習慣選擇。"}</div>
 </div>
 <h3 className="block-title">{"☀️ 原子筆很怕高溫？「爆墨」原理"}</h3>
 <div className="photo-grid2">
@@ -128,11 +128,11 @@ export function LessonContent() { return (<div className="wrap">
 <div className="info-box warn" style={{"marginTop": "0"}}>
 <b >{"爆墨是怎麼發生的？"}</b><br  />{"\n                    把原子筆放在太陽底下曝曬，筆芯裡的墨受熱膨脹、壓力變大，就可能從筆尖被擠出來，造成「爆墨」。所以：原子筆不要放車上曬太陽、不要放在暖氣旁！\n                "}</div>
 <div className="info-box info">
-<b >{"反過來想 🤔"}</b>{" 平常不漏墨的祕密＝「黏稠的墨水」＋「球珠塞住出口」。只有高溫讓墨膨脹時，這道防線才會被突破。\n                "}</div>
+<b >{"反過來想 🤔"}</b>{" 平常不易漏墨，與「黏稠的墨水」和「球珠擋住出口」有關；高溫造成的膨脹，則可能讓墨水從筆尖滲出。\n                "}</div>
 </div>
 </div>
 <h3 className="block-title">{"🌟 超知識冷知識大挑戰（猜猜看！）"}</h3>
-<p className="sec-lead" style={{"margin": "0 0 6px"}}>{"和同學互相出題吧！先猜再看答案，猜對一題得一分，四題全對就是「原子筆博士」🎓"}</p>
+<p className="sec-lead" style={{"margin": "0 0 6px"}}>{"先猜答案，再讀解說。每答對一題得一分，完成後和同學分享一個新發現吧！"}</p>
 <div className="trivia-grid">
 <KnowledgeQuiz index={0} />
 <KnowledgeQuiz index={1} />
@@ -148,10 +148,10 @@ export function LessonContent() { return (<div className="wrap">
 <h2 >{"墨水的奧秘"}</h2>
 <span className="sec-tag">{"成分 · 種類 · 特性"}</span>
 </div>
-<p className="sec-lead">{"墨水基本上就是："}<b >{"顏色 ＋ 能讓它流動的液體"}</b>{"，再加一些小配方讓它更好用。墨水跟飲料一樣有配方，只是不能喝！"}</p>
+<p className="sec-lead">{"墨水基本上就是："}<b >{"顏色 ＋ 能讓它流動的液體"}</b>{"，再加入添加物，調整成適合書寫的配方。墨水不能飲用喔！"}</p>
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/ink-splash.webp"} alt="墨水潑灑" loading="lazy" width={2500} height={2000} />
-<div className="cap">{"墨水是什麼？顏色＋能讓它流動的液體＋讓它更好用的小配方"}</div>
+<div className="cap">{"墨水是什麼？顏色＋能讓它流動的液體＋調整性質的添加物"}</div>
 </div>
 <h3 className="block-title">{"古代人用什麼寫字？"}</h3>
 <div className="photo">
@@ -179,7 +179,7 @@ export function LessonContent() { return (<div className="wrap">
 <div className="mini-card">
 <div className="m-emoji">{"🥤"}</div>
 <div className="m-title">{"溶劑"}</div>
-<p >{"水 / 油 / 酒精——墨水的「載體」，讓墨水能流動。不同溶劑決定墨水的個性！"}</p>
+<p >{"水 / 油 / 酒精——墨水的「載體」，讓墨水能流動。不同溶劑會影響墨水的性質。"}</p>
 </div>
 <div className="mini-card">
 <div className="m-emoji">{"🎨"}</div>
@@ -196,18 +196,18 @@ export function LessonContent() { return (<div className="wrap">
 <div className="photo-grid2">
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/dye-cups.webp"} alt="染料溶液" loading="lazy" width={2500} height={1667} />
-<div className="cap">{"染料像糖，一倒進水就溶入——顏色亮麗"}</div>
+<div className="cap">{"染料像糖溶進水裡，讓液體呈現顏色。"}</div>
 </div>
 <div >
 <div className="mini-card" style={{"marginBottom": "14px"}}>
 <div className="m-emoji">{"🍬"}</div>
 <div className="m-title">{"染料＝糖"}</div>
-<p >{"溶進水裡，顏色亮（藍筆、紅筆多用染料配方），但比較會褪色"}</p>
+<p >{"能溶於水，顏色鮮明；藍筆、紅筆常用染料配方，但字跡較容易褪色。"}</p>
 </div>
 <div className="mini-card">
 <div className="m-emoji">{"🏖️"}</div>
 <div className="m-title">{"色素＝沙子"}</div>
-<p >{"漂在水裡但不溶解，耐久不褪色——黑筆常用「碳黑」，所以黑色最耐久！"}</p>
+<p >{"分散在水裡，不像糖那樣溶解；黑筆常用的「碳黑」，就以字跡耐久為特色。"}</p>
 </div>
 </div>
 </div>
@@ -216,7 +216,7 @@ export function LessonContent() { return (<div className="wrap">
 <h3 className="block-title">{"現代墨水四大類型"}</h3>
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/slide-ink-types.webp"} alt="水性、油性、凝膠、酒精墨四大類" loading="lazy" width={1334} height={750} />
-<div className="cap">{"每一種墨水都是為不同用途設計：白板筆用酒精所以擦得掉；油性筆寫塑膠比較好附著"}</div>
+<div className="cap">{"不同墨水有不同用途：白板筆用酒精所以擦得掉；油性筆寫塑膠比較好附著"}</div>
 </div>
 <div className="visc-bar"></div>
 <div className="visc-labels"><span >{"水性"}</span><span >{"中性"}</span><span >{"中油"}</span><span >{"油性"}</span></div>
@@ -229,9 +229,9 @@ export function LessonContent() { return (<div className="wrap">
 </thead>
 <tbody >
 <tr ><td >{"墨水"}</td><td >{"水性"}</td><td >{"水＋膠"}</td><td >{"油性"}</td></tr>
-<tr ><td >{"寫感"}</td><td >{"最滑順"}</td><td >{"滑順又顯色"}</td><td >{"稍有阻力"}</td></tr>
+<tr ><td >{"書寫感受"}</td><td >{"最滑順"}</td><td >{"滑順又顯色"}</td><td >{"稍有阻力"}</td></tr>
 <tr ><td >{"缺點"}</td><td >{"容易漏墨、要保養"}</td><td >{"墨耗得快"}</td><td >{"偶爾出墨結塊"}</td></tr>
-<tr ><td >{"耐用度"}</td><td >{"字怕水"}</td><td >{"中等"}</td><td >{"最耐久 🏆"}</td></tr>
+<tr ><td >{"字跡耐久度"}</td><td >{"字怕水"}</td><td >{"中等"}</td><td >{"最耐久 🏆"}</td></tr>
 <tr ><td >{"適合場合"}</td><td >{"簽名、書法"}</td><td >{"筆記、日常"}</td><td >{"考試、文件、萬用"}</td></tr>
 </tbody>
 </table>
@@ -241,13 +241,13 @@ export function LessonContent() { return (<div className="wrap">
 <div className="photo-grid2">
 <div className="photo">
 <img src={import.meta.env.BASE_URL + "assets/images/magic-ink/shirt-stain.webp"} alt="襯衫上的油性筆痕" loading="lazy" width={2500} height={1875} />
-<div className="cap">{"慘劇現場：油性筆沾到衣服……"}</div>
+<div className="cap">{"油性筆不小心沾到衣服，為什麼水洗不容易去除？"}</div>
 </div>
 <div >
 <div className="info-box bad" style={{"marginTop": "0"}}>
 <b >{"為什麼水洗不掉？"}</b><br  />{"\n                    油性筆遇到水不會暈開，因為裡面的溶劑是「油」，而"}<b >{"水和油不互溶"}</b>{"。另外油性筆的樹脂附著力強，一旦乾掉就像一層薄膜黏在表面。\n                "}</div>
 <div className="info-box good">
-<b >{"那怎麼辦？"}</b><br  />{"\n                    酒精分子能溶解油性墨水，也能把樹脂薄膜慢慢弄散——所以用酒精擦最有機會救回來！\n                "}</div>
+<b >{"那怎麼辦？"}</b><br  />{"\n                    酒精分子能溶解油性墨水，也能把樹脂薄膜慢慢弄散——因此酒精可能有助於去除筆痕。\n                "}</div>
 </div>
 </div>
 <KnowledgeQuiz index={4} />
@@ -305,7 +305,7 @@ export function LessonContent() { return (<div className="wrap">
 </div>
 </div>
 <div className="info-box info">
-<b >{"📖 小故事："}</b><br  />{"\n            很久以前，有個國家的郵差常常被敵人偷看信件。國王很苦惱，就請來一位化學師。化學師調配出一種魔法墨水：寫下去很清楚，但三個時辰後會慢慢消失，只剩下淡淡的影子。只有收信人知道秘密——把信放到溫暖的火爐旁，字就會像幽靈一樣重新浮出來！從此以後，只有真正的收件人才看得懂裡面的訊息。\n        "}</div>
+<b >{"📖 想像故事："}</b><br  />{"\n            有個王國的郵差，總擔心信件被偷看。化學師便送他一瓶魔法墨水：寫下的字過幾個時辰就會淡去，收信人用約定的方法，才能讓字重新浮現。郵差把祕密藏進信裡，也把一個問題留給我們：現實中，能不能讓字跡消失又出現？\n        "}</div>
 <p style={{"fontSize": "16.5px", "color": "var(--ink-soft)"}}>{"消失的墨水，利用的是"}<b >{"「染料分子會改變」"}</b>{"的原理：有些顏料遇到"}<b >{"酸或鹼"}</b>{"會變色、褪色甚至變透明；有些則是氧化還原反應讓顏色被破壞掉。字跡不是真的不見，是分子「變身」了！"}</p>
 <h3 className="block-title">{"🍋 加碼：在家就能玩的檸檬汁隱形墨水"}</h3>
 <div className="photo-grid2">
@@ -372,22 +372,22 @@ export function LessonContent() { return (<div className="wrap">
 <div >
 <div className="r-name">{"百里酚酞指示劑"}</div>
 <span className="r-formula">{"95% 酒精 50 mL ＋ 百里酚酞 0.5 g"}</span>
-<p >{"百里酚酞（Thymolphthalein）不溶於水，一定要用 95% 酒精溶解。"}</p>
+<p >{"本實驗使用 95% 酒精溶解百里酚酞（Thymolphthalein）。"}</p>
 </div>
 </div>
 <div className="recipe-item">
 <div className="r-emoji">{"🧴"}</div>
 <div >
 <div className="r-name">{"氫氧化鈉（NaOH）水溶液"}</div>
-<span className="r-formula">{"水 50 mL ＋ 50 mL（共 100 mL）配 NaOH 0.4 g"}</span>
-<p >{"用"}<b >{"棉花棒"}</b>{"沾取書寫呈現，避免學生直接接觸強鹼。"}</p>
+<span className="r-formula">{"水共 100 mL（50 mL ＋ 50 mL），加入 NaOH 0.4 g"}</span>
+<p >{"用"}<b >{"棉花棒"}</b>{"沾取溶液書寫，避免學生直接接觸強鹼。"}</p>
 </div>
 </div>
 <div className="recipe-item">
 <div className="r-emoji">{"🍋"}</div>
 <div >
 <div className="r-name">{"檸檬酸水溶液"}</div>
-<span className="r-formula">{"水 100 mL 配 檸檬酸 8.4 g"}</span>
+<span className="r-formula">{"水 100 mL，加入檸檬酸 8.4 g"}</span>
 <p >{"「消字魔法水」——酸鹼中和的主角。"}</p>
 </div>
 </div>
@@ -420,12 +420,12 @@ export function LessonContent() { return (<div className="wrap">
 <div className="mini-card">
 <div className="m-emoji">{"🔍"}</div>
 <div className="m-title">{"觀察任務"}</div>
-<p >{"找出家裡 3 支不同的筆，判斷它們是水性、中性還是油性？寫在紙上滴一滴水試試看！"}</p>
+<p >{"找出家裡 3 支不同的筆，先猜猜它們是水性、中性還是油性，再分別寫在紙上，滴一滴水觀察變化。"}</p>
 </div>
 <div className="mini-card">
 <div className="m-emoji">{"🌈"}</div>
 <div className="m-title">{"實驗任務"}</div>
-<p >{"用咖啡濾紙和黑色水性筆做色層分析，數數看你分出了幾種顏色？"}</p>
+<p >{"用咖啡濾紙和黑色水性筆做色層分析，看看墨水分出了幾種顏色。"}</p>
 </div>
 <div className="mini-card">
 <div className="m-emoji">{"🍋"}</div>
@@ -435,5 +435,5 @@ export function LessonContent() { return (<div className="wrap">
 </div>
 </div>
 <footer >
-<img src={import.meta.env.BASE_URL + "assets/images/magic-ink/logo-wall.webp"} alt="超知識 logo 牆" loading="lazy" width={859} height={532} />{"\n        超知識 SUPER SCIENCE KNOWLEDGE · 1143L1 神奇的墨水！原子筆的科學"}<br  />{"\n        40 分鐘課程懶人包 · 暮光森林學習驛站 · By Anita 老師\n    "}</footer>
+<img src={import.meta.env.BASE_URL + "assets/images/magic-ink/logo-wall.webp"} alt="超知識 logo 牆" loading="lazy" width={859} height={532} />{"\n        超知識 SUPER SCIENCE KNOWLEDGE · 1143L1 神奇的墨水！原子筆的科學"}<br  />{"\n        40 分鐘課程教材 · 暮光森林學習驛站 · Anita 老師整理\n    "}</footer>
 </div>); }

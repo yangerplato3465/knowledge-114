@@ -34,7 +34,7 @@ it('格式錯誤、限流與空目錄可辨認並重新整理恢復', async () =
   fireEvent.click(screen.getByRole('button', { name: '重新整理' }));
   await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('查詢次數'));
   fireEvent.click(screen.getByRole('button', { name: '重新整理' }));
-  expect(await screen.findByText('素材庫還是空的，快去上傳第一個檔案吧！')).toBeTruthy();
+  expect(await screen.findByText('目前還沒有可下載的素材，稍後再來看看。')).toBeTruthy();
 });
 it('舊回應較晚完成也不能覆蓋新清單', async () => {
   let finish!: (value: Response) => void;

@@ -18,17 +18,17 @@ export function targetAction(from: number, id: string): Action | null {
   return null;
 }
 export function sceneDialogue(g: GameState): string {
-  if (g.screen === 'home') return '晚安，我是米洛。\n今晚，也讓魔法發光吧！';
+  if (g.screen === 'home') return '我是米洛。\n一起為朋友施展魔法！';
   if (g.screen === 'finished') return storyFor(g.seed).ending;
   if (g.screen === 'practice-done') return '剛剛好！\n準備迎接第一位客人吧。';
-  if (g.screen === 'ready') return g.practice ? '哇，剛剛好！\n這份魔法可以出發囉！' : journeyDialogue(g);
+  if (g.screen === 'ready') return g.practice ? '哇，剛剛好！\n魔力液可以交付了！' : journeyDialogue(g);
   if (g.hintLevel) {
     const action = shortestSolution(currentPuzzle(g), g.amounts)?.[0];
-    if (!action) return '這份魔法，已經剛剛好了。';
-    if (g.hintLevel === 1) return action.kind === 'empty' ? '有時候，留一點空間，\n才裝得下新的可能。' : action.kind === 'fill' ? '滿滿的一瓶，\n也許就是下一個靈感。' : '看看兩個瓶子，\n誰的空間比較小呢？';
-    return action.kind === 'fill' ? `第 ${action.from + 1} 瓶，\n正在等魔力泉的光。` : action.kind === 'empty' ? `讓第 ${action.from + 1} 瓶\n在回收釜歇一會兒吧。` : `第 ${action.from + 1} 瓶的魔法，\n正好能借給第 ${action.to! + 1} 瓶。`;
+    if (!action) return '魔力液已經量好了。';
+    if (g.hintLevel === 1) return action.kind === 'empty' ? '試著先倒空一瓶，\n替下一次互倒留空間。' : action.kind === 'fill' ? '試著先補滿一瓶，\n再看看能怎麼分配。' : '互倒時，來源會先空，\n還是另一瓶先滿呢？';
+    return action.kind === 'fill' ? `選第 ${action.from + 1} 瓶，\n到魔力泉補滿。` : action.kind === 'empty' ? `選第 ${action.from + 1} 瓶，\n到回收釜倒空。` : `選第 ${action.from + 1} 瓶，\n倒進第 ${action.to! + 1} 瓶。`;
   }
-  return g.practice ? '我們一起試試吧！\n先量出這個份量。' : journeyDialogue(g);
+  return g.practice ? '我們一起試試吧！\n量出委託需要的量。' : journeyDialogue(g);
 }
 export function sceneAnnouncement(g: GameState): string {
   if (g.screen === 'finished') return `${sceneDialogue(g).replaceAll('\n', '')}${g.results.map((r, i) => `第 ${i + 1} 關 ${r.steps} 步，最短 ${r.minimumSteps} 步，通關表現 ${performanceStars(r.steps, r.minimumSteps )} 枚魔力結晶。`).join('')}重玩代碼 ${g.seed}，${difficultyTitle(g.difficulty)}委託。`;

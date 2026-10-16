@@ -176,7 +176,7 @@ async function boot(session) {
             if (!offline) {
                 if (session.codeId) forgetGroup(session.codeId);
                 clearSession();
-                showGate('這組驗證碼已經失效了，請改選其他組或輸入新的碼。');
+                showGate('這組驗證碼已失效，請選擇其他組別，或向老師取得新的驗證碼。');
                 return;
             }
             saveBlocked = true;
@@ -267,8 +267,8 @@ function wireGroupSwitch(session) {
         }
         if (!ok && !confirm(
             '⚠️ 這一組的進度沒有存成功。\n\n'
-            + '可能是網路不通，或這組驗證碼已經失效。\n'
-            + '現在離開的話，這次玩的內容會消失。\n\n'
+            + '可能是網路中斷，或這組驗證碼已失效。\n'
+            + '現在離開，尚未儲存的進度可能遺失。\n\n'
             + '仍然要離開嗎？')) {
             btn.disabled = false;
             btn.textContent = original;      // 留在遊戲裡，讓老師先處理網路
@@ -291,7 +291,7 @@ function wireGroupSwitch(session) {
             item.disabled = current;
             if (!current) {
                 item.addEventListener('click', () => leaveTo(g,
-                    `要切換到「${g.label}」嗎？\n\n目前這一組的進度會先存好，之後隨時可以再切回來。`));
+                    `要切換到「${g.label}」嗎？\n\n切換前會先儲存目前進度，之後可再選擇這一組繼續調查。`));
             }
             menu.appendChild(item);
         }
@@ -311,7 +311,7 @@ function wireGroupSwitch(session) {
         out.type = 'button';
         out.textContent = '💾 登出並儲存';
         out.addEventListener('click', () => leaveTo(null,
-            '要登出嗎？\n\n這一組的進度會先存好，下次直接點組別名字就能接著玩。'));
+            '要登出嗎？\n\n登出前會先儲存進度，下次可選擇組別名稱繼續調查。'));
         menu.appendChild(out);
     }
 }
@@ -387,7 +387,7 @@ function cooldown() {
     submitBtn.disabled = true;
     input.disabled = true;
     const tick = () => {
-        errEl.textContent = `錯太多次了，請等 ${left} 秒再試`;
+        errEl.textContent = `驗證暫時鎖定，請等 ${left} 秒再試`;
         if (left-- <= 0) {
             clearInterval(timer);
             submitBtn.disabled = false;

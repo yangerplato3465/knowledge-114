@@ -1,7 +1,7 @@
 import type { RainbowViewProps } from "./interactions";
 export function RainbowView({picks, phase, canStart, done, onPick, onStart, onReset, result}: RainbowViewProps) { return (<div className="cap-game" id="rb-game">
 <div className="cg-title">{"🌈 互動小遊戲：彩虹橋——水會自己過橋！"}</div>
-<div className="cg-hint">{"紙巾橋已經架好了！藍、黃、紅三罐水會沿著紙巾「走」過橋，流進中間的空罐子。先猜猜看：兩個空罐子裡會出現什麼顏色？兩題都選好才能開始喔！"}</div>
+<div className="cg-hint">{"紙巾橋已經架好了！藍、黃、紅三罐水會沿著紙巾「走」過橋，流進中間的空罐子。先猜猜兩個空罐會變成什麼顏色，兩邊都選好後，再按「開始過橋」。"}</div>
 <div className="rb-stage">
 <div className="rb-bridge" style={{"left": "10%", "width": "20%"}}>
 <div className="rb-arch"><div className="rb-flow fl" style={{...{"background": "#4a90d9"}, width: phase >= 2 ? "100%" : "0%", transition: phase ? "width 1.2s linear" : "none"}}></div></div>

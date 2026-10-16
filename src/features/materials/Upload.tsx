@@ -69,7 +69,7 @@ export function Upload() {
     finally { finish(controller); }
   }
   return <PageLayout header={<TeacherHeader current="upload" />}><section className="hub-card materials" aria-labelledby="upload-title">
-    <ForestArt name="ledger" className="material-illustration" /><h1 id="upload-title">上傳素材</h1><p>上傳的檔案會存到網站的素材庫，任何人都能在下載頁取得。</p>
+    <ForestArt name="ledger" className="material-illustration" /><h1 id="upload-title">上傳素材</h1><p>上傳後，檔案會公開出現在素材下載頁。請選擇適合分享的教材與素材。</p>
     <div className="material-field"><label htmlFor="token">GitHub 存取權杖（Token）</label>
       <input id="token" type="password" autoComplete="off" value={token} disabled={busy} onChange={e => setToken(e.target.value)} placeholder="ghp_... 或 github_pat_..." />
       <p className="material-hint">到 <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener noreferrer">GitHub 設定</a> 建立 Fine-grained token，對 <b>knowledge-114</b> 開啟 <b>Contents: Read and write</b> 權限。切勿分享給別人。</p>
@@ -78,15 +78,15 @@ export function Upload() {
     <div className="material-field"><label htmlFor="material-files">選擇檔案</label>
       <button className={`material-drop ${dragging ? 'dragging' : ''}`} disabled={busy} onClick={() => input.current?.click()}
         onDragOver={e => { e.preventDefault(); if (!busy) setDragging(true); }} onDragLeave={() => setDragging(false)}
-        onDrop={e => { e.preventDefault(); setDragging(false); if (!operation.current) setFiles(Array.from(e.dataTransfer.files)); }}>點這裡選檔，或把檔案拖進來</button>
+        onDrop={e => { e.preventDefault(); setDragging(false); if (!operation.current) setFiles(Array.from(e.dataTransfer.files)); }}>選擇檔案，或將檔案拖到這裡</button>
       <input ref={input} id="material-files" type="file" multiple disabled={busy} onChange={e => { if (!operation.current) setFiles(Array.from(e.target.files || [])); }} />
-      {files.length > 0 && <p className="material-selection">已選 {files.length} 個檔案：{files.map(file => file.name).join('、')}</p>}
+      {files.length > 0 && <p className="material-selection">已選擇 {files.length} 個檔案：{files.map(file => file.name).join('、')}</p>}
     </div>
     <button className="material-primary" disabled={busy || !token.trim() || !files.length} onClick={() => void upload()}>{busy ? '處理中…' : '上傳'}</button>
     <div aria-live="polite">{results.map((row, i) => <p key={`${i}-${row.name}`} className={`material-result ${row.state}`}><strong>{row.name}</strong><span>{row.message}</span></p>)}</div>
     {error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     <section className="material-manage" aria-labelledby="manage-title"><div className="material-toolbar"><h2 id="manage-title">已上傳的素材</h2><button disabled={busy} onClick={() => void list.reload(token.trim())}>重新整理</button></div>
-      {list.loading ? <p role="status">載入中…</p> : list.error ? <p role="alert">{list.error}</p> : !list.files.length ? <p role="status">素材庫還是空的。</p> :
+      {list.loading ? <p role="status">正在載入素材清單…</p> : list.error ? <p role="alert">{list.error}</p> : !list.files.length ? <p role="status">尚未上傳素材，可從上方選擇檔案。</p> :
         <ul className="material-list">{list.files.map(file => <li key={file.name} className="material-row"><div><strong>{file.name}</strong><small>{formatSize(file.size)}</small></div><button disabled={busy} aria-label={`刪除 ${file.name}`} onClick={() => void remove(file)}>刪除</button></li>)}</ul>}
     </section>
   </section></PageLayout>;

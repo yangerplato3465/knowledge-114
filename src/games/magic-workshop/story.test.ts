@@ -76,6 +76,6 @@ it('提示優先於彩蛋；復原、重試、練習與回首頁不殘留故事�
   game = gameReducer(game, { type: 'practice' });
   expect(sceneDialogue(game)).toContain('一起試試');
   game = gameReducer(game, { type: 'operate', action: { kind: 'fill', from: 0 } });
-  expect(sceneDialogue(game)).toContain('可以出發');
+  expect(sceneDialogue(game)).toContain('可以交付');
   expect(sceneDialogue(gameReducer(game, { type: 'deliver' }))).toContain('第一位客人');
 });

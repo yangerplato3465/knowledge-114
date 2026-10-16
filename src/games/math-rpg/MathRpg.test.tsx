@@ -65,7 +65,7 @@ test('逾時直接更新失敗狀態，重試後晚到的舊場景不影響新�
   expect(vi.mocked(createGameScene).mock.calls[0][1].aborted).toBe(true);
   const live = emptyScene(), late = emptyScene();
   vi.mocked(createGameScene).mockResolvedValueOnce(live);
-  fireEvent.click(screen.getByRole('button', { name: '重新載入畫布' }));
+  fireEvent.click(screen.getByRole('button', { name: '重新載入遊戲' }));
   await act(async () => { finish(late); });
   expect(late.destroy).toHaveBeenCalledTimes(1);
   expect(live.destroy).not.toHaveBeenCalled();
@@ -78,7 +78,7 @@ test('載入拒絕可透過輔助操作重試', async () => {
   await act(async () => {});
   expect(screen.getByRole('main').dataset.status).toBe('error');
   vi.mocked(createGameScene).mockResolvedValueOnce(emptyScene());
-  fireEvent.click(screen.getByRole('button', { name: '重新載入畫布' }));
+  fireEvent.click(screen.getByRole('button', { name: '重新載入遊戲' }));
   await act(async () => {});
   expect(screen.getByRole('main').dataset.status).toBe('ready');
 });

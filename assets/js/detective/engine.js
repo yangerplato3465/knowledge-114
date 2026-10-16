@@ -1068,7 +1068,7 @@ function renderScene(id) {
     // 第一次進場講開場白；之後再回來改講 introBack，才不會一直重講「快來調查吧」
     const first = !visitedScenes.has(id);
     visitedScenes.add(id);
-    say(txt(first ? scene.intro : (scene.introBack || scene.intro)) || '點擊場景中的東西開始調查。');
+    say(txt(first ? scene.intro : (scene.introBack || scene.intro)) || '點選場景中的物件，開始調查。');
     saveProgress();
 }
 
@@ -1089,7 +1089,7 @@ function refreshSceneAccess() {
     if (CASE.hints?.length) {
         const hint = document.createElement('button');
         hint.type = 'button';
-        hint.textContent = `向${CASE.assistantName || '助手'}求提示`;
+        hint.textContent = `請${CASE.assistantName || '助手'}給提示`;
         hint.addEventListener('click', showAssistantHint);
         body.append(hint);
     }
@@ -1109,7 +1109,7 @@ function refreshSceneAccess() {
                 state.storedOrder.push(o.id);
                 delete objPositions[o.id];
                 const clueMessage = collectObjectClues(o);
-                say(`🎒 ${o.name}收進物品欄了。${objectUsesOf(o.id).length ? '選取物品，再點場景中的用途位置。' : (txt(o.after) || '可在下方查看。')}${clueMessage}`);
+                say(`🎒 ${o.name}收進物品欄了。${objectUsesOf(o.id).length ? '選取物品，再點場景中要使用的位置。' : (txt(o.after) || '可在下方查看。')}${clueMessage}`);
                 refreshHud(); renderInteractives(); refreshSceneAccess(); saveProgress();
             });
             body.append(collect);
@@ -1684,7 +1684,7 @@ function onObjUp() {
         const partner = partnerOf(o.id);
         say((partner && state.stored.has(partner.id)
             ? `🎒 ${o.name}收進物品欄了。${partner.name}也在裡面 —— 點其中一個就能把它們裝起來。`
-            : `🎒 ${o.name}收進物品欄了。${objectUsesOf(o.id).length ? '點下方圖示選取，再點場景中的用途位置。' : '點下方的圖示隨時查看。'}`) + clueMessage);
+            : `🎒 ${o.name}收進物品欄了。${objectUsesOf(o.id).length ? '點下方圖示選取，再點場景中要使用的位置。' : '點下方的圖示隨時查看。'}`) + clueMessage);
         refreshHud();
         renderInteractives();
         refreshSceneAccess();
@@ -1764,11 +1764,11 @@ function onHotspot(h) {
         return;
     }
     setZoom(null);                                     // 放大鈕永遠只跟著「現在這一則」說明
-    if (isHidden(h)) { say('那個東西你還沒找到。'); return; }   // 從道具欄繞過來的也擋一下
+    if (isHidden(h)) { say('還沒找到需要的物品，先到現場找找吧。'); return; }   // 從道具欄繞過來的也擋一下
 
     // 需要某條線索才知道要做什麼
     if (h.needsClue && !hasClue(h.needsClue) && !state.examined.has(h.id)) {
-        say(txt(h.lockedClue) || '你還不知道該從哪裡下手。');
+        say(txt(h.lockedClue) || '先找出相關線索，再回來試試。');
         return;
     }
     // 需要道具
@@ -1781,7 +1781,7 @@ function onHotspot(h) {
         return;
     }
     if (h.requiresUse && ![].concat(h.requiresUse).every(id => isObjectUsed(id, h.id))) {
-        say(txt(h.lockedUse) || '選取物品欄裡的實物，再點場景中對應的位置使用。');
+        say(txt(h.lockedUse) || '選取物品欄中的道具，再點場景中要使用的位置。');
         return;
     }
     if (h.goto) { transitionTo(h.goto); return; }
@@ -2308,7 +2308,7 @@ function accuse(s) {
     closePanel();
     state.misjudge++;
     saveProgress();
-    say(`❌ 不對喔 —— ${s.wrong}`);
+    say(`❌ 再比對一次證據：${s.wrong}`);
 
     // 誤判用完就強制結案 —— 沒抓到人也要有結局，不能讓人卡在那裡重試到放棄。
     // 沒宣告 misjudgeLimit 的案件（黃金貓頭鷹）永遠不會走到這裡，行為跟以前一樣。
@@ -2463,5 +2463,5 @@ if (resumed) {
 // 存檔讀不到時（斷線、碼被刪或過期）遊戲照樣能玩，但這次不會被記錄。
 // 一定要講出來，否則學生玩了一整堂課才發現沒存到。
 if (sess?.saveBlocked) {
-    setTimeout(() => say('⚠️ 連不上進度伺服器 —— 這次玩的內容不會被記錄下來，請先告訴老師。'), 5000);
+    setTimeout(() => say('⚠️ 連不上進度伺服器 —— 這次的調查進度無法儲存，請先告訴老師。'), 5000);
 }

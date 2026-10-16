@@ -1,7 +1,7 @@
 import type { CapillaryViewProps } from "./interactions";
 export function CapillaryView({picked, phase, canStart, done, onPick, onStart, onReset, result}: CapillaryViewProps) { return (<div className="cap-game" id="cap-game">
 <div className="cg-title">{"🏁 互動小遊戲：吸水大賽"}</div>
-<div className="cg-hint">{"三位選手要比賽把水吸上去！先"}<b >{"點選"}</b>{"你覺得會吸得最快、最高的選手，再按「開始比賽」看看猜得對不對～"}</div>
+<div className="cg-hint">{"紙巾、棉繩、塑膠棒，誰能讓水爬得又快又高？先"}<b >{"點選"}</b>{"你看好的選手，再按「開始比賽」觀察結果。"}</div>
 <div className="cap-lanes">
 <button data-mat="towel" type="button" className={"cap-lane" + (picked === "towel" ? " picked" : "")} disabled={phase !== 0} aria-pressed={picked === "towel"} onClick={() => onPick("towel")}>
 <div className="cap-stage">

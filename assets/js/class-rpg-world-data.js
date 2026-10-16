@@ -16,7 +16,7 @@ export function connectWorld({ select, onStudents, onStatus }) {
             if (token !== generation) return;
             const students = snap.docs.map(d => ({ ...d.data(), id: d.id })).sort((a,b) => String(a.name || '').localeCompare(String(b.name || ''), 'zh-TW'));
             onStudents(students);
-            onStatus(snap.metadata.fromCache ? '顯示快取名冊，正在等待雲端同步。' : students.length ? `全班 ${students.length} 位冒險者已到齊，自由散步中。` : '這個班級尚無學生，請回班級管理新增。');
+            onStatus(snap.metadata.fromCache ? '目前顯示先前載入的名冊，正在與雲端同步。' : students.length ? `班上的 ${students.length} 位冒險者正在自由散步。` : '這個班級尚無學生，請回班級管理新增。');
         }, () => {
             if (token !== generation) return;
             clearStudents(); onStatus('無法讀取角色，請確認登入與網路後重新選擇班級。');

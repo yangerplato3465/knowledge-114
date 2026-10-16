@@ -32,7 +32,7 @@ export function createBattle(next: () => BattleQuestion, stage = 0) {
       state.explanation = '答對，出劍！敵人蓄力已壓回。';
     } else {
       state.heroHp = Math.max(0, state.heroHp - BATTLE_RULES.damage); state.charge = 0;
-      state.explanation = `${event === 'wrong' ? '這次答案需要調整。' : '敵人蓄力滿，受到攻擊。'} 正解：${state.question.a[state.question.correct]}。${state.question.hint ?? ''}`;
+      state.explanation = `${event === 'wrong' ? '這次沒答對。' : '敵人蓄力滿，受到攻擊。'} 正解：${state.question.a[state.question.correct]}。${state.question.hint ?? ''}`;
     }
   }
   return {

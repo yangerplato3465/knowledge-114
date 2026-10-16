@@ -19,7 +19,7 @@ export function BookShelf({ difficulty, levels, current, loading, onClose, onSel
     onCancel={event => { event.preventDefault(); onClose(); }}>
     <div className="ss-shelf-heading">
       <div><span className="ss-shelf-eyebrow">魔法禁書庫 · 選一本書</span><h2 id="ss-shelf-title">{difficulty} 星書架</h2>
-        <p>每本書都是同樣難度的不同路線。選好後先看世界，再開始冒險。</p></div>
+        <p>每本書藏著一條同星級的路線。選好後先巡覽小徑，再開始冒險。</p></div>
       <button type="button" className="ss-shelf-close" onClick={onClose}>返回遊戲</button>
     </div>
     <div className="ss-shelf-books" role="group" aria-label={`${difficulty} 星關卡`}>

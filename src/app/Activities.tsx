@@ -93,7 +93,7 @@ export function Activities() {
     <main id="main" className="star-atlas" tabIndex={-1}>
       {!activeCategory ? <section className={'star-sky star-focus-' + mobileFocus + (zoomCategory ? ' is-zooming star-zoom-' + zoomCategory : '')} aria-labelledby="sky-title">
         <div className="star-sky-copy"><p className="star-eyebrow">暮光森林 · 學習活動</p><h1 id="sky-title" ref={headingRef} tabIndex={-1}>星燈星圖</h1>
-          <p>今晚，想循著哪一束光出發？</p><span className="star-sky-hint">選一座星座，看看裡面的活動。</span></div>
+          <p>今晚，想循著哪一束光出發？</p><span className="star-sky-hint">選個星座，找一項想探索的活動。</span></div>
         <div className="star-chart"><img className="star-sky-art" src={atlasImage} alt="" aria-hidden="true" width="1536" height="1024" fetchPriority="high" />
         <div className="star-choices" role="group" aria-label="活動星座">{categories.map(category => <button key={category.id} type="button"
           className={'star-choice star-choice-' + category.id + (mobileFocus === category.id ? ' is-mobile-active' : '')} onClick={() => enterConstellation(category)}>
@@ -103,7 +103,7 @@ export function Activities() {
         <div className="star-mobile-nav" role="group" aria-label="選擇星座">{categories.map(category => <button key={category.id} type="button" aria-pressed={mobileFocus === category.id}
           onClick={() => setMobileFocus(category.id)}>{category.starName}</button>)}</div>
         </div>
-        <div className="star-sky-foot" aria-hidden="true">✦　每一束光，都藏著一段新的發現　✦</div>
+        <div className="star-sky-foot" aria-hidden="true">✦　循著星光，找找今天的新發現　✦</div>
       </section> : <section className="star-interior" aria-labelledby="constellation-title">
         <div className="star-interior-head"><button type="button" className="star-back" onClick={() => navigate(null)}>← 返回星圖</button>
           <span className="star-interior-marker">星燈星圖 / {activeCategory.starName}</span></div>
@@ -113,7 +113,7 @@ export function Activities() {
           <div className={'star-observation star-observation-' + activeCategory.id}>
             {selectedActivity && <div className="star-feature" key={selectedActivity.path}>
               <span className="star-feature-art"><ForestArt name={artworkForActivity(selectedActivity.path)} /></span>
-              <span className="star-feature-kicker">正在觀測的活動</span><h2>{selectedActivity.title}</h2><p>{selectedActivity.description}</p>
+              <span className="star-feature-kicker">這次想探索的活動</span><h2>{selectedActivity.title}</h2><p>{selectedActivity.description}</p>
               <a ref={enterLinkRef} className="star-enter" href={import.meta.env.BASE_URL + 'pages/' + selectedActivity.path + '.html'}>進入{selectedActivity.title} <span aria-hidden="true">↗</span></a>
             </div>}
           </div>
@@ -124,7 +124,7 @@ export function Activities() {
                 <span className="star-activity-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><span className="star-activity-text"><strong>{item.title}</strong><small>{item.description}</small></span>
               </button>
             </li>)}</ul>
-            {visibleActivities.length === 0 && <p className="star-empty">沒有找到符合的活動，試試其他名稱。</p>}
+            {visibleActivities.length === 0 && <p className="star-empty">找不到符合的活動，試試其他關鍵字。</p>}
           </div>
         </div>
       </section>}

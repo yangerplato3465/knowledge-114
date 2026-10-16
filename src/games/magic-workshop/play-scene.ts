@@ -315,7 +315,7 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       const portrait=layout.portrait,cx=layout.home.x;
       text('暮光',cx,portrait?76:90,25,C.gold,foreground,undefined,true);
       text('魔法工坊',cx,portrait?130:152,portrait?62:78,C.paper,foreground,undefined,true);
-      text('每一份剛剛好，都是小小的魔法',cx,portrait?194:224,portrait?23:25,C.paper,foreground,undefined,true);
+      text('量好魔力液，幫朋友一個忙',cx,portrait?194:224,portrait?23:25,C.paper,foreground,undefined,true);
       // Illustrated spellbooks distinguish difficulty from the three performance crystals.
       const cy=layout.home.y, paperW=portrait?530:640;
       paper(cx,cy,paperW,430);
@@ -330,12 +330,12 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
       woodSign('start','開始五關委託',cx,cy+99,300);
       text('操作練習',cx-113,cy+166,21,0x544030); addControl('practice','先做操作練習',cx-113,cy+166,174,52);
       text('重玩代碼',cx+113,cy+166,21,0x544030); addControl('code','輸入重玩代碼',cx+113,cy+166,174,52);
-      if(!portrait) { shadow(layout.home.miloX,H*.84,90); milo=art('guide',layout.home.miloX,H*.84,250,375); miloY=H*.84; bubble(layout.home.miloX-30,miloY-375-75,330,'我是米洛。\n今晚，也讓魔法發光吧！'); }
+      if(!portrait) { shadow(layout.home.miloX,H*.84,90); milo=art('guide',layout.home.miloX,H*.84,250,375); miloY=H*.84; bubble(layout.home.miloX-30,miloY-375-75,330,'我是米洛。\n一起為朋友施展魔法！'); }
       else { milo=art('guide',layout.home.miloX,cy-197,130,185); miloY=cy-197; }
     };
     const drawEnding = () => {
       const g=model.game, portrait=layout.portrait, practice=g.screen==='practice-done';
-      text(practice?'第一束魔法，亮了！':storyFor(g.seed).title,W/2,portrait?90:105,portrait?42:55,C.paper,foreground,undefined,true);
+      text(practice?'第一次練習，完成！':storyFor(g.seed).title,W/2,portrait?90:105,portrait?42:55,C.paper,foreground,undefined,true);
       drawProgress(portrait?155:172);
       const {x:cx,y:cy}=layout.ending;
       paper(cx,cy,portrait?455:610,practice?270:400);
@@ -421,14 +421,14 @@ export async function createPlayScene(host: HTMLElement, initial: SceneModel, pa
         // In portrait, keep delivery above the dialogue and away from the guest's face.
         const x=portrait?layout.edge+140:W-layout.edge-210, y=portrait?layout.order.y+56:H-119;
         art('gift',x-100,y+22,48,68);
-        woodSign('deliver',pendingDelivery?'客人正在道別…':g.practice?'完成練習':g.index===4?'交付 · 看成果':'交付這份魔法',x+12,y,portrait?271:258,true,pendingDelivery);
+        woodSign('deliver',pendingDelivery?'客人正在道別…':g.practice?'完成練習':g.index===4?'交付 · 看成果':'交付魔力液',x+12,y,portrait?271:258,true,pendingDelivery);
       }
     };
     const drawCode = () => {
       foreground.removeChildren().forEach(n=>n.destroy({children:true})); controls=[];bottles=[];tweens=[];milo=null;
       const veil=foreground.addChild(new P.Sprite(textures.get('background')!));veil.width=W;veil.height=H;veil.tint=0x30233e;veil.alpha=.92;
       const cy=H/2;paper(W/2,cy,Math.min(540,W-30),700);
-      text('重逢的魔法密碼',W/2,cy-196,30,C.ink);
+      text('輸入重玩代碼',W/2,cy-196,30,C.ink);
       text(model.seed||'—',W/2,cy-145,32,C.ink);
       const startY=cy-75;
       ['1','2','3','4','5','6','7','8','9','⌫','0','清除'].forEach((value,i)=>{

@@ -36,7 +36,7 @@ it('指示劑先加入仍無色，加入 NaOH 才變粉紅，作答可改答', (
   expect(container.querySelector('#water-liquid.pink')).toBeNull(); add(); advance();
   expect(container.querySelector('#water-liquid.pink')).toBeTruthy();
   fireEvent.click(screen.getByRole('button',{name:'無溫度變化'}));
-  expect(screen.getByText(/答案不太對喔/)).toBeTruthy();
+  expect(screen.getByText(/這次沒答對/)).toBeTruthy();
   fireEvent.click(screen.getByRole('button',{name:'放熱反應 (溫度上升)'}));
   expect(screen.getByText(/答對了/)).toBeTruthy();
   fireEvent.click(screen.getByRole('button',{name:'重設'}));

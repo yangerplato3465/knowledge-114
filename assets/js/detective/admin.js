@@ -138,7 +138,7 @@ async function generate() {
     } catch (err) {
         console.error(err);
         toast(err.code === 'permission-denied'
-            ? '沒有產碼權限：請確認安全規則的 isOwner() 已填入你的信箱'
+            ? '沒有產生驗證碼的權限，請確認登入帳號已加入安全規則的 isOwner() 名單'
             : '產生失敗：' + err.message);
     } finally {
         $('genBtn').disabled = false;
@@ -201,7 +201,7 @@ function progressOf(live) {
     if (!p) return '<span class="prog-none">尚未開始</span>';
 
     const at = live.progressAt?.toMillis?.();
-    const when = at ? `（最後遊玩 ${fmtTime(at)}）` : '';
+    const when = at ? `（上次遊玩：${fmtTime(at)}）` : '';
     if (p.solved) return `<span class="prog-done">✅ 已破關</span>${escapeHtml(when)}`;
 
     const got = p.clues?.length ?? 0;
@@ -246,7 +246,7 @@ function renderCodes() {
 }
 
 async function revoke(id) {
-    if (!confirm('作廢這組驗證碼？已經在玩的人不受影響，但之後不能再用它開新的一台。')) return;
+    if (!confirm('確定作廢這組驗證碼？作廢後將無法再使用此碼驗證。')) return;
     try {
         await updateDoc(doc(db, 'unlockCodes', id), { active: false });
         toast('已作廢');
@@ -277,7 +277,7 @@ async function purgeDead() {
             await deleteDoc(doc(db, 'unlockCodes', r.id)).catch(() => {});
             await deleteDoc(doc(db, 'unlockCodesAdmin', r.id));
         }
-        toast(`已清掉 ${dead.length} 筆`);
+        toast(`已清除 ${dead.length} 筆紀錄`);
         await loadCodes();
     } catch (err) {
         toast('清除失敗：' + err.message);
@@ -334,7 +334,7 @@ onAuthStateChanged(auth, user => {
         $('app').style.display = 'block';
         $('whoEmail').textContent = user.email || user.uid;
         $('whoUid').textContent = `UID ${user.uid}`;
-        $('setupEmail').textContent = user.email || '（此帳號沒有 email）';
+        $('setupEmail').textContent = user.email || '（此帳號未提供電子郵件）';
         $('loginPassword').value = '';
         loadCodes();
     } else {

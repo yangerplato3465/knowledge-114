@@ -35,7 +35,7 @@ export function Question({ index }: { index: number }) {
     <div className="option-group" role="group" aria-labelledby={`question-${index}`}>{question.options.map((option, i) =>
       <button key={i} type="button" className={`option-btn ${selected === i ? correct ? 'correct' : 'incorrect' : ''}`} aria-pressed={selected === i} onClick={() => lab.answer(index, i)}>{option.label}</button>)}</div>
     <div role="status" className={`feedback-alert ${selected !== undefined ? 'shown' : ''} ${correct ? 'correct' : 'incorrect'}`}>
-      {selected !== undefined && (correct ? '答對了！恭喜你，實驗觀察非常入微！' : '答案不太對喔！試著加一些 NaOH 或重設實驗再觀察一次！')}
+      {selected !== undefined && (correct ? '答對了！這和實驗結果一致。' : '這次沒答對。可以加入 NaOH 或重設實驗，再觀察溫度、離子和顏色。')}
     </div></div>;
 }
 export function Beaker() {

@@ -83,11 +83,11 @@ export function SideScroller() {
   const books = LEVEL_TIERS[level.difficulty];
   const nextBook = books[books.findIndex(book => book.id === level.id) + 1];
   const crossroads = Boolean(level.obstacles?.length);
-  const colorMessage = (status.color === 'purple' ? '紅＋藍開啟 · 紫色地板實體' : status.color === 'red' ? '紅燈開啟 · 紅色地板實體' : status.color === 'blue' ? '藍燈開啟 · 藍色地板實體' : '兩燈關閉 · 特殊地板皆透明')
-    + (crossroads ? status.color ? '、同色直立方塊淡化' : '、直立方塊皆會阻擋' : '');
+  const colorMessage = (status.color === 'purple' ? '紅＋藍開啟 · 紫色地板可踩' : status.color === 'red' ? '紅燈開啟 · 紅色地板可踩' : status.color === 'blue' ? '藍燈開啟 · 藍色地板可踩' : '兩燈關閉 · 彩色地板都不能踩')
+    + (crossroads ? status.color ? '，同色方塊可以穿過' : '，所有直立方塊都會擋路' : '');
   const colorDisabled = load !== 'ready' || manual || (!preview && (status.paused || status.completed));
   const changeColor = (button: ColorButton) => { scene.current?.toggleColor(button); stage.current?.focus({ preventScroll: true }); };
-  const message = status.completed ? '已找到傳送出口，可以重新冒險。' : status.paused ? `已暫停。${preview ? `巡覽第 ${status.lap} 輪。` : ''}` : preview ? `正在自動巡覽地圖，第 ${status.lap} 輪。` : `固定向前跑，空白鍵或跳躍按鈕起跳。位於落腳區 ${status.checkpoint + 1}。`;
+  const message = status.completed ? '找到傳送出口了！可以再玩一次，或選擇其他路線。' : status.paused ? `已暫停。${preview ? `巡覽第 ${status.lap} 輪。` : ''}` : preview ? `正在自動巡覽地圖，第 ${status.lap} 輪。` : `米洛正在向前跑，按空白鍵或「跳躍」起跳。目前在第 ${status.checkpoint + 1} 個落腳區。`;
   return <><SiteHeader navigation current="activities" /><ActivityTrail title="魔法禁書庫" category="games" status="色彩冒險" />
     <main className="ss-game" ref={shell}>
       <div className="ss-stage" ref={stage} tabIndex={0} role="region" aria-label="橫向遊戲世界" aria-describedby="ss-instructions">
@@ -164,7 +164,7 @@ export function SideScroller() {
       {manual && load === 'ready' && <Tutorial initial={!started} onClose={closeManual} onStart={start} />}
       {shelfDifficulty !== null && <BookShelf difficulty={shelfDifficulty} levels={LEVEL_TIERS[shelfDifficulty]} current={level}
         loading={load === 'loading' && shelfDifficulty === level.difficulty} onClose={() => setShelfDifficulty(null)} onSelect={selectBook} />}
-      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。只有對應顏色地板可踩，正常地板永遠可踩。{crossroads && '直立方塊未點燈時一直存在，遇到相同光色才淡化；關燈或換成其他光色會恢復，撞上就會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}可開啟玩法手冊翻閱示範。</p>
+      <p className="ss-sr-status" id="ss-instructions">米洛固定向右跑。空白鍵、向上鍵或 W 跳躍；1 切換紅燈，2 切換藍燈，兩燈同亮變紫色。彩色地板要配合相同的燈光顏色才能踩，普通地板隨時能踩。{crossroads && '直立方塊只有在燈光同色時才能穿過；關燈或換成其他顏色，就會重新擋路，撞上便會掉落。下路平台較寬；提早起跳可選上路連跳換色。'}可開啟玩法手冊翻閱示範。</p>
       <p className="ss-sr-status" role="status" aria-live="polite">難度 {level.difficulty} 星。{message}{colorMessage}。{status.collectedGems.length > 0 ? `寶石 ${status.collectedGems.length} / 4。` : ''}{status.falls > 0 ? `已回到落腳區 ${status.falls} 次。` : ''}</p>
     </main></>;
 }

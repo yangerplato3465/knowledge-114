@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { TutorialDemo } from './TutorialDemo';
 
 const pages = [
-  { title: '歡迎來到魔法禁書庫', eyebrow: '陪米洛找到出口', body: '米洛會一直向前跑。跳過缺口，穿過小徑，碰到傳送門就過關！', hint: '空白鍵、↑、W 或「跳躍」起跳。落地後才能再跳；掉落會回到最近的落腳處。' },
-  { title: '點亮，才站得穩', eyebrow: '同色地板，點燈就能踩', body: '紅地板開紅燈，藍地板開藍燈。沒點對顏色就會掉下去；普通地板隨時能踩。', hint: '按 1 或「紅燈」、2 或「藍燈」切換開關。遇到換色路段，先跳起來再換燈。' },
-  { title: '兩盞燈，一起亮', eyebrow: '紅 ＋ 藍 ＝ 紫', body: '兩盞燈一起亮，就能踩紫地板。此時紅、藍地板都不能踩。', hint: '每盞燈按一下開、再按一下關。關掉其中一盞，就會回到另一盞燈的顏色。' },
+  { title: '歡迎來到魔法禁書庫', eyebrow: '陪米洛找到出口', body: '米洛會沿著書頁裡的小徑自動向前跑。幫她跳過缺口、切換燈色，碰到傳送門就過關！', hint: '按空白鍵、↑、W 或「跳躍」起跳。落地後才能再跳；掉落會回到最近的落腳處。' },
+  { title: '點亮，才站得穩', eyebrow: '同色地板，點燈就能踩', body: '要踩紅地板，就開紅燈；要踩藍地板，就開藍燈。普通地板隨時能踩。', hint: '按 1 或「紅燈」、2 或「藍燈」切換開關。遇到換色路段，先跳起來再換燈。' },
+  { title: '兩盞燈，一起亮', eyebrow: '紅 ＋ 藍 ＝ 紫', body: '在魔法小徑上，紅藍兩燈同亮會變成紫光。這時能踩紫地板，紅、藍地板則不能踩。', hint: '每盞燈按一下開、再按一下關。關掉其中一盞，就會回到另一盞燈的顏色。' },
 ];
-const crossroadsPage = { title: '淡化方塊，選擇岔路', eyebrow: '四、五星的新挑戰', body: '遇到空中方塊，點亮同色燈就能穿過。沒點對顏色，撞上就會掉落。', hint: '下路平台較寬；提早起跳能走上路，挑戰連跳換燈。兩條路都通往出口。' };
+const crossroadsPage = { title: '穿過方塊，探索岔路', eyebrow: '四、五星的新挑戰', body: '遇到空中的方塊，讓燈光變成相同顏色，就能穿過；光色不同，撞上方塊就會掉落。', hint: '下路平台較寬；提早起跳能走上路，挑戰連跳換燈。兩條路都通往出口。' };
 export function Tutorial({ initial, onClose, onStart }: { initial: boolean; onClose(): void; onStart(): void }) {
   const contents = [...pages, crossroadsPage];
   const lastPage = contents.length - 1;

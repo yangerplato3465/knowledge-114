@@ -240,7 +240,7 @@ function caesar(ctx, panel, box, cfg, onSolve) {
         size: 17,
         onClick: () => {
             if (decode(shift) === answer) { onSolve(); return; }
-            result.text = cfg.wrongText || '這樣讀起來還不成一個字……再轉轉看。';
+            result.text = cfg.wrongText || '還沒拼出單字，再轉轉看。';
         },
     }));
 
@@ -353,7 +353,7 @@ function safe(ctx, panel, box, cfg, onSolve) {
             setTimeout(onSolve, 700);
         } else {
             result.style.fill = COL.red;
-            result.text = '嗶嗶！密碼不對，再想想。';
+            result.text = '密碼沒有對上，再核對一次線索吧。';
             entered = '';
             setTimeout(render, 350);
         }
@@ -782,13 +782,13 @@ function deduce(ctx, panel, box, cfg, onSolve) {
                 else if ((marks[i][j] === 1) !== cfg.truth[i][j]) wrong = true;
             }));
             result.style.fill = COL.red;
-            if (blank) { result.text = `還有 ${blank} 格沒填，每一格都要判斷符不符合。`; return; }
-            if (wrong) { result.text = '有地方對不上。再讀一次證詞，把每個人的說法交叉比對看看！'; return; }
+            if (blank) { result.text = `還有 ${blank} 格沒填，請判斷每一格是否符合物證。`; return; }
+            if (wrong) { result.text = '有些判斷與證據不符，再讀一次證詞，逐項核對物證吧。'; return; }
             // 填得到的都填對了，但還有欄位沒查出來 → 不能結案，也不該罵人
             if (lockedCount) {
                 result.style.fill = COL.ok;
-                result.text = `填得完的欄位都對了！可是「？」那 ${lockedCount} 欄的物證還沒查出來，`
-                    + `光靠現在這幾欄還沒辦法把真兇單獨挑出來。`
+                result.text = `目前能判斷的欄位都填對了！可是「？」那 ${lockedCount} 欄的物證還沒查出來，`
+                    + `還需要補齊物證，才能確認指認對象。`
                     + (cfg.lockedText ? `\n${cfg.lockedText}` : '');
                 return;
             }

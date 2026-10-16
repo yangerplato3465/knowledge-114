@@ -109,12 +109,12 @@ export function MathRpg() {
     <div ref={host} className="mr-pixi-host" aria-hidden="true" />
     <div className="mr-accessibility">
       <h1>數學勇者</h1>
-      <p>算出答案，迎戰傳說。限時解題，答對出劍並壓回敵人蓄力；答錯或敵人蓄力滿時受到攻擊。</p>
-      <p role="status" aria-live="polite">{status === 'loading' ? '正在準備遊戲畫布。' : status === 'error' ? '畫布載入失敗。' : announcement || '封面已就緒。'}</p>
+      <p>解開題目，與黎薇並肩作戰。限時解題，答對出劍並壓回敵人蓄力；答錯或敵人蓄力滿時受到攻擊。</p>
+      <p role="status" aria-live="polite">{status === 'loading' ? '正在準備冒險場景。' : status === 'error' ? '遊戲載入失敗，請重新載入。' : announcement || '封面已就緒。'}</p>
       {status === 'ready' && controls.map(control => <button key={control.id} type="button" disabled={control.disabled}
         aria-pressed={control.selected} onFocus={() => { keyboardFocus.current = true; scene.current?.focus(control.id); }} onBlur={() => scene.current?.focus(null)}
         onClick={() => scene.current?.activate(control.id)}>{control.label}</button>)}
-      {status === 'error' && <button type="button" onClick={() => setAttempt(value => value + 1)}>重新載入畫布</button>}
+      {status === 'error' && <button type="button" onClick={() => setAttempt(value => value + 1)}>重新載入遊戲</button>}
     </div>
   </main></section></>;
 }

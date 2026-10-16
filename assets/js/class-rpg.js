@@ -130,7 +130,7 @@ function renderStudents(students) {
     if (!students.length) {
         studentList.innerHTML = '';
         studentEmpty.style.display = 'block';
-        studentEmpty.textContent = '這個班級還沒有學生，用上方表單新增吧！';
+        studentEmpty.textContent = '這個班級尚無學生，請展開「新增學生角色」加入名冊。';
         return;
     }
     studentEmpty.style.display = 'none';
@@ -151,10 +151,10 @@ function renderStudents(students) {
                 <div class="stat"><span class="k">⭐ 經驗</span><span class="v">${num(s.exp)}</span></div>
                 <div class="stat"><span class="k">🪙 金幣</span><span class="v">${num(s.gold)}</span></div>
                 <div class="stat"><span class="k">🗡️ 武器</span><span class="v">${escapeHtml(s.weapon || '—')}</span></div>
-                <div class="stat"><span class="k">🛡️ 裝備</span><span class="v">${escapeHtml(s.equipment || '—')}</span></div>
+                <div class="stat"><span class="k">🛡️ 防具</span><span class="v">${escapeHtml(s.equipment || '—')}</span></div>
             </div>
             <div class="growth-stats">生命 ${stats.hp} · 攻擊 ${stats.atk} · 防禦 ${stats.def}</div>
-            <div class="student-lv">${stats.cost ? `距離升級還需 ${stats.remaining} 經驗` : '已達等級上限'}</div>
+            <div class="student-lv">${stats.cost ? `距離升級還需 ${stats.remaining} 經驗值` : '已達等級上限'}</div>
             <div class="student-team">小隊：${escapeHtml(s.team || '未分組')}</div>
             <div class="student-actions">
                 <button class="btn btn-ghost" data-act="select" aria-pressed="${activeIds.has(s.id)}">${activeIds.has(s.id) ? '已選取' : '選取'}</button>
@@ -197,7 +197,7 @@ async function addStudent() {
     if (!name) { toast('請輸入姓名'); $('f_name').focus(); return; }
     const initial = ['f_exp', 'f_gold'].map(id => Number($(id).value));
     if (initial.some(n => !Number.isSafeInteger(n) || n < 0)) {
-        toast('經驗與金幣須為非負整數'); return;
+        toast('經驗值與金幣請輸入 0 或正整數'); return;
     }
     const data = {
         name,
@@ -315,7 +315,7 @@ function renderRewardState() {
     $('teamField').hidden = $('selectionMode').value !== 'team';
     const people = targets();
     $('selectionSummary').textContent = people.length ? `已選取 ${people.length} 人：${people.map(s => s.name).join('、')}` : '尚未選取學生';
-    $('connectionState').textContent = !navigator.onLine ? '目前離線，暫停寫入。連線恢復後請重新操作。' : busy ? '正在處理，請稍候…' : !rosterReady ? '等待班級名冊載入…' : '名冊已載入；獎勵成功後會顯示紀錄。';
+    $('connectionState').textContent = !navigator.onLine ? '目前離線，無法儲存變更。恢復連線後請再試一次。' : busy ? '正在處理，請稍候…' : !rosterReady ? '等待班級名冊載入…' : '名冊已載入，發送獎勵後可在下方查看紀錄。';
     $('rewardBtn').textContent = busy ? '處理中…' : `發送獎勵${people.length ? `（${people.length} 人）` : ''}`;
     $('rewardBtn').disabled = busy || !navigator.onLine || !rosterReady || !people.length;
     const history = (classData.rewardHistory || []).filter(e => e.lessonId === lessonId);

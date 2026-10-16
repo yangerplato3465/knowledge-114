@@ -112,11 +112,11 @@ export function createBattleView(P:BattlePixi,app:App,art:BattleArt,grade:string
       button('fullscreen',fullscreen?'退出全螢幕':'全螢幕',p?570:W/2+260,p?976:637,p?200:230,p?100:62);
     } else if(state.phase==='ready') {
       text(state.stage===4?'面對赫恩・奪輝王':'準備出戰',W/2,p?711:503,p?43:34);
-      text('在蓄力滿前解題，答對出劍\n答錯受擊；錯題可看完解說再繼續',W/2,p?822:571,p?29:25,p?630:1100);
+      text('在敵人蓄力滿前作答，答對出劍\n答錯會受擊；看懂解說再繼續',W/2,p?822:571,p?29:25,p?630:1100);
       button('fight','開始戰鬥',W/2,p?1050:653,p?460:400,p?100:62);
     } else if(state.phase==='cleared'||state.phase==='defeated') {
       text(state.phase==='defeated'?'稍作休息，再試一次':state.stage===4?'魔王關完成！':'本關完成！',W/2,p?753:521,p?42:34);
-      text(state.phase==='defeated'?'可以保留本單元，重新挑戰這一關。':'這次的解題支持了黎薇的行動。',W/2,p?838:579,p?27:23,p?630:1120);
+      text(state.phase==='defeated'?'按「再戰本關」，恢復生命後再出發。':state.stage===4?'你和黎薇完成了這場挑戰。':'你和黎薇一起闖過了這一關。',W/2,p?838:579,p?27:23,p?630:1120);
       if(state.phase==='cleared'&&state.stage<4)button('next-stage','前往下一關',W/2,p?1010:651,p?460:410,p?94:60);
       else button('retry','再戰本關',W/2,p?1010:651,p?460:410,p?94:60);
     } else if(state.phase==='review') {

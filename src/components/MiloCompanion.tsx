@@ -6,11 +6,11 @@ type Moment = 'hello' | 'walk' | 'water' | 'look' | 'flowers' | 'oops' | 'wave';
 const moments: { action: Moment; line: string; duration: number }[] = [
   { action: 'hello', line: '今天想往哪裡走？', duration: 4200 },
   { action: 'walk', line: '', duration: 2600 },
-  { action: 'water', line: '小水滴，來幫花喝水吧。', duration: 4400 },
+  { action: 'water', line: '小水滴，這朵花也在等你。', duration: 4400 },
   { action: 'look', line: '', duration: 2400 },
   { action: 'flowers', line: '咦，真的長出小花了！', duration: 4600 },
   { action: 'oops', line: '哎呀，帽子差點先走了。', duration: 3700 },
-  { action: 'wave', line: '慢慢想也沒關係喔。', duration: 3900 },
+  { action: 'wave', line: '想到了什麼？我想聽聽。', duration: 3900 },
 ];
 
 export function MiloCompanion() {

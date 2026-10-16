@@ -8,20 +8,20 @@ export function LessonContent() { const lab = useLab(); return <><div className=
 <ForestArt name="science" className="lesson-title-art" />
 <div className="academic-badge">微觀化學與酸鹼平衡</div>
 <h1 >{"水與酸鹼的微觀奧秘"}</h1>
-<p className="subtitle">{"用簡單直覺的視角，探索液體中的離子行為與 pH/pOH 的平衡美學"}</p>
+<p className="subtitle">{"從水中的離子出發，認識酸鹼性與 pH、pOH 的關係"}</p>
 </div>
 </div>
 <div className="slide-container" id="slide2">
-<h2 className="slide-title" style={{"borderLeftColor":"#4fc3f7"}}>{"1. 水：完美的「解離媒介」"}</h2>
+<h2 className="slide-title" style={{"borderLeftColor":"#4fc3f7"}}>{"1. 水如何幫助物質解離？"}</h2>
 <div className="content-area">
 <div className="two-column">
 <div className="text-column">
-<h3 style={{"color":"#4fc3f7"}}><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>{" 水分子是如何幫助物質解離的？"}</h3>
-<p >{"水是由一個氧原子 and 兩個氫原子構成的極性分子。因為帶有微小的正負電性，當鹽類、酸 or 鹼放進水中時，水分子會將它們包圍並拉開，這個過程就叫"}<strong >{"「解離」"}</strong>{"。"}</p>
+<h3 style={{"color":"#4fc3f7"}}><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>{" 一起觀察水分子的作用"}</h3>
+<p >{"一個水分子由一個氧原子與兩個氫原子構成，是一種極性分子。因為帶有微小的正負電性，當鹽類、酸或鹼放進水中時，水分子會將它們包圍並拉開，這個過程就叫"}<strong >{"「解離」"}</strong>{"。"}</p>
 <p >{"不只如此，水分子彼此之間也會發生微弱的"}<strong >{"「自我解離」"}</strong>{"，產生兩種性質相反的微小粒子："}</p>
 <p >
-<i className="fa-solid fa-circle-nodes" style={{"color":"#ff8a65","marginRight":"8px"}} aria-hidden="true"></i><strong >{"氫離子 [hydrogen ion] (H⁺)："}</strong>{" 決定溶液「酸性」的主角。"}<br />{" "}
-<i className="fa-solid fa-circle-nodes" style={{"color":"#4db6ac","marginRight":"8px"}} aria-hidden="true"></i><strong >{"氫氧根離子 [hydroxide ion] (OH⁻)："}</strong>{" 決定溶液「鹼性」的主角。\n                    "}</p>
+<i className="fa-solid fa-circle-nodes" style={{"color":"#ff8a65","marginRight":"8px"}} aria-hidden="true"></i><strong >{"氫離子 [hydrogen ion] (H⁺)："}</strong>{" 與溶液的酸性有關。"}<br />{" "}
+<i className="fa-solid fa-circle-nodes" style={{"color":"#4db6ac","marginRight":"8px"}} aria-hidden="true"></i><strong >{"氫氧根離子 [hydroxide ion] (OH⁻)："}</strong>{" 與溶液的鹼性有關。\n                    "}</p>
 <div id="formula-container" className="formula-container">
 <math display="block">
 <mrow >
@@ -93,26 +93,26 @@ export function LessonContent() { const lab = useLab(); return <><div className=
 <div className="tiled-content">
 <div className="tile tile-ph">
 <div className="tile-icon"><i className="fa-solid fa-droplet" aria-hidden="true"></i></div>
-<h3 style={{"color":"#ff8a65"}}>{"pH值：酸度的測量尺"}</h3>
-<p >{"pH 值用來衡量溶液中"}<strong >{"氫離子 [hydrogen ion] (H⁺)"}</strong>{" 的濃度大小。"}</p>
+<h3 style={{"color":"#ff8a65"}}>{"用 pH 值認識酸性"}</h3>
+<p >{"pH 值用來衡量溶液中"}<strong >{"氫離子 [hydrogen ion] (H⁺)"}</strong>{" 的濃度。"}</p>
 <p >{"當 pH 值"}<strong >{"小於 7"}</strong>{"時，代表溶液中的 H⁺ 比較多，溶液呈現"}<strong >{"酸性"}</strong>{"（例如：檸檬汁、醋）。數值越小，酸性就越強。"}</p>
 </div>
 <div className="tile tile-poh">
 <div className="tile-icon"><i className="fa-solid fa-soap" aria-hidden="true"></i></div>
-<h3 style={{"color":"#4db6ac"}}>{"pOH值：鹼度的測量尺"}</h3>
-<p >{"pOH 值用來衡量溶液中"}<strong >{"氫氧根離子 [hydroxide ion] (OH⁻)"}</strong>{" 的濃度大小。"}</p>
+<h3 style={{"color":"#4db6ac"}}>{"用 pOH 值認識鹼性"}</h3>
+<p >{"pOH 值用來衡量溶液中"}<strong >{"氫氧根離子 [hydroxide ion] (OH⁻)"}</strong>{" 的濃度。"}</p>
 <p >{"當 pOH 值"}<strong >{"小於 7"}</strong>{"時，代表溶液中的 OH⁻ 比較多，溶液呈現"}<strong >{"鹼性"}</strong>{"（例如：小蘇打水、肥皂水）。數值越小，鹼性越明顯。"}</p>
 </div>
 </div>
 </div>
 </div>
 <div className="slide-container" id="slide4">
-<h2 className="slide-title" style={{"borderLeftColor":"#4db6ac"}}>{"3. pH 與 pOH 的 14 平衡守則"}</h2>
+<h2 className="slide-title" style={{"borderLeftColor":"#4db6ac"}}>{"3. pH 與 pOH：相加等於 14"}</h2>
 <div className="content-area">
 <div className="wide-layout">
 <div className="wide-top-bar">
 <div className="wide-text-intro">
-<p ><strong >{"完美互補的微觀天平："}</strong>{"在同一個水溶液世界中，酸性主角與鹼性主角就像在玩蹺蹺板：一邊增加，另一邊就必然減少。在 25°C 的標準狀態下，"}<strong >{"不論溶液是酸還是鹼，pH 值與 pOH 值的加總永遠剛好等於 14！"}</strong></p>
+<p ><strong >{"兩種離子的關係："}</strong>{"在同一份水溶液中，氫離子與氫氧根離子的濃度就像蹺蹺板：一邊升高，另一邊就會降低。在本教材採用的 25°C 條件下，"}<strong >{"不論溶液是酸還是鹼，pH 值與 pOH 值相加等於 14。"}</strong></p>
 </div>
 <div id="ph-formula-container" className="formula-container" style={{"borderColor":"#4db6ac","backgroundColor":"#f2fbf9","marginTop":"0","whiteSpace":"nowrap","flexShrink":"0"}}>
 <math display="block">
@@ -299,7 +299,7 @@ export function LessonContent() { const lab = useLab(); return <><div className=
 </div>
 </div>
 </div>
-<p style={{"fontSize":"14px","color":"#78909c","marginTop":"8px"}}>{"操作下方控制鈕，觀察杯中離子的增長與變化："}</p>
+<p style={{"fontSize":"14px","color":"#78909c","marginTop":"8px"}}>{"試試下方按鈕，觀察離子數量、溫度與顏色如何改變："}</p>
 </div>
 
 <Beaker />

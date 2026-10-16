@@ -6,8 +6,8 @@ import { LegacyModule } from '../../components/LegacyModule';
 export function DetectiveAdmin() { return <>
     <div className="wrap admin-shell"><TeacherHeader current="detective-admin" /><div className="admin-heading"><div><p className="page-kicker"><Icon name="lock" />老師工作室</p>
 
-        <h1>偵探事件簿 · 驗證碼後台</h1>
-        <p className="subtitle">管理課堂案件與限時驗證碼，讓每一組偵探準備好再出發。</p></div><ForestArt name="key" /></div>
+        <h1>偵探事件簿 · 驗證碼管理</h1>
+        <p className="subtitle">為各組準備案件驗證碼，查看有效期限與調查進度。</p></div><ForestArt name="key" /></div>
 
 
         <div id="loginScreen" className="login-screen" style={{"display":"none"}}>
@@ -31,7 +31,7 @@ export function DetectiveAdmin() { return <>
 
         <div id="app">
             <div className="auth-bar">
-                <span className="who">登入為 <b id="whoEmail">—</b> <span className="whoami" id="whoUid"></span></span>
+                <span className="who">目前帳號：<b id="whoEmail">—</b> <span className="whoami" id="whoUid"></span></span>
                 <button className="btn btn-ghost btn-sm logout" id="logoutBtn" style={{"marginLeft":"auto"}}>
                      登出
                 </button>
@@ -41,7 +41,7 @@ export function DetectiveAdmin() { return <>
                 <h2>產生驗證碼</h2>
                 <div className="row" style={{"marginBottom":"12px"}}>
                     <div>
-                        <label htmlFor="f_game">案件（關卡）</label>
+                        <label htmlFor="f_game">選擇案件</label>
                         <select id="f_game" defaultValue=""></select>
                     </div>
                     <div>
@@ -62,7 +62,7 @@ export function DetectiveAdmin() { return <>
                         </select>
                     </div>
                     <div>
-                        <label htmlFor="f_count">份數</label>
+                        <label htmlFor="f_count">組數</label>
                         <select id="f_count" defaultValue="1">
                             <option value="1">1 組</option>
                             <option value="2">2 組</option>
@@ -77,14 +77,14 @@ export function DetectiveAdmin() { return <>
                 <div className="row" style={{"marginBottom":"14px"}}>
                     <div style={{"flex":"2"}}>
                         <label htmlFor="f_note">班級／組別名稱</label>
-                        <input id="f_note" placeholder="例：A班（產多組時自動變成 A班第1組、A班第2組…）" />
+                        <input id="f_note" placeholder="例：A 班（多組時會自動加上第 1 組、第 2 組…）" />
                     </div>
                     <div>
                         <label htmlFor="f_max">使用次數上限（0 = 不限）</label>
                         <input id="f_max" type="number" defaultValue="0" min="0" />
                     </div>
                 </div>
-                <button className="btn" id="genBtn"> 產生</button>
+                <button className="btn" id="genBtn">產生驗證碼</button>
 
                 <div id="fresh" className="fresh" style={{"display":"none"}}></div>
             </div>
@@ -97,26 +97,26 @@ export function DetectiveAdmin() { return <>
                         <select id="filterGame" defaultValue=""></select>
                     </div>
                     <button className="btn btn-ghost" id="refreshBtn"> 重新整理</button>
-                    <button className="btn btn-danger" id="purgeBtn"> 清除已失效</button>
+                    <button className="btn btn-danger" id="purgeBtn"> 清除已失效的驗證碼</button>
                 </div>
                 <div id="codeList" className="codes"></div>
                 <div id="codeEmpty" className="state" style={{"display":"none"}}>還沒有發出任何驗證碼。</div>
             </div>
 
             <div className="card">
-                <h2>第一次使用要做的事</h2>
+                <h2>首次使用設定</h2>
                 <details className="setup">
-                    <summary>展開設定步驟（做過一次就不用再做）</summary>
+                    <summary>展開設定步驟（首次使用時完成）</summary>
                     <ol>
                         <li>把 <code>pages/firestore.rules.txt</code> 的內容整份貼到 Firebase 主控台 →
                             Firestore Database → 規則 → 發布。</li>
-                        <li>規則裡的 <code>isOwner()</code> 是一份 email 白名單，已經填好
+                        <li>規則裡的 <code>isOwner()</code> 使用電子郵件允許名單，目前已列入
                             <code>nini900219@gmail.com</code> 與 <code>yangerplato3465@gmail.com</code>。
                             你目前登入的是 <b id="setupEmail">登入後顯示</b> —— 如果它不在名單裡，
-                            就會產不出碼，請把它補進規則再重新發布。</li>
+                            便無法產生驗證碼；請將帳號加入規則後重新發布。</li>
                         <li>（選用）Firestore → TTL → 對 <code>unlockCodes</code> 集合的
                             <code>expiresAt</code> 欄位建立政策，過期的碼會自動被清掉。
-                            不做也不影響安全，規則本來就擋著，只是資料會慢慢累積。</li>
+                            未設定自動清除時，過期驗證碼仍會被安全規則拒絕，但紀錄會持續保留。</li>
                     </ol>
                 </details>
             </div>

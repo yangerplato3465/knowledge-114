@@ -74,7 +74,7 @@ it('兩按鈕可同時開啟紫色並獨立關閉；重看手冊只凍結場景�
   });
   expect(created.toggleColor).toHaveBeenCalledTimes(2);
   expect(red.getAttribute('aria-pressed')).toBe('true'); expect(blue.getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByRole('status').textContent).toContain('紅＋藍開啟 · 紫色地板實體');
+  expect(screen.getByRole('status').textContent).toContain('紅＋藍開啟 · 紫色地板可踩');
   fireEvent.click(blue, { detail: 1 }); expect(created.toggleColor).toHaveBeenCalledTimes(2);
   expect(document.activeElement).toBe(screen.getByRole('region', { name: '橫向遊戲世界' }));
   fireEvent.click(red); expect(red.getAttribute('aria-pressed')).toBe('false'); expect(blue.getAttribute('aria-pressed')).toBe('true');
@@ -106,7 +106,7 @@ it('開場四頁手冊阻止跑道前進，可依序看完障礙教學，開始�
   fireEvent.keyDown(manual, { key: 'ArrowRight' });
   expect(screen.getByRole('heading', { name: '兩盞燈，一起亮' })).toBeTruthy();
   fireEvent.keyDown(manual, { key: 'ArrowRight' });
-  expect(screen.getByRole('heading', { name: '淡化方塊，選擇岔路' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: '穿過方塊，探索岔路' })).toBeTruthy();
   expect(screen.getByText('旅人手冊 · 4 / 4')).toBeTruthy();
   const buttons = screen.getAllByRole('button', { name: '開始冒險' }); fireEvent.click(buttons.at(-1)!);
   expect(screen.queryByRole('dialog')).toBeNull(); expect(created.setTutorial).toHaveBeenLastCalledWith(false);
@@ -261,9 +261,9 @@ it.each([[4, '石橋岔路'], [5, '燈牆連跳']] as const)('選 %i 星 %s 直�
   fireEvent.click(screen.getByRole('button', { name: '玩法手冊' }));
   expect(screen.getByRole('heading', { name: '歡迎來到魔法禁書庫' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: '前往第 4 頁' }));
-  expect(screen.getByRole('heading', { name: '淡化方塊，選擇岔路' })).toBeTruthy();
-  expect(screen.getByText(/點亮同色燈就能穿過/)).toBeTruthy();
-  expect(screen.getByText(/沒點對顏色，撞上就會掉落/)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: '穿過方塊，探索岔路' })).toBeTruthy();
+  expect(screen.getByText(/讓燈光變成相同顏色，就能穿過/)).toBeTruthy();
+  expect(screen.getByText(/光色不同，撞上方塊就會掉落/)).toBeTruthy();
   expect(screen.getByText(/兩條路都通往出口/)).toBeTruthy();
   fireEvent.click(screen.getAllByRole('button', { name: '開始冒險' }).at(-1)!);
   expect(created.setTutorial).toHaveBeenLastCalledWith(false); expect(created.setMode).toHaveBeenLastCalledWith('play');

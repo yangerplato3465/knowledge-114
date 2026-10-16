@@ -13,9 +13,9 @@ let mapWidth = 1200, mapHeight = 700;
 function status(message) { $('worldStatus').textContent = message; }
 function details() {
     const actor = actors.get(selectedId);
-    if (!actor) { $('characterInfo').textContent = '點選角色或使用名冊，查看能力與成長。'; return; }
+    if (!actor) { $('characterInfo').textContent = '點選角色，或從名冊選擇學生，查看能力與成長。'; return; }
     const s = actor.student, p = statsOf(s);
-    $('characterInfo').textContent = `${s.name || '未命名'} · ${s.team || '未分組'} · Lv.${p.level} ｜ 生命 ${p.hp}　攻擊 ${p.atk}　防禦 ${p.def} ｜ ${p.cost ? `距離升級 ${p.remaining} 經驗` : '已達最高等級'} ｜ 武器：${s.weapon || '未裝備'}／防具：${s.equipment || '未裝備'}${p.unknownEquipment ? '（自訂裝備尚無能力加成）' : ''}`;
+    $('characterInfo').textContent = `${s.name || '未命名'} · ${s.team || '未分組'} · Lv.${p.level} ｜ 生命 ${p.hp}　攻擊 ${p.atk}　防禦 ${p.def} ｜ ${p.cost ? `距離升級還需 ${p.remaining} 經驗值` : '已達最高等級'} ｜ 武器：${s.weapon || '未裝備'}／防具：${s.equipment || '未裝備'}${p.unknownEquipment ? '（自訂裝備尚無能力加成）' : ''}`;
 }
 function selectActor(id) {
     selectedId = actors.has(id) ? id : '';
@@ -128,4 +128,4 @@ async function boot() {
         delete globalThis.__PIXI_APP__;
     }, { once: true });
 }
-boot().catch(error => { console.error(error); $('gameLoading').textContent = '世界載入失敗，請重新整理或回班級管理。'; status('圖集或繪圖引擎無法載入。'); });
+boot().catch(error => { console.error(error); $('gameLoading').textContent = '世界載入失敗，請重新整理或回班級管理。'; status('角色圖片或遊戲場景載入失敗，請重新整理後再試。'); });

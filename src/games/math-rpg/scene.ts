@@ -195,7 +195,7 @@ export async function createGameScene(host: HTMLElement, parentSignal: AbortSign
       if (screen === 'cover') {
         const title = label('數學勇者',W/2,portrait ? 188 : 178,portrait ? 112 : 110,layers.interface,true);
         if (title.width > (portrait ? 630 : 520)) title.scale.set((portrait ? 630 : 520)/title.width);
-        label('算出答案，迎戰傳說',W/2,portrait ? 315 : 295,portrait ? 36 : 31,layers.interface,true);
+        label('解開題目，與黎薇並肩作戰',W/2,portrait ? 315 : 295,portrait ? 36 : 31,layers.interface,true);
         button({ id:'start',label:'開始冒險' },W/2,portrait ? 1042 : 546,portrait ? 422 : 300,portrait ? 104 : 74,portrait ? 48 : 38);
       } else if(screen==='stages') {
         label('選擇關卡',W/2,portrait?160:112,portrait?64:50,layers.interface,true);
@@ -208,7 +208,7 @@ export async function createGameScene(host: HTMLElement, parentSignal: AbortSign
         button({id:'units',label:'返回單元'},W/2,H*.78,portrait?350:270,portrait?80:58,28);
       } else {
         label('選擇冒險單元',W/2,portrait ? 180 : 78,portrait ? 60 : 46,layers.interface,true);
-        label('選擇已開放的題庫，進入五關挑戰',W/2,portrait ? 244 : 139,portrait ? 28 : 23);
+        label('選一個已開放的單元，開始五關挑戰',W/2,portrait ? 244 : 139,portrait ? 28 : 23);
         for (const [i,name] of ['五上','六上'].entries()) button({ id:`grade:${name}`,label:name,selected:grade===name },W/2+(i-.5)*(portrait ? 240 : 200),portrait ? 324 : 199,portrait ? 200 : 170,portrait ? 86 : 52,portrait ? 38 : 28);
         CURRICULUM[grade].forEach((unit,i) => {
           const ready = isUnitReady(grade,unit.name), number = unit.endNumber ? `${unit.number}–${unit.endNumber}` : String(unit.number);
