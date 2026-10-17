@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { StrictMode } from 'react';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { Downloads } from './Downloads';
@@ -20,8 +20,14 @@ it('檔名作純文字呈現並編碼下載路徑，排除資料夾及 gitkeep',
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response([{ ...file, name }, { type: 'dir' }, { type: 'file', name: '.gitkeep' }])));
   render(<ThemeProvider><Downloads /></ThemeProvider>);
   expect(await screen.findByText(name)).toBeTruthy();
-  expect(document.querySelector('.material-list img')).toBeNull();
-  expect(screen.getByRole('link', { name: `下載 ${name}` }).getAttribute('href')).toContain(encodeURIComponent(name));
+  const entrance = screen.getByRole('link', { name: `下載 ${name}` });
+  expect(entrance.getAttribute('href')).toContain(encodeURIComponent(name));
+  expect(entrance.getAttribute('download')).toBe(name);
+  expect(within(entrance).getByText(name)).toBeTruthy();
+  expect(within(entrance).getByText('2.0 KB')).toBeTruthy();
+  expect(entrance.querySelector('img')?.getAttribute('src')).toBe('/assets/images/site/library.webp');
+  expect(entrance.querySelector('[onerror],button,a')).toBeNull();
+  expect(document.getElementById(entrance.getAttribute('aria-describedby')!)?.textContent).toContain('TXT 檔案');
   expect(screen.getByText('2.0 KB')).toBeTruthy();
 });
 it('格式錯誤、限流與空目錄可辨認並重新整理恢復', async () => {

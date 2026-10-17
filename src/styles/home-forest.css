@@ -8,14 +8,8 @@
 .forest-site .home-hero h1 { font-weight:750; font-size:clamp(2.1rem,3.6vw,3.4rem); line-height:1.4; font-family:inherit; }
 .home-hero h1 span { color:var(--primary-strong); }
 .hero-description { margin:20px 0 8px; color:var(--ink-soft); line-height:1.9; }
-.hero-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:center; gap:clamp(10px,2vw,24px); }
-.world-portal { display:flex; flex-direction:column; align-items:center; min-width:0; padding:10px 4px 16px; border-radius:28px; text-align:center; text-decoration:none; }
-.portal-art { position:relative; display:block; width:min(100%,270px); height:180px; overflow:hidden; }
-.portal-art img { position:absolute; left:50%; top:-45px; width:300px; height:300px; transform:translateX(-50%); transition:transform .3s; }
-.world-portal-activities .portal-art img { top:-68px; }
-.world-portal:hover .portal-art img,.world-portal:focus-visible .portal-art img { transform:translate(-50%,-8px) rotate(-3deg); }
-.world-portal small { display:block; color:var(--ink-soft); font-size:.95rem; }
-.world-portal strong { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:52px; max-width:100%; padding:10px 18px; border-radius:999px; background:var(--primary-strong); color:var(--on-primary); font-size:1.05rem; white-space:nowrap; box-shadow:0 5px 14px var(--primary-shadow); }
+.hero-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(12px,2vw,24px); }
+.hero-actions .home-entry { --entry-art-size:170px; grid-template-columns:minmax(0,1fr); grid-template-rows:auto 1fr auto; justify-items:center; gap:12px; padding:22px 16px; text-align:center; }
 .milo-stage-placeholder { height:202px; }
 
 .home-note { text-align:center; text-wrap:balance; color:var(--ink-soft); margin:18px 0; }
@@ -28,20 +22,13 @@
  .forest-site .home-hero h1 { font-size:clamp(2rem,7vw,2.8rem); }
  .hero-description { margin:16px 0 4px; font-size:.94rem; }
  .milo-stage-placeholder { height:185px; }
- .hero-actions { gap:12px; padding-bottom:20px; }
- .portal-art { height:145px; }
- .portal-art img { width:230px; height:230px; top:-34px; }
- .world-portal-activities .portal-art img { top:-49px; }
- .world-portal small { font-size:.85rem; }
- .world-portal strong { min-height:46px; font-size:.88rem; gap:6px; padding:9px 12px; }
+ .hero-actions { padding:16px 0 20px; }
  .home-note { font-size:.78rem; margin:10px 0; }
+}
+@media(max-width:680px) {
+ .hero-actions { grid-template-columns:1fr; }
+ .hero-actions .home-entry { --entry-art-size:72px; grid-template-columns:72px minmax(0,1fr); grid-template-rows:auto auto; justify-items:stretch; gap:10px 14px; padding:18px 14px; text-align:left; }
 }
 @media(max-width:380px) {
  .forest-site .home-hero h1 { font-size:1.7rem; line-height:1.35; }
- .hero-actions { grid-template-columns:1fr; }
- .world-portal { flex-direction:row; gap:4px; padding:0 8px; }
- .portal-art { flex:none; width:84px; height:96px; }
- .portal-art img { width:160px; height:160px; top:-28px; }
- .world-portal-activities .portal-art img { top:-38px; }
- .world-portal strong { font-size:.9rem; padding:8px; }
 }

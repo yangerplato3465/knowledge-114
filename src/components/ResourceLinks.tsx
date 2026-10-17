@@ -1,6 +1,6 @@
-import { Icon } from './Icon';
 import type { Activity } from '../content/navigation';
-import { ForestArt, type ForestObject } from './ForestArt';
+import type { ForestObject } from './ForestArt';
+import { ForestEntryLink } from './ForestEntryLink';
 
 const artwork: Record<string, ForestObject> = {
   'water-acid-base': 'science', 'magic-ink': 'ledger', 'math-rpg': 'adventure',
@@ -14,9 +14,6 @@ export function artworkForActivity(path: string): ForestObject {
 
 export function ResourceLinks({ items }: { items: Activity[] }) {
   return <ul className="resource-list">{items.map(item => <li key={item.path}>
-    <a href={import.meta.env.BASE_URL + 'pages/' + item.path + '.html'}>
-      <ForestArt name={artworkForActivity(item.path)} />
-      <span><strong>{item.title}</strong><span>{item.description}</span></span><Icon name="arrow" />
-    </a>
+    <ForestEntryLink href={import.meta.env.BASE_URL + 'pages/' + item.path + '.html'} artwork={artworkForActivity(item.path)} title={item.title} description={item.description} action="進入工具" />
   </li>)}</ul>;
 }

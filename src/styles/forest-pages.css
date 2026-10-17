@@ -21,18 +21,6 @@ button:disabled { cursor:not-allowed; opacity:.6; }
 .category-number { display:none; }
 .forest-site .category-heading h2 { font:700 1.2rem/1.5 'Noto Sans TC','Microsoft JhengHei',sans-serif; margin:0 0 10px; }
 .forest-site .category-heading p { font-size:.85rem; }
-.forest-site .resource-list { padding:0; border:0; background:none; border-radius:0; display:grid; gap:20px; }
-.forest-site .resource-list li+li { border:0; }
-.forest-site .resource-list a { position:relative; isolation:isolate; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; gap:0; padding:8px 16px 18px; border:1px solid var(--border); border-radius:26px; background:linear-gradient(155deg,var(--surface),var(--surface-2)); box-shadow:0 5px 18px var(--shadow),inset 0 0 0 3px var(--surface); min-height:286px; }
-.forest-site .resource-list a:hover { border-color:var(--border-strong); box-shadow:0 10px 24px var(--shadow-strong),inset 0 0 0 3px var(--surface); }
-.forest-site .resource-list a::before { content:''; position:absolute; z-index:-1; top:0; width:210px; height:175px; background:radial-gradient(ellipse,var(--primary-tint),transparent 70%); pointer-events:none; }
-.forest-site .resource-list .forest-object { width:172px; height:172px; transition:transform .3s,filter .3s; }
-.forest-site .resource-list strong { font-size:1rem; line-height:1.7; color:var(--ink); }
-.forest-site .resource-list a>span>span { font-size:.83rem; max-width:260px; margin:6px auto 0; }
-.forest-site .resource-list a>svg { margin-top:12px; padding:5px; width:30px; height:30px; border:1px solid var(--border-strong); border-radius:50%; background:var(--surface); color:var(--primary-strong); }
-.forest-site .resource-list a:hover .forest-object,.forest-site .resource-list a:focus-visible .forest-object { transform:translateY(-7px) rotate(-3deg); filter:drop-shadow(0 10px 8px #9670cb44); }
-.forest-site .teacher-directory>.resource-list { grid-template-columns:repeat(3,minmax(0,1fr)); gap:36px; }
-.forest-site .teacher-directory>.resource-list .forest-object { width:220px; height:220px; }
 .forest-site .teacher-header { max-width:1240px; margin:0 auto 26px; }
 .forest-site .teacher-header-actions { margin-left:auto; }
 .forest-site .teacher-header-actions>a { font-size:.86rem; }
@@ -87,21 +75,11 @@ button:disabled { cursor:not-allowed; opacity:.6; }
  
 .forest-site .directory-page { position:relative; isolation:isolate; margin:20px auto 40px; }
  .forest-intro>div { display:block; }
- .forest-intro .page-lead { margin-top:12px; }
+ .forest-intro .page-lead { width:100%; margin-top:12px; justify-self:stretch; }
  .forest-site .directory-tabs { gap:20px; margin-bottom:28px; }
  .forest-site .directory-tabs a { font-size:.84rem; }
  .forest-site .directory-sections { grid-template-columns:1fr; gap:32px; }
  .category-heading { min-height:0; margin-bottom:16px; }
- .forest-site .resource-list { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
- .forest-site .resource-list a { min-height:252px; padding:5px 8px 12px; }
- .forest-site .resource-list a::before { width:100%; height:140px; }
- .forest-site .resource-list .forest-object { width:140px; height:140px; max-width:100%; }
- .forest-site .resource-list strong { font-size:.9rem; }
- .forest-site .resource-list a>span>span { font-size:.78rem; }
- .forest-site .teacher-directory>.resource-list { grid-template-columns:1fr; }
- .forest-site .teacher-directory>.resource-list a { flex-direction:row; text-align:left; gap:12px; min-height:150px; }
- .forest-site .teacher-directory>.resource-list .forest-object { width:130px; height:130px; }
- .forest-site .teacher-directory>.resource-list a::before { width:140px; }
  .forest-site .admin-heading { min-height:130px; }
  .forest-site .admin-heading .forest-object { display:none; }
  .forest-site .admin-shell .card { padding:22px 18px; }

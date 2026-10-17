@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
-import { Icon } from '../components/Icon';
+import { ForestEntryLink } from '../components/ForestEntryLink';
 
 const MiloCompanion = lazy(() => import('../components/MiloCompanion').then(module => ({ default: module.MiloCompanion })));
 
@@ -22,8 +22,8 @@ export function App() {
           <Suspense fallback={<div className="milo-stage-placeholder" aria-hidden="true" />}><MiloCompanion /></Suspense>
         </div>
         <nav className="hero-actions" aria-label="開始學習">
-          <a className="world-portal" href={base + 'pages/downloads.html'}><span className="portal-art"><img src={base + 'assets/images/site/library.webp'} alt="" width="256" height="256" /></span><span className="portal-caption"><small>帶走靈感</small><strong>素材下載 <Icon name="download" /></strong></span></a>
-          <a className="world-portal world-portal-activities" href={base + 'pages/activities.html'}><span className="portal-art"><img src={base + 'assets/images/site/lantern.webp'} alt="" width="256" height="256" /></span><span className="portal-caption"><small>提燈出發</small><strong>探索學習活動 <Icon name="arrow" /></strong></span></a>
+          <ForestEntryLink className="home-entry" href={base + 'pages/downloads.html'} artwork="library" title="素材下載" description="找找課堂需要的教材與素材。" action="尋找素材" icon="download" />
+          <ForestEntryLink className="home-entry" href={base + 'pages/activities.html'} artwork="lantern" title="學習活動" description="選一個星座，開始實驗、解謎與冒險。" action="探索活動" />
         </nav>
       </section>
       <p className="home-note"><span>慢慢來，我們一起探索。</span><span>每個新發現，都是森林裡的一點光。</span></p>
